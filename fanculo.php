@@ -22,6 +22,6 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 }
 
 // Initialize
-new \Fanculo\Admin\Settings();
+new \Fanculo\Admin\MenuManager();
 new \Fanculo\Core\PostType();
 new \Fanculo\Controllers\PostController();

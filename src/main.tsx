@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+import './index.css'
 
 console.log('🚀 Vite React app is loading...')
 console.log('🎯 Target element:', document.getElementById('fanculo-root'))

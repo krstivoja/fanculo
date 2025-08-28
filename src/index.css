@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+/* Base styles for WordPress admin integration */
+#fanculo-root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* WordPress admin compatibility */
+.wrap {
+  margin: 0;
+  padding: 0;
+}
+
+/* Custom styles for WordPress admin context */
+#fanculo-root * {
+  box-sizing: border-box;
+}
+
+#fanculo-root button {
+  font-family: inherit;
+}
+
+#fanculo-root input, #fanculo-root textarea, #fanculo-root select {
+  font-family: inherit;
+}

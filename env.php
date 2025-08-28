@@ -9,7 +9,7 @@
 return [
     'dev' => [
         'host' => 'localhost',
-        'port' => 5179,
-        'network_ip' => '192.168.0.58', // For CORS-free asset loading
+        'port' => 5177,
+        'network_ip' => 'localhost', // Use localhost for consistent development
     ]
 ];

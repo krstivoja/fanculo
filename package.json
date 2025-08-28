@@ -7,8 +7,11 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.1.12",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^7.8.2",
+    "tailwindcss": "^4.1.12"
   },
   "devDependencies": {
     "@types/react": "^18.2.45",
