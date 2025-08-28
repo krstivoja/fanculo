@@ -1,16 +1,16 @@
 {
-    "name": "marko/fanculo",
-    "description": "gutenberg blocks generator",
+    "name": "fanculo/wordpress-plugin",
+    "description": "Simple WordPress plugin with React settings",
+    "type": "wordpress-plugin",
+    "require": {
+        "php": ">=7.4"
+    },
     "autoload": {
         "psr-4": {
-            "Marko\\Fanculo\\": "app/"
+            "Fanculo\\": "app/"
         }
     },
-    "authors": [
-        {
-            "name": "Marko Krstic",
-            "email": "mailme@markokrstic.com"
-        }
-    ],
-    "require": {}
+    "config": {
+        "optimize-autoloader": true
+    }
 }
