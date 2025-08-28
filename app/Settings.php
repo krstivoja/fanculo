@@ -10,6 +10,8 @@ class Settings
     {
         add_action('admin_menu', [$this, 'add_settings_page']);
         add_action('admin_init', [$this, 'register_settings']);
+        add_action('wp_ajax_fanculo_save_settings', [$this, 'ajax_save_settings']);
+        add_action('wp_ajax_fanculo_get_settings', [$this, 'ajax_get_settings']);
     }
 
     public function add_settings_page()
@@ -114,24 +116,62 @@ class Settings
             return;
         }
 
-        if (isset($_GET['settings-updated'])) {
-            add_settings_error('fanculowp_messages', 'fanculowp_message', 'Settings Saved', 'success');
-        }
+        $vite = new \GutenbergBlockStudio\App\Vite();
 
-        settings_errors('fanculowp_messages');
         ?>
         <div class="wrap">
-            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
-            <form action="options.php" method="post">
-                <?php
-                settings_fields('fanculowp_settings_group');
-                do_settings_sections('fanculowp-settings');
-                submit_button('Save Settings');
-                ?>
-            </form>
+            <div id="fanculo-settings-root"></div>
         </div>
+
+        <?php 
+        // Vite client and React refresh for development
+        echo $vite->client();
+        echo $vite->reactRefresh();
+        
+        // Load CSS files (production only, dev handles CSS automatically)
+        foreach ($vite->getCSSAssets() as $cssFile) {
+            echo "<link rel='stylesheet' href='{$cssFile}'>";
+        }
+        ?>
+
+        <!-- Main app entry point -->
+        <script type="module" src="<?php echo $vite->asset('src/main.tsx'); ?>"></script>
+
+        <script>
+        window.fanculo_ajax = {
+            ajax_url: '<?php echo admin_url('admin-ajax.php'); ?>',
+            nonce: '<?php echo wp_create_nonce('fanculo_nonce'); ?>'
+        };
+        
+        // Debug CSS loading
+        console.log('Vite dev mode:', <?php echo $vite->isDev() ? 'true' : 'false'; ?>);
+        console.log('Main script src:', '<?php echo $vite->asset('src/main.tsx'); ?>');
+        
+        // Check for CSS injection after a delay
+        setTimeout(() => {
+            const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'));
+            console.log('All stylesheets:', styles.map(s => ({
+                type: s.tagName,
+                href: s.href || 'inline',
+                content: s.tagName === 'STYLE' ? s.innerHTML.substring(0, 100) + '...' : null
+            })));
+            
+            // Check if Tailwind classes are working
+            const testEl = document.createElement('div');
+            testEl.className = 'bg-red-500 p-4';
+            testEl.style.position = 'absolute';
+            testEl.style.top = '-1000px';
+            testEl.textContent = 'CSS Test';
+            document.body.appendChild(testEl);
+            const computedStyle = getComputedStyle(testEl);
+            console.log('Tailwind test - bg-red-500 background:', computedStyle.backgroundColor);
+            console.log('Tailwind test - p-4 padding:', computedStyle.padding);
+            document.body.removeChild(testEl);
+        }, 3000);
+        </script>
         <?php
     }
+
 
     public function get_option($key, $default = '')
     {
@@ -143,5 +183,67 @@ class Settings
     {
         $options = get_option('fanculowp_settings');
         return isset($options[$key]) ? $options[$key] : $default;
+    }
+
+    public function ajax_save_settings()
+    {
+        // Check nonce
+        if (!wp_verify_nonce($_POST['nonce'], 'fanculo_nonce')) {
+            wp_send_json_error('Invalid nonce');
+            return;
+        }
+
+        // Check permissions
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Insufficient permissions');
+            return;
+        }
+
+        // Get and sanitize settings
+        $settings = json_decode(stripslashes($_POST['settings']), true);
+        
+        if (!is_array($settings)) {
+            wp_send_json_error('Invalid settings data');
+            return;
+        }
+
+        $sanitized_settings = $this->sanitize_settings($settings);
+        
+        // Save settings
+        $updated = update_option($this->option_name, $sanitized_settings);
+        
+        if ($updated) {
+            wp_send_json_success('Settings saved successfully');
+        } else {
+            wp_send_json_error('Failed to save settings');
+        }
+    }
+
+    public function ajax_get_settings()
+    {
+        // Check nonce
+        if (!wp_verify_nonce($_POST['nonce'], 'fanculo_nonce')) {
+            wp_send_json_error('Invalid nonce');
+            return;
+        }
+
+        // Check permissions
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Insufficient permissions');
+            return;
+        }
+
+        $options = get_option($this->option_name, []);
+        
+        // Set defaults
+        $defaults = [
+            'enable_block_studio' => 1,
+            'blocks_directory' => 'gutenberg-blocks',
+            'debug_mode' => 0,
+        ];
+
+        $settings = wp_parse_args($options, $defaults);
+        
+        wp_send_json_success($settings);
     }
 }

@@ -1,5 +1,6 @@
 /_test/
 /vendor/
 /node_modules/
+/src/node_modules/
 
 package-lock.json

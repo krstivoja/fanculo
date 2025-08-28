@@ -33,6 +33,7 @@ require_once FANCULOWP_PATH . 'vendor/autoload.php';
 // Include app files
 require_once FANCULOWP_PATH . 'app/App.php';
 require_once FANCULOWP_PATH . 'app/Settings.php';
+require_once FANCULOWP_PATH . 'app/Vite.php';
 
 // Initialize the plugin
 if (class_exists('GutenbergBlockStudio\App\App')) {
