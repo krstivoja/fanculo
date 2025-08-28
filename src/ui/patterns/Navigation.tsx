@@ -1,35 +1,14 @@
 import { Link, useLocation } from 'react-router-dom'
+import navItems from '../../consts/pagesURL'
 
 function Navigation() {
   const location = useLocation()
   
-  const navItems = [
-    {
-      path: '/editor',
-      label: 'Editor',
-      icon: '✏️',
-      description: 'Create and edit blocks'
-    },
-    ...(window.fanculo_ajax.user_can.manage_options ? [
-      {
-        path: '/settings',
-        label: 'Settings',
-        icon: '⚙️',
-        description: 'Plugin configuration'
-      },
-      {
-        path: '/license',
-        label: 'License',
-        icon: '🔑',
-        description: 'License management'
-      }
-    ] : [])
-  ]
 
   return (
-    <div className="bg-white border-b border-gray-200 px-5 flex items-center gap-8 min-h-[60px]">
+    <div className="bg-white border-b border-gray-200 px-5 flex items-center gap-8 min-h-[60px] w-full">
       {/* Logo/Title */}
-      <div className="flex items-center gap-3 mr-5">
+      <div className="flex items-center gap-3 mr-5 mr-auto">
         <div className="text-2xl">🚀</div>
         <h1 className="m-0 text-xl font-semibold text-gray-800">
           Fanculo
@@ -63,12 +42,7 @@ function Navigation() {
             </Link>
           )
         })}
-      </nav>
-
-      {/* Right side info */}
-      <div className="ml-auto flex items-center gap-4 text-sm text-gray-500">
-        
-      </div>
+      </nav>     
     </div>
   )
 }
