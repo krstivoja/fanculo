@@ -244,13 +244,50 @@ class Helpers
     public static function getAssetUrl(string $asset): string
     {
         if (self::isDevelopment()) {
-            $envConfig = include self::getPluginPath('env.php');
-            $devConfig = $envConfig['dev'] ?? [];
-            $host = $devConfig['network_ip'] ?? 'localhost';
-            $port = $devConfig['port'] ?? 5177;
-            return "http://{$host}:{$port}/{$asset}";
+            $detectedPort = self::detectVitePort();
+            if ($detectedPort) {
+                $envConfig = include self::getPluginPath('env.php');
+                $devConfig = $envConfig['dev'] ?? [];
+                $host = $devConfig['network_ip'] ?? 'localhost';
+                return "http://{$host}:{$detectedPort}/{$asset}";
+            }
         }
         
         return self::getPluginUrl(Constants::ASSETS_DIR . '/' . $asset);
+    }
+
+    /**
+     * Detect which port Vite is actually running on
+     */
+    private static function detectVitePort(): ?int
+    {
+        $commonPorts = [5173, 5174, 5175, 5176, 5177, 5178, 5179, 5180, 3000, 3001];
+        
+        foreach ($commonPorts as $port) {
+            if (self::isViteServerRunning('localhost', $port)) {
+                return $port;
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Check if Vite server is running on given host:port
+     */
+    private static function isViteServerRunning(string $host, int $port): bool
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, "http://{$host}:{$port}/@vite/client");
+        curl_setopt($ch, CURLOPT_NOBODY, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 1);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 1);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+        $result = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        return $httpCode === 200;
     }
 }

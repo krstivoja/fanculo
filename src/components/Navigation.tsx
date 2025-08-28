@@ -67,11 +67,7 @@ function Navigation() {
 
       {/* Right side info */}
       <div className="ml-auto flex items-center gap-4 text-sm text-gray-500">
-        <span>v{window.fanculo_ajax.plugin_version || '1.0.0'}</span>
-        <div className="w-px h-5 bg-gray-300" />
-        <span>
-          {window.fanculo_ajax.user_can.manage_options ? 'Administrator' : 'Editor'}
-        </span>
+        
       </div>
     </div>
   )

@@ -56,6 +56,10 @@ class MenuManager
             plugin_url: '<?php echo esc_url(Helpers::getPluginUrl()); ?>',
             plugin_version: '<?php echo esc_attr(Helpers::getPluginVersion()); ?>',
             
+            // Development info
+            is_dev: <?php echo $assets->isViteAvailable() ? 'true' : 'false'; ?>,
+            detected_port: <?php echo $assets->getDetectedPort() ?? 'null'; ?>,
+            
             // Block data
             types: <?php echo json_encode(Constants::getTypes()); ?>,
             type_labels: <?php echo json_encode(Constants::getTypeLabels()); ?>,
