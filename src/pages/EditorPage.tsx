@@ -1,4 +1,4 @@
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, forwardRef, useImperativeHandle } from 'react'
 
 declare global {
 	interface Window {
@@ -18,7 +18,11 @@ declare global {
 	}
 }
 
-function EditorPage() {
+interface EditorPageRef {
+	handleQuickCreate: (type: string) => void;
+}
+
+const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	const [message, setMessage] = useState('')
 
 	// Post creation/editing state
@@ -79,6 +83,35 @@ function EditorPage() {
 	useEffect(() => {
 		fetchPosts()
 	}, [])
+
+	// Auto-select first post when posts are loaded
+	useEffect(() => {
+		if (!editingPostId && posts.blocks.length === 0 && posts.symbols.length === 0 && posts.scss.length === 0) {
+			return // No posts available yet
+		}
+
+		if (!editingPostId) {
+			// Find first available post across all types
+			let firstPost = null
+			let firstPostType = null
+
+			if (posts.blocks.length > 0) {
+				firstPost = posts.blocks[0]
+				firstPostType = 'blocks'
+			} else if (posts.symbols.length > 0) {
+				firstPost = posts.symbols[0]
+				firstPostType = 'symbols'
+			} else if (posts.scss.length > 0) {
+				firstPost = posts.scss[0]
+				firstPostType = 'scss'
+			}
+
+			if (firstPost && firstPostType) {
+				setActiveTab(firstPostType)
+				handleEditPost(firstPost.id)
+			}
+		}
+	}, [posts, editingPostId])
 
 	const resetForm = () => {
 		setEditingPostId(null)
@@ -172,6 +205,11 @@ function EditorPage() {
 		setShowModal(true)
 		setQuickTitle('')
 	}
+
+	// Expose handleQuickCreate to parent component
+	useImperativeHandle(ref, () => ({
+		handleQuickCreate
+	}))
 
 	const handleQuickCreateSubmit = async () => {
 		if (!quickTitle.trim()) {
@@ -269,8 +307,8 @@ function EditorPage() {
 	return (
 		<div className='flex'>
 
-				{/* Sidebar with Tabs */}
-				<div className='min-w-[300px]'>
+			{/* Sidebar with Tabs */}
+			<div className='min-w-[300px] p-4'>
 				{/* Tab Navigation */}
 				<div style={{
 					display: 'flex',
@@ -334,7 +372,7 @@ function EditorPage() {
 									</div>
 									No {activeTab} yet
 									<div style={{ fontSize: '12px', marginTop: '10px' }}>
-										Create your first {activeTab.slice(0, -1)} using the Quick Create dropdown
+										Create your first {activeTab.slice(0, -1)} using the Quick Create button in the top navigation
 									</div>
 								</div>
 							) : (
@@ -394,68 +432,171 @@ function EditorPage() {
 			</div>
 
 			{/* Main Content */}
-			<div>
-				<div style={{
-					display: 'flex',
-					alignItems: 'center',
-					gap: '20px',
-					marginBottom: '20px'
-				}}>
-					<h1 style={{ margin: 0 }}>🧱 Manage Blocks</h1>
-					<div style={{ position: 'relative' }}>
-						<select
-							onChange={(e) => e.target.value && handleQuickCreate(e.target.value)}
-							value=""
-							style={{
-								padding: '8px 12px',
-								borderRadius: '6px',
-								border: '2px solid #0073aa',
-								backgroundColor: 'white',
-								color: '#0073aa',
-								cursor: 'pointer',
-								fontSize: '14px',
-								fontWeight: '500',
-								outline: 'none'
-							}}
-						>
-							<option value="">+ Quick Create</option>
-							<option value="blocks">🧱 Blocks</option>
-							<option value="symbols">🔣 Symbols</option>
-							<option value="scss">🎨 SCSS</option>
-						</select>
-					</div>
-				</div>
+			<div className='w-full'>
 
 				{/* Post Creation/Editing Section */}
 				{editingPostId && (
-					<div className="post-form" style={{
-						marginBottom: '40px',
-						padding: '20px',
-						border: '1px solid #ddd',
-						borderRadius: '8px',
-						backgroundColor: '#f9f9f9',
-						position: 'relative'
-					}}>
-						{isLoadingPost && (
-							<div style={{
-								position: 'absolute',
-								top: 0,
-								left: 0,
-								right: 0,
-								bottom: 0,
-								backgroundColor: 'rgba(255,255,255,0.8)',
-								display: 'flex',
-								alignItems: 'center',
-								justifyContent: 'center',
-								borderRadius: '8px',
-								zIndex: 10
-							}}>
-								<div>Loading post data...</div>
-							</div>
-						)}
+					<div className='flex'>
+						<div className="post-form w-full" style={{
+							marginBottom: '40px',
+							padding: '20px',
+							border: '1px solid #ddd',
+							borderRadius: '8px',
+							backgroundColor: '#f9f9f9',
+							position: 'relative'
+						}}>
+							{isLoadingPost && (
+								<div style={{
+									position: 'absolute',
+									top: 0,
+									left: 0,
+									right: 0,
+									bottom: 0,
+									backgroundColor: 'rgba(255,255,255,0.8)',
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									borderRadius: '8px',
+									zIndex: 10
+								}}>
+									<div>Loading post data...</div>
+								</div>
+							)}
 
-						<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-							<h2>Edit Post</h2>
+
+
+							<div style={{ marginBottom: '15px' }}>
+								<label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+									Post Title:
+								</label>
+								<input
+									type="text"
+									value={postTitle}
+									onChange={(e) => setPostTitle(e.target.value)}
+									placeholder="Enter post title..."
+									style={{
+										padding: '8px',
+										width: '100%',
+										border: '1px solid #ccc',
+										borderRadius: '4px',
+										fontSize: '16px'
+									}}
+								/>
+							</div>
+
+							{/* Post Type Display (Edit mode only shows current type) */}
+							<div style={{ marginBottom: '15px' }}>
+								<label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>
+									Post Type:
+								</label>
+								<div style={{
+									padding: '8px 12px',
+									backgroundColor: '#e8f5e8',
+									border: '2px solid #4caf50',
+									borderRadius: '4px',
+									display: 'inline-flex',
+									alignItems: 'center',
+									gap: '8px',
+									fontSize: '16px',
+									fontWeight: '500'
+								}}>
+									<span>
+										{postType === 'blocks' && '🧱'}
+										{postType === 'symbols' && '🔣'}
+										{postType === 'scss' && '🎨'}
+									</span>
+									<span style={{ textTransform: 'capitalize' }}>{postType}</span>
+								</div>
+							</div>
+
+							{/* Content Field (Blocks & Symbols) */}
+							{(postType === 'blocks' || postType === 'symbols') && (
+								<div style={{ marginBottom: '15px' }}>
+									<label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+										📝 Content:
+									</label>
+									<textarea
+										value={postContent}
+										onChange={(e) => setPostContent(e.target.value)}
+										placeholder="Enter HTML/JSX content..."
+										rows={6}
+										style={{
+											width: '100%',
+											padding: '8px',
+											border: '1px solid #ccc',
+											borderRadius: '4px',
+											fontFamily: 'monospace',
+											fontSize: '14px'
+										}}
+									/>
+								</div>
+							)}
+
+							{/* Style Field (All types) */}
+							<div style={{ marginBottom: '15px' }}>
+								<label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+									🎨 Style:
+								</label>
+								<textarea
+									value={postStyle}
+									onChange={(e) => setPostStyle(e.target.value)}
+									placeholder="Enter CSS/SCSS styles..."
+									rows={6}
+									style={{
+										width: '100%',
+										padding: '8px',
+										border: '1px solid #ccc',
+										borderRadius: '4px',
+										fontFamily: 'monospace',
+										fontSize: '14px'
+									}}
+								/>
+							</div>
+
+							{/* Attributes Field (Blocks only) */}
+							{postType === 'blocks' && (
+								<div style={{ marginBottom: '15px' }}>
+									<label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+										⚙️ Attributes:
+									</label>
+									<textarea
+										value={postAttributes}
+										onChange={(e) => setPostAttributes(e.target.value)}
+										placeholder='{"prop1": "default", "prop2": true}'
+										rows={4}
+										style={{
+											width: '100%',
+											padding: '8px',
+											border: '1px solid #ccc',
+											borderRadius: '4px',
+											fontFamily: 'monospace',
+											fontSize: '14px'
+										}}
+									/>
+								</div>
+							)}
+
+							<button
+								onClick={handleCreatePost}
+								disabled={isCreating || isUpdating}
+								style={{
+									padding: '12px 24px',
+									backgroundColor: (isCreating || isUpdating) ? '#ccc' : '#0073aa',
+									color: 'white',
+									border: 'none',
+									borderRadius: '4px',
+									cursor: (isCreating || isUpdating) ? 'not-allowed' : 'pointer',
+									fontSize: '16px',
+									fontWeight: 'bold'
+								}}
+							>
+								{editingPostId
+									? (isUpdating ? 'Updating...' : 'Update Post')
+									: (isCreating ? 'Creating...' : 'Create Post')
+								}
+							</button>
+						</div>
+						<div className="sidebar">
 							<button
 								onClick={() => setShowDeleteConfirm(true)}
 								style={{
@@ -471,137 +612,6 @@ function EditorPage() {
 								Delete Post
 							</button>
 						</div>
-
-						<div style={{ marginBottom: '15px' }}>
-							<label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-								Post Title:
-							</label>
-							<input
-								type="text"
-								value={postTitle}
-								onChange={(e) => setPostTitle(e.target.value)}
-								placeholder="Enter post title..."
-								style={{
-									padding: '8px',
-									width: '100%',
-									border: '1px solid #ccc',
-									borderRadius: '4px',
-									fontSize: '16px'
-								}}
-							/>
-						</div>
-
-						{/* Post Type Display (Edit mode only shows current type) */}
-						<div style={{ marginBottom: '15px' }}>
-							<label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>
-								Post Type:
-							</label>
-							<div style={{
-								padding: '8px 12px',
-								backgroundColor: '#e8f5e8',
-								border: '2px solid #4caf50',
-								borderRadius: '4px',
-								display: 'inline-flex',
-								alignItems: 'center',
-								gap: '8px',
-								fontSize: '16px',
-								fontWeight: '500'
-							}}>
-								<span>
-									{postType === 'blocks' && '🧱'}
-									{postType === 'symbols' && '🔣'}
-									{postType === 'scss' && '🎨'}
-								</span>
-								<span style={{ textTransform: 'capitalize' }}>{postType}</span>
-							</div>
-						</div>
-
-						{/* Content Field (Blocks & Symbols) */}
-						{(postType === 'blocks' || postType === 'symbols') && (
-							<div style={{ marginBottom: '15px' }}>
-								<label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-									📝 Content:
-								</label>
-								<textarea
-									value={postContent}
-									onChange={(e) => setPostContent(e.target.value)}
-									placeholder="Enter HTML/JSX content..."
-									rows={6}
-									style={{
-										width: '100%',
-										padding: '8px',
-										border: '1px solid #ccc',
-										borderRadius: '4px',
-										fontFamily: 'monospace',
-										fontSize: '14px'
-									}}
-								/>
-							</div>
-						)}
-
-						{/* Style Field (All types) */}
-						<div style={{ marginBottom: '15px' }}>
-							<label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-								🎨 Style:
-							</label>
-							<textarea
-								value={postStyle}
-								onChange={(e) => setPostStyle(e.target.value)}
-								placeholder="Enter CSS/SCSS styles..."
-								rows={6}
-								style={{
-									width: '100%',
-									padding: '8px',
-									border: '1px solid #ccc',
-									borderRadius: '4px',
-									fontFamily: 'monospace',
-									fontSize: '14px'
-								}}
-							/>
-						</div>
-
-						{/* Attributes Field (Blocks only) */}
-						{postType === 'blocks' && (
-							<div style={{ marginBottom: '15px' }}>
-								<label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-									⚙️ Attributes:
-								</label>
-								<textarea
-									value={postAttributes}
-									onChange={(e) => setPostAttributes(e.target.value)}
-									placeholder='{"prop1": "default", "prop2": true}'
-									rows={4}
-									style={{
-										width: '100%',
-										padding: '8px',
-										border: '1px solid #ccc',
-										borderRadius: '4px',
-										fontFamily: 'monospace',
-										fontSize: '14px'
-									}}
-								/>
-							</div>
-						)}
-
-						<button
-							onClick={handleCreatePost}
-							disabled={isCreating || isUpdating}
-							style={{
-								padding: '12px 24px',
-								backgroundColor: (isCreating || isUpdating) ? '#ccc' : '#0073aa',
-								color: 'white',
-								border: 'none',
-								borderRadius: '4px',
-								cursor: (isCreating || isUpdating) ? 'not-allowed' : 'pointer',
-								fontSize: '16px',
-								fontWeight: 'bold'
-							}}
-						>
-							{editingPostId
-								? (isUpdating ? 'Updating...' : 'Update Post')
-								: (isCreating ? 'Creating...' : 'Create Post')
-							}
-						</button>
 					</div>
 				)}
 
@@ -618,7 +628,7 @@ function EditorPage() {
 				)}
 			</div>
 
-		
+
 
 			{/* Quick Create Modal */}
 			{showModal && (
@@ -822,6 +832,6 @@ function EditorPage() {
 			)}
 		</div>
 	)
-}
+})
 
 export default EditorPage
