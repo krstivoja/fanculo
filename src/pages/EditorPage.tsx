@@ -310,11 +310,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 			{/* Sidebar with Tabs */}
 			<div className='min-w-[300px] p-4'>
 				{/* Tab Navigation */}
-				<div style={{
-					display: 'flex',
-					borderBottom: '2px solid #ddd',
-					marginBottom: '20px'
-				}}>
+				<div className="flex border-b-2 border-gray-300 mb-5">
 					{[
 						{ key: 'blocks', label: 'Blocks', color: '#000000' },
 						{ key: 'symbols', label: 'Symbols', color: '#dc2626' },
@@ -323,21 +319,13 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 						<button
 							key={tab.key}
 							onClick={() => setActiveTab(tab.key)}
-							className={activeTab === tab.key ? '!bg-black !text-white' : ''}
+							className={`flex-1 py-3 px-2 border-none cursor-pointer text-sm transition-all duration-300 relative ${
+								activeTab === tab.key 
+									? 'font-bold text-white rounded-t-md -mb-0.5 z-10'
+									: 'font-normal text-gray-600 bg-gray-100 z-0'
+							}`}
 							style={{
-								flex: 1,
-								padding: '12px 8px',
-								border: 'none',
-								backgroundColor: activeTab === tab.key ? tab.color : '#f5f5f5',
-								color: activeTab === tab.key ? 'white' : '#666',
-								cursor: 'pointer',
-								fontWeight: activeTab === tab.key ? 'bold' : 'normal',
-								fontSize: '14px',
-								transition: 'all 0.3s ease',
-								borderRadius: activeTab === tab.key ? '6px 6px 0 0' : '0',
-								marginBottom: activeTab === tab.key ? '-2px' : '0',
-								zIndex: activeTab === tab.key ? 10 : 1,
-								position: 'relative'
+								backgroundColor: activeTab === tab.key ? tab.color : undefined
 							}}
 						>
 							{tab.label} ({posts[tab.key as keyof typeof posts].length})
@@ -346,80 +334,46 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				</div>
 
 				{/* Tab Content */}
-				<div style={{
-					border: '1px solid #ddd',
-					borderRadius: '0 0 8px 8px',
-					backgroundColor: '#fff',
-					minHeight: '300px'
-				}}>
+				<div className="border border-gray-300 rounded-b-lg bg-white min-h-[300px]">
 					{isLoadingPosts ? (
-						<div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+						<div className="py-10 px-10 text-center text-gray-600">
 							Loading posts...
 						</div>
 					) : (
-						<div style={{ padding: '15px' }}>
+						<div className="p-4">
 							{posts[activeTab as keyof typeof posts].length === 0 ? (
-								<div style={{
-									textAlign: 'center',
-									color: '#666',
-									fontStyle: 'italic',
-									padding: '40px 20px'
-								}}>
-									<div style={{ fontSize: '48px', marginBottom: '10px' }}>
+								<div className="text-center text-gray-600 italic py-10 px-5">
+									<div className="text-5xl mb-2">
 										{activeTab === 'blocks' && '🧱'}
 										{activeTab === 'symbols' && '🔣'}
 										{activeTab === 'scss' && '🎨'}
 									</div>
 									No {activeTab} yet
-									<div style={{ fontSize: '12px', marginTop: '10px' }}>
+									<div className="text-xs mt-2">
 										Create your first {activeTab.slice(0, -1)} using the Quick Create button in the top navigation
 									</div>
 								</div>
 							) : (
 								posts[activeTab as keyof typeof posts].map((post: any) => (
-									<div key={post.id} style={{
-										padding: '12px',
-										borderBottom: '1px solid #eee',
-										display: 'flex',
-										justifyContent: 'space-between',
-										alignItems: 'center',
-										transition: 'background-color 0.2s ease'
-									}}
-										onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
-										onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+									<div 
+										key={post.id} 
+										className="p-3 border-b border-gray-200 flex justify-between items-center transition-colors duration-200 hover:bg-gray-50"
 									>
 										<div>
-											<div style={{ fontWeight: '500', marginBottom: '4px' }}>
+											<div className="font-medium mb-1">
 												{post.title}
 											</div>
-											<div style={{ fontSize: '12px', color: '#666' }}>
+											<div className="text-xs text-gray-600">
 												{new Date(post.date).toLocaleDateString()}
 											</div>
 										</div>
 										<button
 											onClick={() => handleEditPost(post.id)}
-											style={{
-												color: activeTab === 'blocks' ? '#0073aa' :
-													activeTab === 'symbols' ? '#2e7d32' : '#e65100',
-												fontSize: '12px',
-												padding: '6px 12px',
-												border: `1px solid ${activeTab === 'blocks' ? '#0073aa' :
-													activeTab === 'symbols' ? '#2e7d32' : '#e65100'}`,
-												borderRadius: '4px',
-												transition: 'all 0.2s ease',
-												backgroundColor: 'transparent',
-												cursor: 'pointer'
-											}}
-											onMouseEnter={(e) => {
-												e.currentTarget.style.backgroundColor = activeTab === 'blocks' ? '#0073aa' :
-													activeTab === 'symbols' ? '#2e7d32' : '#e65100'
-												e.currentTarget.style.color = 'white'
-											}}
-											onMouseLeave={(e) => {
-												e.currentTarget.style.backgroundColor = 'transparent'
-												e.currentTarget.style.color = activeTab === 'blocks' ? '#0073aa' :
-													activeTab === 'symbols' ? '#2e7d32' : '#e65100'
-											}}
+											className={`text-xs py-1.5 px-3 border rounded transition-all duration-200 cursor-pointer bg-transparent ${
+												activeTab === 'blocks' ? 'text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white' :
+												activeTab === 'symbols' ? 'text-green-700 border-green-700 hover:bg-green-700 hover:text-white' :
+												'text-orange-600 border-orange-600 hover:bg-orange-600 hover:text-white'
+											}`}
 										>
 											Edit ✏️
 										</button>
@@ -437,36 +391,17 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				{/* Post Creation/Editing Section */}
 				{editingPostId && (
 					<div className='flex'>
-						<div className="post-form w-full" style={{
-							marginBottom: '40px',
-							padding: '20px',
-							border: '1px solid #ddd',
-							borderRadius: '8px',
-							backgroundColor: '#f9f9f9',
-							position: 'relative'
-						}}>
+						<div className="post-form w-full mb-10 p-5 border border-gray-300 rounded-lg bg-gray-100 relative">
 							{isLoadingPost && (
-								<div style={{
-									position: 'absolute',
-									top: 0,
-									left: 0,
-									right: 0,
-									bottom: 0,
-									backgroundColor: 'rgba(255,255,255,0.8)',
-									display: 'flex',
-									alignItems: 'center',
-									justifyContent: 'center',
-									borderRadius: '8px',
-									zIndex: 10
-								}}>
+								<div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center rounded-lg z-10">
 									<div>Loading post data...</div>
 								</div>
 							)}
 
 
 
-							<div style={{ marginBottom: '15px' }}>
-								<label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+							<div className="mb-4">
+								<label className="block mb-1 font-bold">
 									Post Title:
 								</label>
 								<input
@@ -474,45 +409,29 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 									value={postTitle}
 									onChange={(e) => setPostTitle(e.target.value)}
 									placeholder="Enter post title..."
-									style={{
-										padding: '8px',
-										width: '100%',
-										border: '1px solid #ccc',
-										borderRadius: '4px',
-										fontSize: '16px'
-									}}
+									className="p-2 w-full border border-gray-300 rounded text-base"
 								/>
 							</div>
 
 							{/* Post Type Display (Edit mode only shows current type) */}
-							<div style={{ marginBottom: '15px' }}>
-								<label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>
+							<div className="mb-4">
+								<label className="block mb-2 font-bold">
 									Post Type:
 								</label>
-								<div style={{
-									padding: '8px 12px',
-									backgroundColor: '#e8f5e8',
-									border: '2px solid #4caf50',
-									borderRadius: '4px',
-									display: 'inline-flex',
-									alignItems: 'center',
-									gap: '8px',
-									fontSize: '16px',
-									fontWeight: '500'
-								}}>
+								<div className="py-2 px-3 bg-green-100 border-2 border-green-500 rounded inline-flex items-center gap-2 text-base font-medium">
 									<span>
 										{postType === 'blocks' && '🧱'}
 										{postType === 'symbols' && '🔣'}
 										{postType === 'scss' && '🎨'}
 									</span>
-									<span style={{ textTransform: 'capitalize' }}>{postType}</span>
+									<span className="capitalize">{postType}</span>
 								</div>
 							</div>
 
 							{/* Content Field (Blocks & Symbols) */}
 							{(postType === 'blocks' || postType === 'symbols') && (
-								<div style={{ marginBottom: '15px' }}>
-									<label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+								<div className="mb-4">
+									<label className="block mb-1 font-bold">
 										📝 Content:
 									</label>
 									<textarea
@@ -520,21 +439,14 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										onChange={(e) => setPostContent(e.target.value)}
 										placeholder="Enter HTML/JSX content..."
 										rows={6}
-										style={{
-											width: '100%',
-											padding: '8px',
-											border: '1px solid #ccc',
-											borderRadius: '4px',
-											fontFamily: 'monospace',
-											fontSize: '14px'
-										}}
+										className="w-full p-2 border border-gray-300 rounded font-mono text-sm"
 									/>
 								</div>
 							)}
 
 							{/* Style Field (All types) */}
-							<div style={{ marginBottom: '15px' }}>
-								<label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+							<div className="mb-4">
+								<label className="block mb-1 font-bold">
 									🎨 Style:
 								</label>
 								<textarea
@@ -542,21 +454,14 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 									onChange={(e) => setPostStyle(e.target.value)}
 									placeholder="Enter CSS/SCSS styles..."
 									rows={6}
-									style={{
-										width: '100%',
-										padding: '8px',
-										border: '1px solid #ccc',
-										borderRadius: '4px',
-										fontFamily: 'monospace',
-										fontSize: '14px'
-									}}
+									className="w-full p-2 border border-gray-300 rounded font-mono text-sm"
 								/>
 							</div>
 
 							{/* Attributes Field (Blocks only) */}
 							{postType === 'blocks' && (
-								<div style={{ marginBottom: '15px' }}>
-									<label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+								<div className="mb-4">
+									<label className="block mb-1 font-bold">
 										⚙️ Attributes:
 									</label>
 									<textarea
@@ -564,14 +469,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										onChange={(e) => setPostAttributes(e.target.value)}
 										placeholder='{"prop1": "default", "prop2": true}'
 										rows={4}
-										style={{
-											width: '100%',
-											padding: '8px',
-											border: '1px solid #ccc',
-											borderRadius: '4px',
-											fontFamily: 'monospace',
-											fontSize: '14px'
-										}}
+										className="w-full p-2 border border-gray-300 rounded font-mono text-sm"
 									/>
 								</div>
 							)}
@@ -579,16 +477,9 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 							<button
 								onClick={handleCreatePost}
 								disabled={isCreating || isUpdating}
-								style={{
-									padding: '12px 24px',
-									backgroundColor: (isCreating || isUpdating) ? '#ccc' : '#0073aa',
-									color: 'white',
-									border: 'none',
-									borderRadius: '4px',
-									cursor: (isCreating || isUpdating) ? 'not-allowed' : 'pointer',
-									fontSize: '16px',
-									fontWeight: 'bold'
-								}}
+								className={`py-3 px-6 text-white border-none rounded text-base font-bold ${
+									(isCreating || isUpdating) ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 cursor-pointer'
+								}`}
 							>
 								{editingPostId
 									? (isUpdating ? 'Updating...' : 'Update Post')
@@ -599,15 +490,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 						<div className="sidebar">
 							<button
 								onClick={() => setShowDeleteConfirm(true)}
-								style={{
-									padding: '8px 16px',
-									backgroundColor: '#d32f2f',
-									color: 'white',
-									border: 'none',
-									borderRadius: '4px',
-									cursor: 'pointer',
-									fontSize: '14px'
-								}}
+								className="py-2 px-4 bg-red-700 text-white border-none rounded cursor-pointer text-sm"
 							>
 								Delete Post
 							</button>
@@ -616,13 +499,11 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				)}
 
 				{message && (
-					<div style={{
-						marginTop: '20px',
-						padding: '10px',
-						backgroundColor: message.includes('Error') ? '#ffebee' : '#e8f5e8',
-						border: '1px solid ' + (message.includes('Error') ? '#f44336' : '#4caf50'),
-						borderRadius: '4px'
-					}}>
+					<div className={`mt-5 p-2.5 rounded border ${
+						message.includes('Error') 
+							? 'bg-red-50 border-red-500' 
+							: 'bg-green-50 border-green-500'
+					}`}>
 						{message}
 					</div>
 				)}
@@ -632,52 +513,21 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 			{/* Quick Create Modal */}
 			{showModal && (
-				<div style={{
-					position: 'fixed',
-					top: 0,
-					left: 0,
-					right: 0,
-					bottom: 0,
-					backgroundColor: 'rgba(0,0,0,0.5)',
-					display: 'flex',
-					alignItems: 'center',
-					justifyContent: 'center',
-					zIndex: 1000
-				}}>
-					<div style={{
-						backgroundColor: 'white',
-						padding: '30px',
-						borderRadius: '12px',
-						boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-						minWidth: '400px',
-						maxWidth: '500px'
-					}}>
-						<div style={{ marginBottom: '20px' }}>
-							<h3 style={{
-								margin: '0 0 10px 0',
-								fontSize: '20px',
-								color: '#333'
-							}}>
+				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
+					<div className="bg-white p-8 rounded-xl shadow-2xl min-w-[400px] max-w-[500px]">
+						<div className="mb-5">
+							<h3 className="m-0 mb-2 text-xl text-gray-800">
 								{quickCreateType === 'blocks' && '🧱 Create New Block'}
 								{quickCreateType === 'symbols' && '🔣 Create New Symbol'}
 								{quickCreateType === 'scss' && '🎨 Create New SCSS'}
 							</h3>
-							<p style={{
-								margin: 0,
-								color: '#666',
-								fontSize: '14px'
-							}}>
+							<p className="m-0 text-gray-600 text-sm">
 								Enter a title for your new {quickCreateType.slice(0, -1)}. You can add content and styles later.
 							</p>
 						</div>
 
-						<div style={{ marginBottom: '20px' }}>
-							<label style={{
-								display: 'block',
-								marginBottom: '8px',
-								fontWeight: '500',
-								color: '#333'
-							}}>
+						<div className="mb-5">
+							<label className="block mb-2 font-medium text-gray-800">
 								Title:
 							</label>
 							<input
@@ -694,54 +544,32 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										setShowModal(false)
 									}
 								}}
-								style={{
-									width: '100%',
-									padding: '12px',
-									border: '2px solid #ddd',
-									borderRadius: '6px',
-									fontSize: '16px',
-									outline: 'none',
-									boxSizing: 'border-box'
-								}}
+								className="w-full p-3 border-2 border-gray-300 rounded-md text-base outline-none box-border"
 							/>
 						</div>
 
-						<div style={{
-							display: 'flex',
-							gap: '10px',
-							justifyContent: 'flex-end'
-						}}>
+						<div className="flex gap-2.5 justify-end">
 							<button
 								onClick={() => setShowModal(false)}
 								disabled={isQuickCreating}
-								style={{
-									padding: '10px 20px',
-									border: '2px solid #ddd',
-									borderRadius: '6px',
-									backgroundColor: 'white',
-									color: '#666',
-									cursor: isQuickCreating ? 'not-allowed' : 'pointer',
-									fontSize: '14px',
-									fontWeight: '500'
-								}}
+								className={`py-2.5 px-5 border-2 border-gray-300 rounded-md bg-white text-gray-600 text-sm font-medium ${
+									isQuickCreating ? 'cursor-not-allowed' : 'cursor-pointer'
+								}`}
 							>
 								Cancel
 							</button>
 							<button
 								onClick={handleQuickCreateSubmit}
 								disabled={isQuickCreating || !quickTitle.trim()}
-								style={{
-									padding: '10px 20px',
-									border: 'none',
-									borderRadius: '6px',
-									backgroundColor: isQuickCreating || !quickTitle.trim() ? '#ccc' :
-										quickCreateType === 'blocks' ? '#0073aa' :
-											quickCreateType === 'symbols' ? '#2e7d32' : '#e65100',
-									color: 'white',
-									cursor: (isQuickCreating || !quickTitle.trim()) ? 'not-allowed' : 'pointer',
-									fontSize: '14px',
-									fontWeight: '500'
-								}}
+								className={`py-2.5 px-5 border-none rounded-md text-white text-sm font-medium ${
+									(isQuickCreating || !quickTitle.trim()) 
+										? 'bg-gray-400 cursor-not-allowed' 
+										: quickCreateType === 'blocks' 
+											? 'bg-blue-600 cursor-pointer'
+											: quickCreateType === 'symbols'
+												? 'bg-green-700 cursor-pointer'
+												: 'bg-orange-600 cursor-pointer'
+								}`}
 							>
 								{isQuickCreating ? 'Creating...' : 'Create'}
 							</button>
@@ -752,77 +580,33 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 			{/* Delete Confirmation Modal */}
 			{showDeleteConfirm && (
-				<div style={{
-					position: 'fixed',
-					top: 0,
-					left: 0,
-					right: 0,
-					bottom: 0,
-					backgroundColor: 'rgba(0,0,0,0.5)',
-					display: 'flex',
-					alignItems: 'center',
-					justifyContent: 'center',
-					zIndex: 1000
-				}}>
-					<div style={{
-						backgroundColor: 'white',
-						padding: '30px',
-						borderRadius: '12px',
-						boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-						minWidth: '400px',
-						maxWidth: '500px'
-					}}>
-						<div style={{ marginBottom: '20px' }}>
-							<h3 style={{
-								margin: '0 0 10px 0',
-								fontSize: '20px',
-								color: '#d32f2f'
-							}}>
+				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
+					<div className="bg-white p-8 rounded-xl shadow-2xl min-w-[400px] max-w-[500px]">
+						<div className="mb-5">
+							<h3 className="m-0 mb-2 text-xl text-red-700">
 								🗑️ Delete Post
 							</h3>
-							<p style={{
-								margin: 0,
-								color: '#666',
-								fontSize: '14px'
-							}}>
+							<p className="m-0 text-gray-600 text-sm">
 								Are you sure you want to delete "<strong>{postTitle}</strong>"? This action cannot be undone.
 							</p>
 						</div>
 
-						<div style={{
-							display: 'flex',
-							gap: '10px',
-							justifyContent: 'flex-end'
-						}}>
+						<div className="flex gap-2.5 justify-end">
 							<button
 								onClick={() => setShowDeleteConfirm(false)}
 								disabled={isDeleting}
-								style={{
-									padding: '10px 20px',
-									border: '2px solid #ddd',
-									borderRadius: '6px',
-									backgroundColor: 'white',
-									color: '#666',
-									cursor: isDeleting ? 'not-allowed' : 'pointer',
-									fontSize: '14px',
-									fontWeight: '500'
-								}}
+								className={`py-2.5 px-5 border-2 border-gray-300 rounded-md bg-white text-gray-600 text-sm font-medium ${
+									isDeleting ? 'cursor-not-allowed' : 'cursor-pointer'
+								}`}
 							>
 								Cancel
 							</button>
 							<button
 								onClick={handleDeletePost}
 								disabled={isDeleting}
-								style={{
-									padding: '10px 20px',
-									border: 'none',
-									borderRadius: '6px',
-									backgroundColor: isDeleting ? '#ccc' : '#d32f2f',
-									color: 'white',
-									cursor: isDeleting ? 'not-allowed' : 'pointer',
-									fontSize: '14px',
-									fontWeight: '500'
-								}}
+								className={`py-2.5 px-5 border-none rounded-md text-white text-sm font-medium ${
+									isDeleting ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-700 cursor-pointer'
+								}`}
 							>
 								{isDeleting ? 'Deleting...' : 'Delete'}
 							</button>
