@@ -65,6 +65,9 @@ class Settings
         $style = sanitize_textarea_field($_POST['style'] ?? '');
         $attributes = sanitize_textarea_field($_POST['attributes'] ?? '');
 
+        // Debug: Log received data
+        error_log("Creating post with data: title='{$title}', type='{$type}'");
+
         if (empty($title)) {
             wp_send_json_error('Title is required');
         }
@@ -89,7 +92,24 @@ class Settings
         }
 
         // Set the taxonomy term
-        wp_set_post_terms($post_id, [$type], 'fanculo_type');
+        // First, ensure the term exists (it should from PostType::create_default_terms)
+        $term = get_term_by('slug', $type, 'fanculo_type');
+        if (!$term) {
+            // Create the term if it doesn't exist
+            $term_result = wp_insert_term($type, 'fanculo_type', ['slug' => $type]);
+            if (is_wp_error($term_result)) {
+                error_log("Error creating term '{$type}': " . $term_result->get_error_message());
+            } else {
+                $term = get_term($term_result['term_id']);
+            }
+        }
+        
+        if ($term) {
+            $taxonomy_result = wp_set_post_terms($post_id, [$term->term_id], 'fanculo_type');
+            error_log("Setting taxonomy for post {$post_id}: type='{$type}', term_id={$term->term_id}, result=" . print_r($taxonomy_result, true));
+        } else {
+            error_log("Could not find or create term '{$type}' for fanculo_type taxonomy");
+        }
 
         // Save meta fields based on type
         if ($content && in_array($type, ['blocks', 'symbols'])) {

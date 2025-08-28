@@ -27,6 +27,7 @@ function App() {
     scss: []
   })
   const [isLoadingPosts, setIsLoadingPosts] = useState(false)
+  const [activeTab, setActiveTab] = useState('blocks')
   
   console.log('📱 App component rendering...', new Date().toLocaleTimeString())
   console.log('🔄 Current message state:', message)
@@ -65,6 +66,14 @@ function App() {
       setMessage('Please enter a post title')
       return
     }
+
+    console.log('🔄 Creating post with data:', {
+      title: postTitle,
+      type: postType,
+      content: postContent,
+      style: postStyle,
+      attributes: postAttributes
+    })
 
     setIsCreating(true)
     setMessage('')
@@ -266,158 +275,130 @@ function App() {
       )}
       </div>
 
-      {/* Sidebar */}
+      {/* Sidebar with Tabs */}
       <div style={{ flex: '1', minWidth: '300px' }}>
         <h2>📋 Posts Overview</h2>
         
-        {isLoadingPosts ? (
-          <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
-            Loading posts...
-          </div>
-        ) : (
-          <>
-            {/* Blocks Section */}
-            <div style={{
-              marginBottom: '20px',
-              border: '1px solid #ddd',
-              borderRadius: '8px',
-              backgroundColor: '#fff'
-            }}>
-              <div style={{
-                padding: '10px 15px',
-                backgroundColor: '#0073aa',
-                color: 'white',
-                borderRadius: '7px 7px 0 0',
-                fontWeight: 'bold'
-              }}>
-                🧱 Blocks ({posts.blocks.length})
-              </div>
-              <div style={{ padding: '10px' }}>
-                {posts.blocks.length === 0 ? (
-                  <div style={{ color: '#666', fontStyle: 'italic' }}>No blocks yet</div>
-                ) : (
-                  posts.blocks.map((post: any) => (
-                    <div key={post.id} style={{
-                      padding: '8px',
-                      borderBottom: '1px solid #eee',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
-                      <span style={{ fontWeight: '500' }}>{post.title}</span>
-                      <a 
-                        href={post.edit_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        style={{ 
-                          color: '#0073aa', 
-                          textDecoration: 'none',
-                          fontSize: '12px'
-                        }}
-                      >
-                        Edit ↗
-                      </a>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+        {/* Tab Navigation */}
+        <div style={{ 
+          display: 'flex', 
+          borderBottom: '2px solid #ddd',
+          marginBottom: '20px'
+        }}>
+          {[
+            { key: 'blocks', label: '🧱 Blocks', color: '#0073aa' },
+            { key: 'symbols', label: '🔣 Symbols', color: '#2e7d32' },
+            { key: 'scss', label: '🎨 SCSS', color: '#e65100' }
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              style={{
+                flex: 1,
+                padding: '12px 8px',
+                border: 'none',
+                backgroundColor: activeTab === tab.key ? tab.color : '#f5f5f5',
+                color: activeTab === tab.key ? 'white' : '#666',
+                cursor: 'pointer',
+                fontWeight: activeTab === tab.key ? 'bold' : 'normal',
+                fontSize: '14px',
+                transition: 'all 0.3s ease',
+                borderRadius: activeTab === tab.key ? '6px 6px 0 0' : '0',
+                marginBottom: activeTab === tab.key ? '-2px' : '0',
+                zIndex: activeTab === tab.key ? 10 : 1,
+                position: 'relative'
+              }}
+            >
+              {tab.label} ({posts[tab.key as keyof typeof posts].length})
+            </button>
+          ))}
+        </div>
 
-            {/* Symbols Section */}
-            <div style={{
-              marginBottom: '20px',
-              border: '1px solid #ddd',
-              borderRadius: '8px',
-              backgroundColor: '#fff'
-            }}>
-              <div style={{
-                padding: '10px 15px',
-                backgroundColor: '#2e7d32',
-                color: 'white',
-                borderRadius: '7px 7px 0 0',
-                fontWeight: 'bold'
-              }}>
-                🔣 Symbols ({posts.symbols.length})
-              </div>
-              <div style={{ padding: '10px' }}>
-                {posts.symbols.length === 0 ? (
-                  <div style={{ color: '#666', fontStyle: 'italic' }}>No symbols yet</div>
-                ) : (
-                  posts.symbols.map((post: any) => (
-                    <div key={post.id} style={{
-                      padding: '8px',
-                      borderBottom: '1px solid #eee',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
-                      <span style={{ fontWeight: '500' }}>{post.title}</span>
-                      <a 
-                        href={post.edit_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        style={{ 
-                          color: '#2e7d32', 
-                          textDecoration: 'none',
-                          fontSize: '12px'
-                        }}
-                      >
-                        Edit ↗
-                      </a>
-                    </div>
-                  ))
-                )}
-              </div>
+        {/* Tab Content */}
+        <div style={{
+          border: '1px solid #ddd',
+          borderRadius: '0 0 8px 8px',
+          backgroundColor: '#fff',
+          minHeight: '300px'
+        }}>
+          {isLoadingPosts ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+              Loading posts...
             </div>
-
-            {/* SCSS Section */}
-            <div style={{
-              marginBottom: '20px',
-              border: '1px solid #ddd',
-              borderRadius: '8px',
-              backgroundColor: '#fff'
-            }}>
-              <div style={{
-                padding: '10px 15px',
-                backgroundColor: '#e65100',
-                color: 'white',
-                borderRadius: '7px 7px 0 0',
-                fontWeight: 'bold'
-              }}>
-                🎨 SCSS ({posts.scss.length})
-              </div>
-              <div style={{ padding: '10px' }}>
-                {posts.scss.length === 0 ? (
-                  <div style={{ color: '#666', fontStyle: 'italic' }}>No SCSS yet</div>
-                ) : (
-                  posts.scss.map((post: any) => (
-                    <div key={post.id} style={{
-                      padding: '8px',
-                      borderBottom: '1px solid #eee',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
-                      <span style={{ fontWeight: '500' }}>{post.title}</span>
-                      <a 
-                        href={post.edit_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        style={{ 
-                          color: '#e65100', 
-                          textDecoration: 'none',
-                          fontSize: '12px'
-                        }}
-                      >
-                        Edit ↗
-                      </a>
+          ) : (
+            <div style={{ padding: '15px' }}>
+              {posts[activeTab as keyof typeof posts].length === 0 ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  color: '#666', 
+                  fontStyle: 'italic',
+                  padding: '40px 20px'
+                }}>
+                  <div style={{ fontSize: '48px', marginBottom: '10px' }}>
+                    {activeTab === 'blocks' && '🧱'}
+                    {activeTab === 'symbols' && '🔣'}
+                    {activeTab === 'scss' && '🎨'}
+                  </div>
+                  No {activeTab} yet
+                  <div style={{ fontSize: '12px', marginTop: '10px' }}>
+                    Create your first {activeTab.slice(0, -1)} using the form on the left
+                  </div>
+                </div>
+              ) : (
+                posts[activeTab as keyof typeof posts].map((post: any) => (
+                  <div key={post.id} style={{
+                    padding: '12px',
+                    borderBottom: '1px solid #eee',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <div>
+                      <div style={{ fontWeight: '500', marginBottom: '4px' }}>
+                        {post.title}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#666' }}>
+                        {new Date(post.date).toLocaleDateString()}
+                      </div>
                     </div>
-                  ))
-                )}
-              </div>
+                    <a 
+                      href={post.edit_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ 
+                        color: activeTab === 'blocks' ? '#0073aa' : 
+                               activeTab === 'symbols' ? '#2e7d32' : '#e65100',
+                        textDecoration: 'none',
+                        fontSize: '12px',
+                        padding: '6px 12px',
+                        border: `1px solid ${activeTab === 'blocks' ? '#0073aa' : 
+                                              activeTab === 'symbols' ? '#2e7d32' : '#e65100'}`,
+                        borderRadius: '4px',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = activeTab === 'blocks' ? '#0073aa' : 
+                                                                 activeTab === 'symbols' ? '#2e7d32' : '#e65100'
+                        e.currentTarget.style.color = 'white'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                        e.currentTarget.style.color = activeTab === 'blocks' ? '#0073aa' : 
+                                                       activeTab === 'symbols' ? '#2e7d32' : '#e65100'
+                      }}
+                    >
+                      Edit ↗
+                    </a>
+                  </div>
+                ))
+              )}
             </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </div>
   )
