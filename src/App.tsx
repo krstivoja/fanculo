@@ -29,6 +29,12 @@ function App() {
   const [isLoadingPosts, setIsLoadingPosts] = useState(false)
   const [activeTab, setActiveTab] = useState('blocks')
   
+  // Quick create modal state
+  const [showModal, setShowModal] = useState(false)
+  const [quickCreateType, setQuickCreateType] = useState('')
+  const [quickTitle, setQuickTitle] = useState('')
+  const [isQuickCreating, setIsQuickCreating] = useState(false)
+  
   console.log('📱 App component rendering...', new Date().toLocaleTimeString())
   console.log('🔄 Current message state:', message)
 
@@ -60,6 +66,56 @@ function App() {
   useEffect(() => {
     fetchPosts()
   }, [])
+
+  const handleQuickCreate = (type: string) => {
+    setQuickCreateType(type)
+    setShowModal(true)
+    setQuickTitle('')
+  }
+
+  const handleQuickCreateSubmit = async () => {
+    if (!quickTitle.trim()) {
+      setMessage('Please enter a title')
+      return
+    }
+
+    setIsQuickCreating(true)
+    setMessage('')
+
+    try {
+      const response = await fetch(window.fanculo_ajax.ajax_url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          action: 'fanculo_create_post',
+          nonce: window.fanculo_ajax.nonce,
+          title: quickTitle,
+          type: quickCreateType,
+          content: '',
+          style: '',
+          attributes: '',
+        }),
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        setMessage(`${quickCreateType} "${quickTitle}" created successfully!`)
+        setShowModal(false)
+        setQuickTitle('')
+        fetchPosts()
+        // Switch to the tab of the created post type
+        setActiveTab(quickCreateType)
+      } else {
+        setMessage(result.data || 'Error creating post')
+      }
+    } catch (error) {
+      setMessage('Error creating post')
+    } finally {
+      setIsQuickCreating(false)
+    }
+  }
 
   const handleCreatePost = async () => {
     if (!postTitle.trim()) {
@@ -120,7 +176,36 @@ function App() {
       
       {/* Main Content */}
       <div style={{ flex: '2' }}>
-        <h1>🚀 Fanculo Admin</h1>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '20px', 
+          marginBottom: '20px' 
+        }}>
+          <h1 style={{ margin: 0 }}>🚀 Fanculo Admin</h1>
+          <div style={{ position: 'relative' }}>
+            <select
+              onChange={(e) => e.target.value && handleQuickCreate(e.target.value)}
+              value=""
+              style={{
+                padding: '8px 12px',
+                borderRadius: '6px',
+                border: '2px solid #0073aa',
+                backgroundColor: 'white',
+                color: '#0073aa',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                outline: 'none'
+              }}
+            >
+              <option value="">+ Quick Create</option>
+              <option value="blocks">🧱 Blocks</option>
+              <option value="symbols">🔣 Symbols</option>
+              <option value="scss">🎨 SCSS</option>
+            </select>
+          </div>
+        </div>
         
         {/* Post Creation Section */}
         <div style={{ 
@@ -400,6 +485,126 @@ function App() {
           )}
         </div>
       </div>
+
+      {/* Quick Create Modal */}
+      {showModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '30px',
+            borderRadius: '12px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+            minWidth: '400px',
+            maxWidth: '500px'
+          }}>
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ 
+                margin: '0 0 10px 0', 
+                fontSize: '20px',
+                color: '#333'
+              }}>
+                {quickCreateType === 'blocks' && '🧱 Create New Block'}
+                {quickCreateType === 'symbols' && '🔣 Create New Symbol'}
+                {quickCreateType === 'scss' && '🎨 Create New SCSS'}
+              </h3>
+              <p style={{ 
+                margin: 0, 
+                color: '#666', 
+                fontSize: '14px' 
+              }}>
+                Enter a title for your new {quickCreateType.slice(0, -1)}. You can add content and styles later.
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '8px', 
+                fontWeight: '500',
+                color: '#333'
+              }}>
+                Title:
+              </label>
+              <input
+                type="text"
+                value={quickTitle}
+                onChange={(e) => setQuickTitle(e.target.value)}
+                placeholder={`Enter ${quickCreateType.slice(0, -1)} title...`}
+                autoFocus
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleQuickCreateSubmit()
+                  }
+                  if (e.key === 'Escape') {
+                    setShowModal(false)
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '2px solid #ddd',
+                  borderRadius: '6px',
+                  fontSize: '16px',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            <div style={{ 
+              display: 'flex', 
+              gap: '10px', 
+              justifyContent: 'flex-end' 
+            }}>
+              <button
+                onClick={() => setShowModal(false)}
+                disabled={isQuickCreating}
+                style={{
+                  padding: '10px 20px',
+                  border: '2px solid #ddd',
+                  borderRadius: '6px',
+                  backgroundColor: 'white',
+                  color: '#666',
+                  cursor: isQuickCreating ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleQuickCreateSubmit}
+                disabled={isQuickCreating || !quickTitle.trim()}
+                style={{
+                  padding: '10px 20px',
+                  border: 'none',
+                  borderRadius: '6px',
+                  backgroundColor: isQuickCreating || !quickTitle.trim() ? '#ccc' : 
+                                    quickCreateType === 'blocks' ? '#0073aa' :
+                                    quickCreateType === 'symbols' ? '#2e7d32' : '#e65100',
+                  color: 'white',
+                  cursor: (isQuickCreating || !quickTitle.trim()) ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                {isQuickCreating ? 'Creating...' : 'Create'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
