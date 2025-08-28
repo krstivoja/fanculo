@@ -24,4 +24,3 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 // Initialize
 new \Fanculo\Admin\Settings();
 new \Fanculo\Core\PostType();
-new \Fanculo\Core\MetaFields();

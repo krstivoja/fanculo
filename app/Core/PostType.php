@@ -40,7 +40,7 @@ class PostType
             'show_ui' => true,
             'show_in_menu' => true,
             'show_in_rest' => true, // Enable Gutenberg
-            'supports' => ['title', 'editor', 'thumbnail', 'excerpt'],
+            'supports' => ['title'],
             'menu_icon' => 'dashicons-admin-generic',
             'menu_position' => 20,
             'rewrite' => ['slug' => 'fanculo'],
