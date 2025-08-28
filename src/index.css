@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+:root {
+  --sidebar-width: 300px;
+}
+
 /* WordPress Blue Colors */
 .bg-wp-blue { background-color: #0073aa !important; }
 .text-wp-blue { color: #0073aa !important; }

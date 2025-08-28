@@ -124,6 +124,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	}
 
 	const handleEditPost = async (postId: number) => {
+		console.log('handleEditPost called with ID:', postId)
 		if (editingPostId && editingPostId !== postId) {
 			resetForm()
 		}
@@ -147,6 +148,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 			const result = await response.json()
 			if (result.success) {
 				const post = result.data
+				console.log('Post loaded successfully:', post)
 				setEditingPostId(postId)
 				setPostTitle(post.title)
 				setPostType(post.type)
@@ -156,6 +158,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 				document.querySelector('.post-form')?.scrollIntoView({ behavior: 'smooth' })
 			} else {
+				console.log('Error loading post:', result)
 				setMessage('Error loading post data')
 			}
 		} catch (error) {
@@ -242,8 +245,18 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				setMessage(`${quickCreateType} "${quickTitle}" created successfully!`)
 				setShowModal(false)
 				setQuickTitle('')
-				fetchPosts()
+				await fetchPosts()
 				setActiveTab(quickCreateType)
+				
+				// Focus on the newly created post
+				if (result.data?.post_id) {
+					console.log('Quick create - New post ID:', result.data.post_id)
+					// Small delay to ensure the post is available after fetchPosts
+					setTimeout(() => {
+						console.log('Quick create - Calling handleEditPost for ID:', result.data.post_id)
+						handleEditPost(result.data.post_id)
+					}, 100)
+				}
 			} else {
 				setMessage(result.data || 'Error creating post')
 			}
@@ -290,9 +303,22 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 			if (result.success) {
 				setMessage(`Post "${postTitle}" ${isEditing ? 'updated' : 'created'} successfully!`)
 				if (!isEditing) {
-					resetForm()
+					// For new posts, focus on the created post instead of resetting form
+					if (result.data?.post_id) {
+						console.log('Main create - New post ID:', result.data.post_id)
+						await fetchPosts()
+						// Small delay to ensure the post is available after fetchPosts
+						setTimeout(() => {
+							console.log('Main create - Calling handleEditPost for ID:', result.data.post_id)
+							handleEditPost(result.data.post_id)
+						}, 100)
+					} else {
+						resetForm()
+						fetchPosts()
+					}
+				} else {
+					fetchPosts()
 				}
-				fetchPosts()
 			} else {
 				setMessage(result.data || `Error ${isEditing ? 'updating' : 'creating'} post`)
 			}
@@ -308,25 +334,22 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 		<div className='flex'>
 
 			{/* Sidebar with Tabs */}
-			<div className='min-w-[300px] p-4'>
+			<div className='min-w-[var(--sidebar-width)] p-4'>
 				{/* Tab Navigation */}
-				<div className="flex border-b-2 border-gray-300 mb-5">
+				<div className="flex border border-solid border-slate-500 rounded-sm overflow-hidden p-1">
 					{[
-						{ key: 'blocks', label: 'Blocks', color: '#000000' },
-						{ key: 'symbols', label: 'Symbols', color: '#dc2626' },
-						{ key: 'scss', label: 'SCSS', color: '#7c3aed' },
+						{ key: 'blocks', label: 'Blocks' },
+						{ key: 'symbols', label: 'Symbols' },
+						{ key: 'scss', label: 'SCSS' },
 					].map((tab) => (
 						<button
 							key={tab.key}
 							onClick={() => setActiveTab(tab.key)}
-							className={`flex-1 py-3 px-2 border-none cursor-pointer text-sm transition-all duration-300 relative ${
+							className={`flex-1 cursor-pointer !text-[12px] transition-all duration-300 p-1 ${
 								activeTab === tab.key 
-									? 'font-bold text-white rounded-t-md -mb-0.5 z-10'
-									: 'font-normal text-gray-600 bg-gray-100 z-0'
+									? 'text-white  bg-black rounded-sm'
+									: 'text-gray-600'
 							}`}
-							style={{
-								backgroundColor: activeTab === tab.key ? tab.color : undefined
-							}}
 						>
 							{tab.label} ({posts[tab.key as keyof typeof posts].length})
 						</button>
@@ -334,7 +357,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				</div>
 
 				{/* Tab Content */}
-				<div className="border border-gray-300 rounded-b-lg bg-white min-h-[300px]">
+				<div className="border border-gray-300 rounded-b-lg bg-white min-h-[var(--sidebar-width)]">
 					{isLoadingPosts ? (
 						<div className="py-10 px-10 text-center text-gray-600">
 							Loading posts...
@@ -487,7 +510,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 								}
 							</button>
 						</div>
-						<div className="sidebar">
+						<div className="sidebar min-w-[var(--sidebar-width)]">
 							<button
 								onClick={() => setShowDeleteConfirm(true)}
 								className="py-2 px-4 bg-red-700 text-white border-none rounded cursor-pointer text-sm"
