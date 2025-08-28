@@ -1,0 +1,16 @@
+{
+    "name": "marko/fanculo",
+    "description": "gutenberg blocks generator",
+    "autoload": {
+        "psr-4": {
+            "Marko\\Fanculo\\": "app/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Marko Krstic",
+            "email": "mailme@markokrstic.com"
+        }
+    ],
+    "require": {}
+}
