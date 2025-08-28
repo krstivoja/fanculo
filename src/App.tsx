@@ -12,13 +12,16 @@ declare global {
 function App() {
   const [message, setMessage] = useState('')
   
-  // Post creation state
+  // Post creation/editing state
+  const [editingPostId, setEditingPostId] = useState<number | null>(null)
   const [postTitle, setPostTitle] = useState('')
   const [postType, setPostType] = useState('blocks')
   const [postContent, setPostContent] = useState('')
   const [postStyle, setPostStyle] = useState('')
   const [postAttributes, setPostAttributes] = useState('')
   const [isCreating, setIsCreating] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [isLoadingPost, setIsLoadingPost] = useState(false)
 
   // Posts list state
   const [posts, setPosts] = useState({
@@ -34,6 +37,10 @@ function App() {
   const [quickCreateType, setQuickCreateType] = useState('')
   const [quickTitle, setQuickTitle] = useState('')
   const [isQuickCreating, setIsQuickCreating] = useState(false)
+  
+  // Delete confirmation state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   
   console.log('📱 App component rendering...', new Date().toLocaleTimeString())
   console.log('🔄 Current message state:', message)
@@ -66,6 +73,95 @@ function App() {
   useEffect(() => {
     fetchPosts()
   }, [])
+
+  const resetForm = () => {
+    setEditingPostId(null)
+    setPostTitle('')
+    setPostType('blocks')
+    setPostContent('')
+    setPostStyle('')
+    setPostAttributes('')
+    setMessage('')
+  }
+
+  const handleEditPost = async (postId: number) => {
+    // If switching to a different post while editing, automatically cancel current edit
+    if (editingPostId && editingPostId !== postId) {
+      resetForm()
+    }
+    
+    setIsLoadingPost(true)
+    setMessage('')
+    
+    try {
+      const response = await fetch(window.fanculo_ajax.ajax_url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          action: 'fanculo_get_post',
+          nonce: window.fanculo_ajax.nonce,
+          post_id: postId.toString(),
+        }),
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        const post = result.data
+        setEditingPostId(postId)
+        setPostTitle(post.title)
+        setPostType(post.type)
+        setPostContent(post.content || '')
+        setPostStyle(post.style || '')
+        setPostAttributes(post.attributes || '')
+        
+        // Scroll to form
+        document.querySelector('.post-form')?.scrollIntoView({ behavior: 'smooth' })
+      } else {
+        setMessage('Error loading post data')
+      }
+    } catch (error) {
+      setMessage('Error loading post data')
+    } finally {
+      setIsLoadingPost(false)
+    }
+  }
+
+  const handleDeletePost = async () => {
+    if (!editingPostId) return
+    
+    setIsDeleting(true)
+    setMessage('')
+    
+    try {
+      const response = await fetch(window.fanculo_ajax.ajax_url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          action: 'fanculo_delete_post',
+          nonce: window.fanculo_ajax.nonce,
+          post_id: editingPostId.toString(),
+        }),
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        setMessage(`Post "${postTitle}" deleted successfully!`)
+        resetForm()
+        fetchPosts()
+        setShowDeleteConfirm(false)
+      } else {
+        setMessage(result.data || 'Error deleting post')
+      }
+    } catch (error) {
+      setMessage('Error deleting post')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   const handleQuickCreate = (type: string) => {
     setQuickCreateType(type)
@@ -123,7 +219,8 @@ function App() {
       return
     }
 
-    console.log('🔄 Creating post with data:', {
+    console.log(editingPostId ? '🔄 Updating post:' : '🔄 Creating post:', {
+      id: editingPostId,
       title: postTitle,
       type: postType,
       content: postContent,
@@ -131,7 +228,12 @@ function App() {
       attributes: postAttributes
     })
 
-    setIsCreating(true)
+    const isEditing = editingPostId !== null
+    if (isEditing) {
+      setIsUpdating(true)
+    } else {
+      setIsCreating(true)
+    }
     setMessage('')
 
     try {
@@ -141,8 +243,9 @@ function App() {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          action: 'fanculo_create_post',
+          action: isEditing ? 'fanculo_update_post' : 'fanculo_create_post',
           nonce: window.fanculo_ajax.nonce,
+          ...(isEditing && { post_id: editingPostId.toString() }),
           title: postTitle,
           type: postType,
           content: postContent,
@@ -153,21 +256,21 @@ function App() {
 
       const result = await response.json()
       if (result.success) {
-        setMessage(`Post "${postTitle}" created successfully!`)
-        // Reset form
-        setPostTitle('')
-        setPostContent('')
-        setPostStyle('')
-        setPostAttributes('')
+        setMessage(`Post "${postTitle}" ${isEditing ? 'updated' : 'created'} successfully!`)
+        if (!isEditing) {
+          // Reset form only for new posts
+          resetForm()
+        }
         // Refresh posts list
         fetchPosts()
       } else {
-        setMessage(result.data || 'Error creating post')
+        setMessage(result.data || `Error ${isEditing ? 'updating' : 'creating'} post`)
       }
     } catch (error) {
-      setMessage('Error creating post')
+      setMessage(`Error ${isEditing ? 'updating' : 'creating'} post`)
     } finally {
       setIsCreating(false)
+      setIsUpdating(false)
     }
   }
 
@@ -207,15 +310,51 @@ function App() {
           </div>
         </div>
         
-        {/* Post Creation Section */}
-        <div style={{ 
-          marginBottom: '40px', 
-          padding: '20px', 
-          border: '1px solid #ddd', 
-          borderRadius: '8px',
-          backgroundColor: '#f9f9f9'
-        }}>
-        <h2>Create New Post</h2>
+        {/* Post Creation/Editing Section */}
+        {editingPostId && (
+          <div className="post-form" style={{ 
+            marginBottom: '40px', 
+            padding: '20px', 
+            border: '1px solid #ddd', 
+            borderRadius: '8px',
+            backgroundColor: '#f9f9f9',
+            position: 'relative'
+          }}>
+          {isLoadingPost && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(255,255,255,0.8)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '8px',
+              zIndex: 10
+            }}>
+              <div>Loading post data...</div>
+            </div>
+          )}
+          
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <h2>Edit Post</h2>
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#d32f2f',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              Delete Post
+            </button>
+          </div>
         
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
@@ -236,29 +375,28 @@ function App() {
           />
         </div>
 
+        {/* Post Type Display (Edit mode only shows current type) */}
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>
             Post Type:
           </label>
-          <div style={{ display: 'flex', gap: '20px' }}>
-            {['blocks', 'symbols', 'scss'].map(type => (
-              <label key={type} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                <input
-                  type="radio"
-                  name="postType"
-                  value={type}
-                  checked={postType === type}
-                  onChange={(e) => setPostType(e.target.value)}
-                  style={{ marginRight: '5px' }}
-                />
-                <span style={{ textTransform: 'capitalize', fontSize: '16px' }}>
-                  {type === 'blocks' && '🧱'} 
-                  {type === 'symbols' && '🔣'} 
-                  {type === 'scss' && '🎨'} 
-                  {type}
-                </span>
-              </label>
-            ))}
+          <div style={{ 
+            padding: '8px 12px',
+            backgroundColor: '#e8f5e8',
+            border: '2px solid #4caf50',
+            borderRadius: '4px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '16px',
+            fontWeight: '500'
+          }}>
+            <span>
+              {postType === 'blocks' && '🧱'} 
+              {postType === 'symbols' && '🔣'} 
+              {postType === 'scss' && '🎨'} 
+            </span>
+            <span style={{ textTransform: 'capitalize' }}>{postType}</span>
           </div>
         </div>
 
@@ -331,21 +469,25 @@ function App() {
 
         <button 
           onClick={handleCreatePost}
-          disabled={isCreating}
+          disabled={isCreating || isUpdating}
           style={{
             padding: '12px 24px',
-            backgroundColor: isCreating ? '#ccc' : '#0073aa',
+            backgroundColor: (isCreating || isUpdating) ? '#ccc' : '#0073aa',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
-            cursor: isCreating ? 'not-allowed' : 'pointer',
+            cursor: (isCreating || isUpdating) ? 'not-allowed' : 'pointer',
             fontSize: '16px',
             fontWeight: 'bold'
           }}
         >
-          {isCreating ? 'Creating...' : 'Create Post'}
+          {editingPostId 
+            ? (isUpdating ? 'Updating...' : 'Update Post')
+            : (isCreating ? 'Creating...' : 'Create Post')
+          }
         </button>
-      </div>
+        </div>
+        )}
 
       {message && (
         <div style={{ 
@@ -450,20 +592,19 @@ function App() {
                         {new Date(post.date).toLocaleDateString()}
                       </div>
                     </div>
-                    <a 
-                      href={post.edit_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={() => handleEditPost(post.id)}
                       style={{ 
                         color: activeTab === 'blocks' ? '#0073aa' : 
                                activeTab === 'symbols' ? '#2e7d32' : '#e65100',
-                        textDecoration: 'none',
                         fontSize: '12px',
                         padding: '6px 12px',
                         border: `1px solid ${activeTab === 'blocks' ? '#0073aa' : 
                                               activeTab === 'symbols' ? '#2e7d32' : '#e65100'}`,
                         borderRadius: '4px',
-                        transition: 'all 0.2s ease'
+                        transition: 'all 0.2s ease',
+                        backgroundColor: 'transparent',
+                        cursor: 'pointer'
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = activeTab === 'blocks' ? '#0073aa' : 
@@ -476,8 +617,8 @@ function App() {
                                                        activeTab === 'symbols' ? '#2e7d32' : '#e65100'
                       }}
                     >
-                      Edit ↗
-                    </a>
+                      Edit ✏️
+                    </button>
                   </div>
                 ))
               )}
@@ -600,6 +741,87 @@ function App() {
                 }}
               >
                 {isQuickCreating ? 'Creating...' : 'Create'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '30px',
+            borderRadius: '12px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+            minWidth: '400px',
+            maxWidth: '500px'
+          }}>
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ 
+                margin: '0 0 10px 0', 
+                fontSize: '20px',
+                color: '#d32f2f'
+              }}>
+                🗑️ Delete Post
+              </h3>
+              <p style={{ 
+                margin: 0, 
+                color: '#666', 
+                fontSize: '14px' 
+              }}>
+                Are you sure you want to delete "<strong>{postTitle}</strong>"? This action cannot be undone.
+              </p>
+            </div>
+
+            <div style={{ 
+              display: 'flex', 
+              gap: '10px', 
+              justifyContent: 'flex-end' 
+            }}>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                style={{
+                  padding: '10px 20px',
+                  border: '2px solid #ddd',
+                  borderRadius: '6px',
+                  backgroundColor: 'white',
+                  color: '#666',
+                  cursor: isDeleting ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeletePost}
+                disabled={isDeleting}
+                style={{
+                  padding: '10px 20px',
+                  border: 'none',
+                  borderRadius: '6px',
+                  backgroundColor: isDeleting ? '#ccc' : '#d32f2f',
+                  color: 'white',
+                  cursor: isDeleting ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>
