@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Gutenberg Studio
+ * Plugin Name: Fanculo WP
  * Description: A plugin for creating Native Gutenberg blocks.
  * Version: 0.0.3
  * Author: DPlugins
@@ -17,20 +17,20 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('GUTENBERG_BLOCK_STUDIO_URL', plugin_dir_url(__FILE__));
-define('GUTENBERG_BLOCK_STUDIO_PATH', plugin_dir_path(__FILE__));
-define('GUTENBERG_BLOCK_STUDIO_VERSION', '0.0.4');
+define('FANCULOWP_URL', plugin_dir_url(__FILE__));
+define('FANCULOWP_PATH', plugin_dir_path(__FILE__));
+define('FANCULOWP_VERSION', '0.0.4');
 
 // Define blocks directory - save to wp-content/plugins/gutenberg-blocks
 $blocks_dir_name = 'gutenberg-blocks';
 $blocks_path = WP_PLUGIN_DIR . '/' . $blocks_dir_name;
-define('GUTENBERG_BLOCK_STUDIO_BLOCKS_DIR', $blocks_path);
-define('GUTENBERG_BLOCK_STUDIO_BLOCKS_URL', plugins_url($blocks_dir_name));
+define('FANCULOWP_BLOCKS_DIR', $blocks_path);
+define('FANCULOWP_BLOCKS_URL', plugins_url($blocks_dir_name));
 
 // Include Composer autoload
-require_once GUTENBERG_BLOCK_STUDIO_PATH . 'vendor/autoload.php';
+require_once FANCULOWP_PATH . 'vendor/autoload.php';
 
 // Initialize the plugin
 if (!class_exists('GutenbergBlockStudio\App\App')) {
-    $app = new \GutenbergBlockStudio\App\App();
+    // $app = new \GutenbergBlockStudio\App\App();
 }
