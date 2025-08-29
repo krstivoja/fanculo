@@ -1,9 +1,11 @@
 import { useState, useEffect, Suspense, forwardRef, useImperativeHandle } from 'react'
 import LoadingSpinner from '../ui/components/LoadingSpinner'
 import PostListSidebar from '../ui/components/PostListSidebar'
+import MonacoEditor from '../ui/components/MonacoEditor'
 import { Button, TextControl, TextareaControl, TabPanel, Modal } from '@wordpress/components'
 import { BlocksIcon, SymbolIcon, StyleIcon, SettingsIcon } from '../ui/icons/Icons.jsx'
 import { MdOutlineDescription } from 'react-icons/md'
+import { preloadCommonLanguages } from '../utils/monacoLanguageLoader'
 
 declare global {
 	interface Window {
@@ -90,7 +92,18 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 	useEffect(() => {
 		fetchPosts()
+		// Initialize Monaco Editor
+		initializeMonaco()
 	}, [])
+
+	const initializeMonaco = async () => {
+		try {
+			// Pre-load common languages for better performance
+			await preloadCommonLanguages()
+		} catch (error) {
+			console.error('Failed to initialize Monaco Editor:', error)
+		}
+	}
 
 	// Auto-select first post when posts are loaded initially (only once)
 	useEffect(() => {
@@ -441,35 +454,49 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 								{(tab) => (
 									<div className="form-tab-content">
 										{tab.name === 'content' && (postType === 'blocks' || postType === 'symbols') && (
-											<TextareaControl
-												label="Content"
-												value={postContent}
-												onChange={(value) => setPostContent(value)}
-												placeholder="Enter HTML/JSX content..."
-												rows={8}
-												className="wp-textarea-code"
-												help="Enter HTML/JSX content for this component"
-											/>
+											<div className="mb-4">
+												<label className="block mb-2 font-medium text-sm">
+													Content (PHP)
+												</label>
+												<p className="text-xs text-gray-600 mb-3">
+													Enter PHP render code for this {postType === 'blocks' ? 'block' : 'component'}
+												</p>
+												<MonacoEditor
+													value={postContent}
+													onChange={(value) => setPostContent(value || '')}
+													language="php"
+													theme="vs-dark"
+													height="400px"
+													placeholder="<?php\n// Enter your PHP render code here\necho 'Hello World';\n?>"
+												/>
+											</div>
 										)}
 										
 										{tab.name === 'style' && (
-											<TextareaControl
-												label="Style"
-												value={postStyle}
-												onChange={(value) => setPostStyle(value)}
-												placeholder="Enter CSS/SCSS styles..."
-												rows={8}
-												className="wp-textarea-code"
-												help="Enter CSS or SCSS styles for this component"
-											/>
+											<div className="mb-4">
+												<label className="block mb-2 font-medium text-sm">
+													Style (SCSS)
+												</label>
+												<p className="text-xs text-gray-600 mb-3">
+													Enter SCSS styles for this {postType === 'blocks' ? 'block' : 'component'}
+												</p>
+												<MonacoEditor
+													value={postStyle}
+													onChange={(value) => setPostStyle(value || '')}
+													language="scss"
+													theme="vs-dark"
+													height="400px"
+													placeholder="// Enter your SCSS styles here\n.my-component {\n  color: #333;\n  padding: 1rem;\n}"
+												/>
+											</div>
 										)}
 										
 										{tab.name === 'attributes' && postType === 'blocks' && (
 											<TextareaControl
-												label="Attributes"
+												label="Attributes (JSON)"
 												value={postAttributes}
 												onChange={(value) => setPostAttributes(value)}
-												placeholder='{"prop1": "default", "prop2": true}'
+												placeholder='{"title": {"type": "string", "default": ""}, "alignment": {"type": "string", "default": "left"}}'
 												rows={8}
 												className="wp-textarea-code"
 												help="Enter JSON attributes for this block component"

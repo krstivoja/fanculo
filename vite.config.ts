@@ -26,5 +26,21 @@ export default defineConfig({
         assetFileNames: '[name].[ext]'
       }
     }
+  },
+  define: {
+    // Monaco Editor global variables
+    global: 'globalThis',
+  },
+  optimizeDeps: {
+    include: [
+      '@monaco-editor/react'
+    ],
+    exclude: [
+      // Exclude Monaco Editor from pre-bundling to enable proper code splitting
+      'monaco-editor'
+    ]
+  },
+  worker: {
+    format: 'es'
   }
 })
