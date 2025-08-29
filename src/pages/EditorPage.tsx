@@ -369,7 +369,9 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 							title: (
 								<span className="flex items-center gap-2">
 									<BlocksIcon width={16} height={16} />
-									Blocks ({posts.blocks.length})
+									<span className='!text-xxs flex gap-1'>Blocks 
+										<span className='text-[10px] bg-slate-300 px-1 py-0 rounded-md'>{posts.blocks.length}</span>
+									</span>
 								</span>
 							),
 							className: 'tab-blocks'
@@ -379,7 +381,9 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 							title: (
 								<span className="flex items-center gap-2">
 									<SymbolIcon width={16} height={16} />
-									Symbols ({posts.symbols.length})
+									<span className='!text-xxs'>Symbols 
+										<span className='text-[10px] bg-slate-300 px-1 py-0 rounded-md'>{posts.symbols.length}</span>									
+									</span>
 								</span>
 							),
 							className: 'tab-symbols'
@@ -389,7 +393,9 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 							title: (
 								<span className="flex items-center gap-2">
 									<StyleIcon width={16} height={16} />
-									SCSS ({posts.scss.length})
+									<span className='!text-xxs'>SCSS 										
+										<span className='text-[10px] bg-slate-300 px-1 py-0 rounded-md'>{posts.scss.length}</span>									
+									</span>
 								</span>
 							),
 							className: 'tab-scss'
@@ -579,7 +585,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 						</div>
 
 						{/* Sidebar */}
-						
+
 					</div>
 				)}
 

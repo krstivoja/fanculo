@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme {
+  --text-xxs: 12px;
+}
+
 :root {
   --sidebar-width: 300px;
 }
@@ -31,4 +35,11 @@ html { padding:0 !important;}
 .components-menu-group button {
   height: inherit !important;
   text-align: left;
+}
+
+.components-tab-panel__tabs-item {
+  font-weight: 400;
+  height: unset !important;
+  margin-left: 0;
+  padding: 12px 8px;
 }
