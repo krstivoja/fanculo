@@ -81,7 +81,7 @@ export default function PostListSidebar({
 				]}
 			>
 				{(tab) => (
-					<div className="tab-content min-h-[var(--sidebar-width)] mt-4">
+					<div className="tab-content min-h-[var(--sidebar-width)] mt-2 bg-white border border-stone-200 !p-[2px] rounded-sm">
 						{isLoadingPosts ? (
 							<div className="py-10 px-10 text-center text-gray-600">
 								Loading posts...
@@ -105,7 +105,7 @@ export default function PostListSidebar({
 										<button
 											key={post.id} 
 											className={`w-full cursor-pointer text-left p-2 flex justify-between items-center transition-colors duration-200 rounded-sm ${
-												editingPostId === post.id ? 'bg-white border border-stone-200' : ''
+												editingPostId === post.id ? 'bg-blue-500 text-white border' : ''
 											}`}
 											onClick={() => onEditPost(post.id)}
 										>
