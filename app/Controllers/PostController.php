@@ -25,8 +25,8 @@ class PostController
 
         $title = sanitize_text_field($_POST['title'] ?? '');
         $type = sanitize_text_field($_POST['type'] ?? 'blocks');
-        $content = wp_kses_post($_POST['content'] ?? '');
-        $style = sanitize_textarea_field($_POST['style'] ?? '');
+        $content = wp_unslash($_POST['content'] ?? ''); // Save content as-is without filtering
+        $style = wp_unslash($_POST['style'] ?? ''); // Save CSS as-is without filtering
         $attributes = sanitize_textarea_field($_POST['attributes'] ?? '');
 
         if (empty($title)) {
@@ -194,8 +194,8 @@ class PostController
         }
 
         $title = sanitize_text_field($_POST['title'] ?? '');
-        $content = wp_kses_post($_POST['content'] ?? '');
-        $style = sanitize_textarea_field($_POST['style'] ?? '');
+        $content = wp_unslash($_POST['content'] ?? ''); // Save content as-is without filtering
+        $style = wp_unslash($_POST['style'] ?? ''); // Save CSS as-is without filtering
         $attributes = sanitize_textarea_field($_POST['attributes'] ?? '');
 
         if (empty($title)) {

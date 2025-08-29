@@ -19,13 +19,14 @@ interface CachedInstance {
 
 class MonacoInstanceManager {
   private instances = new Map<string, CachedInstance>()
-  private maxInstances = 2 // Reduced for better memory management
+  private maxInstances = 2 // Keep at 2 but manage better
   private cleanupInterval: NodeJS.Timeout | null = null
   private memoryCheckInterval: NodeJS.Timeout | null = null
   private monacoLoaded = false
   private monacoPromise: Promise<any> | null = null
   private totalMemoryUsage = 0
-  private memoryLimit = 50 * 1024 * 1024 // 50MB limit for all instances
+  private memoryLimit = 100 * 1024 * 1024 // Increased to 100MB - more realistic
+  private activeInstanceLimit = 1 // Only allow 1 active instance at a time
 
   constructor() {
     this.startCleanup()
@@ -80,6 +81,9 @@ class MonacoInstanceManager {
   async getOrCreateInstance(language: string, container: HTMLElement): Promise<CachedInstance | null> {
     const key = `${language}`
     
+    // First, deactivate other active instances to enforce single active instance
+    await this.enforceActiveInstanceLimit()
+    
     // Check memory pressure before creating new instances
     if (this.totalMemoryUsage > this.memoryLimit * 0.8) {
       console.warn('Memory pressure detected, cleaning up before creating instance')
@@ -89,8 +93,8 @@ class MonacoInstanceManager {
     // Check if we have a cached instance for this language
     let instance = this.instances.get(key)
     
-    if (instance && !instance.isActive) {
-      // Reuse existing instance
+    if (instance) {
+      // Reactivate existing instance
       instance.container = container
       instance.lastUsed = Date.now()
       instance.isActive = true
@@ -107,7 +111,7 @@ class MonacoInstanceManager {
       // Track in global registry
       this.registerInstanceGlobally(key, instance)
       
-      console.debug(`Reused Monaco instance for ${language} (access #${instance.accessCount})`)
+      console.debug(`Reactivated Monaco instance for ${language} (access #${instance.accessCount})`)
       return instance
     }
 
@@ -170,22 +174,22 @@ class MonacoInstanceManager {
   }
 
   private estimateInstanceMemory(language: string): number {
-    // Base Monaco overhead
-    let memory = 15 * 1024 * 1024 // 15MB base
+    // More realistic Monaco overhead based on actual usage
+    let memory = 25 * 1024 * 1024 // 25MB base (more realistic)
 
-    // Language-specific overhead
+    // Language-specific overhead (more accurate estimates)
     switch (language) {
       case 'php':
-        memory += 8 * 1024 * 1024 // 8MB for PHP language features
+        memory += 15 * 1024 * 1024 // 15MB for PHP language features + autocomplete
         break
       case 'scss':
-        memory += 5 * 1024 * 1024 // 5MB for SCSS language features
+        memory += 10 * 1024 * 1024 // 10MB for SCSS language features
         break
       default:
-        memory += 3 * 1024 * 1024 // 3MB for basic language
+        memory += 5 * 1024 * 1024 // 5MB for basic language
     }
 
-    return memory
+    return memory // Total: ~40MB for PHP, ~35MB for SCSS
   }
 
   private measureActualMemoryUsage(instance: CachedInstance): number {
@@ -352,6 +356,24 @@ class MonacoInstanceManager {
     }
   }
 
+  private async enforceActiveInstanceLimit(): Promise<void> {
+    const activeInstances = Array.from(this.instances.values()).filter(i => i.isActive)
+    
+    if (activeInstances.length >= this.activeInstanceLimit) {
+      console.debug(`Enforcing active instance limit (${this.activeInstanceLimit}), deactivating oldest instances`)
+      
+      // Sort by last used time and deactivate oldest
+      activeInstances
+        .sort((a, b) => a.lastUsed - b.lastUsed)
+        .slice(0, activeInstances.length - this.activeInstanceLimit + 1)
+        .forEach(instance => {
+          instance.isActive = false
+          instance.container = undefined
+          console.debug(`Deactivated ${instance.language} instance to enforce limits`)
+        })
+    }
+  }
+
   private setupMemoryPressureHandling() {
     // Listen to memory manager events
     memoryManager.onMemoryChange((stats) => {
@@ -443,8 +465,24 @@ class MonacoInstanceManager {
   }
 
   // Public method to force cleanup
-  forceCleanup(): Promise<void> {
-    return this.performMemoryCleanup()
+  async forceCleanup(): Promise<void> {
+    console.warn('Forcing Monaco memory cleanup due to pressure')
+    
+    // Immediately enforce active instance limits
+    await this.enforceActiveInstanceLimit()
+    
+    // Perform deep cleanup
+    await this.performMemoryCleanup()
+    
+    // Force garbage collection if available
+    if (typeof window !== 'undefined' && (window as any).gc && process.env.NODE_ENV === 'development') {
+      try {
+        ;(window as any).gc()
+        console.debug('Forced garbage collection')
+      } catch {}
+    }
+    
+    console.debug('Monaco force cleanup completed')
   }
 
   // Public method to get memory usage
