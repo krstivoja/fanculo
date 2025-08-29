@@ -1,5 +1,6 @@
 import { useState, useEffect, Suspense, forwardRef, useImperativeHandle } from 'react'
 import LoadingSpinner from '../ui/components/LoadingSpinner'
+import Button from '../ui/components/Button'
 
 declare global {
 	interface Window {
@@ -391,16 +392,13 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 												{new Date(post.date).toLocaleDateString()}
 											</div>
 										</div>
-										<button
+										<Button
+											variant="secondary"
+											size="sm"
 											onClick={() => handleEditPost(post.id)}
-											className={`text-xs py-1.5 px-3 border rounded transition-all duration-200 cursor-pointer bg-transparent ${
-												activeTab === 'blocks' ? 'text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white' :
-												activeTab === 'symbols' ? 'text-green-700 border-green-700 hover:bg-green-700 hover:text-white' :
-												'text-orange-600 border-orange-600 hover:bg-orange-600 hover:text-white'
-											}`}
 										>
 											Edit ✏️
-										</button>
+										</Button>
 									</div>
 								))
 							)}
@@ -498,26 +496,27 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 								</div>
 							)}
 
-							<button
+							<Button
+								variant="primary"
+								size="md"
 								onClick={handleCreatePost}
-								disabled={isCreating || isUpdating}
-								className={`py-3 px-6 text-white border-none rounded text-base font-bold ${
-									(isCreating || isUpdating) ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 cursor-pointer'
-								}`}
+								loading={isCreating || isUpdating}
+								className="font-bold"
 							>
 								{editingPostId
-									? (isUpdating ? 'Updating...' : 'Update Post')
-									: (isCreating ? 'Creating...' : 'Create Post')
+									? (isUpdating ? 'Updating' : 'Update Post')
+									: (isCreating ? 'Creating' : 'Create Post')
 								}
-							</button>
+							</Button>
 						</div>
 						<div className="sidebar min-w-[var(--sidebar-width)]">
-							<button
+							<Button
+								variant="destructive"
+								size="sm"
 								onClick={() => setShowDeleteConfirm(true)}
-								className="py-2 px-4 bg-red-700 text-white border-none rounded cursor-pointer text-sm"
 							>
 								Delete Post
-							</button>
+							</Button>
 						</div>
 					</div>
 				)}
@@ -573,30 +572,25 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 						</div>
 
 						<div className="flex gap-2.5 justify-end">
-							<button
+							<Button
+								variant="secondary"
+								size="sm"
 								onClick={() => setShowModal(false)}
 								disabled={isQuickCreating}
-								className={`py-2.5 px-5 border-2 border-gray-300 rounded-md bg-white text-gray-600 text-sm font-medium ${
-									isQuickCreating ? 'cursor-not-allowed' : 'cursor-pointer'
-								}`}
+								className="font-medium"
 							>
 								Cancel
-							</button>
-							<button
+							</Button>
+							<Button
+								variant="primary"
+								size="sm"
 								onClick={handleQuickCreateSubmit}
-								disabled={isQuickCreating || !quickTitle.trim()}
-								className={`py-2.5 px-5 border-none rounded-md text-white text-sm font-medium ${
-									(isQuickCreating || !quickTitle.trim()) 
-										? 'bg-gray-400 cursor-not-allowed' 
-										: quickCreateType === 'blocks' 
-											? 'bg-blue-600 cursor-pointer'
-											: quickCreateType === 'symbols'
-												? 'bg-green-700 cursor-pointer'
-												: 'bg-orange-600 cursor-pointer'
-								}`}
+								loading={isQuickCreating}
+								disabled={!quickTitle.trim()}
+								className="font-medium"
 							>
-								{isQuickCreating ? 'Creating...' : 'Create'}
-							</button>
+								{isQuickCreating ? 'Creating' : 'Create'}
+							</Button>
 						</div>
 					</div>
 				</div>
@@ -616,24 +610,24 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 						</div>
 
 						<div className="flex gap-2.5 justify-end">
-							<button
+							<Button
+								variant="secondary"
+								size="sm"
 								onClick={() => setShowDeleteConfirm(false)}
 								disabled={isDeleting}
-								className={`py-2.5 px-5 border-2 border-gray-300 rounded-md bg-white text-gray-600 text-sm font-medium ${
-									isDeleting ? 'cursor-not-allowed' : 'cursor-pointer'
-								}`}
+								className="font-medium"
 							>
 								Cancel
-							</button>
-							<button
+							</Button>
+							<Button
+								variant="destructive"
+								size="sm"
 								onClick={handleDeletePost}
-								disabled={isDeleting}
-								className={`py-2.5 px-5 border-none rounded-md text-white text-sm font-medium ${
-									isDeleting ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-700 cursor-pointer'
-								}`}
+								loading={isDeleting}
+								className="font-medium"
 							>
-								{isDeleting ? 'Deleting...' : 'Delete'}
-							</button>
+								{isDeleting ? 'Deleting' : 'Delete'}
+							</Button>
 						</div>
 					</div>
 				</div>
