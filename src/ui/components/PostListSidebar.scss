@@ -1,0 +1,68 @@
+/* PostListSidebar Component Styles */
+
+:root  {
+  --wp-components-color-accent: #0073aa;
+  --wp-components-color-accent-darker-10: #006ba1;
+  --wp-components-color-accent-darker-20: #005a87;
+}
+.fanculo-tab-panel {
+
+  button:after {
+    display: none;
+  }
+
+  .components-tab-panel__tabs {
+
+    display: flex;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    overflow: hidden;
+    padding: 2px;
+    background: #f6f7f7;
+
+    .components-button {
+      flex: 1;
+      font-size: 12px !important;
+      padding: 8px 12px !important;
+      border: none !important;
+      border-radius: 2px !important;
+      background: transparent !important;
+      color: #666 !important;
+      transition: all 0.2s ease !important;
+      margin: 0 !important;
+    }
+
+    .components-button:hover {
+      background: #e0e0e0 !important;
+      color: #333 !important;
+    }
+
+    .components-button.is-active {
+      background: #000 !important;
+      color: #fff !important;
+      font-weight: 600 !important;
+      border-radius: 4px !important;
+    }
+
+    .is-active svg {
+      opacity: 1;
+    }
+
+  }
+
+
+  .components-tab-panel__tab-content {
+    border: 1px solid #ddd;
+    border-radius: 0 0 8px 8px;
+    background: #fff;
+    min-height: var(--sidebar-width, 300px);
+  }
+
+  .tab-content {
+    padding: 0;
+  }
+
+
+
+
+}

@@ -2,6 +2,11 @@
 
 @theme {
   --text-xxs: 12px;
+  --color-base: black; 
+  --color-contrast: white;
+  --color-action: blue;
+  --color-sidebar: grey;
+  --color-input: lightgrey;
 }
 
 :root {
