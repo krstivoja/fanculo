@@ -39,6 +39,8 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	const [postContent, setPostContent] = useState('')
 	const [postStyle, setPostStyle] = useState('')
 	const [postAttributes, setPostAttributes] = useState('')
+	const [postEditorStyle, setPostEditorStyle] = useState('')
+	const [postViewJs, setPostViewJs] = useState('')
 	const [isCreating, setIsCreating] = useState(false)
 	const [isUpdating, setIsUpdating] = useState(false)
 	const [isLoadingPost, setIsLoadingPost] = useState(false)
@@ -142,6 +144,8 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 		setPostContent('')
 		setPostStyle('')
 		setPostAttributes('')
+		setPostEditorStyle('')
+		setPostViewJs('')
 		setMessage('')
 	}
 
@@ -190,6 +194,8 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				setPostContent(post.content || '')
 				setPostStyle(post.style || '')
 				setPostAttributes(post.attributes || '')
+				setPostEditorStyle(post.editor_style || '')
+				setPostViewJs(post.view_js || '')
 
 				// Set the active tab to match the post type (unless we're skipping tab update)
 				if (!skipTabUpdate) {
@@ -277,6 +283,8 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 					content: '',
 					style: '',
 					attributes: '',
+					editor_style: '',
+					view_js: '',
 				}),
 			})
 
@@ -336,6 +344,8 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 					content: postContent,
 					style: postStyle,
 					attributes: postAttributes,
+					editor_style: postEditorStyle,
+					view_js: postViewJs,
 				}),
 			})
 
@@ -448,6 +458,26 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 											</span>
 										),
 										className: 'tab-attributes'
+									}] : []),
+									...(postType === 'blocks' ? [{
+										name: 'editor_style',
+										title: (
+											<span className="flex items-center gap-2">
+												<StyleIcon width={16} height={16} />
+												Editor Style
+											</span>
+										),
+										className: 'tab-editor-style'
+									}] : []),
+									...(postType === 'blocks' ? [{
+										name: 'view_js',
+										title: (
+											<span className="flex items-center gap-2">
+												<MdOutlineDescription size={16} />
+												View JS
+											</span>
+										),
+										className: 'tab-view-js'
 									}] : [])
 								]}
 							>
@@ -489,6 +519,40 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 												className="wp-textarea-code"
 												help="Enter JSON attributes for this block component"
 											/>
+										)}
+										
+										{tab.name === 'editor_style' && postType === 'blocks' && (
+											<div className="mb-4">
+												<MonacoEditor
+													value={postEditorStyle}
+													onChange={(value) => setPostEditorStyle(value || '')}
+													language="scss"
+													theme="vs-dark"
+													height="400px"
+													placeholder="// Editor-specific styles for this block
+.wp-block-editor .my-block {
+  border: 2px dashed #ccc;
+  padding: 1rem;
+}"
+												/>
+											</div>
+										)}
+										
+										{tab.name === 'view_js' && postType === 'blocks' && (
+											<div className="mb-4">
+												<MonacoEditor
+													value={postViewJs}
+													onChange={(value) => setPostViewJs(value || '')}
+													language="javascript"
+													theme="vs-dark"
+													height="400px"
+													placeholder="// Frontend JavaScript for this block
+document.addEventListener('DOMContentLoaded', function() {
+  // Your block's frontend code here
+  console.log('Block loaded on frontend');
+});"
+												/>
+											</div>
 										)}
 									</div>
 								)}

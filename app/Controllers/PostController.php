@@ -28,6 +28,8 @@ class PostController
         $content = wp_unslash($_POST['content'] ?? ''); // Save content as-is without filtering
         $style = wp_unslash($_POST['style'] ?? ''); // Save CSS as-is without filtering
         $attributes = sanitize_textarea_field($_POST['attributes'] ?? '');
+        $editor_style = wp_unslash($_POST['editor_style'] ?? ''); // Save editor style as-is
+        $view_js = wp_unslash($_POST['view_js'] ?? ''); // Save view JS as-is
 
         if (empty($title)) {
             wp_send_json_error('Title is required');
@@ -74,7 +76,7 @@ class PostController
             update_post_meta($post_id, '_fanculo_style', $style);
         }
 
-        if ($attributes && $type === 'blocks') {
+        if ($type === 'blocks') {
             if (!empty($attributes)) {
                 $decoded = json_decode($attributes, true);
                 if (json_last_error() === JSON_ERROR_NONE) {
@@ -83,6 +85,10 @@ class PostController
                     wp_send_json_error('Invalid JSON in attributes field');
                 }
             }
+            
+            // Save editor style and view JS for blocks only
+            update_post_meta($post_id, '_fanculo_editor_style', $editor_style);
+            update_post_meta($post_id, '_fanculo_view_js', $view_js);
         }
 
         wp_send_json_success([
@@ -167,6 +173,8 @@ class PostController
         $content = get_post_meta($post_id, '_fanculo_content', true);
         $style = get_post_meta($post_id, '_fanculo_style', true);
         $attributes = get_post_meta($post_id, '_fanculo_attributes', true);
+        $editor_style = get_post_meta($post_id, '_fanculo_editor_style', true);
+        $view_js = get_post_meta($post_id, '_fanculo_view_js', true);
 
         wp_send_json_success([
             'id' => $post->ID,
@@ -174,7 +182,9 @@ class PostController
             'type' => $type,
             'content' => $content ?: '',
             'style' => $style ?: '',
-            'attributes' => $attributes ?: ''
+            'attributes' => $attributes ?: '',
+            'editor_style' => $editor_style ?: '',
+            'view_js' => $view_js ?: ''
         ]);
     }
 
@@ -197,6 +207,8 @@ class PostController
         $content = wp_unslash($_POST['content'] ?? ''); // Save content as-is without filtering
         $style = wp_unslash($_POST['style'] ?? ''); // Save CSS as-is without filtering
         $attributes = sanitize_textarea_field($_POST['attributes'] ?? '');
+        $editor_style = wp_unslash($_POST['editor_style'] ?? ''); // Save editor style as-is
+        $view_js = wp_unslash($_POST['view_js'] ?? ''); // Save view JS as-is
 
         if (empty($title)) {
             wp_send_json_error('Title is required');
@@ -235,6 +247,10 @@ class PostController
             } else {
                 update_post_meta($post_id, '_fanculo_attributes', '');
             }
+            
+            // Update editor style and view JS for blocks only
+            update_post_meta($post_id, '_fanculo_editor_style', $editor_style);
+            update_post_meta($post_id, '_fanculo_view_js', $view_js);
         }
 
         wp_send_json_success([
