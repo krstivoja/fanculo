@@ -11,6 +11,7 @@ class PostController
         add_action('wp_ajax_fanculo_get_post', [$this, 'get_post']);
         add_action('wp_ajax_fanculo_get_posts', [$this, 'get_posts']);
         add_action('wp_ajax_fanculo_delete_post', [$this, 'delete_post']);
+        add_action('wp_ajax_fanculo_get_block_categories', [$this, 'get_block_categories']);
     }
 
     public function create_post(): void
@@ -31,6 +32,7 @@ class PostController
         $editor_style = wp_unslash($_POST['editor_style'] ?? ''); // Save editor style as-is
         $view_js = wp_unslash($_POST['view_js'] ?? ''); // Save view JS as-is
         $description = sanitize_textarea_field($_POST['description'] ?? ''); // Save description
+        $category = sanitize_text_field($_POST['category'] ?? ''); // Save block category
 
         if (empty($title)) {
             wp_send_json_error('Title is required');
@@ -80,6 +82,11 @@ class PostController
         // Save description for all post types (but mainly used for blocks)
         if ($description) {
             update_post_meta($post_id, '_fanculo_description', $description);
+        }
+
+        // Save block category (mainly used for blocks)
+        if ($category) {
+            update_post_meta($post_id, '_fanculo_category', $category);
         }
 
         if ($type === 'blocks') {
@@ -188,6 +195,7 @@ class PostController
         $editor_style = get_post_meta($post_id, '_fanculo_editor_style', true);
         $view_js = get_post_meta($post_id, '_fanculo_view_js', true);
         $description = get_post_meta($post_id, '_fanculo_description', true);
+        $category = get_post_meta($post_id, '_fanculo_category', true);
         $enable_editor_style = get_post_meta($post_id, '_fanculo_enable_editor_style', true);
         $enable_view_js = get_post_meta($post_id, '_fanculo_enable_view_js', true);
 
@@ -201,6 +209,7 @@ class PostController
             'editor_style' => $editor_style ?: '',
             'view_js' => $view_js ?: '',
             'description' => $description ?: '',
+            'category' => $category ?: '',
             'enable_editor_style' => $enable_editor_style === 'true',
             'enable_view_js' => $enable_view_js === 'true'
         ]);
@@ -228,6 +237,7 @@ class PostController
         $editor_style = wp_unslash($_POST['editor_style'] ?? ''); // Save editor style as-is
         $view_js = wp_unslash($_POST['view_js'] ?? ''); // Save view JS as-is
         $description = sanitize_textarea_field($_POST['description'] ?? ''); // Save description
+        $category = sanitize_text_field($_POST['category'] ?? ''); // Save block category
 
         if (empty($title)) {
             wp_send_json_error('Title is required');
@@ -255,8 +265,9 @@ class PostController
 
         update_post_meta($post_id, '_fanculo_style', $style);
 
-        // Update description
+        // Update description and category
         update_post_meta($post_id, '_fanculo_description', $description);
+        update_post_meta($post_id, '_fanculo_category', $category);
 
         if ($type === 'blocks') {
             if (!empty($attributes)) {
@@ -314,5 +325,28 @@ class PostController
         }
 
         wp_send_json_success(['post_id' => $post_id]);
+    }
+
+    public function get_block_categories(): void
+    {
+        if (!wp_verify_nonce($_POST['nonce'], 'fanculo_nonce')) {
+            wp_send_json_error('Invalid nonce');
+        }
+
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error('Permission denied');
+        }
+
+        $categories = get_default_block_categories();
+        
+        // Format categories for select dropdown
+        $formatted_categories = array_map(function($category) {
+            return [
+                'slug' => $category['slug'],
+                'title' => $category['title']
+            ];
+        }, $categories);
+
+        wp_send_json_success($formatted_categories);
     }
 }

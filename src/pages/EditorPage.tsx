@@ -5,7 +5,7 @@ import MonacoEditor from '../ui/components/MonacoEditor'
 import QuickCreateModal from '../ui/components/modals/QuickCreateModal'
 import TitleEditModal from '../ui/components/modals/TitleEditModal'
 import DeleteConfirmModal from '../ui/components/modals/DeleteConfirmModal'
-import { Button, TextareaControl, TabPanel, ToggleControl } from '@wordpress/components'
+import { Button, TextareaControl, TabPanel, ToggleControl, SelectControl } from '@wordpress/components'
 import { BlocksIcon, SymbolIcon, StyleIcon, SettingsIcon } from '../ui/icons/Icons.jsx'
 import { MdOutlineDescription } from 'react-icons/md'
 import { preloadCommonLanguages } from '../utils/monacoLanguageLoader'
@@ -45,6 +45,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	const [postEditorStyle, setPostEditorStyle] = useState('')
 	const [postViewJs, setPostViewJs] = useState('')
 	const [postDescription, setPostDescription] = useState('')
+	const [postCategory, setPostCategory] = useState('')
 	const [isCreating, setIsCreating] = useState(false)
 	const [isUpdating, setIsUpdating] = useState(false)
 	const [isLoadingPost, setIsLoadingPost] = useState(false)
@@ -72,6 +73,9 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	// Toggle states for Editor Style and View JS tabs
 	const [enableEditorStyle, setEnableEditorStyle] = useState(false)
 	const [enableViewJs, setEnableViewJs] = useState(false)
+
+	// Block categories
+	const [blockCategories, setBlockCategories] = useState<any[]>([])
 
 	const fetchPosts = async () => {
 		setIsLoadingPosts(true)
@@ -104,8 +108,31 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 		}
 	}
 
+	const fetchBlockCategories = async () => {
+		try {
+			const response = await fetch(window.fanculo_ajax.ajax_url, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+				},
+				body: new URLSearchParams({
+					action: 'fanculo_get_block_categories',
+					nonce: window.fanculo_ajax.nonce,
+				}),
+			})
+
+			const result = await response.json()
+			if (result.success) {
+				setBlockCategories(result.data)
+			}
+		} catch (error) {
+			console.error('Error fetching block categories:', error)
+		}
+	}
+
 	useEffect(() => {
 		fetchPosts()
+		fetchBlockCategories()
 		// Initialize Monaco Editor
 		initializeMonaco()
 	}, [])
@@ -141,6 +168,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 		setPostEditorStyle('')
 		setPostViewJs('')
 		setPostDescription('')
+		setPostCategory('')
 		setEnableEditorStyle(false)
 		setEnableViewJs(false)
 		setMessage('')
@@ -186,6 +214,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				setPostEditorStyle(post.editor_style || '')
 				setPostViewJs(post.view_js || '')
 				setPostDescription(post.description || '')
+				setPostCategory(post.category || '')
 				
 				// Set toggle states from saved values
 				if (post.type === 'blocks') {
@@ -274,6 +303,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 					editor_style: '',
 					view_js: '',
 					description: '',
+					category: '',
 					enable_editor_style: 'false',
 					enable_view_js: 'false',
 				}),
@@ -337,6 +367,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 					editor_style: postEditorStyle,
 					view_js: postViewJs,
 					description: postDescription,
+					category: postCategory,
 					enable_editor_style: enableEditorStyle.toString(),
 					enable_view_js: enableViewJs.toString(),
 				}),
@@ -589,6 +620,25 @@ document.addEventListener('DOMContentLoaded', function() {
 										placeholder="Enter a description for this block..."
 										rows={3}
 										help="Optional description to help identify and understand this block's purpose"
+									/>
+								</div>
+							)}
+
+							{/* Block Category - Only for blocks */}
+							{postType === 'blocks' && (
+								<div className="mb-4">
+									<SelectControl
+										label="Block Category"
+										value={postCategory}
+										onChange={(value) => setPostCategory(value || '')}
+										options={[
+											{ label: 'Select a category...', value: '' },
+											...blockCategories.map(category => ({
+												label: category.title,
+												value: category.slug
+											}))
+										]}
+										help="Choose the Gutenberg category for this block"
 									/>
 								</div>
 							)}
