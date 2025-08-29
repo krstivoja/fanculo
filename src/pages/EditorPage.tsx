@@ -86,34 +86,35 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 		fetchPosts()
 	}, [])
 
-	// Auto-select first post when posts are loaded
+	// Auto-select first post when posts are loaded initially (only once)
 	useEffect(() => {
-		if (!editingPostId && posts.blocks.length === 0 && posts.symbols.length === 0 && posts.scss.length === 0) {
+		// Only auto-select on initial load when no post is being edited
+		if (editingPostId) return
+		
+		if (posts.blocks.length === 0 && posts.symbols.length === 0 && posts.scss.length === 0) {
 			return // No posts available yet
 		}
 
-		if (!editingPostId) {
-			// Find first available post across all types
-			let firstPost = null
-			let firstPostType = null
+		// Find first available post across all types
+		let firstPost = null
+		let firstPostType = null
 
-			if (posts.blocks.length > 0) {
-				firstPost = posts.blocks[0]
-				firstPostType = 'blocks'
-			} else if (posts.symbols.length > 0) {
-				firstPost = posts.symbols[0]
-				firstPostType = 'symbols'
-			} else if (posts.scss.length > 0) {
-				firstPost = posts.scss[0]
-				firstPostType = 'scss'
-			}
-
-			if (firstPost && firstPostType) {
-				setActiveTab(firstPostType)
-				handleEditPost(firstPost.id)
-			}
+		if (posts.blocks.length > 0) {
+			firstPost = posts.blocks[0]
+			firstPostType = 'blocks'
+		} else if (posts.symbols.length > 0) {
+			firstPost = posts.symbols[0]
+			firstPostType = 'symbols'
+		} else if (posts.scss.length > 0) {
+			firstPost = posts.scss[0]
+			firstPostType = 'scss'
 		}
-	}, [posts, editingPostId])
+
+		if (firstPost && firstPostType) {
+			setActiveTab(firstPostType)
+			handleEditPost(firstPost.id)
+		}
+	}, [posts]) // Only depend on posts, not activeTab or editingPostId
 
 	const resetForm = () => {
 		setEditingPostId(null)
@@ -125,7 +126,20 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 		setMessage('')
 	}
 
-	const handleEditPost = async (postId: number) => {
+	const handleTabChange = (tabKey: string) => {
+		setActiveTab(tabKey)
+		
+		// Auto-select first post in the new tab if available
+		const postsInTab = posts[tabKey as keyof typeof posts]
+		if (postsInTab.length > 0) {
+			handleEditPost(postsInTab[0].id, true) // Skip tab update since we're already setting it
+		} else {
+			// If no posts in this tab, clear the form
+			resetForm()
+		}
+	}
+
+	const handleEditPost = async (postId: number, skipTabUpdate = false) => {
 		console.log('handleEditPost called with ID:', postId)
 		if (editingPostId && editingPostId !== postId) {
 			resetForm()
@@ -157,6 +171,11 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				setPostContent(post.content || '')
 				setPostStyle(post.style || '')
 				setPostAttributes(post.attributes || '')
+
+				// Set the active tab to match the post type (unless we're skipping tab update)
+				if (!skipTabUpdate) {
+					setActiveTab(post.type)
+				}
 
 				document.querySelector('.post-form')?.scrollIntoView({ behavior: 'smooth' })
 			} else {
@@ -346,7 +365,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 					].map((tab) => (
 						<button
 							key={tab.key}
-							onClick={() => setActiveTab(tab.key)}
+							onClick={() => handleTabChange(tab.key)}
 							className={`flex-1 cursor-pointer !text-[12px] transition-all duration-300 p-1 ${
 								activeTab === tab.key 
 									? 'text-white  bg-black rounded-sm'
@@ -382,7 +401,9 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 								posts[activeTab as keyof typeof posts].map((post: any) => (
 									<div 
 										key={post.id} 
-										className="p-3 border-b border-gray-200 flex justify-between items-center transition-colors duration-200 hover:bg-gray-50"
+										className={`p-3 border-b border-gray-200 flex justify-between items-center transition-colors duration-200 hover:bg-gray-50 ${
+											editingPostId === post.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+										}`}
 									>
 										<div>
 											<div className="font-medium mb-1">
