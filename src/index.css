@@ -17,6 +17,8 @@
 
 
 /* WP UI Reset */
+html { padding:0 !important;}
+#wpadminbar { display: none !important; }
 #wpcontent { padding-left: 0px }
 #wpfooter { display: none !important; }
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, Suspense, forwardRef, useImperativeHandle } from 'react'
+import LoadingSpinner from '../ui/components/LoadingSpinner'
 
 declare global {
 	interface Window {
@@ -417,7 +418,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 						<div className="post-form w-full mb-10 p-5 border border-gray-300 rounded-lg bg-gray-100 relative">
 							{isLoadingPost && (
 								<div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center rounded-lg z-10">
-									<div>Loading post data...</div>
+									<LoadingSpinner />
 								</div>
 							)}
 
