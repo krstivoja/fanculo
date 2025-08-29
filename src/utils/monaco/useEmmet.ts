@@ -61,17 +61,25 @@ export default function useEmmet(editor: any, monaco: any) {
                             const lineContent = model.getLineContent(position.lineNumber)
                             const textUntilPosition = lineContent.substr(0, position.column - 1)
 
-                            // PHP context detection
+                            // Enhanced PHP context detection
                             if (lang === 'php') {
                                 const lastPhpOpen = textUntilPosition.lastIndexOf('<?')
                                 const lastPhpClose = textUntilPosition.lastIndexOf('?>')
                                 const insidePHP = lastPhpOpen > lastPhpClose
                                 
+                                // Skip Emmet inside PHP tags
                                 if (insidePHP) {
                                     return { suggestions: [] }
                                 }
 
-                                if (textUntilPosition.endsWith('$') || textUntilPosition.match(/\$\w*$/)) {
+                                // Skip Emmet when typing PHP variables or functions
+                                if (textUntilPosition.match(/\$\w*$/) || 
+                                    textUntilPosition.match(/[a-zA-Z_][a-zA-Z0-9_]*$/)) {
+                                    return { suggestions: [] }
+                                }
+
+                                // Skip Emmet for common PHP function patterns
+                                if (textUntilPosition.match(/(get_|wp_|add_|remove_|update_|delete_|the_|is_|has_)[a-zA-Z0-9_]*$/)) {
                                     return { suggestions: [] }
                                 }
                             }
@@ -228,6 +236,27 @@ export default function useEmmet(editor: any, monaco: any) {
                             emmetPattern = /[\w.#>+*\[\]{}@()\-:]+$/
                             match = textUntilPosition.match(emmetPattern)
                             
+                            // Enhanced PHP context detection for Tab expansion
+                            if (match && languageId === 'php') {
+                                const lastPhpOpen = textUntilPosition.lastIndexOf('<?')
+                                const lastPhpClose = textUntilPosition.lastIndexOf('?>')
+                                const insidePHP = lastPhpOpen > lastPhpClose
+                                
+                                // Don't expand Emmet inside PHP tags
+                                if (insidePHP) {
+                                    match = null
+                                }
+                                
+                                // Don't expand PHP function names as Emmet
+                                const matchText = match[0]
+                                if (matchText.match(/^(get_|wp_|add_|remove_|update_|delete_|the_|is_|has_)[a-zA-Z0-9_]*$/) ||
+                                    matchText.match(/^\$[a-zA-Z0-9_]*$/) ||
+                                    matchText.match(/^[a-zA-Z_][a-zA-Z0-9_]*$/)) {
+                                    match = null
+                                }
+                            }
+                            
+                            // Original logic for other contexts
                             if (match && languageId !== 'scss' && textUntilPosition.includes('$') && !textUntilPosition.match(/^\$[\w\-]+$/)) {
                                 match = null
                             }

@@ -1,0 +1,252 @@
+{
+  "actions": [
+    {
+      "name": "init",
+      "description": "Fires after WordPress has finished loading but before any headers are sent",
+      "parameters": [],
+      "priority": 10
+    },
+    {
+      "name": "wp_loaded",
+      "description": "Fires once WordPress, all plugins, and the theme are fully loaded and instantiated",
+      "parameters": [],
+      "priority": 10
+    },
+    {
+      "name": "wp_enqueue_scripts",
+      "description": "Enqueue scripts and styles on the front end",
+      "parameters": [],
+      "priority": 10
+    },
+    {
+      "name": "admin_enqueue_scripts",
+      "description": "Enqueue scripts and styles in the admin area",
+      "parameters": ["$hook"],
+      "priority": 10
+    },
+    {
+      "name": "enqueue_block_editor_assets",
+      "description": "Enqueue scripts and styles for the block editor",
+      "parameters": [],
+      "priority": 10
+    },
+    {
+      "name": "enqueue_block_assets",
+      "description": "Enqueue scripts and styles for both front end and editor",
+      "parameters": [],
+      "priority": 10
+    },
+    {
+      "name": "wp_head",
+      "description": "Print scripts or data in the head tag on the front end",
+      "parameters": [],
+      "priority": 10
+    },
+    {
+      "name": "wp_footer",
+      "description": "Print scripts or data before the closing body tag on the front end",
+      "parameters": [],
+      "priority": 10
+    },
+    {
+      "name": "admin_head",
+      "description": "Print scripts or data in the head tag in the admin area",
+      "parameters": [],
+      "priority": 10
+    },
+    {
+      "name": "admin_footer",
+      "description": "Print scripts or data before the closing body tag in the admin area",
+      "parameters": [],
+      "priority": 10
+    },
+    {
+      "name": "wp_ajax_{action}",
+      "description": "Handle AJAX requests for logged-in users",
+      "parameters": [],
+      "priority": 10
+    },
+    {
+      "name": "wp_ajax_nopriv_{action}",
+      "description": "Handle AJAX requests for non-logged-in users",
+      "parameters": [],
+      "priority": 10
+    },
+    {
+      "name": "save_post",
+      "description": "Runs whenever a post or page is created or updated",
+      "parameters": ["$post_id", "$post", "$update"],
+      "priority": 10
+    },
+    {
+      "name": "delete_post",
+      "description": "Runs when a post is deleted",
+      "parameters": ["$post_id"],
+      "priority": 10
+    },
+    {
+      "name": "user_register",
+      "description": "Runs when a new user account is created",
+      "parameters": ["$user_id"],
+      "priority": 10
+    },
+    {
+      "name": "wp_login",
+      "description": "Runs when a user logs in",
+      "parameters": ["$user_login", "$user"],
+      "priority": 10
+    },
+    {
+      "name": "wp_logout",
+      "description": "Runs when a user logs out",
+      "parameters": [],
+      "priority": 10
+    },
+    {
+      "name": "template_redirect",
+      "description": "Fires before determining which template to load",
+      "parameters": [],
+      "priority": 10
+    },
+    {
+      "name": "pre_get_posts",
+      "description": "Fires after the query variable object is created, but before the actual query is run",
+      "parameters": ["$query"],
+      "priority": 10
+    },
+    {
+      "name": "plugins_loaded",
+      "description": "Fires once activated plugins have loaded",
+      "parameters": [],
+      "priority": 10
+    },
+    {
+      "name": "after_setup_theme",
+      "description": "Fires after the active theme's functions.php file is loaded",
+      "parameters": [],
+      "priority": 10
+    }
+  ],
+  "filters": [
+    {
+      "name": "the_content",
+      "description": "Filter the post content",
+      "parameters": ["$content"],
+      "priority": 10
+    },
+    {
+      "name": "the_title",
+      "description": "Filter the post title",
+      "parameters": ["$title", "$id"],
+      "priority": 10
+    },
+    {
+      "name": "the_excerpt",
+      "description": "Filter the post excerpt",
+      "parameters": ["$excerpt"],
+      "priority": 10
+    },
+    {
+      "name": "wp_title",
+      "description": "Filter the page title",
+      "parameters": ["$title", "$sep", "$seplocation"],
+      "priority": 10
+    },
+    {
+      "name": "body_class",
+      "description": "Filter the CSS classes for the body tag",
+      "parameters": ["$classes"],
+      "priority": 10
+    },
+    {
+      "name": "post_class",
+      "description": "Filter the CSS classes for the post container element",
+      "parameters": ["$classes", "$post_id"],
+      "priority": 10
+    },
+    {
+      "name": "wp_nav_menu_items",
+      "description": "Filter the navigation menu items",
+      "parameters": ["$items", "$args"],
+      "priority": 10
+    },
+    {
+      "name": "excerpt_length",
+      "description": "Filter the number of words in an excerpt",
+      "parameters": ["$length"],
+      "priority": 10
+    },
+    {
+      "name": "excerpt_more",
+      "description": "Filter the string in the \"more\" link displayed after a trimmed excerpt",
+      "parameters": ["$more"],
+      "priority": 10
+    },
+    {
+      "name": "login_redirect",
+      "description": "Filter the login redirect URL",
+      "parameters": ["$redirect_to", "$request", "$user"],
+      "priority": 10
+    },
+    {
+      "name": "logout_redirect",
+      "description": "Filter the logout redirect URL",
+      "parameters": ["$redirect_to", "$request", "$user"],
+      "priority": 10
+    },
+    {
+      "name": "wp_mail",
+      "description": "Filter the wp_mail() arguments",
+      "parameters": ["$args"],
+      "priority": 10
+    },
+    {
+      "name": "upload_mimes",
+      "description": "Filter the list of allowed mime types and file extensions",
+      "parameters": ["$mime_types"],
+      "priority": 10
+    },
+    {
+      "name": "image_size_names_choose",
+      "description": "Filter the names and labels of the default image sizes",
+      "parameters": ["$size_names"],
+      "priority": 10
+    },
+    {
+      "name": "wp_get_attachment_image_attributes",
+      "description": "Filter the attributes of an image attachment",
+      "parameters": ["$attr", "$attachment", "$size"],
+      "priority": 10
+    },
+    {
+      "name": "block_categories_all",
+      "description": "Filter the available block categories",
+      "parameters": ["$categories", "$post"],
+      "priority": 10
+    },
+    {
+      "name": "render_block",
+      "description": "Filter the content of a single block",
+      "parameters": ["$block_content", "$block"],
+      "priority": 10
+    },
+    {
+      "name": "render_block_{block_name}",
+      "description": "Filter the content of a specific block type",
+      "parameters": ["$block_content", "$block"],
+      "priority": 10
+    },
+    {
+      "name": "allowed_block_types_all",
+      "description": "Filter the allowed block types",
+      "parameters": ["$allowed_blocks", "$post"],
+      "priority": 10
+    },
+    {
+      "name": "block_editor_settings_all",
+      "description": "Filter the block editor settings",
+      "parameters": ["$editor_settings", "$post"],
+      "priority": 10
+    }
+  ]
+}

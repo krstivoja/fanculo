@@ -25,7 +25,7 @@ class PostController
 
         $title = sanitize_text_field($_POST['title'] ?? '');
         $type = sanitize_text_field($_POST['type'] ?? 'blocks');
-        $content = sanitize_textarea_field($_POST['content'] ?? '');
+        $content = wp_kses_post($_POST['content'] ?? '');
         $style = sanitize_textarea_field($_POST['style'] ?? '');
         $attributes = sanitize_textarea_field($_POST['attributes'] ?? '');
 
@@ -194,7 +194,7 @@ class PostController
         }
 
         $title = sanitize_text_field($_POST['title'] ?? '');
-        $content = sanitize_textarea_field($_POST['content'] ?? '');
+        $content = wp_kses_post($_POST['content'] ?? '');
         $style = sanitize_textarea_field($_POST['style'] ?? '');
         $attributes = sanitize_textarea_field($_POST['attributes'] ?? '');
 

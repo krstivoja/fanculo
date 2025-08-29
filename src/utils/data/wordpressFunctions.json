@@ -1,0 +1,366 @@
+[
+  {
+    "label": "get_block_wrapper_attributes",
+    "insertText": "get_block_wrapper_attributes(${1:\\$attributes})",
+    "documentation": "Generates the wrapper attributes for a block based on the block supports",
+    "category": "blocks",
+    "since": "5.6.0"
+  },
+  {
+    "label": "register_block_type",
+    "insertText": "register_block_type('${1:namespace/block-name}', ${2:\\$args})",
+    "documentation": "Registers a block type from a block.json file or array configuration",
+    "category": "blocks",
+    "since": "5.0.0"
+  },
+  {
+    "label": "render_block",
+    "insertText": "render_block(${1:\\$parsed_block})",
+    "documentation": "Renders a single block into a HTML string",
+    "category": "blocks",
+    "since": "5.0.0"
+  },
+  {
+    "label": "parse_blocks",
+    "insertText": "parse_blocks(${1:\\$content})",
+    "documentation": "Parses blocks out of a content string",
+    "category": "blocks",
+    "since": "5.0.0"
+  },
+  {
+    "label": "serialize_blocks",
+    "insertText": "serialize_blocks(${1:\\$blocks})",
+    "documentation": "Takes a block or list of blocks and returns the serialized post content",
+    "category": "blocks",
+    "since": "5.0.0"
+  },
+  {
+    "label": "has_blocks",
+    "insertText": "has_blocks(${1:\\$post})",
+    "documentation": "Determines whether a post or content string has blocks",
+    "category": "blocks",
+    "since": "5.0.0"
+  },
+  {
+    "label": "register_block_pattern",
+    "insertText": "register_block_pattern('${1:namespace/pattern-name}', array(\n\t'title' => '${2:Pattern Title}',\n\t'content' => '${3:<!-- Block content -->}',\n\t'categories' => array('${4:category}')\n))",
+    "documentation": "Registers a block pattern",
+    "category": "blocks",
+    "since": "5.5.0"
+  },
+  {
+    "label": "register_block_style",
+    "insertText": "register_block_style('${1:block-name}', array(\n\t'name' => '${2:style-name}',\n\t'label' => '${3:Style Label}'\n))",
+    "documentation": "Registers a block style variation",
+    "category": "blocks",
+    "since": "5.3.0"
+  },
+  {
+    "label": "wp_register_script",
+    "insertText": "wp_register_script('${1:handle}', ${2:\\$src}, ${3:\\$deps}, ${4:'1.0.0'}, ${5:true})",
+    "documentation": "Register a script for later use",
+    "category": "scripts",
+    "since": "2.1.0"
+  },
+  {
+    "label": "wp_enqueue_script",
+    "insertText": "wp_enqueue_script('${1:handle}', ${2:\\$src}, ${3:\\$deps}, ${4:'1.0.0'}, ${5:true})",
+    "documentation": "Enqueue a script",
+    "category": "scripts",
+    "since": "2.1.0"
+  },
+  {
+    "label": "wp_register_style",
+    "insertText": "wp_register_style('${1:handle}', ${2:\\$src}, ${3:\\$deps}, ${4:'1.0.0'})",
+    "documentation": "Register a style for later use",
+    "category": "styles",
+    "since": "2.6.0"
+  },
+  {
+    "label": "wp_enqueue_style",
+    "insertText": "wp_enqueue_style('${1:handle}', ${2:\\$src}, ${3:\\$deps}, ${4:'1.0.0'})",
+    "documentation": "Enqueue a style",
+    "category": "styles",
+    "since": "2.6.0"
+  },
+  {
+    "label": "wp_add_inline_script",
+    "insertText": "wp_add_inline_script('${1:handle}', '${2:data}', '${3:before}')",
+    "documentation": "Add extra code to a registered script",
+    "category": "scripts",
+    "since": "4.5.0"
+  },
+  {
+    "label": "wp_add_inline_style",
+    "insertText": "wp_add_inline_style('${1:handle}', '${2:data}')",
+    "documentation": "Add extra CSS styles to a registered stylesheet",
+    "category": "styles",
+    "since": "3.3.0"
+  },
+  {
+    "label": "wp_set_script_translations",
+    "insertText": "wp_set_script_translations('${1:handle}', '${2:domain}', '${3:path}')",
+    "documentation": "Sets translated strings for a script handle",
+    "category": "scripts",
+    "since": "5.0.0"
+  },
+  {
+    "label": "get_post_meta",
+    "insertText": "get_post_meta(${1:\\$post_id}, '${2:key}', ${3:true})",
+    "documentation": "Retrieve a post meta field for the given post ID",
+    "category": "post-meta",
+    "since": "1.5.0"
+  },
+  {
+    "label": "update_post_meta",
+    "insertText": "update_post_meta(${1:\\$post_id}, '${2:meta_key}', ${3:\\$meta_value})",
+    "documentation": "Update a post meta field based on the given post ID",
+    "category": "post-meta",
+    "since": "1.5.0"
+  },
+  {
+    "label": "add_post_meta",
+    "insertText": "add_post_meta(${1:\\$post_id}, '${2:meta_key}', ${3:\\$meta_value}, ${4:false})",
+    "documentation": "Add a meta field to the given post",
+    "category": "post-meta",
+    "since": "1.5.0"
+  },
+  {
+    "label": "delete_post_meta",
+    "insertText": "delete_post_meta(${1:\\$post_id}, '${2:meta_key}', ${3:\\$meta_value})",
+    "documentation": "Delete a post meta field for the given post ID",
+    "category": "post-meta",
+    "since": "1.5.0"
+  },
+  {
+    "label": "get_option",
+    "insertText": "get_option('${1:option}', ${2:\\$default})",
+    "documentation": "Retrieves an option value based on an option name",
+    "category": "options",
+    "since": "1.5.0"
+  },
+  {
+    "label": "update_option",
+    "insertText": "update_option('${1:option}', ${2:\\$value})",
+    "documentation": "Update the value of an option that was already added",
+    "category": "options",
+    "since": "1.0.0"
+  },
+  {
+    "label": "add_option",
+    "insertText": "add_option('${1:option}', ${2:\\$value}, '${3:}', '${4:yes}')",
+    "documentation": "Add a new option",
+    "category": "options",
+    "since": "1.0.0"
+  },
+  {
+    "label": "delete_option",
+    "insertText": "delete_option('${1:option}')",
+    "documentation": "Remove an option by name",
+    "category": "options",
+    "since": "1.2.0"
+  },
+  {
+    "label": "esc_html",
+    "insertText": "esc_html(${1:\\$text})",
+    "documentation": "Escape HTML blocks",
+    "category": "sanitization",
+    "since": "2.8.0"
+  },
+  {
+    "label": "esc_attr",
+    "insertText": "esc_attr(${1:\\$text})",
+    "documentation": "Escape HTML attributes",
+    "category": "sanitization",
+    "since": "2.8.0"
+  },
+  {
+    "label": "esc_url",
+    "insertText": "esc_url(${1:\\$url})",
+    "documentation": "Checks and cleans a URL",
+    "category": "sanitization",
+    "since": "2.8.0"
+  },
+  {
+    "label": "esc_js",
+    "insertText": "esc_js(${1:\\$text})",
+    "documentation": "Escape single quotes, htmlspecialchar \"<>\" and fix line endings",
+    "category": "sanitization",
+    "since": "2.8.0"
+  },
+  {
+    "label": "wp_kses_post",
+    "insertText": "wp_kses_post(${1:\\$data})",
+    "documentation": "Sanitize content for allowed HTML tags for post content",
+    "category": "sanitization",
+    "since": "2.9.0"
+  },
+  {
+    "label": "sanitize_text_field",
+    "insertText": "sanitize_text_field(${1:\\$str})",
+    "documentation": "Sanitizes a string from user input or from the database",
+    "category": "sanitization",
+    "since": "2.9.0"
+  },
+  {
+    "label": "sanitize_email",
+    "insertText": "sanitize_email(${1:\\$email})",
+    "documentation": "Strips out all characters that are not allowable in an email",
+    "category": "sanitization",
+    "since": "1.5.0"
+  },
+  {
+    "label": "sanitize_url",
+    "insertText": "sanitize_url(${1:\\$url})",
+    "documentation": "Sanitizes a URL for use in a redirect",
+    "category": "sanitization",
+    "since": "2.8.0"
+  },
+  {
+    "label": "add_action",
+    "insertText": "add_action('${1:hook}', '${2:function_to_add}', ${3:10}, ${4:1})",
+    "documentation": "Hook a function or method to a specific filter action",
+    "category": "hooks",
+    "since": "1.2.0"
+  },
+  {
+    "label": "remove_action",
+    "insertText": "remove_action('${1:hook}', '${2:function_to_remove}', ${3:10})",
+    "documentation": "Remove a function from a specified action hook",
+    "category": "hooks",
+    "since": "1.2.0"
+  },
+  {
+    "label": "add_filter",
+    "insertText": "add_filter('${1:hook}', '${2:function_to_add}', ${3:10}, ${4:1})",
+    "documentation": "Hook a function or method to a specific filter action",
+    "category": "hooks",
+    "since": "0.71"
+  },
+  {
+    "label": "remove_filter",
+    "insertText": "remove_filter('${1:hook}', '${2:function_to_remove}', ${3:10})",
+    "documentation": "Remove a function from a specified filter hook",
+    "category": "hooks",
+    "since": "1.2.0"
+  },
+  {
+    "label": "apply_filters",
+    "insertText": "apply_filters('${1:hook}', ${2:\\$value}, ${3:\\$args})",
+    "documentation": "Calls the callback functions that have been added to a filter hook",
+    "category": "hooks",
+    "since": "0.71"
+  },
+  {
+    "label": "do_action",
+    "insertText": "do_action('${1:hook}', ${2:\\$args})",
+    "documentation": "Execute functions hooked on a specific action hook",
+    "category": "hooks",
+    "since": "1.2.0"
+  },
+  {
+    "label": "get_posts",
+    "insertText": "get_posts(array(\n\t'numberposts' => ${1:5},\n\t'post_type' => '${2:post}',\n\t'post_status' => 'publish'\n))",
+    "documentation": "Retrieve a list of the latest posts or posts matching criteria",
+    "category": "posts",
+    "since": "1.2.0"
+  },
+  {
+    "label": "wp_insert_post",
+    "insertText": "wp_insert_post(array(\n\t'post_title' => '${1:Post Title}',\n\t'post_content' => '${2:Post Content}',\n\t'post_status' => 'publish',\n\t'post_type' => '${3:post}'\n))",
+    "documentation": "Insert or update a post",
+    "category": "posts",
+    "since": "1.0.0"
+  },
+  {
+    "label": "wp_update_post",
+    "insertText": "wp_update_post(array(\n\t'ID' => ${1:\\$post_id},\n\t'post_title' => '${2:New Title}'\n))",
+    "documentation": "Update a post with new post data",
+    "category": "posts",
+    "since": "1.0.0"
+  },
+  {
+    "label": "wp_delete_post",
+    "insertText": "wp_delete_post(${1:\\$post_id}, ${2:false})",
+    "documentation": "Trash or delete a post or page",
+    "category": "posts",
+    "since": "1.0.0"
+  },
+  {
+    "label": "the_title",
+    "insertText": "the_title()",
+    "documentation": "Display or retrieve the current post title with optional markup",
+    "category": "template",
+    "since": "0.71"
+  },
+  {
+    "label": "the_content",
+    "insertText": "the_content('${1:more_text}')",
+    "documentation": "Display the post content",
+    "category": "template",
+    "since": "0.71"
+  },
+  {
+    "label": "the_excerpt",
+    "insertText": "the_excerpt()",
+    "documentation": "Display the post excerpt",
+    "category": "template",
+    "since": "0.71"
+  },
+  {
+    "label": "get_the_title",
+    "insertText": "get_the_title(${1:\\$post})",
+    "documentation": "Retrieve the post title",
+    "category": "template",
+    "since": "0.71"
+  },
+  {
+    "label": "get_the_content",
+    "insertText": "get_the_content('${1:more_text}', ${2:false}, ${3:\\$post})",
+    "documentation": "Retrieve the post content",
+    "category": "template",
+    "since": "0.71"
+  },
+  {
+    "label": "get_the_excerpt",
+    "insertText": "get_the_excerpt(${1:\\$post})",
+    "documentation": "Retrieve the post excerpt",
+    "category": "template",
+    "since": "1.5.0"
+  },
+  {
+    "label": "get_template_part",
+    "insertText": "get_template_part('${1:slug}', '${2:name}')",
+    "documentation": "Load a template part into a template",
+    "category": "template",
+    "since": "3.0.0"
+  },
+  {
+    "label": "wp_head",
+    "insertText": "wp_head()",
+    "documentation": "Fire the wp_head action",
+    "category": "template",
+    "since": "1.2.0"
+  },
+  {
+    "label": "wp_footer",
+    "insertText": "wp_footer()",
+    "documentation": "Fire the wp_footer action",
+    "category": "template",
+    "since": "1.5.1"
+  },
+  {
+    "label": "body_class",
+    "insertText": "body_class('${1:class}')",
+    "documentation": "Display the classes for the body element",
+    "category": "template",
+    "since": "2.8.0"
+  },
+  {
+    "label": "post_class",
+    "insertText": "post_class('${1:class}', ${2:\\$post_id})",
+    "documentation": "Display the classes for the post div element",
+    "category": "template",
+    "since": "2.7.0"
+  }
+]

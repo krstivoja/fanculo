@@ -2,6 +2,7 @@ import { Suspense, lazy, useRef } from 'react'
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Navigation from './ui/patterns/Navigation'
 import LoadingSpinner from './ui/components/LoadingSpinner'
+import MemoryMonitor from './ui/components/MemoryMonitor'
 
 
 // Lazy load pages
@@ -40,6 +41,9 @@ function App() {
           </Suspense>
         </>
       </div>
+      
+      {/* Memory Monitor - only show in development */}
+      {process.env.NODE_ENV === 'development' && <MemoryMonitor show={true} />}
     </Router>
   )
 }
