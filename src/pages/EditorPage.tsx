@@ -429,7 +429,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										),
 										className: 'tab-content-field'
 									}] : []),
-									...(postType !== 'symbols' ? [{
+									...(postType === 'blocks' || postType === 'scss' ? [{
 										name: 'style',
 										title: (
 											<span className="flex items-center gap-2">
