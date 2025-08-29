@@ -12,6 +12,7 @@
     "@wordpress/components": "^30.2.0",
     "@wordpress/element": "^6.29.0",
     "@wordpress/icons": "^10.29.0",
+    "emmet-monaco-es": "^5.5.0",
     "monaco-editor": "^0.52.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

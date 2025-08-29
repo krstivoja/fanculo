@@ -1,5 +1,8 @@
-import { memo, Suspense, lazy } from 'react'
+import { memo, Suspense, lazy, useRef } from 'react'
 import LoadingSpinner from './LoadingSpinner'
+import useEmmet from '../../utils/monaco/useEmmet'
+import usePHPIntellisense from '../../utils/monaco/usePHPIntellisense'
+import useEditorConfig from '../../utils/monaco/useEditorConfig'
 
 // Lazy load Monaco Editor to reduce initial bundle size
 const Editor = lazy(() => import('@monaco-editor/react'))
@@ -21,6 +24,8 @@ const MonacoEditor = memo(({
   height = '400px',
   options = {}
 }: MonacoEditorProps) => {
+  const editorRef = useRef<any>(null)
+  const monacoRef = useRef<any>(null)
   const defaultOptions = {
     minimap: { enabled: false },
     scrollBeyondLastLine: false,
@@ -45,13 +50,15 @@ const MonacoEditor = memo(({
     ...options
   }
 
+  // Use our custom hooks for enhanced functionality
+  useEmmet(editorRef.current, monacoRef.current)
+  usePHPIntellisense(editorRef.current, monacoRef.current)
+  useEditorConfig(editorRef.current, monacoRef.current)
+
   const handleEditorDidMount = (editor: any, monaco: any) => {
-    // Configure language-specific features
-    if (language === 'php') {
-      configurePHPLanguage(monaco)
-    } else if (language === 'scss') {
-      configureSCSSLanguage(monaco)
-    }
+    // Store references for hooks
+    editorRef.current = editor
+    monacoRef.current = monaco
 
     // Set editor theme
     monaco.editor.setTheme(theme)
@@ -60,154 +67,7 @@ const MonacoEditor = memo(({
     editor.focus()
   }
 
-  const configurePHPLanguage = (monaco: any) => {
-    // Enhanced PHP language configuration
-    monaco.languages.setLanguageConfiguration('php', {
-      wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
-      comments: {
-        lineComment: '//',
-        blockComment: ['/*', '*/']
-      },
-      brackets: [
-        ['{', '}'],
-        ['[', ']'],
-        ['(', ')']
-      ],
-      autoClosingPairs: [
-        { open: '{', close: '}' },
-        { open: '[', close: ']' },
-        { open: '(', close: ')' },
-        { open: '"', close: '"', notIn: ['string'] },
-        { open: "'", close: "'", notIn: ['string', 'comment'] }
-      ]
-    })
-
-    // PHP-specific snippets and autocomplete
-    monaco.languages.registerCompletionItemProvider('php', {
-      provideCompletionItems: () => {
-        const suggestions = [
-          {
-            label: 'WordPress Block Template',
-            kind: monaco.languages.CompletionItemKind.Snippet,
-            insertText: [
-              '<?php',
-              '/**',
-              ' * Block Name: ${1:Block Name}',
-              ' * Description: ${2:Block description}',
-              ' */',
-              '',
-              '// Get block attributes',
-              '$attributes = $attributes ?? [];',
-              '',
-              '// Block content',
-              '?>',
-              '<div <?php echo get_block_wrapper_attributes(); ?>>',
-              '\t${3:Block content here}',
-              '</div>'
-            ].join('\n'),
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: 'WordPress block template with wrapper attributes'
-          },
-          {
-            label: 'get_block_wrapper_attributes',
-            kind: monaco.languages.CompletionItemKind.Function,
-            insertText: 'get_block_wrapper_attributes(${1:$extra_attributes})',
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: 'WordPress function to get block wrapper attributes'
-          },
-          {
-            label: 'wp_kses_post',
-            kind: monaco.languages.CompletionItemKind.Function,
-            insertText: 'wp_kses_post(${1:$content})',
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: 'Sanitize content for allowed HTML tags for post content'
-          },
-          {
-            label: 'esc_attr',
-            kind: monaco.languages.CompletionItemKind.Function,
-            insertText: 'esc_attr(${1:$text})',
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: 'Escaping for HTML attributes'
-          },
-          {
-            label: 'esc_html',
-            kind: monaco.languages.CompletionItemKind.Function,
-            insertText: 'esc_html(${1:$text})',
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: 'Escaping for HTML blocks'
-          }
-        ]
-        return { suggestions }
-      }
-    })
-  }
-
-  const configureSCSSLanguage = (monaco: any) => {
-    // Enhanced SCSS language configuration
-    monaco.languages.registerCompletionItemProvider('scss', {
-      provideCompletionItems: () => {
-        const suggestions = [
-          {
-            label: 'Block Base Styles',
-            kind: monaco.languages.CompletionItemKind.Snippet,
-            insertText: [
-              '.wp-block-${1:namespace}-${2:block-name} {',
-              '\t// Block styles here',
-              '\t${3:}',
-              '',
-              '\t// Responsive design',
-              '\t@media (max-width: 768px) {',
-              '\t\t// Mobile styles',
-              '\t}',
-              '',
-              '\t@media (min-width: 769px) and (max-width: 1024px) {',
-              '\t\t// Tablet styles',
-              '\t}',
-              '',
-              '\t@media (min-width: 1025px) {',
-              '\t\t// Desktop styles',
-              '\t}',
-              '}'
-            ].join('\n'),
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: 'WordPress block base styles template with responsive breakpoints'
-          },
-          {
-            label: 'Tailwind @apply',
-            kind: monaco.languages.CompletionItemKind.Snippet,
-            insertText: '@apply ${1:utility-classes};',
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: 'Apply Tailwind utility classes'
-          },
-          {
-            label: 'CSS Custom Property',
-            kind: monaco.languages.CompletionItemKind.Snippet,
-            insertText: '--${1:property-name}: ${2:value};',
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: 'CSS custom property (CSS variable)'
-          },
-          {
-            label: 'WordPress Editor Styles',
-            kind: monaco.languages.CompletionItemKind.Snippet,
-            insertText: [
-              '// Editor specific styles',
-              '.editor-styles-wrapper & {',
-              '\t${1:// Styles only for Gutenberg editor}',
-              '}',
-              '',
-              '// Frontend styles',
-              ':not(.editor-styles-wrapper) & {',
-              '\t${2:// Styles only for frontend}',
-              '}'
-            ].join('\n'),
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: 'WordPress editor vs frontend specific styles'
-          }
-        ]
-        return { suggestions }
-      }
-    })
-  }
+  // Note: Language configurations and autocomplete are now handled by custom hooks above
 
 
   return (
