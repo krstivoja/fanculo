@@ -1,6 +1,8 @@
 import { useState, useEffect, Suspense, forwardRef, useImperativeHandle } from 'react'
 import LoadingSpinner from '../ui/components/LoadingSpinner'
 import Button from '../ui/components/Button'
+import Input from '../ui/components/Input'
+import Textarea from '../ui/components/Textarea'
 
 declare global {
 	interface Window {
@@ -384,7 +386,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 							Loading posts...
 						</div>
 					) : (
-						<div className="p-4">
+						<div className="">
 							{posts[activeTab as keyof typeof posts].length === 0 ? (
 								<div className="text-center text-gray-600 italic py-10 px-5">
 									<div className="text-5xl mb-2">
@@ -399,28 +401,17 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 								</div>
 							) : (
 								posts[activeTab as keyof typeof posts].map((post: any) => (
-									<div 
-										key={post.id} 
-										className={`p-3 border-b border-gray-200 flex justify-between items-center transition-colors duration-200 hover:bg-gray-50 ${
-											editingPostId === post.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-										}`}
-									>
-										<div>
-											<div className="font-medium mb-1">
-												{post.title}
-											</div>
-											<div className="text-xs text-gray-600">
-												{new Date(post.date).toLocaleDateString()}
-											</div>
-										</div>
-										<Button
-											variant="secondary"
-											size="sm"
+									
+										<button
+											key={post.id} 
+											className={`w-full cursor-pointer text-left p-3 border-b border-gray-200 flex justify-between items-center transition-colors duration-200 hover:bg-gray-50 ${
+												editingPostId === post.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+											}`}
 											onClick={() => handleEditPost(post.id)}
 										>
-											Edit ✏️
-										</Button>
-									</div>
+											{post.title}
+										</button>
+									
 								))
 							)}
 						</div>
@@ -443,18 +434,13 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 
 
-							<div className="mb-4">
-								<label className="block mb-1 font-bold">
-									Post Title:
-								</label>
-								<input
-									type="text"
-									value={postTitle}
-									onChange={(e) => setPostTitle(e.target.value)}
-									placeholder="Enter post title..."
-									className="p-2 w-full border border-gray-300 rounded text-base"
-								/>
-							</div>
+							<Input
+								label="Post Title:"
+								type="text"
+								value={postTitle}
+								onChange={(e) => setPostTitle(e.target.value)}
+								placeholder="Enter post title..."
+							/>
 
 							{/* Post Type Display (Edit mode only shows current type) */}
 							<div className="mb-4">
@@ -473,48 +459,37 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 							{/* Content Field (Blocks & Symbols) */}
 							{(postType === 'blocks' || postType === 'symbols') && (
-								<div className="mb-4">
-									<label className="block mb-1 font-bold">
-										📝 Content:
-									</label>
-									<textarea
-										value={postContent}
-										onChange={(e) => setPostContent(e.target.value)}
-										placeholder="Enter HTML/JSX content..."
-										rows={6}
-										className="w-full p-2 border border-gray-300 rounded font-mono text-sm"
-									/>
-								</div>
+								<Textarea
+									label="📝 Content:"
+									value={postContent}
+									onChange={(e) => setPostContent(e.target.value)}
+									placeholder="Enter HTML/JSX content..."
+									rows={6}
+									variant="code"
+								/>
 							)}
 
 							{/* Style Field (All types) */}
-							<div className="mb-4">
-								<label className="block mb-1 font-bold">
-									🎨 Style:
-								</label>
-								<textarea
-									value={postStyle}
-									onChange={(e) => setPostStyle(e.target.value)}
-									placeholder="Enter CSS/SCSS styles..."
-									rows={6}
-									className="w-full p-2 border border-gray-300 rounded font-mono text-sm"
-								/>
-							</div>
+							<Textarea
+								label="🎨 Style:"
+								value={postStyle}
+								onChange={(e) => setPostStyle(e.target.value)}
+								placeholder="Enter CSS/SCSS styles..."
+								rows={6}
+								variant="code"
+							/>
 
 							{/* Attributes Field (Blocks only) */}
 							{postType === 'blocks' && (
-								<div className="mb-4">
-									<label className="block mb-1 font-bold">
-										⚙️ Attributes:
-									</label>
-									<textarea
-										value={postAttributes}
-										onChange={(e) => setPostAttributes(e.target.value)}
-										placeholder='{"prop1": "default", "prop2": true}'
-										rows={4}
-										className="w-full p-2 border border-gray-300 rounded font-mono text-sm"
-									/>
-								</div>
+								<Textarea
+									label="⚙️ Attributes:"
+									value={postAttributes}
+									onChange={(e) => setPostAttributes(e.target.value)}
+									placeholder='{"prop1": "default", "prop2": true}'
+									rows={4}
+									variant="code"
+									helpText="Enter JSON attributes for this block"
+								/>
 							)}
 
 							<Button
@@ -570,27 +545,23 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 							</p>
 						</div>
 
-						<div className="mb-5">
-							<label className="block mb-2 font-medium text-gray-800">
-								Title:
-							</label>
-							<input
-								type="text"
-								value={quickTitle}
-								onChange={(e) => setQuickTitle(e.target.value)}
-								placeholder={`Enter ${quickCreateType.slice(0, -1)} title...`}
-								autoFocus
-								onKeyPress={(e) => {
-									if (e.key === 'Enter') {
-										handleQuickCreateSubmit()
-									}
-									if (e.key === 'Escape') {
-										setShowModal(false)
-									}
-								}}
-								className="w-full p-3 border-2 border-gray-300 rounded-md text-base outline-none box-border"
-							/>
-						</div>
+						<Input
+							label="Title:"
+							type="text"
+							value={quickTitle}
+							onChange={(e) => setQuickTitle(e.target.value)}
+							placeholder={`Enter ${quickCreateType.slice(0, -1)} title...`}
+							autoFocus
+							onKeyPress={(e) => {
+								if (e.key === 'Enter') {
+									handleQuickCreateSubmit()
+								}
+								if (e.key === 'Escape') {
+									setShowModal(false)
+								}
+							}}
+							className="p-3 text-base border-2"
+						/>
 
 						<div className="flex gap-2.5 justify-end">
 							<Button
