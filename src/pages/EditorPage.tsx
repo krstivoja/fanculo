@@ -58,6 +58,9 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	// Delete confirmation state
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 	const [isDeleting, setIsDeleting] = useState(false)
+	// Title editing modal state
+	const [showTitleModal, setShowTitleModal] = useState(false)
+	const [tempTitle, setTempTitle] = useState('')
 
 	const fetchPosts = async () => {
 		setIsLoadingPosts(true)
@@ -457,13 +460,19 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 
 
-							<TextControl
-								label="Post Title:"
-								type="text"
-								value={postTitle}
-								onChange={(value) => setPostTitle(value)}
-								placeholder="Enter post title..."
-							/>
+							{/* Post Title */}
+							<div className="mb-4">
+								<h1 
+									className="text-xl font-semibold cursor-pointer hover:bg-gray-100 p-2 rounded border border-dashed border-gray-300 hover:border-gray-400 transition-colors"
+									onClick={() => {
+										setTempTitle(postTitle)
+										setShowTitleModal(true)
+									}}
+									title="Click to edit title"
+								>
+									{postTitle || "Click to add title..."}
+								</h1>
+							</div>
 
 							
 
@@ -664,6 +673,66 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 								disabled={isQuickCreating || !quickTitle.trim()}
 							>
 								{isQuickCreating ? 'Creating...' : 'Create'}
+							</Button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Title Edit Modal */}
+			{showTitleModal && (
+				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
+					<div className="bg-white p-8 rounded-xl shadow-2xl min-w-[400px] max-w-[500px]">
+						<div className="mb-5">
+							<h3 className="m-0 mb-2 text-xl text-gray-800 flex items-center gap-2">
+								<MdOutlineDescription size={24} />
+								Edit Post Title
+							</h3>
+							<p className="m-0 text-gray-600 text-sm">
+								Update the title for this post.
+							</p>
+						</div>
+
+						<TextControl
+							label="Title:"
+							type="text"
+							value={tempTitle}
+							onChange={(value) => setTempTitle(value)}
+							placeholder="Enter post title..."
+							autoFocus
+							onKeyPress={(e) => {
+								if (e.key === 'Enter') {
+									setPostTitle(tempTitle)
+									setShowTitleModal(false)
+									setTempTitle('')
+								}
+								if (e.key === 'Escape') {
+									setShowTitleModal(false)
+									setTempTitle('')
+								}
+							}}
+						/>
+
+						<div className="flex gap-2.5 justify-end">
+							<Button
+								variant="tertiary"
+								onClick={() => {
+									setShowTitleModal(false)
+									setTempTitle('')
+								}}
+							>
+								Cancel
+							</Button>
+							<Button
+								variant="primary"
+								onClick={() => {
+									setPostTitle(tempTitle)
+									setShowTitleModal(false)
+									setTempTitle('')
+								}}
+								disabled={!tempTitle.trim()}
+							>
+								Save
 							</Button>
 						</div>
 					</div>
