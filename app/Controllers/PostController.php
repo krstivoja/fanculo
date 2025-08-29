@@ -30,6 +30,7 @@ class PostController
         $attributes = sanitize_textarea_field($_POST['attributes'] ?? '');
         $editor_style = wp_unslash($_POST['editor_style'] ?? ''); // Save editor style as-is
         $view_js = wp_unslash($_POST['view_js'] ?? ''); // Save view JS as-is
+        $description = sanitize_textarea_field($_POST['description'] ?? ''); // Save description
 
         if (empty($title)) {
             wp_send_json_error('Title is required');
@@ -76,6 +77,11 @@ class PostController
             update_post_meta($post_id, '_fanculo_style', $style);
         }
 
+        // Save description for all post types (but mainly used for blocks)
+        if ($description) {
+            update_post_meta($post_id, '_fanculo_description', $description);
+        }
+
         if ($type === 'blocks') {
             if (!empty($attributes)) {
                 $decoded = json_decode($attributes, true);
@@ -89,6 +95,12 @@ class PostController
             // Save editor style and view JS for blocks only
             update_post_meta($post_id, '_fanculo_editor_style', $editor_style);
             update_post_meta($post_id, '_fanculo_view_js', $view_js);
+            
+            // Save toggle states
+            $enable_editor_style = isset($_POST['enable_editor_style']) ? sanitize_text_field($_POST['enable_editor_style']) : 'false';
+            $enable_view_js = isset($_POST['enable_view_js']) ? sanitize_text_field($_POST['enable_view_js']) : 'false';
+            update_post_meta($post_id, '_fanculo_enable_editor_style', $enable_editor_style);
+            update_post_meta($post_id, '_fanculo_enable_view_js', $enable_view_js);
         }
 
         wp_send_json_success([
@@ -175,6 +187,9 @@ class PostController
         $attributes = get_post_meta($post_id, '_fanculo_attributes', true);
         $editor_style = get_post_meta($post_id, '_fanculo_editor_style', true);
         $view_js = get_post_meta($post_id, '_fanculo_view_js', true);
+        $description = get_post_meta($post_id, '_fanculo_description', true);
+        $enable_editor_style = get_post_meta($post_id, '_fanculo_enable_editor_style', true);
+        $enable_view_js = get_post_meta($post_id, '_fanculo_enable_view_js', true);
 
         wp_send_json_success([
             'id' => $post->ID,
@@ -184,7 +199,10 @@ class PostController
             'style' => $style ?: '',
             'attributes' => $attributes ?: '',
             'editor_style' => $editor_style ?: '',
-            'view_js' => $view_js ?: ''
+            'view_js' => $view_js ?: '',
+            'description' => $description ?: '',
+            'enable_editor_style' => $enable_editor_style === 'true',
+            'enable_view_js' => $enable_view_js === 'true'
         ]);
     }
 
@@ -209,6 +227,7 @@ class PostController
         $attributes = sanitize_textarea_field($_POST['attributes'] ?? '');
         $editor_style = wp_unslash($_POST['editor_style'] ?? ''); // Save editor style as-is
         $view_js = wp_unslash($_POST['view_js'] ?? ''); // Save view JS as-is
+        $description = sanitize_textarea_field($_POST['description'] ?? ''); // Save description
 
         if (empty($title)) {
             wp_send_json_error('Title is required');
@@ -236,6 +255,9 @@ class PostController
 
         update_post_meta($post_id, '_fanculo_style', $style);
 
+        // Update description
+        update_post_meta($post_id, '_fanculo_description', $description);
+
         if ($type === 'blocks') {
             if (!empty($attributes)) {
                 $decoded = json_decode($attributes, true);
@@ -251,6 +273,12 @@ class PostController
             // Update editor style and view JS for blocks only
             update_post_meta($post_id, '_fanculo_editor_style', $editor_style);
             update_post_meta($post_id, '_fanculo_view_js', $view_js);
+            
+            // Update toggle states
+            $enable_editor_style = isset($_POST['enable_editor_style']) ? sanitize_text_field($_POST['enable_editor_style']) : 'false';
+            $enable_view_js = isset($_POST['enable_view_js']) ? sanitize_text_field($_POST['enable_view_js']) : 'false';
+            update_post_meta($post_id, '_fanculo_enable_editor_style', $enable_editor_style);
+            update_post_meta($post_id, '_fanculo_enable_view_js', $enable_view_js);
         }
 
         wp_send_json_success([

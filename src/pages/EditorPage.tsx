@@ -5,7 +5,7 @@ import MonacoEditor from '../ui/components/MonacoEditor'
 import QuickCreateModal from '../ui/components/modals/QuickCreateModal'
 import TitleEditModal from '../ui/components/modals/TitleEditModal'
 import DeleteConfirmModal from '../ui/components/modals/DeleteConfirmModal'
-import { Button, TextareaControl, TabPanel } from '@wordpress/components'
+import { Button, TextareaControl, TabPanel, ToggleControl } from '@wordpress/components'
 import { BlocksIcon, SymbolIcon, StyleIcon, SettingsIcon } from '../ui/icons/Icons.jsx'
 import { MdOutlineDescription } from 'react-icons/md'
 import { preloadCommonLanguages } from '../utils/monacoLanguageLoader'
@@ -44,6 +44,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	const [postAttributes, setPostAttributes] = useState('')
 	const [postEditorStyle, setPostEditorStyle] = useState('')
 	const [postViewJs, setPostViewJs] = useState('')
+	const [postDescription, setPostDescription] = useState('')
 	const [isCreating, setIsCreating] = useState(false)
 	const [isUpdating, setIsUpdating] = useState(false)
 	const [isLoadingPost, setIsLoadingPost] = useState(false)
@@ -67,6 +68,10 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 	const [isDeleting, setIsDeleting] = useState(false)
 	const [showTitleModal, setShowTitleModal] = useState(false)
+
+	// Toggle states for Editor Style and View JS tabs
+	const [enableEditorStyle, setEnableEditorStyle] = useState(false)
+	const [enableViewJs, setEnableViewJs] = useState(false)
 
 	const fetchPosts = async () => {
 		setIsLoadingPosts(true)
@@ -135,6 +140,9 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 		setPostAttributes('')
 		setPostEditorStyle('')
 		setPostViewJs('')
+		setPostDescription('')
+		setEnableEditorStyle(false)
+		setEnableViewJs(false)
 		setMessage('')
 	}
 
@@ -177,6 +185,13 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				setPostAttributes(post.attributes || '')
 				setPostEditorStyle(post.editor_style || '')
 				setPostViewJs(post.view_js || '')
+				setPostDescription(post.description || '')
+				
+				// Set toggle states from saved values
+				if (post.type === 'blocks') {
+					setEnableEditorStyle(post.enable_editor_style || false)
+					setEnableViewJs(post.enable_view_js || false)
+				}
 
 				// Auto-switch to the correct tab for this post type
 				setActiveTab(post.type)
@@ -258,6 +273,9 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 					attributes: '',
 					editor_style: '',
 					view_js: '',
+					description: '',
+					enable_editor_style: 'false',
+					enable_view_js: 'false',
 				}),
 			})
 
@@ -318,6 +336,9 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 					attributes: postAttributes,
 					editor_style: postEditorStyle,
 					view_js: postViewJs,
+					description: postDescription,
+					enable_editor_style: enableEditorStyle.toString(),
+					enable_view_js: enableViewJs.toString(),
 				}),
 			})
 
@@ -383,7 +404,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 							{/* Post Title */}
 							<div className="mb-4">
 								<h1 
-									className="text-xl font-semibold cursor-pointer hover:underline"
+									className="!text-4xl !font-bold cursor-pointer hover:underline"
 									onClick={() => setShowTitleModal(true)}
 									title="Click to edit title"
 								>
@@ -428,7 +449,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										),
 										className: 'tab-attributes'
 									}] : []),
-									...(postType === 'blocks' ? [{
+									...(postType === 'blocks' && enableEditorStyle ? [{
 										name: 'editor_style',
 										title: (
 											<span className="flex items-center gap-2">
@@ -438,7 +459,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										),
 										className: 'tab-editor-style'
 									}] : []),
-									...(postType === 'blocks' ? [{
+									...(postType === 'blocks' && enableViewJs ? [{
 										name: 'view_js',
 										title: (
 											<span className="flex items-center gap-2">
@@ -557,6 +578,42 @@ document.addEventListener('DOMContentLoaded', function() {
 									<span className="capitalize">{postType}</span>
 								</div>
 							</div>
+
+							{/* Block Description - Only for blocks */}
+							{postType === 'blocks' && (
+								<div className="mb-4">
+									<TextareaControl
+										label="Block Description"
+										value={postDescription}
+										onChange={(value) => setPostDescription(value || '')}
+										placeholder="Enter a description for this block..."
+										rows={3}
+										help="Optional description to help identify and understand this block's purpose"
+									/>
+								</div>
+							)}
+
+							{/* Toggle Controls for Blocks only */}
+							{postType === 'blocks' && (
+								<div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded">
+									<h3 className="text-sm font-semibold mb-3 text-gray-700">Additional Fields</h3>
+									<div className="space-y-2">
+										<ToggleControl
+											label="Editor Style"
+											help={enableEditorStyle ? "Styles for the editor environment" : "Enable editor-specific CSS"}
+											checked={enableEditorStyle}
+											onChange={setEnableEditorStyle}
+										/>
+										<ToggleControl
+											label="View JS"
+											help={enableViewJs ? "Frontend JavaScript for this block" : "Enable frontend JavaScript"}
+											checked={enableViewJs}
+											onChange={setEnableViewJs}
+										/>
+									</div>
+								</div>
+							)}
+
 							<Button
 								variant="secondary"
 								isDestructive={true}
