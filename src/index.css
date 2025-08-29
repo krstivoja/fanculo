@@ -28,44 +28,7 @@ html { padding:0 !important;}
   padding: 0;
 }
 
-/* WordPress components styling */
-.wp-input-wrapper .components-base-control {
-  margin-bottom: 1rem;
-}
-
-.wp-textarea-wrapper .components-base-control {
-  margin-bottom: 1rem;
-}
-
-.wp-textarea-code textarea {
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-  font-size: 14px;
-}
-
-/* WordPress button overrides for consistent sizing */
-.components-button.is-primary {
-  font-weight: 600;
-}
-
-.components-button.is-destructive {
-  background-color: #d32f2f;
-  border-color: #d32f2f;
-}
-
-.components-button.is-destructive:hover {
-  background-color: #b71c1c;
-  border-color: #b71c1c;
-}
-
-/* Custom styles for WordPress admin context */
-#fanculo-root * {
-  box-sizing: border-box;
-}
-
-#fanculo-root button {
-  font-family: inherit;
-}
-
-#fanculo-root input, #fanculo-root textarea, #fanculo-root select {
-  font-family: inherit;
+.components-menu-group button {
+  height: inherit !important;
+  text-align: left;
 }

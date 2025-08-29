@@ -1,6 +1,8 @@
 import { useState, useEffect, Suspense, forwardRef, useImperativeHandle } from 'react'
 import LoadingSpinner from '../ui/components/LoadingSpinner'
-import { Button, TextControl, TextareaControl } from '@wordpress/components'
+import { Button, TextControl, TextareaControl, TabPanel } from '@wordpress/components'
+import { BlocksIcon, SymbolIcon, StyleIcon, SettingsIcon } from '../ui/icons/Icons.jsx'
+import { MdOutlineDescription } from 'react-icons/md'
 
 declare global {
 	interface Window {
@@ -356,65 +358,82 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 			{/* Sidebar with Tabs */}
 			<div className='min-w-[var(--sidebar-width)] p-4'>
-				{/* Tab Navigation */}
-				<div className="flex border border-solid border-slate-500 rounded-sm overflow-hidden p-1">
-					{[
-						{ key: 'blocks', label: 'Blocks' },
-						{ key: 'symbols', label: 'Symbols' },
-						{ key: 'scss', label: 'SCSS' },
-					].map((tab) => (
-						<button
-							key={tab.key}
-							onClick={() => handleTabChange(tab.key)}
-							className={`flex-1 cursor-pointer !text-[12px] transition-all duration-300 p-1 ${
-								activeTab === tab.key 
-									? 'text-white  bg-black rounded-sm'
-									: 'text-gray-600'
-							}`}
-						>
-							{tab.label} ({posts[tab.key as keyof typeof posts].length})
-						</button>
-					))}
-				</div>
-
-				{/* Tab Content */}
-				<div className="border border-gray-300 rounded-b-lg bg-white min-h-[var(--sidebar-width)]">
-					{isLoadingPosts ? (
-						<div className="py-10 px-10 text-center text-gray-600">
-							Loading posts...
-						</div>
-					) : (
-						<div className="">
-							{posts[activeTab as keyof typeof posts].length === 0 ? (
-								<div className="text-center text-gray-600 italic py-10 px-5">
-									<div className="text-5xl mb-2">
-										{activeTab === 'blocks' && '🧱'}
-										{activeTab === 'symbols' && '🔣'}
-										{activeTab === 'scss' && '🎨'}
-									</div>
-									No {activeTab} yet
-									<div className="text-xs mt-2">
-										Create your first {activeTab.slice(0, -1)} using the Quick Create button in the top navigation
-									</div>
+				<TabPanel
+					className="fanculo-tab-panel"
+					activeClass="is-active"
+					onSelect={(tabName) => handleTabChange(tabName)}
+					initialTabName={activeTab}
+					tabs={[
+						{
+							name: 'blocks',
+							title: (
+								<span className="flex items-center gap-2">
+									<BlocksIcon width={16} height={16} />
+									Blocks ({posts.blocks.length})
+								</span>
+							),
+							className: 'tab-blocks'
+						},
+						{
+							name: 'symbols',
+							title: (
+								<span className="flex items-center gap-2">
+									<SymbolIcon width={16} height={16} />
+									Symbols ({posts.symbols.length})
+								</span>
+							),
+							className: 'tab-symbols'
+						},
+						{
+							name: 'scss',
+							title: (
+								<span className="flex items-center gap-2">
+									<StyleIcon width={16} height={16} />
+									SCSS ({posts.scss.length})
+								</span>
+							),
+							className: 'tab-scss'
+						}
+					]}
+				>
+					{(tab) => (
+						<div className="tab-content min-h-[var(--sidebar-width)]">
+							{isLoadingPosts ? (
+								<div className="py-10 px-10 text-center text-gray-600">
+									Loading posts...
 								</div>
 							) : (
-								posts[activeTab as keyof typeof posts].map((post: any) => (
-									
-										<button
-											key={post.id} 
-											className={`w-full cursor-pointer text-left p-3 border-b border-gray-200 flex justify-between items-center transition-colors duration-200 hover:bg-gray-50 ${
-												editingPostId === post.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-											}`}
-											onClick={() => handleEditPost(post.id)}
-										>
-											{post.title}
-										</button>
-									
-								))
+								<div>
+									{posts[tab.name as keyof typeof posts].length === 0 ? (
+										<div className="text-center text-gray-600 italic py-10 px-5">
+											<div className="mb-4 flex justify-center">
+												{tab.name === 'blocks' && <BlocksIcon width={48} height={48} className="text-gray-400" />}
+												{tab.name === 'symbols' && <SymbolIcon width={48} height={48} className="text-gray-400" />}
+												{tab.name === 'scss' && <StyleIcon width={48} height={48} className="text-gray-400" />}
+											</div>
+											No {tab.name} yet
+											<div className="text-xs mt-2">
+												Create your first {tab.name.slice(0, -1)} using the Quick Create button in the top navigation
+											</div>
+										</div>
+									) : (
+										posts[tab.name as keyof typeof posts].map((post: any) => (
+											<button
+												key={post.id} 
+												className={`w-full cursor-pointer text-left p-3 border-b border-gray-200 flex justify-between items-center transition-colors duration-200 hover:bg-gray-50 ${
+													editingPostId === post.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+												}`}
+												onClick={() => handleEditPost(post.id)}
+											>
+												{post.title}
+											</button>
+										))
+									)}
+								</div>
 							)}
 						</div>
 					)}
-				</div>
+				</TabPanel>
 			</div>
 
 			{/* Main Content */}
@@ -440,55 +459,85 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 								placeholder="Enter post title..."
 							/>
 
-							{/* Post Type Display (Edit mode only shows current type) */}
-							<div className="mb-4">
-								<label className="block mb-2 font-bold">
-									Post Type:
-								</label>
-								<div className="py-2 px-3 bg-green-100 border-2 border-green-500 rounded inline-flex items-center gap-2 text-base font-medium">
-									<span>
-										{postType === 'blocks' && '🧱'}
-										{postType === 'symbols' && '🔣'}
-										{postType === 'scss' && '🎨'}
-									</span>
-									<span className="capitalize">{postType}</span>
-								</div>
-							</div>
+							
 
-							{/* Content Field (Blocks & Symbols) */}
-							{(postType === 'blocks' || postType === 'symbols') && (
-								<TextareaControl
-									label="📝 Content:"
-									value={postContent}
-									onChange={(value) => setPostContent(value)}
-									placeholder="Enter HTML/JSX content..."
-									rows={6}
-									className="wp-textarea-code"
-								/>
-							)}
-
-							{/* Style Field (All types) */}
-							<TextareaControl
-								label="🎨 Style:"
-								value={postStyle}
-								onChange={(value) => setPostStyle(value)}
-								placeholder="Enter CSS/SCSS styles..."
-								rows={6}
-								className="wp-textarea-code"
-							/>
-
-							{/* Attributes Field (Blocks only) */}
-							{postType === 'blocks' && (
-								<TextareaControl
-									label="⚙️ Attributes:"
-									value={postAttributes}
-									onChange={(value) => setPostAttributes(value)}
-									placeholder='{"prop1": "default", "prop2": true}'
-									rows={4}
-									className="wp-textarea-code"
-									help="Enter JSON attributes for this block"
-								/>
-							)}
+							{/* Form Fields Tabs */}
+							<TabPanel
+								className="fanculo-form-tabs"
+								activeClass="is-active"
+								tabs={[
+									...(postType === 'blocks' || postType === 'symbols' ? [{
+										name: 'content',
+										title: (
+											<span className="flex items-center gap-2">
+												<MdOutlineDescription size={16} />
+												Content
+											</span>
+										),
+										className: 'tab-content-field'
+									}] : []),
+									{
+										name: 'style',
+										title: (
+											<span className="flex items-center gap-2">
+												<StyleIcon width={16} height={16} />
+												Style
+											</span>
+										),
+										className: 'tab-style'
+									},
+									...(postType === 'blocks' ? [{
+										name: 'attributes',
+										title: (
+											<span className="flex items-center gap-2">
+												<SettingsIcon width={16} height={16} />
+												Attributes
+											</span>
+										),
+										className: 'tab-attributes'
+									}] : [])
+								]}
+							>
+								{(tab) => (
+									<div className="form-tab-content">
+										{tab.name === 'content' && (postType === 'blocks' || postType === 'symbols') && (
+											<TextareaControl
+												label="Content"
+												value={postContent}
+												onChange={(value) => setPostContent(value)}
+												placeholder="Enter HTML/JSX content..."
+												rows={8}
+												className="wp-textarea-code"
+												help="Enter HTML/JSX content for this component"
+											/>
+										)}
+										
+										{tab.name === 'style' && (
+											<TextareaControl
+												label="Style"
+												value={postStyle}
+												onChange={(value) => setPostStyle(value)}
+												placeholder="Enter CSS/SCSS styles..."
+												rows={8}
+												className="wp-textarea-code"
+												help="Enter CSS or SCSS styles for this component"
+											/>
+										)}
+										
+										{tab.name === 'attributes' && postType === 'blocks' && (
+											<TextareaControl
+												label="Attributes"
+												value={postAttributes}
+												onChange={(value) => setPostAttributes(value)}
+												placeholder='{"prop1": "default", "prop2": true}'
+												rows={8}
+												className="wp-textarea-code"
+												help="Enter JSON attributes for this block component"
+											/>
+										)}
+									</div>
+								)}
+							</TabPanel>
 
 							<Button
 								variant="primary"
@@ -502,7 +551,24 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 								}
 							</Button>
 						</div>
+
+						{/* Sidebar */}
+
 						<div className="sidebar min-w-[var(--sidebar-width)]">
+							{/* Post Type Display (Edit mode only shows current type) */}
+							<div className="mb-4">
+								<label className="block mb-2 font-bold">
+									Post Type:
+								</label>
+								<div className="py-2 px-3 bg-green-100 border-2 border-green-500 rounded inline-flex items-center gap-2 text-base font-medium">
+									<span>
+										{postType === 'blocks' && <BlocksIcon width={20} height={20} />}
+										{postType === 'symbols' && <SymbolIcon width={20} height={20} />}
+										{postType === 'scss' && <StyleIcon width={20} height={20} />}
+									</span>
+									<span className="capitalize">{postType}</span>
+								</div>
+							</div>
 							<Button
 								variant="secondary"
 								isDestructive={true}
@@ -511,6 +577,9 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 								Delete Post
 							</Button>
 						</div>
+
+						{/* Sidebar */}
+						
 					</div>
 				)}
 
@@ -532,10 +601,25 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
 					<div className="bg-white p-8 rounded-xl shadow-2xl min-w-[400px] max-w-[500px]">
 						<div className="mb-5">
-							<h3 className="m-0 mb-2 text-xl text-gray-800">
-								{quickCreateType === 'blocks' && '🧱 Create New Block'}
-								{quickCreateType === 'symbols' && '🔣 Create New Symbol'}
-								{quickCreateType === 'scss' && '🎨 Create New SCSS'}
+							<h3 className="m-0 mb-2 text-xl text-gray-800 flex items-center gap-2">
+								{quickCreateType === 'blocks' && (
+									<>
+										<BlocksIcon width={24} height={24} />
+										Create New Block
+									</>
+								)}
+								{quickCreateType === 'symbols' && (
+									<>
+										<SymbolIcon width={24} height={24} />
+										Create New Symbol
+									</>
+								)}
+								{quickCreateType === 'scss' && (
+									<>
+										<StyleIcon width={24} height={24} />
+										Create New SCSS
+									</>
+								)}
 							</h3>
 							<p className="m-0 text-gray-600 text-sm">
 								Enter a title for your new {quickCreateType.slice(0, -1)}. You can add content and styles later.

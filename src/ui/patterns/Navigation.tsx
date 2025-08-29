@@ -1,5 +1,8 @@
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import { MenuGroup, MenuItem, Button, Popover } from '@wordpress/components'
+import { BlocksIcon, SymbolIcon, StyleIcon } from '../icons/Icons.jsx'
+import { MdOutlineRocketLaunch, MdOutlineViewList, MdOutlineAdd } from 'react-icons/md'
 import navItems from '../../consts/pagesURL'
 
 interface NavigationProps {
@@ -8,7 +11,9 @@ interface NavigationProps {
 
 function Navigation({ onQuickCreate }: NavigationProps) {
   const location = useLocation()
+  const navigate = useNavigate()
   const [showQuickCreateDropdown, setShowQuickCreateDropdown] = useState(false)
+  const [showMainMenu, setShowMainMenu] = useState(false)
 
   const handleQuickCreate = (type: string) => {
     setShowQuickCreateDropdown(false)
@@ -22,7 +27,7 @@ function Navigation({ onQuickCreate }: NavigationProps) {
       <div className='flex mr-auto'>
       {/* Logo/Title */}
       <div className="flex items-center gap-3 mr-5">
-        <div className="text-2xl">🚀</div>
+        <MdOutlineRocketLaunch size={28} className="text-blue-600" />
         <h1 className="m-0 text-xl font-semibold text-gray-800">
           Fanculo
         </h1>
@@ -31,72 +36,93 @@ function Navigation({ onQuickCreate }: NavigationProps) {
       {/* Quick Create Dropdown - Only show on Editor page */}
       {location.pathname === '/editor' && (
         <div className="relative ml-auto">
-          <button
+          <Button
             onClick={() => setShowQuickCreateDropdown(!showQuickCreateDropdown)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-wp-blue text-white rounded-md text-sm font-medium hover:bg-wp-blue-dark transition-colors"
+            variant="secondary"
+            className="flex items-center gap-2"
           >
-            <span>✨</span>
+            <MdOutlineAdd size={16} />
             Quick Create
             <span className={`transition-transform ${showQuickCreateDropdown ? 'rotate-180' : ''}`}>▼</span>
-          </button>
+          </Button>
 
           {showQuickCreateDropdown && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
-              <div className="py-1">
-                <button
+            <Popover
+              position="bottom right"
+              onClose={() => setShowQuickCreateDropdown(false)}
+              className="fanculo-quick-create-popover"
+            >
+              <MenuGroup label="Create New">
+                <MenuItem
                   onClick={() => handleQuickCreate('blocks')}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  icon={<BlocksIcon width={16} height={16} />}
+                  info="Create a new reusable block component"
                 >
-                  <span>🧱</span> Block
-                </button>
-                <button
+                  Block
+                </MenuItem>
+                <MenuItem
                   onClick={() => handleQuickCreate('symbols')}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  icon={<SymbolIcon width={16} height={16} />}
+                  info="Create a new symbol component"
                 >
-                  <span>🔣</span> Symbol
-                </button>
-                <button
+                  Symbol
+                </MenuItem>
+                <MenuItem
                   onClick={() => handleQuickCreate('scss')}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  icon={<StyleIcon width={16} height={16} />}
+                  info="Create a new SCSS partial"
                 >
-                  <span>🎨</span> SCSS
-                </button>
-              </div>
-            </div>
+                  SCSS
+                </MenuItem>
+              </MenuGroup>
+            </Popover>
           )}
         </div>
       )}
 
       </div>
 
-      {/* Navigation Links */}
-      <nav className="flex gap-1">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path
-          
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`
-                flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium
-                no-underline transition-all duration-200 relative
-                ${isActive 
-                  ? 'text-wp-blue bg-blue-50 border border-wp-blue font-semibold' 
-                  : 'text-gray-600 border border-transparent hover:bg-gray-100 hover:text-gray-800'
-                }
-              `}
-              title={item.description}
-            >
-              <span className="text-base">{item.icon}</span>
-              {item.label}
-              {isActive && (
-                <div className="absolute -bottom-px left-1/2 transform -translate-x-1/2 w-1 h-1 bg-wp-blue rounded-full" />
-              )}
-            </Link>
-          )
-        })}
-      </nav>
+      {/* Navigation Menu */}
+      <div className="relative">
+        <Button
+          onClick={() => setShowMainMenu(!showMainMenu)}
+          variant="secondary"
+          className="flex items-center gap-2"
+        >
+          <MdOutlineViewList size={16} />
+          Pages
+          <span className={`transition-transform ${showMainMenu ? 'rotate-180' : ''}`}>▼</span>
+        </Button>
+
+        {showMainMenu && (
+          <Popover
+            position="bottom right"
+            onClose={() => setShowMainMenu(false)}
+            className="fanculo-main-menu-popover"
+          >
+            <MenuGroup label="Navigation">
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.path
+                
+                return (
+                  <MenuItem
+                    key={item.path}
+                    onClick={() => {
+                      setShowMainMenu(false)
+                      navigate(item.path)
+                    }}
+                    icon={<item.icon width={16} height={16} />}
+                    isSelected={isActive}
+                    info={item.description}
+                  >
+                    {item.label}
+                  </MenuItem>
+                )
+              })}
+            </MenuGroup>
+          </Popover>
+        )}
+      </div>
 
       
     </div>

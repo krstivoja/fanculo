@@ -1,21 +1,23 @@
+import { BlocksIcon, SettingsIcon, LicenceIcon } from '../ui/icons/Icons.jsx'
+
 const navItems = [
     {
       path: '/editor',
       label: 'Editor',
-      icon: '✏️',
+      icon: BlocksIcon,
       description: 'Create and edit blocks'
     },
     ...(window.fanculo_ajax.user_can.manage_options ? [
       {
         path: '/settings',
         label: 'Settings',
-        icon: '⚙️',
+        icon: SettingsIcon,
         description: 'Plugin configuration'
       },
       {
         path: '/license',
         label: 'License',
-        icon: '🔑',
+        icon: LicenceIcon,
         description: 'License management'
       }
     ] : [])

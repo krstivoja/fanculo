@@ -140,8 +140,17 @@ class Assets
      */
     public function enqueueWordPressStyles(): void
     {
+        // Core WordPress admin styles
+        wp_enqueue_style('common');
+        wp_enqueue_style('forms');
+        wp_enqueue_style('admin-menu');
+        
         // Enqueue WordPress Components styles
         wp_enqueue_style('wp-components');
+        
+        // Enqueue specific component styles
+        wp_enqueue_style('wp-block-editor');
+        wp_enqueue_style('wp-edit-post');
         
         // Enqueue Gutenberg editor styles if available
         if (function_exists('gutenberg_url')) {
@@ -152,19 +161,29 @@ class Assets
                 ['wp-components'],
                 GUTENBERG_VERSION
             );
-        } elseif (wp_get_theme()->get('Name') !== 'Twenty Twenty-One') {
-            // Core Gutenberg styles (WordPress 5.0+)
-            global $wp_version;
             wp_enqueue_style(
-                'wp-editor',
-                includes_url('css/dist/editor/style.css'),
+                'gutenberg-components',
+                gutenberg_url('build/components/style.css'),
                 ['wp-components'],
-                $wp_version
+                GUTENBERG_VERSION
             );
+        } else {
+            // Core Gutenberg styles (WordPress 5.9+)
+            global $wp_version;
+            if (version_compare($wp_version, '5.9', '>=')) {
+                wp_enqueue_style(
+                    'wp-editor',
+                    includes_url('css/dist/editor/style.css'),
+                    ['wp-components'],
+                    $wp_version
+                );
+                wp_enqueue_style(
+                    'wp-components-style',
+                    includes_url('css/dist/components/style.css'),
+                    ['wp-components'],
+                    $wp_version
+                );
+            }
         }
-
-        // Additional admin styles for better integration
-        wp_enqueue_style('common');
-        wp_enqueue_style('forms');
     }
 }

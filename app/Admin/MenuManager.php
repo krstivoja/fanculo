@@ -10,6 +10,7 @@ class MenuManager
     public function __construct()
     {
         add_action('admin_menu', [$this, 'registerMenus']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueueStyles']);
     }
 
     public function registerMenus(): void
@@ -25,6 +26,17 @@ class MenuManager
             100
         );
     }
+
+    public function enqueueStyles($hook): void
+    {
+        // Only load on our plugin pages
+        if (strpos($hook, 'fanculo') === false) {
+            return;
+        }
+
+        $assets = new Assets();
+        $assets->enqueueWordPressStyles();
+    }
     
     public function renderMainPage(): void
     {
@@ -33,7 +45,6 @@ class MenuManager
         }
         
         $assets = new Assets();
-        $assets->enqueueWordPressStyles();
         
         $currentSettings = Helpers::getOption(Constants::OPTION_SETTINGS, Constants::DEFAULT_SETTINGS);
         $licenseData = Helpers::getOption(Constants::OPTION_LICENSE, [
