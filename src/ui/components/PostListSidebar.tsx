@@ -47,7 +47,7 @@ export default function PostListSidebar({
 								<BlocksIcon width={16} height={16} />
 								<span className='!text-xxs flex gap-1'>
 									Blocks 
-									{/* <span className='text-[10px] bg-slate-300 px-1 py-0 rounded-md'>{posts.blocks.length}</span> */}
+									{/* <span className='text-[10px] bg-stone-300 px-1 py-0 rounded-md'>{posts.blocks.length}</span> */}
 								</span>
 							</span>
 						),
@@ -60,7 +60,7 @@ export default function PostListSidebar({
 								<SymbolIcon width={16} height={16} />
 								<span className='!text-xxs'>
 									Symbols 
-									{/* <span className='text-[10px] bg-slate-300 px-1 py-0 rounded-md'>{posts.symbols.length}</span>									 */}
+									{/* <span className='text-[10px] bg-stone-300 px-1 py-0 rounded-md'>{posts.symbols.length}</span>									 */}
 								</span>
 							</span>
 						),
@@ -72,7 +72,7 @@ export default function PostListSidebar({
 							<span className="flex items-center gap-2">
 								<StyleIcon width={16} height={16} />
 								<span className='!text-xxs'>SCSS 
-									{/* <span className='text-[10px] bg-slate-300 px-1 py-0 rounded-md'>{posts.scss.length}</span>									 */}
+									{/* <span className='text-[10px] bg-stone-300 px-1 py-0 rounded-md'>{posts.scss.length}</span>									 */}
 								</span>
 							</span>
 						),
@@ -81,7 +81,7 @@ export default function PostListSidebar({
 				]}
 			>
 				{(tab) => (
-					<div className="tab-content min-h-[var(--sidebar-width)]">
+					<div className="tab-content min-h-[var(--sidebar-width)] mt-4">
 						{isLoadingPosts ? (
 							<div className="py-10 px-10 text-center text-gray-600">
 								Loading posts...
@@ -89,11 +89,11 @@ export default function PostListSidebar({
 						) : (
 							<div>
 								{posts[tab.name as keyof typeof posts].length === 0 ? (
-									<div className="text-center text-gray-600 italic py-10 px-5">
+									<div>
 										<div className="mb-4 flex justify-center">
-											{tab.name === 'blocks' && <BlocksIcon width={48} height={48} className="text-gray-400" />}
-											{tab.name === 'symbols' && <SymbolIcon width={48} height={48} className="text-gray-400" />}
-											{tab.name === 'scss' && <StyleIcon width={48} height={48} className="text-gray-400" />}
+											{tab.name === 'blocks' && <BlocksIcon />}
+											{tab.name === 'symbols' && <SymbolIcon />}
+											{tab.name === 'scss' && <StyleIcon />}
 										</div>
 										No {tab.name} yet
 										<div className="text-xs mt-2">
@@ -104,8 +104,8 @@ export default function PostListSidebar({
 									posts[tab.name as keyof typeof posts].map((post: any) => (
 										<button
 											key={post.id} 
-											className={`w-full cursor-pointer text-left p-3 border-b border-gray-200 flex justify-between items-center transition-colors duration-200 hover:bg-gray-50 ${
-												editingPostId === post.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+											className={`w-full cursor-pointer text-left p-2 flex justify-between items-center transition-colors duration-200 rounded-sm ${
+												editingPostId === post.id ? 'bg-white border border-stone-200' : ''
 											}`}
 											onClick={() => onEditPost(post.id)}
 										>
