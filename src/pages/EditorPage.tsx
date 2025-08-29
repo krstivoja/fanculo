@@ -1,8 +1,6 @@
 import { useState, useEffect, Suspense, forwardRef, useImperativeHandle } from 'react'
 import LoadingSpinner from '../ui/components/LoadingSpinner'
-import Button from '../ui/components/Button'
-import Input from '../ui/components/Input'
-import Textarea from '../ui/components/Textarea'
+import { Button, TextControl, TextareaControl } from '@wordpress/components'
 
 declare global {
 	interface Window {
@@ -434,11 +432,11 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 
 
-							<Input
+							<TextControl
 								label="Post Title:"
 								type="text"
 								value={postTitle}
-								onChange={(e) => setPostTitle(e.target.value)}
+								onChange={(value) => setPostTitle(value)}
 								placeholder="Enter post title..."
 							/>
 
@@ -459,56 +457,55 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 							{/* Content Field (Blocks & Symbols) */}
 							{(postType === 'blocks' || postType === 'symbols') && (
-								<Textarea
+								<TextareaControl
 									label="📝 Content:"
 									value={postContent}
-									onChange={(e) => setPostContent(e.target.value)}
+									onChange={(value) => setPostContent(value)}
 									placeholder="Enter HTML/JSX content..."
 									rows={6}
-									variant="code"
+									className="wp-textarea-code"
 								/>
 							)}
 
 							{/* Style Field (All types) */}
-							<Textarea
+							<TextareaControl
 								label="🎨 Style:"
 								value={postStyle}
-								onChange={(e) => setPostStyle(e.target.value)}
+								onChange={(value) => setPostStyle(value)}
 								placeholder="Enter CSS/SCSS styles..."
 								rows={6}
-								variant="code"
+								className="wp-textarea-code"
 							/>
 
 							{/* Attributes Field (Blocks only) */}
 							{postType === 'blocks' && (
-								<Textarea
+								<TextareaControl
 									label="⚙️ Attributes:"
 									value={postAttributes}
-									onChange={(e) => setPostAttributes(e.target.value)}
+									onChange={(value) => setPostAttributes(value)}
 									placeholder='{"prop1": "default", "prop2": true}'
 									rows={4}
-									variant="code"
-									helpText="Enter JSON attributes for this block"
+									className="wp-textarea-code"
+									help="Enter JSON attributes for this block"
 								/>
 							)}
 
 							<Button
 								variant="primary"
-								size="md"
+								isBusy={isCreating || isUpdating}
+								disabled={isCreating || isUpdating}
 								onClick={handleCreatePost}
-								loading={isCreating || isUpdating}
-								className="font-bold"
 							>
 								{editingPostId
-									? (isUpdating ? 'Updating' : 'Update Post')
-									: (isCreating ? 'Creating' : 'Create Post')
+									? (isUpdating ? 'Updating...' : 'Update Post')
+									: (isCreating ? 'Creating...' : 'Create Post')
 								}
 							</Button>
 						</div>
 						<div className="sidebar min-w-[var(--sidebar-width)]">
 							<Button
-								variant="destructive"
-								size="sm"
+								variant="secondary"
+								isDestructive={true}
 								onClick={() => setShowDeleteConfirm(true)}
 							>
 								Delete Post
@@ -545,11 +542,11 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 							</p>
 						</div>
 
-						<Input
+						<TextControl
 							label="Title:"
 							type="text"
 							value={quickTitle}
-							onChange={(e) => setQuickTitle(e.target.value)}
+							onChange={(value) => setQuickTitle(value)}
 							placeholder={`Enter ${quickCreateType.slice(0, -1)} title...`}
 							autoFocus
 							onKeyPress={(e) => {
@@ -560,28 +557,23 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 									setShowModal(false)
 								}
 							}}
-							className="p-3 text-base border-2"
 						/>
 
 						<div className="flex gap-2.5 justify-end">
 							<Button
-								variant="secondary"
-								size="sm"
+								variant="tertiary"
 								onClick={() => setShowModal(false)}
 								disabled={isQuickCreating}
-								className="font-medium"
 							>
 								Cancel
 							</Button>
 							<Button
 								variant="primary"
-								size="sm"
 								onClick={handleQuickCreateSubmit}
-								loading={isQuickCreating}
-								disabled={!quickTitle.trim()}
-								className="font-medium"
+								isBusy={isQuickCreating}
+								disabled={isQuickCreating || !quickTitle.trim()}
 							>
-								{isQuickCreating ? 'Creating' : 'Create'}
+								{isQuickCreating ? 'Creating...' : 'Create'}
 							</Button>
 						</div>
 					</div>
@@ -603,22 +595,20 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 						<div className="flex gap-2.5 justify-end">
 							<Button
-								variant="secondary"
-								size="sm"
+								variant="tertiary"
 								onClick={() => setShowDeleteConfirm(false)}
 								disabled={isDeleting}
-								className="font-medium"
 							>
 								Cancel
 							</Button>
 							<Button
-								variant="destructive"
-								size="sm"
+								variant="secondary"
+								isDestructive={true}
 								onClick={handleDeletePost}
-								loading={isDeleting}
-								className="font-medium"
+								isBusy={isDeleting}
+								disabled={isDeleting}
 							>
-								{isDeleting ? 'Deleting' : 'Delete'}
+								{isDeleting ? 'Deleting...' : 'Delete'}
 							</Button>
 						</div>
 					</div>

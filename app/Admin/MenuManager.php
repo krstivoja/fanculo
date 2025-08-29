@@ -33,6 +33,8 @@ class MenuManager
         }
         
         $assets = new Assets();
+        $assets->enqueueWordPressStyles();
+        
         $currentSettings = Helpers::getOption(Constants::OPTION_SETTINGS, Constants::DEFAULT_SETTINGS);
         $licenseData = Helpers::getOption(Constants::OPTION_LICENSE, [
             'key' => '',

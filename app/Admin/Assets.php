@@ -134,4 +134,37 @@ class Assets
             </script>
         ";
     }
+
+    /**
+     * Enqueue WordPress/Gutenberg styles for component compatibility
+     */
+    public function enqueueWordPressStyles(): void
+    {
+        // Enqueue WordPress Components styles
+        wp_enqueue_style('wp-components');
+        
+        // Enqueue Gutenberg editor styles if available
+        if (function_exists('gutenberg_url')) {
+            // Gutenberg plugin is active
+            wp_enqueue_style(
+                'gutenberg-editor',
+                gutenberg_url('build/editor/style.css'),
+                ['wp-components'],
+                GUTENBERG_VERSION
+            );
+        } elseif (wp_get_theme()->get('Name') !== 'Twenty Twenty-One') {
+            // Core Gutenberg styles (WordPress 5.0+)
+            global $wp_version;
+            wp_enqueue_style(
+                'wp-editor',
+                includes_url('css/dist/editor/style.css'),
+                ['wp-components'],
+                $wp_version
+            );
+        }
+
+        // Additional admin styles for better integration
+        wp_enqueue_style('common');
+        wp_enqueue_style('forms');
+    }
 }
