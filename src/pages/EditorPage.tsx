@@ -5,6 +5,7 @@ import MonacoEditor from '../ui/components/MonacoEditor'
 import QuickCreateModal from '../ui/components/modals/QuickCreateModal'
 import TitleEditModal from '../ui/components/modals/TitleEditModal'
 import DeleteConfirmModal from '../ui/components/modals/DeleteConfirmModal'
+import DashiconSelector from '../ui/components/modals/DashiconSelector'
 import { Button, TextareaControl, TabPanel, ToggleControl, SelectControl } from '@wordpress/components'
 import { BlocksIcon, SymbolIcon, StyleIcon, SettingsIcon } from '../ui/icons/Icons.jsx'
 import { MdOutlineDescription } from 'react-icons/md'
@@ -46,6 +47,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	const [postViewJs, setPostViewJs] = useState('')
 	const [postDescription, setPostDescription] = useState('')
 	const [postCategory, setPostCategory] = useState('')
+	const [postIcon, setPostIcon] = useState('smiley')
 	const [isCreating, setIsCreating] = useState(false)
 	const [isUpdating, setIsUpdating] = useState(false)
 	const [isLoadingPost, setIsLoadingPost] = useState(false)
@@ -69,6 +71,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 	const [isDeleting, setIsDeleting] = useState(false)
 	const [showTitleModal, setShowTitleModal] = useState(false)
+	const [showDashiconModal, setShowDashiconModal] = useState(false)
 
 	// Toggle states for Editor Style and View JS tabs
 	const [enableEditorStyle, setEnableEditorStyle] = useState(false)
@@ -169,6 +172,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 		setPostViewJs('')
 		setPostDescription('')
 		setPostCategory('')
+		setPostIcon('smiley')
 		setEnableEditorStyle(false)
 		setEnableViewJs(false)
 		setMessage('')
@@ -215,6 +219,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				setPostViewJs(post.view_js || '')
 				setPostDescription(post.description || '')
 				setPostCategory(post.category || '')
+				setPostIcon(post.icon || '')
 				
 				// Set toggle states from saved values
 				if (post.type === 'blocks') {
@@ -368,6 +373,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 					view_js: postViewJs,
 					description: postDescription,
 					category: postCategory,
+					icon: postIcon,
 					enable_editor_style: enableEditorStyle.toString(),
 					enable_view_js: enableViewJs.toString(),
 				}),
@@ -643,6 +649,30 @@ document.addEventListener('DOMContentLoaded', function() {
 								</div>
 							)}
 
+							{/* Block Dashicon - Only for blocks */}
+							{postType === 'blocks' && (
+								<div className="mb-4">
+									<label className="components-base-control__label css-1v57ksj">Block Dashicon</label>
+									<div className="mt-1">
+										<Button
+											variant="secondary"
+											onClick={() => setShowDashiconModal(true)}
+											className="flex items-center gap-2 w-full justify-start"
+										>
+											{postIcon && (
+												<span className={`dashicons dashicons-${postIcon} text-lg`}></span>
+											)}
+											{postIcon ? 'Change Icon' : 'Select Icon'}
+										</Button>
+									</div>
+									{postIcon && (
+										<div className="text-xs text-gray-600 mt-1">
+											Selected: {postIcon}
+										</div>
+									)}
+								</div>
+							)}
+
 							{/* Toggle Controls for Blocks only */}
 							{postType === 'blocks' && (
 								<div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded">
@@ -713,6 +743,13 @@ document.addEventListener('DOMContentLoaded', function() {
 				onClose={() => setShowDeleteConfirm(false)}
 				onConfirm={handleDeletePost}
 				isDeleting={isDeleting}
+			/>
+
+			<DashiconSelector
+				isOpen={showDashiconModal}
+				selectedIcon={postIcon}
+				onClose={() => setShowDashiconModal(false)}
+				onSelect={setPostIcon}
 			/>
 		</div>
 	)

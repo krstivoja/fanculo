@@ -144,6 +144,7 @@ class Assets
         wp_enqueue_style('common');
         wp_enqueue_style('forms');
         wp_enqueue_style('admin-menu');
+        wp_enqueue_style('dashicons');
         
         // Enqueue WordPress Components styles
         wp_enqueue_style('wp-components');

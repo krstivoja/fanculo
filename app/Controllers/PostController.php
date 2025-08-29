@@ -33,6 +33,7 @@ class PostController
         $view_js = wp_unslash($_POST['view_js'] ?? ''); // Save view JS as-is
         $description = sanitize_textarea_field($_POST['description'] ?? ''); // Save description
         $category = sanitize_text_field($_POST['category'] ?? ''); // Save block category
+        $icon = sanitize_text_field($_POST['icon'] ?? ''); // Save block icon
 
         if (empty($title)) {
             wp_send_json_error('Title is required');
@@ -87,6 +88,11 @@ class PostController
         // Save block category (mainly used for blocks)
         if ($category) {
             update_post_meta($post_id, '_fanculo_category', $category);
+        }
+
+        // Save block icon (mainly used for blocks)
+        if ($icon) {
+            update_post_meta($post_id, '_fanculo_icon', $icon);
         }
 
         if ($type === 'blocks') {
@@ -196,6 +202,7 @@ class PostController
         $view_js = get_post_meta($post_id, '_fanculo_view_js', true);
         $description = get_post_meta($post_id, '_fanculo_description', true);
         $category = get_post_meta($post_id, '_fanculo_category', true);
+        $icon = get_post_meta($post_id, '_fanculo_icon', true);
         $enable_editor_style = get_post_meta($post_id, '_fanculo_enable_editor_style', true);
         $enable_view_js = get_post_meta($post_id, '_fanculo_enable_view_js', true);
 
@@ -210,6 +217,7 @@ class PostController
             'view_js' => $view_js ?: '',
             'description' => $description ?: '',
             'category' => $category ?: '',
+            'icon' => $icon ?: 'smiley',
             'enable_editor_style' => $enable_editor_style === 'true',
             'enable_view_js' => $enable_view_js === 'true'
         ]);
@@ -238,6 +246,7 @@ class PostController
         $view_js = wp_unslash($_POST['view_js'] ?? ''); // Save view JS as-is
         $description = sanitize_textarea_field($_POST['description'] ?? ''); // Save description
         $category = sanitize_text_field($_POST['category'] ?? ''); // Save block category
+        $icon = sanitize_text_field($_POST['icon'] ?? ''); // Save block icon
 
         if (empty($title)) {
             wp_send_json_error('Title is required');
@@ -265,9 +274,10 @@ class PostController
 
         update_post_meta($post_id, '_fanculo_style', $style);
 
-        // Update description and category
+        // Update description, category, and icon
         update_post_meta($post_id, '_fanculo_description', $description);
         update_post_meta($post_id, '_fanculo_category', $category);
+        update_post_meta($post_id, '_fanculo_icon', $icon);
 
         if ($type === 'blocks') {
             if (!empty($attributes)) {
