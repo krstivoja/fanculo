@@ -1,6 +1,6 @@
 import { useState, useEffect, Suspense, forwardRef, useImperativeHandle } from 'react'
 import LoadingSpinner from '../ui/components/LoadingSpinner'
-import { Button, TextControl, TextareaControl, TabPanel } from '@wordpress/components'
+import { Button, TextControl, TextareaControl, TabPanel, Modal } from '@wordpress/components'
 import { BlocksIcon, SymbolIcon, StyleIcon, SettingsIcon } from '../ui/icons/Icons.jsx'
 import { MdOutlineDescription } from 'react-icons/md'
 
@@ -613,165 +613,156 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 			{/* Quick Create Modal */}
 			{showModal && (
-				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
-					<div className="bg-white p-8 rounded-xl shadow-2xl min-w-[400px] max-w-[500px]">
-						<div className="mb-5">
-							<h3 className="m-0 mb-2 text-xl text-gray-800 flex items-center gap-2">
-								{quickCreateType === 'blocks' && (
-									<>
-										<BlocksIcon width={24} height={24} />
-										Create New Block
-									</>
-								)}
-								{quickCreateType === 'symbols' && (
-									<>
-										<SymbolIcon width={24} height={24} />
-										Create New Symbol
-									</>
-								)}
-								{quickCreateType === 'scss' && (
-									<>
-										<StyleIcon width={24} height={24} />
-										Create New SCSS
-									</>
-								)}
-							</h3>
-							<p className="m-0 text-gray-600 text-sm">
-								Enter a title for your new {quickCreateType.slice(0, -1)}. You can add content and styles later.
-							</p>
-						</div>
+				<Modal
+					title={
+						<span className="flex items-center gap-2">
+							{quickCreateType === 'blocks' && <BlocksIcon width={20} height={20} />}
+							{quickCreateType === 'symbols' && <SymbolIcon width={20} height={20} />}
+							{quickCreateType === 'scss' && <StyleIcon width={20} height={20} />}
+							{quickCreateType === 'blocks' && 'Create New Block'}
+							{quickCreateType === 'symbols' && 'Create New Symbol'}
+							{quickCreateType === 'scss' && 'Create New SCSS'}
+						</span>
+					}
+					onRequestClose={() => setShowModal(false)}
+					className="fanculo-quick-create-modal"
+				>
+					<p className="text-gray-600 text-sm mb-4">
+						Enter a title for your new {quickCreateType.slice(0, -1)}. You can add content and styles later.
+					</p>
 
-						<TextControl
-							label="Title:"
-							type="text"
-							value={quickTitle}
-							onChange={(value) => setQuickTitle(value)}
-							placeholder={`Enter ${quickCreateType.slice(0, -1)} title...`}
-							autoFocus
-							onKeyPress={(e) => {
-								if (e.key === 'Enter') {
-									handleQuickCreateSubmit()
-								}
-								if (e.key === 'Escape') {
-									setShowModal(false)
-								}
-							}}
-						/>
+					<TextControl
+						label="Title:"
+						type="text"
+						value={quickTitle}
+						onChange={(value) => setQuickTitle(value)}
+						placeholder={`Enter ${quickCreateType.slice(0, -1)} title...`}
+						autoFocus
+						onKeyPress={(e) => {
+							if (e.key === 'Enter') {
+								handleQuickCreateSubmit()
+							}
+							if (e.key === 'Escape') {
+								setShowModal(false)
+							}
+						}}
+					/>
 
-						<div className="flex gap-2.5 justify-end">
-							<Button
-								variant="tertiary"
-								onClick={() => setShowModal(false)}
-								disabled={isQuickCreating}
-							>
-								Cancel
-							</Button>
-							<Button
-								variant="primary"
-								onClick={handleQuickCreateSubmit}
-								isBusy={isQuickCreating}
-								disabled={isQuickCreating || !quickTitle.trim()}
-							>
-								{isQuickCreating ? 'Creating...' : 'Create'}
-							</Button>
-						</div>
+					<div className="flex gap-2.5 justify-end mt-4">
+						<Button
+							variant="tertiary"
+							onClick={() => setShowModal(false)}
+							disabled={isQuickCreating}
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="primary"
+							onClick={handleQuickCreateSubmit}
+							isBusy={isQuickCreating}
+							disabled={isQuickCreating || !quickTitle.trim()}
+						>
+							{isQuickCreating ? 'Creating...' : 'Create'}
+						</Button>
 					</div>
-				</div>
+				</Modal>
 			)}
 
 			{/* Title Edit Modal */}
 			{showTitleModal && (
-				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
-					<div className="bg-white p-8 rounded-xl shadow-2xl min-w-[400px] max-w-[500px]">
-						<div className="mb-5">
-							<h3 className="m-0 mb-2 text-xl text-gray-800 flex items-center gap-2">
-								<MdOutlineDescription size={24} />
-								Edit Post Title
-							</h3>
-							<p className="m-0 text-gray-600 text-sm">
-								Update the title for this post.
-							</p>
-						</div>
+				<Modal
+					title={
+						<span className="flex items-center gap-2">
+							<MdOutlineDescription size={20} />
+							Edit Post Title
+						</span>
+					}
+					onRequestClose={() => {
+						setShowTitleModal(false)
+						setTempTitle('')
+					}}
+					className="fanculo-title-edit-modal"
+				>
+					<p className="text-gray-600 text-sm mb-4">
+						Update the title for this post.
+					</p>
 
-						<TextControl
-							label="Title:"
-							type="text"
-							value={tempTitle}
-							onChange={(value) => setTempTitle(value)}
-							placeholder="Enter post title..."
-							autoFocus
-							onKeyPress={(e) => {
-								if (e.key === 'Enter') {
-									setPostTitle(tempTitle)
-									setShowTitleModal(false)
-									setTempTitle('')
-								}
-								if (e.key === 'Escape') {
-									setShowTitleModal(false)
-									setTempTitle('')
-								}
+					<TextControl
+						label="Title:"
+						type="text"
+						value={tempTitle}
+						onChange={(value) => setTempTitle(value)}
+						placeholder="Enter post title..."
+						autoFocus
+						onKeyPress={(e) => {
+							if (e.key === 'Enter') {
+								setPostTitle(tempTitle)
+								setShowTitleModal(false)
+								setTempTitle('')
+							}
+							if (e.key === 'Escape') {
+								setShowTitleModal(false)
+								setTempTitle('')
+							}
+						}}
+					/>
+
+					<div className="flex gap-2.5 justify-end mt-4">
+						<Button
+							variant="tertiary"
+							onClick={() => {
+								setShowTitleModal(false)
+								setTempTitle('')
 							}}
-						/>
-
-						<div className="flex gap-2.5 justify-end">
-							<Button
-								variant="tertiary"
-								onClick={() => {
-									setShowTitleModal(false)
-									setTempTitle('')
-								}}
-							>
-								Cancel
-							</Button>
-							<Button
-								variant="primary"
-								onClick={() => {
-									setPostTitle(tempTitle)
-									setShowTitleModal(false)
-									setTempTitle('')
-								}}
-								disabled={!tempTitle.trim()}
-							>
-								Save
-							</Button>
-						</div>
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="primary"
+							onClick={() => {
+								setPostTitle(tempTitle)
+								setShowTitleModal(false)
+								setTempTitle('')
+							}}
+							disabled={!tempTitle.trim()}
+						>
+							Save
+						</Button>
 					</div>
-				</div>
+				</Modal>
 			)}
 
 			{/* Delete Confirmation Modal */}
 			{showDeleteConfirm && (
-				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
-					<div className="bg-white p-8 rounded-xl shadow-2xl min-w-[400px] max-w-[500px]">
-						<div className="mb-5">
-							<h3 className="m-0 mb-2 text-xl text-red-700">
-								🗑️ Delete Post
-							</h3>
-							<p className="m-0 text-gray-600 text-sm">
-								Are you sure you want to delete "<strong>{postTitle}</strong>"? This action cannot be undone.
-							</p>
-						</div>
+				<Modal
+					title="🗑️ Delete Post"
+					onRequestClose={() => setShowDeleteConfirm(false)}
+					className="fanculo-delete-confirm-modal"
+					isDismissible={!isDeleting}
+				>
+					<p className="text-gray-600 text-sm mb-4">
+						Are you sure you want to delete "<strong>{postTitle}</strong>"? This action cannot be undone.
+					</p>
 
-						<div className="flex gap-2.5 justify-end">
-							<Button
-								variant="tertiary"
-								onClick={() => setShowDeleteConfirm(false)}
-								disabled={isDeleting}
-							>
-								Cancel
-							</Button>
-							<Button
-								variant="secondary"
-								isDestructive={true}
-								onClick={handleDeletePost}
-								isBusy={isDeleting}
-								disabled={isDeleting}
-							>
-								{isDeleting ? 'Deleting...' : 'Delete'}
-							</Button>
-						</div>
+					<div className="flex gap-2.5 justify-end mt-4">
+						<Button
+							variant="tertiary"
+							onClick={() => setShowDeleteConfirm(false)}
+							disabled={isDeleting}
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="secondary"
+							isDestructive={true}
+							onClick={handleDeletePost}
+							isBusy={isDeleting}
+							disabled={isDeleting}
+						>
+							{isDeleting ? 'Deleting...' : 'Delete'}
+						</Button>
 					</div>
-				</div>
+				</Modal>
 			)}
 		</div>
 	)
