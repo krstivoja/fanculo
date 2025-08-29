@@ -2,7 +2,10 @@ import { useState, useEffect, Suspense, forwardRef, useImperativeHandle } from '
 import LoadingSpinner from '../ui/components/LoadingSpinner'
 import PostListSidebar from '../ui/components/PostListSidebar'
 import MonacoEditor from '../ui/components/MonacoEditor'
-import { Button, TextControl, TextareaControl, TabPanel, Modal } from '@wordpress/components'
+import QuickCreateModal from '../ui/components/modals/QuickCreateModal'
+import TitleEditModal from '../ui/components/modals/TitleEditModal'
+import DeleteConfirmModal from '../ui/components/modals/DeleteConfirmModal'
+import { Button, TextareaControl, TabPanel } from '@wordpress/components'
 import { BlocksIcon, SymbolIcon, StyleIcon, SettingsIcon } from '../ui/icons/Icons.jsx'
 import { MdOutlineDescription } from 'react-icons/md'
 import { preloadCommonLanguages } from '../utils/monacoLanguageLoader'
@@ -57,18 +60,13 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 		scss: allPosts.filter(post => post.type === 'scss')
 	}
 
-	// Quick create modal state
-	const [showModal, setShowModal] = useState(false)
+	// Modal states
+	const [showQuickCreateModal, setShowQuickCreateModal] = useState(false)
 	const [quickCreateType, setQuickCreateType] = useState('')
-	const [quickTitle, setQuickTitle] = useState('')
 	const [isQuickCreating, setIsQuickCreating] = useState(false)
-
-	// Delete confirmation state
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 	const [isDeleting, setIsDeleting] = useState(false)
-	// Title editing modal state
 	const [showTitleModal, setShowTitleModal] = useState(false)
-	const [tempTitle, setTempTitle] = useState('')
 
 	const fetchPosts = async () => {
 		setIsLoadingPosts(true)
@@ -232,8 +230,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 	const handleQuickCreate = (type: string) => {
 		setQuickCreateType(type)
-		setShowModal(true)
-		setQuickTitle('')
+		setShowQuickCreateModal(true)
 	}
 
 	// Expose handleQuickCreate to parent component
@@ -241,12 +238,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 		handleQuickCreate
 	}))
 
-	const handleQuickCreateSubmit = async () => {
-		if (!quickTitle.trim()) {
-			setMessage('Please enter a title')
-			return
-		}
-
+	const handleQuickCreateSubmit = async (title: string) => {
 		setIsQuickCreating(true)
 		setMessage('')
 
@@ -259,7 +251,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				body: new URLSearchParams({
 					action: 'fanculo_create_post',
 					nonce: window.fanculo_ajax.nonce,
-					title: quickTitle,
+					title: title,
 					type: quickCreateType,
 					content: '',
 					style: '',
@@ -271,9 +263,8 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 			const result = await response.json()
 			if (result.success) {
-				setMessage(`${quickCreateType} "${quickTitle}" created successfully!`)
-				setShowModal(false)
-				setQuickTitle('')
+				setMessage(`${quickCreateType} "${title}" created successfully!`)
+				setShowQuickCreateModal(false)
 				await fetchPosts()
 				setActiveTab(quickCreateType)
 				
@@ -393,10 +384,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 							<div className="mb-4">
 								<h1 
 									className="text-xl font-semibold cursor-pointer hover:underline"
-									onClick={() => {
-										setTempTitle(postTitle)
-										setShowTitleModal(true)
-									}}
+									onClick={() => setShowTitleModal(true)}
 									title="Click to edit title"
 								>
 									{postTitle || "Click to add title..."}
@@ -596,159 +584,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-			{/* Quick Create Modal */}
-			{showModal && (
-				<Modal
-					title={
-						<span className="flex items-center gap-2">
-							{quickCreateType === 'blocks' && <BlocksIcon width={20} height={20} />}
-							{quickCreateType === 'symbols' && <SymbolIcon width={20} height={20} />}
-							{quickCreateType === 'scss' && <StyleIcon width={20} height={20} />}
-							{quickCreateType === 'blocks' && 'Create New Block'}
-							{quickCreateType === 'symbols' && 'Create New Symbol'}
-							{quickCreateType === 'scss' && 'Create New SCSS'}
-						</span>
-					}
-					onRequestClose={() => setShowModal(false)}
-					className="fanculo-quick-create-modal"
-				>
-					<p className="text-gray-600 text-sm mb-4">
-						Enter a title for your new {quickCreateType.slice(0, -1)}. You can add content and styles later.
-					</p>
+			{/* Modals */}
+			<QuickCreateModal
+				isOpen={showQuickCreateModal}
+				type={quickCreateType}
+				onClose={() => setShowQuickCreateModal(false)}
+				onSubmit={handleQuickCreateSubmit}
+				isCreating={isQuickCreating}
+			/>
 
-					<TextControl
-						label="Title:"
-						type="text"
-						value={quickTitle}
-						onChange={(value) => setQuickTitle(value)}
-						placeholder={`Enter ${quickCreateType.slice(0, -1)} title...`}
-						autoFocus
-						onKeyPress={(e) => {
-							if (e.key === 'Enter') {
-								handleQuickCreateSubmit()
-							}
-							if (e.key === 'Escape') {
-								setShowModal(false)
-							}
-						}}
-					/>
+			<TitleEditModal
+				isOpen={showTitleModal}
+				currentTitle={postTitle}
+				onClose={() => setShowTitleModal(false)}
+				onSave={setPostTitle}
+			/>
 
-					<div className="flex gap-2.5 justify-end mt-4">
-						<Button
-							variant="tertiary"
-							onClick={() => setShowModal(false)}
-							disabled={isQuickCreating}
-						>
-							Cancel
-						</Button>
-						<Button
-							variant="primary"
-							onClick={handleQuickCreateSubmit}
-							isBusy={isQuickCreating}
-							disabled={isQuickCreating || !quickTitle.trim()}
-						>
-							{isQuickCreating ? 'Creating...' : 'Create'}
-						</Button>
-					</div>
-				</Modal>
-			)}
-
-			{/* Title Edit Modal */}
-			{showTitleModal && (
-				<Modal
-					title={
-						<span className="flex items-center gap-2">
-							<MdOutlineDescription size={20} />
-							Edit Post Title
-						</span>
-					}
-					onRequestClose={() => {
-						setShowTitleModal(false)
-						setTempTitle('')
-					}}
-					className="fanculo-title-edit-modal"
-				>
-					<p className="text-gray-600 text-sm mb-4">
-						Update the title for this post.
-					</p>
-
-					<TextControl
-						label="Title:"
-						type="text"
-						value={tempTitle}
-						onChange={(value) => setTempTitle(value)}
-						placeholder="Enter post title..."
-						autoFocus
-						onKeyPress={(e) => {
-							if (e.key === 'Enter') {
-								setPostTitle(tempTitle)
-								setShowTitleModal(false)
-								setTempTitle('')
-							}
-							if (e.key === 'Escape') {
-								setShowTitleModal(false)
-								setTempTitle('')
-							}
-						}}
-					/>
-
-					<div className="flex gap-2.5 justify-end mt-4">
-						<Button
-							variant="tertiary"
-							onClick={() => {
-								setShowTitleModal(false)
-								setTempTitle('')
-							}}
-						>
-							Cancel
-						</Button>
-						<Button
-							variant="primary"
-							onClick={() => {
-								setPostTitle(tempTitle)
-								setShowTitleModal(false)
-								setTempTitle('')
-							}}
-							disabled={!tempTitle.trim()}
-						>
-							Save
-						</Button>
-					</div>
-				</Modal>
-			)}
-
-			{/* Delete Confirmation Modal */}
-			{showDeleteConfirm && (
-				<Modal
-					title="🗑️ Delete Post"
-					onRequestClose={() => setShowDeleteConfirm(false)}
-					className="fanculo-delete-confirm-modal"
-					isDismissible={!isDeleting}
-				>
-					<p className="text-gray-600 text-sm mb-4">
-						Are you sure you want to delete "<strong>{postTitle}</strong>"? This action cannot be undone.
-					</p>
-
-					<div className="flex gap-2.5 justify-end mt-4">
-						<Button
-							variant="tertiary"
-							onClick={() => setShowDeleteConfirm(false)}
-							disabled={isDeleting}
-						>
-							Cancel
-						</Button>
-						<Button
-							variant="secondary"
-							isDestructive={true}
-							onClick={handleDeletePost}
-							isBusy={isDeleting}
-							disabled={isDeleting}
-						>
-							{isDeleting ? 'Deleting...' : 'Delete'}
-						</Button>
-					</div>
-				</Modal>
-			)}
+			<DeleteConfirmModal
+				isOpen={showDeleteConfirm}
+				postTitle={postTitle}
+				onClose={() => setShowDeleteConfirm(false)}
+				onConfirm={handleDeletePost}
+				isDeleting={isDeleting}
+			/>
 		</div>
 	)
 })

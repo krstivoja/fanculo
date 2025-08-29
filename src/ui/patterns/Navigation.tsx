@@ -1,8 +1,8 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { MenuGroup, MenuItem, Button, Popover } from '@wordpress/components'
-import { BlocksIcon, SymbolIcon, StyleIcon } from '../icons/Icons.jsx'
-import { MdOutlineRocketLaunch, MdOutlineViewList, MdOutlineAdd } from 'react-icons/md'
+import { BlocksIcon, SymbolIcon, StyleIcon, MoreIcon, LogoIcon } from '../icons/Icons.jsx'
+import { MdOutlineAdd } from 'react-icons/md'
 import navItems from '../../consts/pagesURL'
 
 interface NavigationProps {
@@ -26,9 +26,9 @@ function Navigation({ onQuickCreate }: NavigationProps) {
     <div className="bg-white border-b border-gray-200 px-5 flex items-center gap-8 min-h-[60px] w-full">
       <div className='flex mr-auto'>
       {/* Logo/Title */}
-      <div className="flex items-center gap-3 mr-5">
-        <MdOutlineRocketLaunch size={28} className="text-blue-600" />
-        <h1 className="m-0 text-xl font-semibold text-gray-800">
+      <div className="flex items-center gap-1 mr-5">
+        <LogoIcon className="w-8 h-8" />
+        <h1 className="m-0 text-xl !font-bold text-gray-800">
           Fanculo
         </h1>
       </div>
@@ -89,9 +89,8 @@ function Navigation({ onQuickCreate }: NavigationProps) {
           variant="secondary"
           className="flex items-center gap-2"
         >
-          <MdOutlineViewList size={16} />
           Pages
-          <span className={`transition-transform ${showMainMenu ? 'rotate-180' : ''}`}>▼</span>
+          <MoreIcon width={16} height={16} />
         </Button>
 
         {showMainMenu && (
