@@ -429,7 +429,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										),
 										className: 'tab-content-field'
 									}] : []),
-									{
+									...(postType !== 'symbols' ? [{
 										name: 'style',
 										title: (
 											<span className="flex items-center gap-2">
@@ -438,7 +438,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 											</span>
 										),
 										className: 'tab-style'
-									},
+									}] : []),
 									...(postType === 'blocks' ? [{
 										name: 'attributes',
 										title: (
@@ -454,13 +454,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 								{(tab) => (
 									<div className="form-tab-content">
 										{tab.name === 'content' && (postType === 'blocks' || postType === 'symbols') && (
-											<div className="mb-4">
-												<label className="block mb-2 font-medium text-sm">
-													Content (PHP)
-												</label>
-												<p className="text-xs text-gray-600 mb-3">
-													Enter PHP render code for this {postType === 'blocks' ? 'block' : 'component'}
-												</p>
+											<div className="mb-4">												
 												<MonacoEditor
 													value={postContent}
 													onChange={(value) => setPostContent(value || '')}
@@ -473,13 +467,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										)}
 										
 										{tab.name === 'style' && (
-											<div className="mb-4">
-												<label className="block mb-2 font-medium text-sm">
-													Style (SCSS)
-												</label>
-												<p className="text-xs text-gray-600 mb-3">
-													Enter SCSS styles for this {postType === 'blocks' ? 'block' : 'component'}
-												</p>
+											<div className="mb-4">												
 												<MonacoEditor
 													value={postStyle}
 													onChange={(value) => setPostStyle(value || '')}
@@ -493,7 +481,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										
 										{tab.name === 'attributes' && postType === 'blocks' && (
 											<TextareaControl
-												label="Attributes (JSON)"
+												// label="Attributes (JSON)"
 												value={postAttributes}
 												onChange={(value) => setPostAttributes(value)}
 												placeholder='{"title": {"type": "string", "default": ""}, "alignment": {"type": "string", "default": "left"}}'

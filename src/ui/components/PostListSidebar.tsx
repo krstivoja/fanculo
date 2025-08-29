@@ -104,8 +104,8 @@ export default function PostListSidebar({
 									posts[tab.name as keyof typeof posts].map((post: any) => (
 										<button
 											key={post.id} 
-											className={`w-full cursor-pointer text-left p-2 flex justify-between items-center transition-colors duration-200 rounded-sm ${
-												editingPostId === post.id ? 'bg-blue-500 text-white border' : ''
+											className={`w-full cursor-pointer text-left p-2 flex justify-between items-center transition-colors duration-200 rounded-sm hover:bg-stone-100 ${
+												editingPostId === post.id ? 'bg-blue-500 text-white border hover:!bg-blue-500 cursor-auto' : ''
 											}`}
 											onClick={() => onEditPost(post.id)}
 										>
