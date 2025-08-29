@@ -46,13 +46,16 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	const [isLoadingPost, setIsLoadingPost] = useState(false)
 
 	// Posts list state
-	const [posts, setPosts] = useState({
-		blocks: [],
-		symbols: [],
-		scss: []
-	})
+	const [allPosts, setAllPosts] = useState<any[]>([])
 	const [isLoadingPosts, setIsLoadingPosts] = useState(false)
 	const [activeTab, setActiveTab] = useState('blocks')
+	
+	// Filter posts by type for display
+	const posts = {
+		blocks: allPosts.filter(post => post.type === 'blocks'),
+		symbols: allPosts.filter(post => post.type === 'symbols'),
+		scss: allPosts.filter(post => post.type === 'scss')
+	}
 
 	// Quick create modal state
 	const [showModal, setShowModal] = useState(false)
@@ -83,7 +86,13 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 			const result = await response.json()
 			if (result.success) {
-				setPosts(result.data)
+				// Flatten the grouped posts into a single array
+				const flatPosts = [
+					...result.data.blocks.map((post: any) => ({ ...post, type: 'blocks' })),
+					...result.data.symbols.map((post: any) => ({ ...post, type: 'symbols' })),
+					...result.data.scss.map((post: any) => ({ ...post, type: 'scss' }))
+				]
+				setAllPosts(flatPosts)
 			}
 		} catch (error) {
 			console.error('Error fetching posts:', error)
@@ -107,35 +116,17 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 		}
 	}
 
-	// Auto-select first post when posts are loaded initially (only once)
+	// Auto-select first available post on initial load only
 	useEffect(() => {
-		// Only auto-select on initial load when no post is being edited
-		if (editingPostId) return
+		if (editingPostId || allPosts.length === 0) return
 		
-		if (posts.blocks.length === 0 && posts.symbols.length === 0 && posts.scss.length === 0) {
-			return // No posts available yet
-		}
-
-		// Find first available post across all types
-		let firstPost = null
-		let firstPostType = null
-
-		if (posts.blocks.length > 0) {
-			firstPost = posts.blocks[0]
-			firstPostType = 'blocks'
-		} else if (posts.symbols.length > 0) {
-			firstPost = posts.symbols[0]
-			firstPostType = 'symbols'
-		} else if (posts.scss.length > 0) {
-			firstPost = posts.scss[0]
-			firstPostType = 'scss'
-		}
-
-		if (firstPost && firstPostType) {
-			setActiveTab(firstPostType)
+		// Find first post and auto-select it
+		const firstPost = allPosts[0]
+		if (firstPost) {
+			setActiveTab(firstPost.type)
 			handleEditPost(firstPost.id)
 		}
-	}, [posts]) // Only depend on posts, not activeTab or editingPostId
+	}, [allPosts]) // Only run when allPosts changes
 
 	const resetForm = () => {
 		setEditingPostId(null)
@@ -151,18 +142,10 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 	const handleTabChange = (tabKey: string) => {
 		setActiveTab(tabKey)
-		
-		// Auto-select first post in the new tab if available
-		const postsInTab = posts[tabKey as keyof typeof posts]
-		if (postsInTab.length > 0) {
-			handleEditPost(postsInTab[0].id, true) // Skip tab update since we're already setting it
-		} else {
-			// If no posts in this tab, clear the form
-			resetForm()
-		}
+		// Don't auto-select posts - let user choose
 	}
 
-	const handleEditPost = async (postId: number, skipTabUpdate = false) => {
+	const handleEditPost = async (postId: number) => {
 		console.log('handleEditPost called with ID:', postId)
 		if (editingPostId && editingPostId !== postId) {
 			resetForm()
@@ -197,10 +180,8 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				setPostEditorStyle(post.editor_style || '')
 				setPostViewJs(post.view_js || '')
 
-				// Set the active tab to match the post type (unless we're skipping tab update)
-				if (!skipTabUpdate) {
-					setActiveTab(post.type)
-				}
+				// Auto-switch to the correct tab for this post type
+				setActiveTab(post.type)
 
 				document.querySelector('.post-form')?.scrollIntoView({ behavior: 'smooth' })
 			} else {
@@ -397,7 +378,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 			<div className='w-full'>
 
 				{/* Post Creation/Editing Section */}
-				{editingPostId && (
+				{editingPostId ? (
 					<div className='flex'>
 						<div className="post-form w-full mb-10 p-5 border border-gray-300 rounded-lg bg-gray-100 relative">
 							{isLoadingPost && (
@@ -600,7 +581,7 @@ document.addEventListener('DOMContentLoaded', function() {
 						{/* Sidebar */}
 
 					</div>
-				)}
+				) : null}
 
 				{message && (
 					<div className={`mt-5 p-2.5 rounded border ${
