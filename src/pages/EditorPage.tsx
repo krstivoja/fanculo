@@ -6,7 +6,7 @@ import QuickCreateModal from '../ui/components/modals/QuickCreateModal'
 import TitleEditModal from '../ui/components/modals/TitleEditModal'
 import DeleteConfirmModal from '../ui/components/modals/DeleteConfirmModal'
 import DashiconSelector from '../ui/components/modals/DashiconSelector'
-import { Button, TextareaControl, TabPanel, ToggleControl, SelectControl } from '@wordpress/components'
+import { Button, TextareaControl, TabPanel, ToggleControl, SelectControl, Snackbar } from '@wordpress/components'
 import { BlocksIcon, SymbolIcon, StyleIcon, SettingsIcon } from '../ui/icons/Icons.jsx'
 import { MdOutlineDescription } from 'react-icons/md'
 import { preloadCommonLanguages } from '../utils/monacoLanguageLoader'
@@ -38,6 +38,11 @@ interface EditorPageRef {
 
 const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	const [message, setMessage] = useState('')
+	
+	// Snackbar state
+	const [snackbarMessage, setSnackbarMessage] = useState('')
+	const [showSnackbar, setShowSnackbar] = useState(false)
+	const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success')
 
 	// Post creation/editing state
 	const [editingPostId, setEditingPostId] = useState<number | null>(null)
@@ -82,6 +87,17 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 	// Block categories
 	const [blockCategories, setBlockCategories] = useState<any[]>([])
+
+	// Helper function to show snackbar
+	const showSnackbarNotification = (message: string, type: 'success' | 'error' = 'success') => {
+		setSnackbarMessage(message)
+		setSnackbarType(type)
+		setShowSnackbar(true)
+		// Auto-hide after 3 seconds
+		setTimeout(() => {
+			setShowSnackbar(false)
+		}, 3000)
+	}
 
 	const fetchPosts = async () => {
 		setIsLoadingPosts(true)
@@ -270,7 +286,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 			const result = await response.json()
 			if (result.success) {
-				setMessage(`Post "${postTitle}" deleted successfully!`)
+				showSnackbarNotification(`Post "${postTitle}" deleted successfully!`)
 				resetForm()
 				fetchPosts()
 				setShowDeleteConfirm(false)
@@ -330,7 +346,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 			const result = await response.json()
 			if (result.success) {
-				setMessage(`${quickCreateType} "${title}" created successfully!`)
+				showSnackbarNotification(`${quickCreateType} "${title}" created successfully!`)
 				setShowQuickCreateModal(false)
 				await fetchPosts()
 				setActiveTab(quickCreateType)
@@ -395,7 +411,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 			const result = await response.json()
 			if (result.success) {
-				setMessage(`Post "${postTitle}" ${isEditing ? 'updated' : 'created'} successfully!`)
+				showSnackbarNotification(`Post "${postTitle}" ${isEditing ? 'updated' : 'created'} successfully!`)
 				if (!isEditing) {
 					// For new posts, focus on the created post instead of resetting form
 					if (result.data?.post_id) {
@@ -414,10 +430,10 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 					fetchPosts()
 				}
 			} else {
-				setMessage(result.data || `Error ${isEditing ? 'updating' : 'creating'} post`)
+				showSnackbarNotification(result.data || `Error ${isEditing ? 'updating' : 'creating'} post`, 'error')
 			}
 		} catch (error) {
-			setMessage(`Error ${isEditing ? 'updating' : 'creating'} post`)
+			showSnackbarNotification(`Error ${isEditing ? 'updating' : 'creating'} post`, 'error')
 		} finally {
 			setIsCreating(false)
 			setIsUpdating(false)
@@ -712,15 +728,6 @@ document.addEventListener('DOMContentLoaded', function() {
 					</div>
 				) : null}
 
-				{message && (
-					<div className={`mt-5 p-2.5 rounded border ${
-						message.includes('Error') 
-							? 'bg-red-50 border-red-500' 
-							: 'bg-green-50 border-green-500'
-					}`}>
-						{message}
-					</div>
-				)}
 			</div>
 
 
@@ -755,6 +762,17 @@ document.addEventListener('DOMContentLoaded', function() {
 				onClose={() => setShowDashiconModal(false)}
 				onSelect={setPostIcon}
 			/>
+
+			{/* Snackbar for notifications */}
+			{showSnackbar && (
+				<div className="fixed bottom-4 right-4">
+					<Snackbar 
+						onRemove={() => setShowSnackbar(false)}
+					>
+						{snackbarMessage}
+					</Snackbar>
+				</div>	
+			)}
 		</div>
 	)
 })
