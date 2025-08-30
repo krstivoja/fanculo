@@ -441,7 +441,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	}
 
 	return (
-		<main className='flex'>
+		<>
 
 			{/* Post List Sidebar */}
 			<PostListSidebar
@@ -453,12 +453,13 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				editingPostId={editingPostId}
 			/>
 
-			{/* Main Content */}
-			<div className='w-full flex'>
+			
+			
 
 				{/* Post Creation/Editing Section */}
 				{editingPostId ? (
 					<>
+						{/* Main Content */}
 						<div className="post-form w-full relative">
 							{isLoadingPost && (
 								<div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center rounded-lg z-10">
@@ -634,7 +635,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 						{/* Sidebar */}
 
-						<div className="w-full max-w-sidebar px-4 py-2 border-l border-solid border-ui-outline">
+						<aside id="block-settings" className="w-full max-w-sidebar px-4 py-2 border-l border-solid border-ui-outline">
 							
 							{/* Block Description - Only for blocks */}
 							{postType === 'blocks' && (
@@ -721,14 +722,14 @@ document.addEventListener('DOMContentLoaded', function() {
 							>
 								Delete Post
 							</Button>
-						</div>
+						</aside>
 
 						{/* Sidebar */}
 
 					</>
 				) : null}
 
-			</div>
+			
 
 
 
@@ -773,7 +774,7 @@ document.addEventListener('DOMContentLoaded', function() {
 					</Snackbar>
 				</div>	
 			)}
-		</main>
+		</>
 	)
 })
 

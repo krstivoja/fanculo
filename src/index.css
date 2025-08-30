@@ -53,3 +53,32 @@ html, body  {
   margin-left: 0;
   padding: 12px 8px;
 }
+
+
+
+
+
+.monaco-editor-panel .components-tab-panel__tab-content section {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100% !important;
+  contain: layout;
+}
+
+.monaco-editor-wrapper section {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100% !important;
+  contain: layout;
+}
+
+.monaco-editor-wrapper  {
+  position: relative;
+  height: 600px;
+}
