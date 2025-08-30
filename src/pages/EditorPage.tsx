@@ -8,8 +8,9 @@ import DeleteConfirmModal from '../ui/components/modals/DeleteConfirmModal'
 import DashiconSelector from '../ui/components/modals/DashiconSelector'
 import { Button, TextareaControl, TabPanel, ToggleControl, SelectControl, Snackbar } from '@wordpress/components'
 import { BlocksIcon, SymbolIcon, StyleIcon, SettingsIcon } from '../ui/icons/Icons.jsx'
-import { Icon, page } from '@wordpress/icons'
+import { Icon, page, edit } from '@wordpress/icons'
 import { preloadCommonLanguages } from '../utils/monacoLanguageLoader'
+import './EditorPage.css';
 
 declare global {
 	interface Window {
@@ -81,9 +82,6 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	const [showTitleModal, setShowTitleModal] = useState(false)
 	const [showDashiconModal, setShowDashiconModal] = useState(false)
 
-	// Toggle states for Editor Style and View JS tabs
-	const [enableEditorStyle, setEnableEditorStyle] = useState(false)
-	const [enableViewJs, setEnableViewJs] = useState(false)
 
 	// Block categories
 	const [blockCategories, setBlockCategories] = useState<any[]>([])
@@ -196,8 +194,6 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 		setPostDescription('')
 		setPostCategory(blockCategories.length > 0 ? blockCategories[0].slug : '')
 		setPostIcon('smiley')
-		setEnableEditorStyle(false)
-		setEnableViewJs(false)
 		setMessage('')
 	}
 
@@ -244,11 +240,6 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				setPostCategory(post.category || '')
 				setPostIcon(post.icon || '')
 
-				// Set toggle states from saved values
-				if (post.type === 'blocks') {
-					setEnableEditorStyle(post.enable_editor_style || false)
-					setEnableViewJs(post.enable_view_js || false)
-				}
 
 				// Auto-switch to the correct tab for this post type
 				setActiveTab(post.type)
@@ -339,8 +330,6 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 					view_js: '',
 					description: '',
 					category: '',
-					enable_editor_style: 'false',
-					enable_view_js: 'false',
 				}),
 			})
 
@@ -404,8 +393,6 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 					description: postDescription,
 					category: postCategory,
 					icon: postIcon,
-					enable_editor_style: enableEditorStyle.toString(),
-					enable_view_js: enableViewJs.toString(),
 				}),
 			})
 
@@ -470,9 +457,9 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 
 						{/* Post Title */}
-						<div className="mt-8">
+						<div className='h-[100px] flex item-center px-12'>
 							<h1
-								className="!text-4xl !font-bold cursor-pointer hover:underline !flex gap-3 items-center"
+								className="!text-4xl !font-bold cursor-pointer hover:underline !flex gap-3 items-center group"
 								onClick={() => setShowTitleModal(true)}
 								title="Click to edit title"
 							>
@@ -482,6 +469,9 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 									{postType === 'scss' && <StyleIcon width={30} height={30} />}
 								</span>
 								{postTitle || "Click to add title..."}
+								<span className='hidden group-hover:!inline-flex'>
+									<Icon icon={edit} size={40} />
+								</span>
 							</h1>
 						</div>
 
@@ -489,7 +479,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 						{/* Form Fields Tabs */}
 						<TabPanel
-							className="fanculo-form-tabs"
+							className="content-form-tabs"
 							activeClass="is-active"
 							tabs={[
 								...(postType === 'blocks' || postType === 'symbols' ? [{
@@ -513,16 +503,6 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 									className: 'tab-style'
 								}] : []),
 								...(postType === 'blocks' ? [{
-									name: 'attributes',
-									title: (
-										<span className="flex items-center gap-2">
-											<SettingsIcon width={16} height={16} />
-											Attributes
-										</span>
-									),
-									className: 'tab-attributes'
-								}] : []),
-								...(postType === 'blocks' && enableEditorStyle ? [{
 									name: 'editor_style',
 									title: (
 										<span className="flex items-center gap-2">
@@ -532,7 +512,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 									),
 									className: 'tab-editor-style'
 								}] : []),
-								...(postType === 'blocks' && enableViewJs ? [{
+								...(postType === 'blocks' ? [{
 									name: 'view_js',
 									title: (
 										<span className="flex items-center gap-2">
@@ -541,13 +521,23 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										</span>
 									),
 									className: 'tab-view-js'
+								}] : []),
+								...(postType === 'blocks' ? [{
+									name: 'attributes',
+									title: (
+										<span className="flex items-center gap-2">
+											<SettingsIcon width={16} height={16} />
+											Attributes
+										</span>
+									),
+									className: 'tab-attributes'
 								}] : [])
 							]}
 						>
 							{(tab) => (
-								<div className="form-tab-content">
+								<div className="content-form-tab-content">
 									{tab.name === 'content' && (postType === 'blocks' || postType === 'symbols') && (
-										<div className="mb-4">
+										
 											<MonacoEditor
 												value={postContent}
 												onChange={(value) => setPostContent(value || '')}
@@ -556,11 +546,11 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 												height="400px"
 												placeholder="<?php\n// Enter your PHP render code here\necho 'Hello World';\n?>"
 											/>
-										</div>
+									
 									)}
 
 									{tab.name === 'style' && (
-										<div className="mb-4">
+										
 											<MonacoEditor
 												value={postStyle}
 												onChange={(value) => setPostStyle(value || '')}
@@ -569,7 +559,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 												height="400px"
 												placeholder="// Enter your SCSS styles here\n.my-component {\n  color: #333;\n  padding: 1rem;\n}"
 											/>
-										</div>
+										
 									)}
 
 									{tab.name === 'attributes' && postType === 'blocks' && (
@@ -585,7 +575,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 									)}
 
 									{tab.name === 'editor_style' && postType === 'blocks' && (
-										<div className="mb-4">
+										
 											<MonacoEditor
 												value={postEditorStyle}
 												onChange={(value) => setPostEditorStyle(value || '')}
@@ -598,11 +588,11 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
   padding: 1rem;
 }"
 											/>
-										</div>
+									
 									)}
 
 									{tab.name === 'view_js' && postType === 'blocks' && (
-										<div className="mb-4">
+										
 											<MonacoEditor
 												value={postViewJs}
 												onChange={(value) => setPostViewJs(value || '')}
@@ -615,7 +605,7 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('Block loaded on frontend');
 });"
 											/>
-										</div>
+										
 									)}
 								</div>
 							)}
@@ -689,29 +679,6 @@ document.addEventListener('DOMContentLoaded', function() {
 							</div>
 						)}
 
-						{/* Toggle Controls for Blocks only */}
-
-						<hr className='my-8 w-full' />
-
-						{postType === 'blocks' && (
-							<>
-								<h3 className="text-sm font-semibold mb-3 text-gray-700">Additional Fields</h3>
-
-								<ToggleControl
-									label="Editor Style"
-									help={enableEditorStyle ? "Styles for the editor environment" : "Enable editor-specific CSS"}
-									checked={enableEditorStyle}
-									onChange={setEnableEditorStyle}
-								/>
-								<ToggleControl
-									label="View JS"
-									help={enableViewJs ? "Frontend JavaScript for this block" : "Enable frontend JavaScript"}
-									checked={enableViewJs}
-									onChange={setEnableViewJs}
-								/>
-
-							</>
-						)}
 
 						<hr className='my-8 w-full' />
 						<h3 className="text-sm font-semibold mb-3 text-gray-700">Dangerous area</h3>

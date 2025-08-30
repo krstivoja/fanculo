@@ -3,9 +3,7 @@
 @theme {
   --text-xxs: 12px;
   --spacing-sidebar: 300px;
-  
   --color-ui-outline: var(--color-stone-300);
-  
   --sidebar-max-height: calc(100vh - 150px);
 }
 
@@ -29,59 +27,4 @@ html, body  {
 .wrap {
   margin: 0;
   padding: 0;
-}
-
-
-
-/* Base styles for WordPress admin integration */
-#fanculo-root {
-  height: 100vh;
-  /* border: 10px solid rgba(255, 0, 0, 0.257); */
-  display: grid;
-  grid-template-columns: 300px 1fr 300px;
-  grid-template-rows: 60px 1fr;
-}
-
-#fanculo-root > header { grid-area: 1 / 1 / 2 / 4; }
-#fanculo-root > aside#post-list { grid-area: 2 / 1 / 3 / 2; }
-#fanculo-root > main { grid-area: 2 / 2 / 3 / 3; }
-#fanculo-root > aside#block-settings { grid-area: 2 / 3 / 3 / 4; }
-
-
-.components-menu-group button {
-  height: inherit !important;
-  text-align: left;
-}
-
-.components-tab-panel__tabs-item {
-  font-weight: 400;
-  height: unset !important;
-  margin-left: 0;
-  padding: 12px 8px;
-}
-
-
-.monaco-editor-panel .components-tab-panel__tab-content section {
-  position: absolute !important;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 100% !important;
-  contain: layout;
-}
-
-.monaco-editor-wrapper section {
-  position: absolute !important;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 100% !important;
-  contain: layout;
-}
-
-.monaco-editor-wrapper  {
-  position: relative;
-  height: 600px;
 }

@@ -1,7 +1,7 @@
 import { TabPanel } from '@wordpress/components'
 import { BlocksIcon, SymbolIcon, StyleIcon } from '../icons/Icons.jsx'
 import LoadingSpinner from './LoadingSpinner'
-import './PostListSidebar.scss';
+import './PostListSidebar.css';
 
 interface Post {
 	id: number
@@ -92,7 +92,7 @@ export default function PostListSidebar({
 							<>
 								{posts[tab.name as keyof typeof posts].length === 0 ? (
 									<>
-										<div className="mb-4 flex justify-center">
+										<div className="mb-4 flex justify-center ">
 											{tab.name === 'blocks' && <BlocksIcon />}
 											{tab.name === 'symbols' && <SymbolIcon />}
 											{tab.name === 'scss' && <StyleIcon />}

@@ -31,6 +31,10 @@
       color: #fff !important;
       font-weight: 600 !important;
       border-radius: var(--radius-sm) !important;
+      flex-grow: 1;
+      text-align: center;
+      display: flex;
+      justify-content: center;
     }
 
     .is-active svg {
@@ -39,12 +43,18 @@
 
   }
 
+  .components-tab-panel__tabs-item {
+    font-weight: 400;
+    height: unset !important;
+    margin-left: 0;
+    padding: 12px 8px;
+  }
+
 
   .tab-content {
     padding: 0;
   }
 
-
-
-
 }
+
+

@@ -109,11 +109,6 @@ class PostController
             update_post_meta($post_id, '_fanculo_editor_style', $editor_style);
             update_post_meta($post_id, '_fanculo_view_js', $view_js);
             
-            // Save toggle states
-            $enable_editor_style = isset($_POST['enable_editor_style']) ? sanitize_text_field($_POST['enable_editor_style']) : 'false';
-            $enable_view_js = isset($_POST['enable_view_js']) ? sanitize_text_field($_POST['enable_view_js']) : 'false';
-            update_post_meta($post_id, '_fanculo_enable_editor_style', $enable_editor_style);
-            update_post_meta($post_id, '_fanculo_enable_view_js', $enable_view_js);
         }
 
         wp_send_json_success([
@@ -204,8 +199,6 @@ class PostController
         $description = get_post_meta($post_id, '_fanculo_description', true);
         $category = get_post_meta($post_id, '_fanculo_category', true);
         $icon = get_post_meta($post_id, '_fanculo_icon', true);
-        $enable_editor_style = get_post_meta($post_id, '_fanculo_enable_editor_style', true);
-        $enable_view_js = get_post_meta($post_id, '_fanculo_enable_view_js', true);
 
         wp_send_json_success([
             'id' => $post->ID,
@@ -218,9 +211,7 @@ class PostController
             'view_js' => $view_js ?: '',
             'description' => $description ?: '',
             'category' => $category ?: '',
-            'icon' => $icon ?: 'smiley',
-            'enable_editor_style' => $enable_editor_style === 'true',
-            'enable_view_js' => $enable_view_js === 'true'
+            'icon' => $icon ?: 'smiley'
         ]);
     }
 
@@ -296,11 +287,6 @@ class PostController
             update_post_meta($post_id, '_fanculo_editor_style', $editor_style);
             update_post_meta($post_id, '_fanculo_view_js', $view_js);
             
-            // Update toggle states
-            $enable_editor_style = isset($_POST['enable_editor_style']) ? sanitize_text_field($_POST['enable_editor_style']) : 'false';
-            $enable_view_js = isset($_POST['enable_view_js']) ? sanitize_text_field($_POST['enable_view_js']) : 'false';
-            update_post_meta($post_id, '_fanculo_enable_editor_style', $enable_editor_style);
-            update_post_meta($post_id, '_fanculo_enable_view_js', $enable_view_js);
         }
 
         wp_send_json_success([

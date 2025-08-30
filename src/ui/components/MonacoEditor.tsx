@@ -168,7 +168,7 @@ const MonacoEditor = memo(({
 
 
   return (
-    <div ref={containerRef} className="monaco-editor-wrapper border border-gray-300 rounded overflow-hidden">
+    <div ref={containerRef} className="monaco-editor-wrapper !h-full overflow-hidden">
       <Suspense fallback={
         <div className="flex items-center justify-center" style={{ height }}>
           <div className="text-center">
