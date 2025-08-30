@@ -11,6 +11,12 @@ import { areMonacoAssetsCached } from '../../utils/monaco/serviceWorkerManager'
 // Lazy load Monaco Editor to reduce initial bundle size
 const Editor = lazy(() => import('@monaco-editor/react'))
 
+declare global {
+  interface Window {
+    _monacoPreloadStarted?: boolean
+  }
+}
+
 interface MonacoEditorProps {
   value: string
   onChange: (value: string | undefined) => void
@@ -82,8 +88,11 @@ const MonacoEditor = memo(({
           setLoadingMessage('Downloading editor...')
         }
 
-        // Start aggressive preloading
-        await aggressivePreloader.startPreloading()
+        // Start preloading only if not already done
+        if (!window._monacoPreloadStarted) {
+          window._monacoPreloadStarted = true
+          await aggressivePreloader.startPreloading()
+        }
         
         if (mounted) {
           setLoadingMessage('Initializing editor...')

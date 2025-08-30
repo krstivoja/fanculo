@@ -29,10 +29,11 @@ class MonacoInstanceManager {
   private activeInstanceLimit = 5 // Allow multiple tabs with Monaco editors
 
   constructor() {
-    this.startCleanup()
-    this.startMemoryMonitoring()
+    // Temporarily disable aggressive management for debugging
+    // this.startCleanup()
+    // this.startMemoryMonitoring()
     this.preloadMonaco()
-    this.setupMemoryPressureHandling()
+    // this.setupMemoryPressureHandling()
   }
 
   private async preloadMonaco() {

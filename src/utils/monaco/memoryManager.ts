@@ -28,7 +28,8 @@ class MemoryManager {
   private callbacks: Array<(stats: any) => void> = []
 
   constructor() {
-    this.startMonitoring()
+    // Temporarily disable memory monitoring for debugging
+    // this.startMonitoring()
   }
 
   private startMonitoring(): void {
