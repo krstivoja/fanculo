@@ -24,6 +24,7 @@ interface MonacoEditorProps {
   theme?: 'vs-dark' | 'light'
   height?: string | number
   options?: any
+  showSimpleLoader?: boolean // New prop to control loader complexity
 }
 
 const MonacoEditor = memo(({
@@ -32,7 +33,8 @@ const MonacoEditor = memo(({
   language,
   theme = 'vs-dark',
   height = '400px',
-  options = {}
+  options = {},
+  showSimpleLoader = false
 }: MonacoEditorProps) => {
   const editorRef = useRef<any>(null)
   const monacoRef = useRef<any>(null)
@@ -170,17 +172,23 @@ const MonacoEditor = memo(({
   return (
     <div ref={containerRef} className="monaco-editor-wrapper !h-full overflow-hidden">
       <Suspense fallback={
-        <div className="flex items-center justify-center" style={{ height }}>
-          <div className="text-center">
-            <LoadingSpinner />
-            <p className="text-sm text-gray-600 mt-2">{loadingMessage}</p>
-            {!isPreloaded && (
-              <div className="text-xs text-gray-500 mt-1">
-                Preparing optimized editor...
-              </div>
-            )}
+        showSimpleLoader ? (
+          <div className="flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-200" style={{ height }}>
+            <div className="text-gray-400 text-sm">Loading editor...</div>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center justify-center" style={{ height }}>
+            <div className="text-center">
+              <LoadingSpinner />
+              <p className="text-sm text-gray-600 mt-2">{loadingMessage}</p>
+              {!isPreloaded && (
+                <div className="text-xs text-gray-500 mt-1">
+                  Preparing optimized editor...
+                </div>
+              )}
+            </div>
+          </div>
+        )
       }>
         <Editor
           height={height}

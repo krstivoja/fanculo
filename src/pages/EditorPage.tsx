@@ -65,6 +65,12 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	const [allPosts, setAllPosts] = useState<any[]>([])
 	const [isLoadingPosts, setIsLoadingPosts] = useState(false)
 	const [activeTab, setActiveTab] = useState('blocks')
+	
+	// Global loading state to consolidate multiple loaders
+	const [isInitializing, setIsInitializing] = useState(true)
+	
+	// Track active form tab to only render Monaco when needed
+	const [activeFormTab, setActiveFormTab] = useState('content')
 
 	// Filter posts by type for display
 	const posts = {
@@ -98,6 +104,8 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	}
 
 	const fetchPosts = async () => {
+		console.log('🔄 [FETCH] Starting fetchPosts...')
+		const startTime = performance.now()
 		setIsLoadingPosts(true)
 		try {
 			const response = await fetch(window.fanculo_ajax.ajax_url, {
@@ -120,6 +128,8 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 					...result.data.scss.map((post: any) => ({ ...post, type: 'scss' }))
 				]
 				setAllPosts(flatPosts)
+				const endTime = performance.now()
+				console.log(`✅ [FETCH] fetchPosts completed in ${(endTime - startTime).toFixed(2)}ms - ${flatPosts.length} posts loaded`)
 			}
 		} catch (error) {
 			console.error('Error fetching posts:', error)
@@ -129,6 +139,8 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	}
 
 	const fetchBlockCategories = async () => {
+		console.log('🔄 [CATEGORIES] Starting fetchBlockCategories...')
+		const startTime = performance.now()
 		try {
 			const response = await fetch(window.fanculo_ajax.ajax_url, {
 				method: 'POST',
@@ -148,6 +160,8 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				if (!editingPostId && !postCategory && result.data.length > 0) {
 					setPostCategory(result.data[0].slug)
 				}
+				const endTime = performance.now()
+				console.log(`✅ [CATEGORIES] fetchBlockCategories completed in ${(endTime - startTime).toFixed(2)}ms - ${result.data.length} categories loaded`)
 			}
 		} catch (error) {
 			console.error('Error fetching block categories:', error)
@@ -155,30 +169,55 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	}
 
 	useEffect(() => {
-		fetchPosts()
-		fetchBlockCategories()
-		// Initialize Monaco Editor
-		initializeMonaco()
+		console.log('🚀 [INIT] Starting page initialization...')
+		const initStartTime = performance.now()
+		
+		// Run all initializations concurrently for better performance
+		Promise.all([
+			fetchPosts(),
+			fetchBlockCategories(),
+			initializeMonaco()
+		]).then(() => {
+			const totalTime = performance.now() - initStartTime
+			console.log(`✅ [INIT] All initialization completed in ${totalTime.toFixed(2)}ms`)
+			setIsInitializing(false)
+		}).catch((error) => {
+			console.error('❌ [INIT] Initialization failed:', error)
+			setIsInitializing(false)
+		})
+		
+		console.log(`🚀 [INIT] All initialization calls started in ${(performance.now() - initStartTime).toFixed(2)}ms`)
 	}, [])
 
 	const initializeMonaco = async () => {
+		console.log('🔄 [MONACO] Starting Monaco initialization...')
+		const monacoStartTime = performance.now()
 		try {
 			// Pre-load common languages for better performance
 			await preloadCommonLanguages()
+			const monacoEndTime = performance.now()
+			console.log(`✅ [MONACO] Monaco initialized in ${(monacoEndTime - monacoStartTime).toFixed(2)}ms`)
 		} catch (error) {
-			console.error('Failed to initialize Monaco Editor:', error)
+			console.error('❌ [MONACO] Failed to initialize Monaco Editor:', error)
 		}
 	}
 
 	// Auto-select first available post on initial load only
 	useEffect(() => {
+		console.log('🔄 [AUTO-SELECT] Checking for auto-select...', { editingPostId, postsCount: allPosts.length })
 		if (editingPostId || allPosts.length === 0) return
 
 		// Find first post and auto-select it
 		const firstPost = allPosts[0]
 		if (firstPost) {
+			console.log(`🎯 [AUTO-SELECT] Auto-selecting first post: ${firstPost.title} (${firstPost.type})`)
 			setActiveTab(firstPost.type)
-			handleEditPost(firstPost.id)
+			handleEditPost(firstPost.id).then(() => {
+				// Log when everything is completely loaded and ready
+				setTimeout(() => {
+					console.log('🎉 [COMPLETE] Page fully loaded and ready for user interaction!')
+				}, 100)
+			})
 		}
 	}, [allPosts]) // Only run when allPosts changes
 
@@ -203,7 +242,9 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	}
 
 	const handleEditPost = async (postId: number) => {
-		console.log('handleEditPost called with ID:', postId)
+		console.log('🔄 [LOAD-POST] Starting handleEditPost for ID:', postId)
+		const loadStartTime = performance.now()
+		
 		if (editingPostId && editingPostId !== postId) {
 			resetForm()
 		}
@@ -227,7 +268,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 			const result = await response.json()
 			if (result.success) {
 				const post = result.data
-				console.log('Post loaded successfully:', post)
+				console.log('✅ [LOAD-POST] Post data received:', post)
 				setEditingPostId(postId)
 				setPostTitle(post.title)
 				setPostType(post.type)
@@ -245,6 +286,9 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				setActiveTab(post.type)
 
 				document.querySelector('.post-form')?.scrollIntoView({ behavior: 'smooth' })
+				
+				const loadEndTime = performance.now()
+				console.log(`✅ [LOAD-POST] Post loaded successfully in ${(loadEndTime - loadStartTime).toFixed(2)}ms`)
 			} else {
 				console.log('Error loading post:', result)
 				setMessage('Error loading post data')
@@ -434,7 +478,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 			<PostListSidebar
 				posts={posts}
 				activeTab={activeTab}
-				isLoadingPosts={isLoadingPosts}
+				isLoadingPosts={isInitializing}
 				onTabChange={handleTabChange}
 				onEditPost={handleEditPost}
 				editingPostId={editingPostId}
@@ -481,6 +525,8 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 						<TabPanel
 							className="content-form-tabs"
 							activeClass="is-active"
+							onSelect={(tabName) => setActiveFormTab(tabName)}
+							initialTabName={activeFormTab}
 							tabs={[
 								...(postType === 'blocks' || postType === 'symbols' ? [{
 									name: 'content',
@@ -537,7 +583,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 							{(tab) => (
 								<div className="content-form-tab-content">
 									{tab.name === 'content' && (postType === 'blocks' || postType === 'symbols') && (
-										
+										activeFormTab === 'content' ? (
 											<MonacoEditor
 												value={postContent}
 												onChange={(value) => setPostContent(value || '')}
@@ -545,12 +591,17 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 												theme="vs-dark"
 												height="400px"
 												placeholder="<?php\n// Enter your PHP render code here\necho 'Hello World';\n?>"
+												showSimpleLoader={isInitializing}
 											/>
-									
+										) : (
+											<div className="flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-200" style={{ height: '400px' }}>
+												<div className="text-gray-400 text-sm">Click to load editor...</div>
+											</div>
+										)
 									)}
 
 									{tab.name === 'style' && (
-										
+										activeFormTab === 'style' ? (
 											<MonacoEditor
 												value={postStyle}
 												onChange={(value) => setPostStyle(value || '')}
@@ -558,8 +609,13 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 												theme="vs-dark"
 												height="400px"
 												placeholder="// Enter your SCSS styles here\n.my-component {\n  color: #333;\n  padding: 1rem;\n}"
+												showSimpleLoader={isInitializing}
 											/>
-										
+										) : (
+											<div className="flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-200" style={{ height: '400px' }}>
+												<div className="text-gray-400 text-sm">Click to load editor...</div>
+											</div>
+										)
 									)}
 
 									{tab.name === 'attributes' && postType === 'blocks' && (
@@ -575,7 +631,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 									)}
 
 									{tab.name === 'editor_style' && postType === 'blocks' && (
-										
+										activeFormTab === 'editor_style' ? (
 											<MonacoEditor
 												value={postEditorStyle}
 												onChange={(value) => setPostEditorStyle(value || '')}
@@ -587,12 +643,17 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
   border: 2px dashed #ccc;
   padding: 1rem;
 }"
+												showSimpleLoader={isInitializing}
 											/>
-									
+										) : (
+											<div className="flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-200" style={{ height: '400px' }}>
+												<div className="text-gray-400 text-sm">Click to load editor...</div>
+											</div>
+										)
 									)}
 
 									{tab.name === 'view_js' && postType === 'blocks' && (
-										
+										activeFormTab === 'view_js' ? (
 											<MonacoEditor
 												value={postViewJs}
 												onChange={(value) => setPostViewJs(value || '')}
@@ -604,8 +665,13 @@ document.addEventListener('DOMContentLoaded', function() {
   // Your block's frontend code here
   console.log('Block loaded on frontend');
 });"
+												showSimpleLoader={isInitializing}
 											/>
-										
+										) : (
+											<div className="flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-200" style={{ height: '400px' }}>
+												<div className="text-gray-400 text-sm">Click to load editor...</div>
+											</div>
+										)
 									)}
 								</div>
 							)}
