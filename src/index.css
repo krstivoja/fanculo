@@ -5,6 +5,8 @@
   --spacing-sidebar: 300px;
   
   --color-ui-outline: var(--color-stone-300);
+  
+  --sidebar-max-height: calc(100vh - 150px);
 }
 
 

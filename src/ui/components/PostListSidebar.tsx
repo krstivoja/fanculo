@@ -9,6 +9,7 @@ interface Post {
 	type: string
 	content: string
 	style: string
+	icon: string
 }
 
 interface PostListSidebarProps {
@@ -81,15 +82,15 @@ export default function PostListSidebar({
 				]}
 			>
 				{(tab) => (
-					<div className="tab-content min-h-[var(--sidebar-width)] mt-2 bg-white ">
+					<div className="tab-content w-full mt-2 overflow-scroll" style={{maxHeight: 'var(--sidebar-max-height)'}}>
 						{isLoadingPosts ? (
 							<div className="py-10 px-10 text-center text-gray-600">
 								Loading posts...
 							</div>
 						) : (
-							<div>
+							<>
 								{posts[tab.name as keyof typeof posts].length === 0 ? (
-									<div>
+									<>
 										<div className="mb-4 flex justify-center">
 											{tab.name === 'blocks' && <BlocksIcon />}
 											{tab.name === 'symbols' && <SymbolIcon />}
@@ -99,7 +100,7 @@ export default function PostListSidebar({
 										<div className="text-xs mt-2">
 											Create your first {tab.name.slice(0, -1)} using the Quick Create button in the top navigation
 										</div>
-									</div>
+									</>
 								) : (
 									posts[tab.name as keyof typeof posts].map((post: any) => (
 										<button
@@ -109,11 +110,16 @@ export default function PostListSidebar({
 											}`}
 											onClick={() => onEditPost(post.id)}
 										>
-											{post.title}
+											<div className="flex items-center gap-2">
+												{post.icon && (
+													<span className={`dashicons dashicons-${post.icon} text-sm`}></span>
+												)}
+												{post.title}
+											</div>
 										</button>
 									))
 								)}
-							</div>
+							</>
 						)}
 					</div>
 				)}

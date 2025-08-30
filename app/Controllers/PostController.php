@@ -162,7 +162,8 @@ class PostController
                     'title' => $post->post_title,
                     'date' => $post->post_date,
                     'edit_url' => admin_url("post.php?post={$post->ID}&action=edit"),
-                    'view_url' => get_permalink($post->ID)
+                    'view_url' => get_permalink($post->ID),
+                    'icon' => get_post_meta($post->ID, '_fanculo_icon', true)
                 ];
             }
         }
