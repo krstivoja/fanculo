@@ -1,4 +1,4 @@
-import { Suspense, lazy, useRef } from 'react'
+import { Suspense, lazy, useRef, useState, useEffect } from 'react'
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Navigation from './ui/patterns/Navigation'
 import LoadingSpinner from './ui/components/LoadingSpinner'
@@ -12,7 +12,34 @@ const LicensePage = lazy(() => import('./pages/LicensePage'))
 
 
 function App() {
-  const editorPageRef = useRef<{ handleQuickCreate: (type: string) => void } | null>(null)
+  const editorPageRef = useRef<{ 
+    handleQuickCreate: (type: string) => void;
+    handleUpdatePost: () => void;
+    isUpdating: boolean;
+    isEditing: boolean;
+  } | null>(null)
+
+  const [navState, setNavState] = useState({
+    isUpdating: false,
+    isEditing: false
+  })
+
+  // Poll for state changes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (editorPageRef.current) {
+        const newState = {
+          isUpdating: editorPageRef.current.isUpdating,
+          isEditing: editorPageRef.current.isEditing
+        }
+        if (newState.isUpdating !== navState.isUpdating || newState.isEditing !== navState.isEditing) {
+          setNavState(newState)
+        }
+      }
+    }, 100)
+
+    return () => clearInterval(interval)
+  }, [navState])
 
   const handleQuickCreateFromNav = (type: string) => {
     if (editorPageRef.current) {
@@ -20,10 +47,21 @@ function App() {
     }
   }
 
+  const handleUpdatePostFromNav = () => {
+    if (editorPageRef.current) {
+      editorPageRef.current.handleUpdatePost()
+    }
+  }
+
   return (
     <Router>
       <div className="min-h-screen">
-        <Navigation onQuickCreate={handleQuickCreateFromNav} />
+        <Navigation 
+          onQuickCreate={handleQuickCreateFromNav}
+          onUpdatePost={handleUpdatePostFromNav}
+          isUpdating={navState.isUpdating}
+          showUpdateButton={navState.isEditing}
+        />
         <>
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>

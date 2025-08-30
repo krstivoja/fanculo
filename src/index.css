@@ -14,6 +14,7 @@
 }
 
 /* WordPress Blue Colors */
+body { background-color: white;}
 .bg-wp-blue { background-color: #0073aa !important; }
 .text-wp-blue { color: #0073aa !important; }
 .border-wp-blue { border-color: #0073aa !important; }

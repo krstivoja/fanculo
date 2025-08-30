@@ -31,6 +31,9 @@ declare global {
 
 interface EditorPageRef {
 	handleQuickCreate: (type: string) => void;
+	handleUpdatePost: () => void;
+	isUpdating: boolean;
+	isEditing: boolean;
 }
 
 const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
@@ -127,6 +130,10 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 			const result = await response.json()
 			if (result.success) {
 				setBlockCategories(result.data)
+				// Set default category to first category if no post is being edited and no category is set
+				if (!editingPostId && !postCategory && result.data.length > 0) {
+					setPostCategory(result.data[0].slug)
+				}
 			}
 		} catch (error) {
 			console.error('Error fetching block categories:', error)
@@ -171,7 +178,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 		setPostEditorStyle('')
 		setPostViewJs('')
 		setPostDescription('')
-		setPostCategory('')
+		setPostCategory(blockCategories.length > 0 ? blockCategories[0].slug : '')
 		setPostIcon('smiley')
 		setEnableEditorStyle(false)
 		setEnableViewJs(false)
@@ -280,11 +287,18 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	const handleQuickCreate = (type: string) => {
 		setQuickCreateType(type)
 		setShowQuickCreateModal(true)
+		// Set default category for blocks
+		if (type === 'blocks' && blockCategories.length > 0) {
+			setPostCategory(blockCategories[0].slug)
+		}
 	}
 
-	// Expose handleQuickCreate to parent component
+	// Expose methods and state to parent component
 	useImperativeHandle(ref, () => ({
-		handleQuickCreate
+		handleQuickCreate,
+		handleUpdatePost: handleCreatePost,
+		isUpdating: isUpdating,
+		isEditing: !!editingPostId
 	}))
 
 	const handleQuickCreateSubmit = async (title: string) => {
@@ -429,7 +443,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				{/* Post Creation/Editing Section */}
 				{editingPostId ? (
 					<div className='flex'>
-						<div className="post-form w-full mb-10 p-5 border border-gray-300 rounded-lg bg-gray-100 relative">
+						<div className="post-form w-full relative">
 							{isLoadingPost && (
 								<div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center rounded-lg z-10">
 									<LoadingSpinner />
@@ -439,12 +453,17 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 
 
 							{/* Post Title */}
-							<div className="mb-4">
+							<div className="mt-8">
 								<h1 
-									className="!text-4xl !font-bold cursor-pointer hover:underline"
+									className="!text-4xl !font-bold cursor-pointer hover:underline !flex gap-3 items-center"
 									onClick={() => setShowTitleModal(true)}
 									title="Click to edit title"
 								>
+									<span className='aspect-square bg-stone-100 p-2 rounded-full'>
+										{postType === 'blocks' && <BlocksIcon width={30} height={30} />}
+										{postType === 'symbols' && <SymbolIcon width={30} height={30} />}
+										{postType === 'scss' && <StyleIcon width={30} height={30} />}
+									</span>
 									{postTitle || "Click to add title..."}
 								</h1>
 							</div>
@@ -585,37 +604,22 @@ document.addEventListener('DOMContentLoaded', function() {
 								)}
 							</TabPanel>
 
-							<Button
-								variant="primary"
-								isBusy={isCreating || isUpdating}
-								disabled={isCreating || isUpdating}
-								onClick={handleCreatePost}
-							>
-								{editingPostId
-									? (isUpdating ? 'Updating...' : 'Update Post')
-									: (isCreating ? 'Creating...' : 'Create Post')
-								}
-							</Button>
+							{!editingPostId && (
+								<Button
+									variant="primary"
+									isBusy={isCreating}
+									disabled={isCreating}
+									onClick={handleCreatePost}
+								>
+									{isCreating ? 'Creating...' : 'Create Post'}
+								</Button>
+							)}
 						</div>
 
 						{/* Sidebar */}
 
 						<div className="sidebar min-w-[var(--sidebar-width)]">
-							{/* Post Type Display (Edit mode only shows current type) */}
-							<div className="mb-4">
-								<label className="block mb-2 font-bold">
-									Post Type:
-								</label>
-								<div className="py-2 px-3 bg-green-100 border-2 border-green-500 rounded inline-flex items-center gap-2 text-base font-medium">
-									<span>
-										{postType === 'blocks' && <BlocksIcon width={20} height={20} />}
-										{postType === 'symbols' && <SymbolIcon width={20} height={20} />}
-										{postType === 'scss' && <StyleIcon width={20} height={20} />}
-									</span>
-									<span className="capitalize">{postType}</span>
-								</div>
-							</div>
-
+							
 							{/* Block Description - Only for blocks */}
 							{postType === 'blocks' && (
 								<div className="mb-4">

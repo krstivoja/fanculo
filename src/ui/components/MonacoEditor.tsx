@@ -88,13 +88,12 @@ const MonacoEditor = memo(({
         if (mounted) {
           setLoadingMessage('Initializing editor...')
           
-          // Get or create cached instance
-          const instance = await monacoInstanceManager.getOrCreateInstance(language, container)
+          // Temporarily bypass instance manager for debugging
+          console.debug(`Bypassing instance manager, direct Monaco rendering for ${language}`)
+          setIsPreloaded(true)
           
-          if (mounted) {
-            setIsPreloaded(true)
-            console.debug(`Monaco editor ready for ${language}`)
-          }
+          // TODO: Re-enable instance manager once working
+          // const instance = await monacoInstanceManager.getOrCreateInstance(language, container)
         }
       } catch (error) {
         console.error('Failed to initialize Monaco editor:', error)

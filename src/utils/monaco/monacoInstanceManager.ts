@@ -19,14 +19,14 @@ interface CachedInstance {
 
 class MonacoInstanceManager {
   private instances = new Map<string, CachedInstance>()
-  private maxInstances = 2 // Keep at 2 but manage better
+  private maxInstances = 6 // Allow for Content, Style, Attributes, Editor Style, View JS + buffer
   private cleanupInterval: NodeJS.Timeout | null = null
   private memoryCheckInterval: NodeJS.Timeout | null = null
   private monacoLoaded = false
   private monacoPromise: Promise<any> | null = null
   private totalMemoryUsage = 0
   private memoryLimit = 100 * 1024 * 1024 // Increased to 100MB - more realistic
-  private activeInstanceLimit = 1 // Only allow 1 active instance at a time
+  private activeInstanceLimit = 5 // Allow multiple tabs with Monaco editors
 
   constructor() {
     this.startCleanup()

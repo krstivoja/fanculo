@@ -7,9 +7,12 @@ import navItems from '../../consts/pagesURL'
 
 interface NavigationProps {
   onQuickCreate?: (type: string) => void;
+  onUpdatePost?: () => void;
+  isUpdating?: boolean;
+  showUpdateButton?: boolean;
 }
 
-function Navigation({ onQuickCreate }: NavigationProps) {
+function Navigation({ onQuickCreate, onUpdatePost, isUpdating, showUpdateButton }: NavigationProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const [showQuickCreateDropdown, setShowQuickCreateDropdown] = useState(false)
@@ -23,64 +26,66 @@ function Navigation({ onQuickCreate }: NavigationProps) {
   }
 
   return (
-    <div className="bg-white border-b border-gray-200 px-5 flex items-center gap-8 min-h-[60px] w-full">
+    <div className="bg-white border-b border-gray-200 px-5 flex items-center gap-2 min-h-[60px] w-full">
       <div className='flex mr-auto'>
-      {/* Logo/Title */}
-      <div className="flex items-center gap-1 mr-5">
-        <LogoIcon className="w-8 h-8" />
-        <h1 className="m-0 text-xl !font-bold text-gray-800">
-          Fanculo
-        </h1>
-      </div>
-
-      {/* Quick Create Dropdown - Only show on Editor page */}
-      {location.pathname === '/editor' && (
-        <div className="relative ml-auto">
-          <Button
-            onClick={() => setShowQuickCreateDropdown(!showQuickCreateDropdown)}
-            variant="secondary"
-            className="flex items-center gap-2"
-          >
-            <MdOutlineAdd size={16} />
-            Quick Create
-            <span className={`transition-transform ${showQuickCreateDropdown ? 'rotate-180' : ''}`}>▼</span>
-          </Button>
-
-          {showQuickCreateDropdown && (
-            <Popover
-              position="bottom right"
-              onClose={() => setShowQuickCreateDropdown(false)}
-              className="fanculo-quick-create-popover"
+        {/* Quick Create Dropdown - Only show on Editor page */}
+        {location.pathname === '/editor' && (
+          <div className="relative ml-auto">
+            <Button
+              onClick={() => setShowQuickCreateDropdown(!showQuickCreateDropdown)}
+              variant="secondary"
+              className="flex items-center gap-2"
             >
-              <MenuGroup label="Create New">
-                <MenuItem
-                  onClick={() => handleQuickCreate('blocks')}
-                  icon={<BlocksIcon width={16} height={16} />}
-                  info="Create a new reusable block component"
-                >
-                  Block
-                </MenuItem>
-                <MenuItem
-                  onClick={() => handleQuickCreate('symbols')}
-                  icon={<SymbolIcon width={16} height={16} />}
-                  info="Create a new symbol component"
-                >
-                  Symbol
-                </MenuItem>
-                <MenuItem
-                  onClick={() => handleQuickCreate('scss')}
-                  icon={<StyleIcon width={16} height={16} />}
-                  info="Create a new SCSS partial"
-                >
-                  SCSS
-                </MenuItem>
-              </MenuGroup>
-            </Popover>
-          )}
-        </div>
-      )}
+              <MdOutlineAdd size={16} />
+              Quick Create
+            </Button>
 
+            {showQuickCreateDropdown && (
+              <Popover
+                position="bottom right"
+                onClose={() => setShowQuickCreateDropdown(false)}
+                className="fanculo-quick-create-popover"
+              >
+                <MenuGroup label="Create New">
+                  <MenuItem
+                    onClick={() => handleQuickCreate('blocks')}
+                    icon={<BlocksIcon width={16} height={16} />}
+                    info="Create a new reusable block component"
+                  >
+                    Block
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => handleQuickCreate('symbols')}
+                    icon={<SymbolIcon width={16} height={16} />}
+                    info="Create a new symbol component"
+                  >
+                    Symbol
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => handleQuickCreate('scss')}
+                    icon={<StyleIcon width={16} height={16} />}
+                    info="Create a new SCSS partial"
+                  >
+                    SCSS
+                  </MenuItem>
+                </MenuGroup>
+              </Popover>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Update Post Button - Only show when editing */}
+      {showUpdateButton && (
+        <Button
+          onClick={onUpdatePost}
+          variant="primary"
+          disabled={isUpdating}
+          className="flex items-center gap-2"
+        >
+          {isUpdating ? 'Updating...' : 'Update Post'}
+        </Button>
+      )}
 
       {/* Navigation Menu */}
       <div className="relative">
@@ -89,7 +94,6 @@ function Navigation({ onQuickCreate }: NavigationProps) {
           variant="secondary"
           className="flex items-center gap-2"
         >
-          Pages
           <MoreIcon width={16} height={16} />
         </Button>
 
