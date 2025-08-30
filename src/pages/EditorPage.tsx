@@ -8,7 +8,7 @@ import DeleteConfirmModal from '../ui/components/modals/DeleteConfirmModal'
 import DashiconSelector from '../ui/components/modals/DashiconSelector'
 import { Button, TextareaControl, TabPanel, ToggleControl, SelectControl, Snackbar } from '@wordpress/components'
 import { BlocksIcon, SymbolIcon, StyleIcon, SettingsIcon } from '../ui/icons/Icons.jsx'
-import { MdOutlineDescription } from 'react-icons/md'
+import { Icon, page } from '@wordpress/icons'
 import { preloadCommonLanguages } from '../utils/monacoLanguageLoader'
 
 declare global {
@@ -441,7 +441,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	}
 
 	return (
-		<div className='flex'>
+		<main className='flex'>
 
 			{/* Post List Sidebar */}
 			<PostListSidebar
@@ -454,11 +454,11 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 			/>
 
 			{/* Main Content */}
-			<div className='w-full'>
+			<div className='w-full flex'>
 
 				{/* Post Creation/Editing Section */}
 				{editingPostId ? (
-					<div className='flex'>
+					<>
 						<div className="post-form w-full relative">
 							{isLoadingPost && (
 								<div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center rounded-lg z-10">
@@ -495,7 +495,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										name: 'content',
 										title: (
 											<span className="flex items-center gap-2">
-												<MdOutlineDescription size={16} />
+												<Icon icon={page} size={16} />
 												Content
 											</span>
 										),
@@ -535,7 +535,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										name: 'view_js',
 										title: (
 											<span className="flex items-center gap-2">
-												<MdOutlineDescription size={16} />
+												<Icon icon={page} size={16} />
 												View JS
 											</span>
 										),
@@ -634,7 +634,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 						{/* Sidebar */}
 
-						<div className="sidebar min-w-[var(--sidebar-width)]">
+						<div className="w-full max-w-sidebar px-4 py-2 border-l border-solid border-ui-outline">
 							
 							{/* Block Description - Only for blocks */}
 							{postType === 'blocks' && (
@@ -725,7 +725,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 						{/* Sidebar */}
 
-					</div>
+					</>
 				) : null}
 
 			</div>
@@ -765,7 +765,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 			{/* Snackbar for notifications */}
 			{showSnackbar && (
-				<div className="fixed bottom-4 right-4">
+				<div className="fixed bottom-4 right-4 animate-in fade-in slide-in-from-right-2 duration-300">
 					<Snackbar 
 						onRemove={() => setShowSnackbar(false)}
 					>
@@ -773,7 +773,7 @@ document.addEventListener('DOMContentLoaded', function() {
 					</Snackbar>
 				</div>	
 			)}
-		</div>
+		</main>
 	)
 })
 

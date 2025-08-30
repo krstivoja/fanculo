@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { MenuGroup, MenuItem, Button, Popover } from '@wordpress/components'
 import { BlocksIcon, SymbolIcon, StyleIcon, MoreIcon, LogoIcon } from '../icons/Icons.jsx'
-import { MdOutlineAdd } from 'react-icons/md'
+import { Icon, moreVertical, plus } from '@wordpress/icons';
 import navItems from '../../consts/pagesURL'
 
 interface NavigationProps {
@@ -26,7 +26,7 @@ function Navigation({ onQuickCreate, onUpdatePost, isUpdating, showUpdateButton 
   }
 
   return (
-    <div className="bg-white border-b border-gray-200 px-5 flex items-center gap-2 min-h-[60px] w-full">
+    <header className="px-4 py-2 flex items-center gap-2 w-full bg-white border-b border-ui-outline">
       <div className='flex mr-auto'>
         {/* Quick Create Dropdown - Only show on Editor page */}
         {location.pathname === '/editor' && (
@@ -36,7 +36,7 @@ function Navigation({ onQuickCreate, onUpdatePost, isUpdating, showUpdateButton 
               variant="secondary"
               className="flex items-center gap-2"
             >
-              <MdOutlineAdd size={16} />
+              <Icon icon={plus} size={16} />
               Quick Create
             </Button>
 
@@ -93,8 +93,8 @@ function Navigation({ onQuickCreate, onUpdatePost, isUpdating, showUpdateButton 
           onClick={() => setShowMainMenu(!showMainMenu)}
           variant="secondary"
           className="flex items-center gap-2"
+          icon={moreVertical} label="Pages"
         >
-          <MoreIcon width={16} height={16} />
         </Button>
 
         {showMainMenu && (
@@ -114,7 +114,7 @@ function Navigation({ onQuickCreate, onUpdatePost, isUpdating, showUpdateButton 
                       setShowMainMenu(false)
                       navigate(item.path)
                     }}
-                    icon={<item.icon width={16} height={16} />}
+                    icon={<item.icon width={24} height={24} />}
                     isSelected={isActive}
                     info={item.description}
                   >
@@ -126,9 +126,7 @@ function Navigation({ onQuickCreate, onUpdatePost, isUpdating, showUpdateButton 
           </Popover>
         )}
       </div>
-
-      
-    </div>
+    </header>
   )
 }
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Button, TextControl, Modal } from '@wordpress/components'
-import { MdOutlineDescription } from 'react-icons/md'
+import { Icon, edit } from '@wordpress/icons'
 
 interface TitleEditModalProps {
 	isOpen: boolean
@@ -41,7 +41,7 @@ export default function TitleEditModal({
 		<Modal
 			title={
 				<span className="flex items-center gap-2">
-					<MdOutlineDescription size={20} />
+					<Icon icon={edit} size={20} />
 					Edit Post Title
 				</span>
 			}

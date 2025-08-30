@@ -55,7 +55,7 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen">
+      <>
         <Navigation 
           onQuickCreate={handleQuickCreateFromNav}
           onUpdatePost={handleUpdatePostFromNav}
@@ -77,7 +77,7 @@ function App() {
             </Routes>
           </Suspense>
         </>
-      </div>
+      </>
     </Router>
   )
 }

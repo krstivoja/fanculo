@@ -33,9 +33,9 @@ export default function PostListSidebar({
 	editingPostId
 }: PostListSidebarProps) {
 	return (
-		<div className='w-[var(--sidebar-width)] p-4'>
+		
 			<TabPanel
-				className="fanculo-tab-panel"
+				className="fanculo-tab-panel  w-full max-w-sidebar px-2 py-4 border-r border-solid border-ui-outline"
 				activeClass="is-active"
 				onSelect={(tabName) => onTabChange(tabName)}
 				initialTabName={activeTab}
@@ -81,7 +81,7 @@ export default function PostListSidebar({
 				]}
 			>
 				{(tab) => (
-					<div className="tab-content min-h-[var(--sidebar-width)] mt-2 bg-white border border-stone-200 !p-[2px] rounded-sm">
+					<div className="tab-content min-h-[var(--sidebar-width)] mt-2 bg-white ">
 						{isLoadingPosts ? (
 							<div className="py-10 px-10 text-center text-gray-600">
 								Loading posts...
@@ -118,6 +118,5 @@ export default function PostListSidebar({
 					</div>
 				)}
 			</TabPanel>
-		</div>
 	)
 }
