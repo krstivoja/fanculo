@@ -35,8 +35,9 @@ export default function PostListSidebar({
 }: PostListSidebarProps) {
 	return (
 		
+			<aside id='post-list' className='w-full max-w-sidebar px-2 py-4 border-r border-solid border-ui-outline'>
 			<TabPanel
-				className="fanculo-tab-panel  w-full max-w-sidebar px-2 py-4 border-r border-solid border-ui-outline"
+				className="w-full"
 				activeClass="is-active"
 				onSelect={(tabName) => onTabChange(tabName)}
 				initialTabName={activeTab}
@@ -124,5 +125,6 @@ export default function PostListSidebar({
 					</div>
 				)}
 			</TabPanel>
+			</aside>
 	)
 }

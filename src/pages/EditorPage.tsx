@@ -38,7 +38,7 @@ interface EditorPageRef {
 
 const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	const [message, setMessage] = useState('')
-	
+
 	// Snackbar state
 	const [snackbarMessage, setSnackbarMessage] = useState('')
 	const [showSnackbar, setShowSnackbar] = useState(false)
@@ -64,7 +64,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	const [allPosts, setAllPosts] = useState<any[]>([])
 	const [isLoadingPosts, setIsLoadingPosts] = useState(false)
 	const [activeTab, setActiveTab] = useState('blocks')
-	
+
 	// Filter posts by type for display
 	const posts = {
 		blocks: allPosts.filter(post => post.type === 'blocks'),
@@ -175,7 +175,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 	// Auto-select first available post on initial load only
 	useEffect(() => {
 		if (editingPostId || allPosts.length === 0) return
-		
+
 		// Find first post and auto-select it
 		const firstPost = allPosts[0]
 		if (firstPost) {
@@ -243,7 +243,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				setPostDescription(post.description || '')
 				setPostCategory(post.category || '')
 				setPostIcon(post.icon || '')
-				
+
 				// Set toggle states from saved values
 				if (post.type === 'blocks') {
 					setEnableEditorStyle(post.enable_editor_style || false)
@@ -350,7 +350,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				setShowQuickCreateModal(false)
 				await fetchPosts()
 				setActiveTab(quickCreateType)
-				
+
 				// Focus on the newly created post
 				if (result.data?.post_id) {
 					console.log('Quick create - New post ID:', result.data.post_id)
@@ -453,283 +453,284 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 				editingPostId={editingPostId}
 			/>
 
-			
-			
-
-				{/* Post Creation/Editing Section */}
-				{editingPostId ? (
-					<>
-						{/* Main Content */}
-						<div className="post-form w-full relative">
-							{isLoadingPost && (
-								<div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center rounded-lg z-10">
-									<LoadingSpinner />
-								</div>
-							)}
 
 
 
-							{/* Post Title */}
-							<div className="mt-8">
-								<h1 
-									className="!text-4xl !font-bold cursor-pointer hover:underline !flex gap-3 items-center"
-									onClick={() => setShowTitleModal(true)}
-									title="Click to edit title"
-								>
-									<span className='aspect-square bg-stone-100 p-2 rounded-full'>
-										{postType === 'blocks' && <BlocksIcon width={30} height={30} />}
-										{postType === 'symbols' && <SymbolIcon width={30} height={30} />}
-										{postType === 'scss' && <StyleIcon width={30} height={30} />}
-									</span>
-									{postTitle || "Click to add title..."}
-								</h1>
+			{/* Post Creation/Editing Section */}
+			{editingPostId ? (
+				<>
+					{/* Main Content */}
+					<main className="post-form w-full relative">
+						{isLoadingPost && (
+							<div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center rounded-lg z-10">
+								<LoadingSpinner />
 							</div>
+						)}
 
-							
 
-							{/* Form Fields Tabs */}
-							<TabPanel
-								className="fanculo-form-tabs"
-								activeClass="is-active"
-								tabs={[
-									...(postType === 'blocks' || postType === 'symbols' ? [{
-										name: 'content',
-										title: (
-											<span className="flex items-center gap-2">
-												<Icon icon={page} size={16} />
-												Content
-											</span>
-										),
-										className: 'tab-content-field'
-									}] : []),
-									...(postType === 'blocks' || postType === 'scss' ? [{
-										name: 'style',
-										title: (
-											<span className="flex items-center gap-2">
-												<StyleIcon width={16} height={16} />
-												Style
-											</span>
-										),
-										className: 'tab-style'
-									}] : []),
-									...(postType === 'blocks' ? [{
-										name: 'attributes',
-										title: (
-											<span className="flex items-center gap-2">
-												<SettingsIcon width={16} height={16} />
-												Attributes
-											</span>
-										),
-										className: 'tab-attributes'
-									}] : []),
-									...(postType === 'blocks' && enableEditorStyle ? [{
-										name: 'editor_style',
-										title: (
-											<span className="flex items-center gap-2">
-												<StyleIcon width={16} height={16} />
-												Editor Style
-											</span>
-										),
-										className: 'tab-editor-style'
-									}] : []),
-									...(postType === 'blocks' && enableViewJs ? [{
-										name: 'view_js',
-										title: (
-											<span className="flex items-center gap-2">
-												<Icon icon={page} size={16} />
-												View JS
-											</span>
-										),
-										className: 'tab-view-js'
-									}] : [])
-								]}
+
+						{/* Post Title */}
+						<div className="mt-8">
+							<h1
+								className="!text-4xl !font-bold cursor-pointer hover:underline !flex gap-3 items-center"
+								onClick={() => setShowTitleModal(true)}
+								title="Click to edit title"
 							>
-								{(tab) => (
-									<div className="form-tab-content">
-										{tab.name === 'content' && (postType === 'blocks' || postType === 'symbols') && (
-											<div className="mb-4">												
-												<MonacoEditor
-													value={postContent}
-													onChange={(value) => setPostContent(value || '')}
-													language="php"
-													theme="vs-dark"
-													height="400px"
-													placeholder="<?php\n// Enter your PHP render code here\necho 'Hello World';\n?>"
-												/>
-											</div>
-										)}
-										
-										{tab.name === 'style' && (
-											<div className="mb-4">												
-												<MonacoEditor
-													value={postStyle}
-													onChange={(value) => setPostStyle(value || '')}
-													language="scss"
-													theme="vs-dark"
-													height="400px"
-													placeholder="// Enter your SCSS styles here\n.my-component {\n  color: #333;\n  padding: 1rem;\n}"
-												/>
-											</div>
-										)}
-										
-										{tab.name === 'attributes' && postType === 'blocks' && (
-											<TextareaControl
-												// label="Attributes (JSON)"
-												value={postAttributes}
-												onChange={(value) => setPostAttributes(value)}
-												placeholder='{"title": {"type": "string", "default": ""}, "alignment": {"type": "string", "default": "left"}}'
-												rows={8}
-												className="wp-textarea-code"
-												help="Enter JSON attributes for this block component"
+								<span className='aspect-square bg-stone-100 p-2 rounded-full'>
+									{postType === 'blocks' && <BlocksIcon width={30} height={30} />}
+									{postType === 'symbols' && <SymbolIcon width={30} height={30} />}
+									{postType === 'scss' && <StyleIcon width={30} height={30} />}
+								</span>
+								{postTitle || "Click to add title..."}
+							</h1>
+						</div>
+
+
+
+						{/* Form Fields Tabs */}
+						<TabPanel
+							className="fanculo-form-tabs"
+							activeClass="is-active"
+							tabs={[
+								...(postType === 'blocks' || postType === 'symbols' ? [{
+									name: 'content',
+									title: (
+										<span className="flex items-center gap-2">
+											<Icon icon={page} size={16} />
+											Content
+										</span>
+									),
+									className: 'tab-content-field'
+								}] : []),
+								...(postType === 'blocks' || postType === 'scss' ? [{
+									name: 'style',
+									title: (
+										<span className="flex items-center gap-2">
+											<StyleIcon width={16} height={16} />
+											Style
+										</span>
+									),
+									className: 'tab-style'
+								}] : []),
+								...(postType === 'blocks' ? [{
+									name: 'attributes',
+									title: (
+										<span className="flex items-center gap-2">
+											<SettingsIcon width={16} height={16} />
+											Attributes
+										</span>
+									),
+									className: 'tab-attributes'
+								}] : []),
+								...(postType === 'blocks' && enableEditorStyle ? [{
+									name: 'editor_style',
+									title: (
+										<span className="flex items-center gap-2">
+											<StyleIcon width={16} height={16} />
+											Editor Style
+										</span>
+									),
+									className: 'tab-editor-style'
+								}] : []),
+								...(postType === 'blocks' && enableViewJs ? [{
+									name: 'view_js',
+									title: (
+										<span className="flex items-center gap-2">
+											<Icon icon={page} size={16} />
+											View JS
+										</span>
+									),
+									className: 'tab-view-js'
+								}] : [])
+							]}
+						>
+							{(tab) => (
+								<div className="form-tab-content">
+									{tab.name === 'content' && (postType === 'blocks' || postType === 'symbols') && (
+										<div className="mb-4">
+											<MonacoEditor
+												value={postContent}
+												onChange={(value) => setPostContent(value || '')}
+												language="php"
+												theme="vs-dark"
+												height="400px"
+												placeholder="<?php\n// Enter your PHP render code here\necho 'Hello World';\n?>"
 											/>
-										)}
-										
-										{tab.name === 'editor_style' && postType === 'blocks' && (
-											<div className="mb-4">
-												<MonacoEditor
-													value={postEditorStyle}
-													onChange={(value) => setPostEditorStyle(value || '')}
-													language="scss"
-													theme="vs-dark"
-													height="400px"
-													placeholder="// Editor-specific styles for this block
+										</div>
+									)}
+
+									{tab.name === 'style' && (
+										<div className="mb-4">
+											<MonacoEditor
+												value={postStyle}
+												onChange={(value) => setPostStyle(value || '')}
+												language="scss"
+												theme="vs-dark"
+												height="400px"
+												placeholder="// Enter your SCSS styles here\n.my-component {\n  color: #333;\n  padding: 1rem;\n}"
+											/>
+										</div>
+									)}
+
+									{tab.name === 'attributes' && postType === 'blocks' && (
+										<TextareaControl
+											// label="Attributes (JSON)"
+											value={postAttributes}
+											onChange={(value) => setPostAttributes(value)}
+											placeholder='{"title": {"type": "string", "default": ""}, "alignment": {"type": "string", "default": "left"}}'
+											rows={8}
+											className="wp-textarea-code"
+											help="Enter JSON attributes for this block component"
+										/>
+									)}
+
+									{tab.name === 'editor_style' && postType === 'blocks' && (
+										<div className="mb-4">
+											<MonacoEditor
+												value={postEditorStyle}
+												onChange={(value) => setPostEditorStyle(value || '')}
+												language="scss"
+												theme="vs-dark"
+												height="400px"
+												placeholder="// Editor-specific styles for this block
 .wp-block-editor .my-block {
   border: 2px dashed #ccc;
   padding: 1rem;
 }"
-												/>
-											</div>
-										)}
-										
-										{tab.name === 'view_js' && postType === 'blocks' && (
-											<div className="mb-4">
-												<MonacoEditor
-													value={postViewJs}
-													onChange={(value) => setPostViewJs(value || '')}
-													language="javascript"
-													theme="vs-dark"
-													height="400px"
-													placeholder="// Frontend JavaScript for this block
+											/>
+										</div>
+									)}
+
+									{tab.name === 'view_js' && postType === 'blocks' && (
+										<div className="mb-4">
+											<MonacoEditor
+												value={postViewJs}
+												onChange={(value) => setPostViewJs(value || '')}
+												language="javascript"
+												theme="vs-dark"
+												height="400px"
+												placeholder="// Frontend JavaScript for this block
 document.addEventListener('DOMContentLoaded', function() {
   // Your block's frontend code here
   console.log('Block loaded on frontend');
 });"
-												/>
-											</div>
-										)}
-									</div>
-								)}
-							</TabPanel>
-
-							{!editingPostId && (
-								<Button
-									variant="primary"
-									isBusy={isCreating}
-									disabled={isCreating}
-									onClick={handleCreatePost}
-								>
-									{isCreating ? 'Creating...' : 'Create Post'}
-								</Button>
-							)}
-						</div>
-
-						{/* Sidebar */}
-
-						<aside id="block-settings" className="w-full max-w-sidebar px-4 py-2 border-l border-solid border-ui-outline">
-							
-							{/* Block Description - Only for blocks */}
-							{postType === 'blocks' && (
-								<div className="mb-4">
-									<TextareaControl
-										label="Block Description"
-										value={postDescription}
-										onChange={(value) => setPostDescription(value || '')}
-										placeholder="Enter a description for this block..."
-										rows={3}
-										help="Optional description to help identify and understand this block's purpose"
-									/>
-								</div>
-							)}
-
-							{/* Block Category - Only for blocks */}
-							{postType === 'blocks' && (
-								<div className="mb-4">
-									<SelectControl
-										label="Block Category"
-										value={postCategory}
-										onChange={(value) => setPostCategory(value || '')}
-										options={[
-											{ label: 'Select a category...', value: '' },
-											...blockCategories.map(category => ({
-												label: category.title,
-												value: category.slug
-											}))
-										]}
-										help="Choose the Gutenberg category for this block"
-									/>
-								</div>
-							)}
-
-							{/* Block Dashicon - Only for blocks */}
-							{postType === 'blocks' && (
-								<div className="mb-4">
-									<label className="components-base-control__label css-1v57ksj">Block Dashicon</label>
-									<div className="mt-1">
-										<Button
-											variant="secondary"
-											onClick={() => setShowDashiconModal(true)}
-											className="flex items-center gap-2 w-full justify-start"
-										>
-											{postIcon && (
-												<span className={`dashicons dashicons-${postIcon} text-lg`}></span>
-											)}
-											{postIcon ? 'Change Icon' : 'Select Icon'}
-										</Button>
-									</div>
-									{postIcon && (
-										<div className="text-xs text-gray-600 mt-1">
-											Selected: {postIcon}
+											/>
 										</div>
 									)}
 								</div>
 							)}
+						</TabPanel>
 
-							{/* Toggle Controls for Blocks only */}
-							{postType === 'blocks' && (
-								<div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded">
-									<h3 className="text-sm font-semibold mb-3 text-gray-700">Additional Fields</h3>
-									<div className="space-y-2">
-										<ToggleControl
-											label="Editor Style"
-											help={enableEditorStyle ? "Styles for the editor environment" : "Enable editor-specific CSS"}
-											checked={enableEditorStyle}
-											onChange={setEnableEditorStyle}
-										/>
-										<ToggleControl
-											label="View JS"
-											help={enableViewJs ? "Frontend JavaScript for this block" : "Enable frontend JavaScript"}
-											checked={enableViewJs}
-											onChange={setEnableViewJs}
-										/>
-									</div>
-								</div>
-							)}
-
+						{!editingPostId && (
 							<Button
-								variant="secondary"
-								isDestructive={true}
-								onClick={() => setShowDeleteConfirm(true)}
+								variant="primary"
+								isBusy={isCreating}
+								disabled={isCreating}
+								onClick={handleCreatePost}
 							>
-								Delete Post
+								{isCreating ? 'Creating...' : 'Create Post'}
 							</Button>
-						</aside>
+						)}
+					</main>
 
-						{/* Sidebar */}
+					{/* Sidebar */}
 
-					</>
-				) : null}
+					<aside id="block-settings" className="w-full max-w-sidebar p-4 border-l border-solid border-ui-outline">
 
-			
+						{/* Block Description - Only for blocks */}
+						{postType === 'blocks' && (
+							<div className="mb-4">
+								<TextareaControl
+									label="Description"
+									value={postDescription}
+									onChange={(value) => setPostDescription(value || '')}
+									placeholder="Enter a description for this block..."
+									rows={3}
+									help="Optional description to help identify and understand this block's purpose"
+								/>
+							</div>
+						)}
+
+						{/* Block Category - Only for blocks */}
+						{postType === 'blocks' && (
+							<div className="mb-4">
+								<SelectControl
+									label="Category"
+									value={postCategory}
+									onChange={(value) => setPostCategory(value || '')}
+									options={[
+										{ label: 'Select a category...', value: '' },
+										...blockCategories.map(category => ({
+											label: category.title,
+											value: category.slug
+										}))
+									]}
+									help="Choose the Gutenberg category for this block"
+								/>
+							</div>
+						)}
+
+						{/* Block Dashicon - Only for blocks */}
+						{postType === 'blocks' && (
+							<div className="mb-4">
+								<label className="components-base-control__label css-1v57ksj">Icon</label>
+								<div className="mt-1">
+									<Button
+										variant="secondary"
+										onClick={() => setShowDashiconModal(true)}
+										className="flex items-center gap-2 w-full justify-start"
+									>
+										{postIcon && (
+											<span className={`dashicons dashicons-${postIcon} text-lg`}></span>
+										)}
+										{postIcon}
+									</Button>
+								</div>
+							</div>
+						)}
+
+						{/* Toggle Controls for Blocks only */}
+
+						<hr className='my-8 w-full' />
+
+						{postType === 'blocks' && (
+							<>
+								<h3 className="text-sm font-semibold mb-3 text-gray-700">Additional Fields</h3>
+
+								<ToggleControl
+									label="Editor Style"
+									help={enableEditorStyle ? "Styles for the editor environment" : "Enable editor-specific CSS"}
+									checked={enableEditorStyle}
+									onChange={setEnableEditorStyle}
+								/>
+								<ToggleControl
+									label="View JS"
+									help={enableViewJs ? "Frontend JavaScript for this block" : "Enable frontend JavaScript"}
+									checked={enableViewJs}
+									onChange={setEnableViewJs}
+								/>
+
+							</>
+						)}
+
+						<hr className='my-8 w-full' />
+						<h3 className="text-sm font-semibold mb-3 text-gray-700">Dangerous area</h3>
+
+						<Button
+							variant="secondary"
+							isDestructive={true}
+							onClick={() => setShowDeleteConfirm(true)}
+						>
+							Delete Post
+						</Button>
+					</aside>
+
+					{/* Sidebar */}
+
+				</>
+			) : null}
+
+
 
 
 
@@ -767,12 +768,12 @@ document.addEventListener('DOMContentLoaded', function() {
 			{/* Snackbar for notifications */}
 			{showSnackbar && (
 				<div className="fixed bottom-4 right-4 animate-in fade-in slide-in-from-right-2 duration-300">
-					<Snackbar 
+					<Snackbar
 						onRemove={() => setShowSnackbar(false)}
 					>
 						{snackbarMessage}
 					</Snackbar>
-				</div>	
+				</div>
 			)}
 		</>
 	)
