@@ -528,7 +528,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 							onSelect={(tabName) => setActiveFormTab(tabName)}
 							initialTabName={activeFormTab}
 							tabs={[
-								...(postType === 'blocks' || postType === 'symbols' ? [{
+								{
 									name: 'content',
 									title: (
 										<span className="flex items-center gap-2">
@@ -537,8 +537,8 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										</span>
 									),
 									className: 'tab-content-field'
-								}] : []),
-								...(postType === 'blocks' || postType === 'scss' ? [{
+								},
+								{
 									name: 'style',
 									title: (
 										<span className="flex items-center gap-2">
@@ -547,8 +547,8 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										</span>
 									),
 									className: 'tab-style'
-								}] : []),
-								...(postType === 'blocks' ? [{
+								},
+								{
 									name: 'editor_style',
 									title: (
 										<span className="flex items-center gap-2">
@@ -557,8 +557,8 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										</span>
 									),
 									className: 'tab-editor-style'
-								}] : []),
-								...(postType === 'blocks' ? [{
+								},
+								{
 									name: 'view_js',
 									title: (
 										<span className="flex items-center gap-2">
@@ -567,8 +567,8 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										</span>
 									),
 									className: 'tab-view-js'
-								}] : []),
-								...(postType === 'blocks' ? [{
+								},
+								{
 									name: 'attributes',
 									title: (
 										<span className="flex items-center gap-2">
@@ -577,12 +577,12 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										</span>
 									),
 									className: 'tab-attributes'
-								}] : [])
+								}
 							]}
 						>
 							{(tab) => (
 								<div className="content-form-tab-content">
-									{tab.name === 'content' && (postType === 'blocks' || postType === 'symbols') && (
+									{tab.name === 'content' && (
 										activeFormTab === 'content' ? (
 											<MonacoEditor
 												value={postContent}
@@ -618,19 +618,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										)
 									)}
 
-									{tab.name === 'attributes' && postType === 'blocks' && (
-										<TextareaControl
-											// label="Attributes (JSON)"
-											value={postAttributes}
-											onChange={(value) => setPostAttributes(value)}
-											placeholder='{"title": {"type": "string", "default": ""}, "alignment": {"type": "string", "default": "left"}}'
-											rows={8}
-											className="wp-textarea-code"
-											help="Enter JSON attributes for this block component"
-										/>
-									)}
-
-									{tab.name === 'editor_style' && postType === 'blocks' && (
+									{tab.name === 'editor_style' && (
 										activeFormTab === 'editor_style' ? (
 											<MonacoEditor
 												value={postEditorStyle}
@@ -652,7 +640,7 @@ const EditorPage = forwardRef<EditorPageRef>((props, ref) => {
 										)
 									)}
 
-									{tab.name === 'view_js' && postType === 'blocks' && (
+									{tab.name === 'view_js' && (
 										activeFormTab === 'view_js' ? (
 											<MonacoEditor
 												value={postViewJs}
@@ -672,6 +660,18 @@ document.addEventListener('DOMContentLoaded', function() {
 												<div className="text-gray-400 text-sm">Click to load editor...</div>
 											</div>
 										)
+									)}
+
+									{tab.name === 'attributes' && (
+										<TextareaControl
+											// label="Attributes (JSON)"
+											value={postAttributes}
+											onChange={(value) => setPostAttributes(value)}
+											placeholder='{"title": {"type": "string", "default": ""}, "alignment": {"type": "string", "default": "left"}}'
+											rows={8}
+											className="wp-textarea-code"
+											help="Enter JSON attributes for this block component"
+										/>
 									)}
 								</div>
 							)}

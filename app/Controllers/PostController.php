@@ -402,9 +402,16 @@ class PostController
             wp_mkdir_p($block_dir);
         }
 
-        // Save render.php
+        // Save render.php - wrap content in PHP block context
         if (!empty($content)) {
-            file_put_contents($block_dir . '/render.php', $content);
+            // If content doesn't start with <?php, it's likely HTML content
+            if (strpos(trim($content), '<?php') !== 0) {
+                $php_render_content = "<?php\n/**\n * Render callback for the fanculo/{$folder_name} block.\n *\n * @param array    \$attributes The block attributes.\n * @param string   \$content    The block default content.\n * @param WP_Block \$block      The block instance.\n */\n\n// Extract attributes\n\$block_attributes = \$attributes ?? [];\n\n// Output the block content\necho wp_kses_post('" . addslashes($content) . "');\n";
+            } else {
+                // It's already PHP code, use as-is
+                $php_render_content = $content;
+            }
+            file_put_contents($block_dir . '/render.php', $php_render_content);
         }
 
         // Save style.css
@@ -421,6 +428,33 @@ class PostController
         if (!empty($view_js)) {
             file_put_contents($block_dir . '/view.js', $view_js);
         }
+
+        // Create index.asset.php with dependencies and unique version
+        $asset_content = "<?php \nreturn array(\n    'dependencies' => array(\n        'wp-block-editor',\n        'wp-blocks',\n        'wp-element',\n        'wp-i18n',\n        'wp-server-side-render'\n    ),\n    'version' => '" . time() . microtime(true) * 1000000 . "'\n);";
+        file_put_contents($block_dir . '/index.asset.php', $asset_content);
+
+        // Create index.js for block registration
+        $js_content = "import { registerBlockType } from '@wordpress/blocks';
+import ServerSideRender from '@wordpress/server-side-render';
+import { useBlockProps } from '@wordpress/block-editor';
+
+registerBlockType('fanculo/" . $folder_name . "', {
+    edit: function(props) {
+        const blockProps = useBlockProps();
+        return (
+            <div {...blockProps}>
+                <ServerSideRender
+                    block=\"fanculo/" . $folder_name . "\"
+                    attributes={props.attributes}
+                />
+            </div>
+        );
+    },
+    save: function() {
+        return null; // Server-side rendering
+    }
+});";
+        file_put_contents($block_dir . '/index.js', $js_content);
 
         // Create block.json
         $block_json = [
@@ -460,6 +494,9 @@ class PostController
             $block_dir . '/block.json', 
             json_encode($block_json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
         );
+
+        // Ensure main plugin file and manifest exist
+        $this->ensure_plugin_infrastructure($blocks_dir);
     }
 
     /**
@@ -492,6 +529,9 @@ class PostController
                     // This is an old folder for the same post - clean it up
                     $old_block_dir = $blocks_dir . '/' . $folder_name;
                     $this->recursive_rmdir($old_block_dir);
+                    
+                    // Regenerate manifest after cleanup
+                    $this->generate_blocks_manifest($blocks_dir);
                 }
             }
         }
@@ -513,6 +553,7 @@ class PostController
 
         if (is_dir($block_dir)) {
             $this->recursive_rmdir($block_dir);
+            $this->generate_blocks_manifest($blocks_dir);
             return;
         }
 
@@ -530,6 +571,9 @@ class PostController
                 if (isset($block_data['_fanculo_post_id']) && $block_data['_fanculo_post_id'] == $post_id) {
                     $block_dir = $blocks_dir . '/' . $folder_name;
                     $this->recursive_rmdir($block_dir);
+                    
+                    // Regenerate manifest after deletion
+                    $this->generate_blocks_manifest($blocks_dir);
                     break; // Found and cleaned up
                 }
             }
@@ -557,5 +601,146 @@ class PostController
         }
 
         return rmdir($dir);
+    }
+
+    /**
+     * Ensure plugin infrastructure files exist and are up to date
+     */
+    private function ensure_plugin_infrastructure($blocks_dir): void
+    {
+        // Create main plugin file
+        $this->create_main_plugin_file($blocks_dir);
+        
+        // Generate blocks manifest
+        $this->generate_blocks_manifest($blocks_dir);
+    }
+
+    /**
+     * Create the main plugin file for fanculo-blocks
+     */
+    private function create_main_plugin_file($blocks_dir): void
+    {
+        $plugin_file = $blocks_dir . '/fanculo-blocks.php';
+        
+        $plugin_content = '<?php
+/**
+ * Plugin Name:       Fanculo Generated Blocks
+ * Plugin URI:        https://github.com/your-org/fanculo-blocks
+ * Description:       Dynamically generated Gutenberg blocks from Fanculo editor
+ * Version:           1.0.0
+ * Requires at least: 6.7
+ * Requires PHP:      7.4
+ * Author:            Fanculo
+ * License:           GPL-2.0-or-later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain:       fanculo-blocks
+ *
+ * @package FanculoBlocks
+ */
+
+if (!defined(\'ABSPATH\')) {
+    exit; // Exit if accessed directly.
+}
+
+/**
+ * Registers all blocks using the modern WordPress 6.8 block registration system
+ * This approach uses blocks-manifest.php for improved performance
+ *
+ * @see https://make.wordpress.org/core/2025/03/13/more-efficient-block-type-registration-in-6-8/
+ */
+function fanculo_blocks_init(): void
+{
+    $manifest_path = __DIR__ . \'/blocks-manifest.php\';
+    
+    if (!file_exists($manifest_path)) {
+        return;
+    }
+
+    /**
+     * WordPress 6.8+ - Most efficient registration method
+     * Registers block metadata collection and block types in one call
+     */
+    if (function_exists(\'wp_register_block_types_from_metadata_collection\')) {
+        wp_register_block_types_from_metadata_collection(__DIR__, $manifest_path);
+        return;
+    }
+
+    /**
+     * WordPress 6.7+ - Register metadata collection first, then block types
+     * Improves performance by batching metadata operations
+     */
+    if (function_exists(\'wp_register_block_metadata_collection\')) {
+        wp_register_block_metadata_collection(__DIR__, $manifest_path);
+    }
+
+    /**
+     * Register individual block types from manifest
+     * Compatible with WordPress 6.7+
+     */
+    $manifest_data = require $manifest_path;
+    foreach (array_keys($manifest_data) as $block_folder) {
+        $block_path = __DIR__ . "/{$block_folder}";
+        if (is_dir($block_path)) {
+            register_block_type($block_path);
+        }
+    }
+}
+add_action(\'init\', \'fanculo_blocks_init\');
+
+/**
+ * Load plugin text domain for translations
+ */
+function fanculo_blocks_load_textdomain(): void
+{
+    load_plugin_textdomain(\'fanculo-blocks\', false, dirname(plugin_basename(__FILE__)) . \'/languages\');
+}
+add_action(\'plugins_loaded\', \'fanculo_blocks_load_textdomain\');
+';
+
+        file_put_contents($plugin_file, $plugin_content);
+    }
+
+    /**
+     * Generate blocks-manifest.php file with all current blocks
+     */
+    private function generate_blocks_manifest($blocks_dir): void
+    {
+        $manifest_path = $blocks_dir . '/blocks-manifest.php';
+        
+        if (!is_dir($blocks_dir)) {
+            return;
+        }
+
+        // Get all block directories
+        $block_folders = array_filter(scandir($blocks_dir), function($item) use ($blocks_dir) {
+            return $item !== '.' && $item !== '..' && 
+                   is_dir($blocks_dir . '/' . $item) && 
+                   file_exists($blocks_dir . '/' . $item . '/block.json');
+        });
+
+        $manifest_data = [];
+
+        foreach ($block_folders as $folder_name) {
+            $block_json_path = $blocks_dir . '/' . $folder_name . '/block.json';
+            
+            if (file_exists($block_json_path)) {
+                $block_data = json_decode(file_get_contents($block_json_path), true);
+                
+                if ($block_data && isset($block_data['name'])) {
+                    // Remove internal tracking field from manifest
+                    unset($block_data['_fanculo_post_id']);
+                    
+                    $manifest_data[$folder_name] = $block_data;
+                }
+            }
+        }
+
+        // Generate PHP array format for the manifest
+        $manifest_content = "<?php\n";
+        $manifest_content .= "// This file is generated automatically by Fanculo. Do not modify it manually.\n";
+        $manifest_content .= "// Last updated: " . date('Y-m-d H:i:s') . "\n";
+        $manifest_content .= "return " . var_export($manifest_data, true) . ";\n";
+
+        file_put_contents($manifest_path, $manifest_content);
     }
 }
