@@ -12,6 +12,7 @@ class PostController
         add_action('wp_ajax_fanculo_get_posts', [$this, 'get_posts']);
         add_action('wp_ajax_fanculo_delete_post', [$this, 'delete_post']);
         add_action('wp_ajax_fanculo_get_block_categories', [$this, 'get_block_categories']);
+        add_action('wp_ajax_fanculo_export_block', [$this, 'export_block']);
     }
 
     public function create_post(): void
@@ -109,6 +110,8 @@ class PostController
             update_post_meta($post_id, '_fanculo_editor_style', $editor_style);
             update_post_meta($post_id, '_fanculo_view_js', $view_js);
             
+            // Export as Gutenberg block to filesystem
+            $this->export_block_to_filesystem($post_id);
         }
 
         wp_send_json_success([
@@ -287,6 +290,8 @@ class PostController
             update_post_meta($post_id, '_fanculo_editor_style', $editor_style);
             update_post_meta($post_id, '_fanculo_view_js', $view_js);
             
+            // Export as Gutenberg block to filesystem
+            $this->export_block_to_filesystem($post_id);
         }
 
         wp_send_json_success([
@@ -316,9 +321,19 @@ class PostController
             wp_send_json_error('Post not found');
         }
 
+        // Get post type and title before deletion for cleanup
+        $post_type_taxonomy = wp_get_post_terms($post_id, 'fanculo_type', ['fields' => 'slugs']);
+        $is_block = !empty($post_type_taxonomy) && in_array('blocks', $post_type_taxonomy);
+        $post_title = $post->post_title;
+
         $deleted = wp_delete_post($post_id, true);
         if (!$deleted) {
             wp_send_json_error('Error deleting post');
+        }
+
+        // Clean up filesystem files if this was a block
+        if ($is_block) {
+            $this->cleanup_block_files($post_id, $post_title);
         }
 
         wp_send_json_success(['post_id' => $post_id]);
@@ -345,5 +360,202 @@ class PostController
         }, $categories);
 
         wp_send_json_success($formatted_categories);
+    }
+
+    /**
+     * Export a block post to filesystem as a proper Gutenberg block
+     */
+    private function export_block_to_filesystem($post_id): void
+    {
+        $post = get_post($post_id);
+        if (!$post) {
+            return;
+        }
+
+        // Check if this is an update with a title change
+        $current_folder_name = sanitize_title($post->post_title);
+        $this->cleanup_old_block_folders($post_id, $current_folder_name);
+
+        // Get all post meta data
+        $content = get_post_meta($post_id, '_fanculo_content', true);
+        $style = get_post_meta($post_id, '_fanculo_style', true);
+        $editor_style = get_post_meta($post_id, '_fanculo_editor_style', true);
+        $view_js = get_post_meta($post_id, '_fanculo_view_js', true);
+        $attributes = get_post_meta($post_id, '_fanculo_attributes', true);
+        $description = get_post_meta($post_id, '_fanculo_description', true);
+        $category = get_post_meta($post_id, '_fanculo_category', true);
+        $icon = get_post_meta($post_id, '_fanculo_icon', true);
+
+        // Create folder name from post title slug
+        $folder_name = sanitize_title($post->post_title);
+        
+        // Define the blocks directory
+        $blocks_dir = WP_CONTENT_DIR . '/plugins/fanculo-blocks';
+        $block_dir = $blocks_dir . '/' . $folder_name;
+
+        // Create directories if they don't exist
+        if (!file_exists($blocks_dir)) {
+            wp_mkdir_p($blocks_dir);
+        }
+        
+        if (!file_exists($block_dir)) {
+            wp_mkdir_p($block_dir);
+        }
+
+        // Save render.php
+        if (!empty($content)) {
+            file_put_contents($block_dir . '/render.php', $content);
+        }
+
+        // Save style.css
+        if (!empty($style)) {
+            file_put_contents($block_dir . '/style.css', $style);
+        }
+
+        // Save editor.css
+        if (!empty($editor_style)) {
+            file_put_contents($block_dir . '/editor.css', $editor_style);
+        }
+
+        // Save view.js
+        if (!empty($view_js)) {
+            file_put_contents($block_dir . '/view.js', $view_js);
+        }
+
+        // Create block.json
+        $block_json = [
+            'apiVersion' => 2,
+            'name' => 'fanculo/' . $folder_name,
+            'title' => $post->post_title,
+            'category' => $category ?: 'widgets',
+            'icon' => $icon ?: 'smiley',
+            'description' => $description ?: '',
+            'supports' => [
+                'html' => false
+            ],
+            'textdomain' => 'fanculo-blocks',
+            'editorScript' => 'file:./index.js',
+            'editorStyle' => !empty($editor_style) ? 'file:./editor.css' : null,
+            'style' => !empty($style) ? 'file:./style.css' : null,
+            'viewScript' => !empty($view_js) ? 'file:./view.js' : null,
+            'render' => !empty($content) ? 'file:./render.php' : null,
+            '_fanculo_post_id' => $post_id  // Internal tracking for cleanup
+        ];
+
+        // Parse attributes if they exist
+        if (!empty($attributes)) {
+            $parsed_attributes = json_decode($attributes, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($parsed_attributes)) {
+                $block_json['attributes'] = $parsed_attributes;
+            }
+        }
+
+        // Remove null values
+        $block_json = array_filter($block_json, function($value) {
+            return $value !== null;
+        });
+
+        // Save block.json
+        file_put_contents(
+            $block_dir . '/block.json', 
+            json_encode($block_json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+        );
+    }
+
+    /**
+     * Clean up old block folders when title changes
+     */
+    private function cleanup_old_block_folders($post_id, $current_folder_name): void
+    {
+        $blocks_dir = WP_CONTENT_DIR . '/plugins/fanculo-blocks';
+        if (!is_dir($blocks_dir)) {
+            return;
+        }
+
+        // Get all existing folders
+        $existing_folders = array_filter(scandir($blocks_dir), function($item) use ($blocks_dir) {
+            return $item !== '.' && $item !== '..' && is_dir($blocks_dir . '/' . $item);
+        });
+
+        // Look for folders that might belong to this post but have different names
+        foreach ($existing_folders as $folder_name) {
+            if ($folder_name === $current_folder_name) {
+                continue; // Skip the current correct folder
+            }
+
+            $block_json_path = $blocks_dir . '/' . $folder_name . '/block.json';
+            if (file_exists($block_json_path)) {
+                $block_data = json_decode(file_get_contents($block_json_path), true);
+                
+                // Check if this block belongs to the same post ID (title was changed)
+                if (isset($block_data['_fanculo_post_id']) && $block_data['_fanculo_post_id'] == $post_id) {
+                    // This is an old folder for the same post - clean it up
+                    $old_block_dir = $blocks_dir . '/' . $folder_name;
+                    $this->recursive_rmdir($old_block_dir);
+                }
+            }
+        }
+    }
+
+    /**
+     * Clean up block files when block is deleted
+     */
+    private function cleanup_block_files($post_id, $post_title): void
+    {
+        $blocks_dir = WP_CONTENT_DIR . '/plugins/fanculo-blocks';
+        if (!is_dir($blocks_dir)) {
+            return;
+        }
+
+        // First try to find by current title
+        $folder_name = sanitize_title($post_title);
+        $block_dir = $blocks_dir . '/' . $folder_name;
+
+        if (is_dir($block_dir)) {
+            $this->recursive_rmdir($block_dir);
+            return;
+        }
+
+        // If not found by title, search all folders for matching post_id
+        $existing_folders = array_filter(scandir($blocks_dir), function($item) use ($blocks_dir) {
+            return $item !== '.' && $item !== '..' && is_dir($blocks_dir . '/' . $item);
+        });
+
+        foreach ($existing_folders as $folder_name) {
+            $block_json_path = $blocks_dir . '/' . $folder_name . '/block.json';
+            if (file_exists($block_json_path)) {
+                $block_data = json_decode(file_get_contents($block_json_path), true);
+                
+                // Check if this block belongs to the deleted post
+                if (isset($block_data['_fanculo_post_id']) && $block_data['_fanculo_post_id'] == $post_id) {
+                    $block_dir = $blocks_dir . '/' . $folder_name;
+                    $this->recursive_rmdir($block_dir);
+                    break; // Found and cleaned up
+                }
+            }
+        }
+    }
+
+    /**
+     * Recursively remove directory and all its contents
+     */
+    private function recursive_rmdir($dir): bool
+    {
+        if (!is_dir($dir)) {
+            return false;
+        }
+
+        $files = array_diff(scandir($dir), ['.', '..']);
+        
+        foreach ($files as $file) {
+            $path = $dir . '/' . $file;
+            if (is_dir($path)) {
+                $this->recursive_rmdir($path);
+            } else {
+                unlink($path);
+            }
+        }
+
+        return rmdir($dir);
     }
 }
