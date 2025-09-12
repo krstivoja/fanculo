@@ -1,0 +1,13 @@
+{
+  "name": "fanculo",
+  "version": "0.0.1",
+  "description": "Build gutenberg blocks without screaming in the screen",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
