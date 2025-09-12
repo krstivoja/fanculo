@@ -1,0 +1,15 @@
+{
+    "name": "marko/fanculo",
+    "autoload": {
+        "psr-4": {
+            "Marko\\Fanculo\\": "app/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Marko Krstic",
+            "email": "mailme@markokrstic.com"
+        }
+    ],
+    "require": {}
+}
