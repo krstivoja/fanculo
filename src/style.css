@@ -4,38 +4,40 @@
 @theme {
     --color-*: initial;
     --color-base: #191c22;
+    --color-base-alt: #191c22;
     --color-contrast: #aab2c0;
+    --color-highlight: white;
     --color-action: #5858eb;
-    --color-outline: #25282d;
+    --color-outline: #32373e;
 }
 
+#fanculo-app {
+    @apply fixed h-full w-full z-[99999] top-0 left-0 bg-base;
+}
 
 #editor {
-    border: 10px solid red;
+    /* border: 10px solid red; */
     display: flex;
     flex-direction: column;
     height: calc(100vh - 32px);
-    height: calc(100vh - 100px);
+    height: 100vh;
+    /* height: calc(100vh - 100px); */
 }
 
 #editor-header {
-    border: 5px solid rgb(255, 255, 47);
+    /* border: 5px solid rgb(255, 255, 47); */
     width: 100%;
 }
 
 #editor-content {
-    border: 5px solid rgb(101, 168, 0);
+    /* border: 5px solid rgb(101, 168, 0); */
     flex-grow: 1;
     height: fit-content;
 }
 
 
-#editor-list {
-    border: 5px solid rgb(75, 75, 255);
-    overflow: scroll;
+#editor-settings {
+    /* border: 5px solid violet; */
 }
 
-#editor-settings {
-    border: 5px solid violet;
-}
 

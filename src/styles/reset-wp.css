@@ -2,9 +2,6 @@ body {
     @apply bg-base text-contrast;
 }
 
-body * {
-    @apply text-contrast;
-}
 
 #wpfooter {
     display: none;
