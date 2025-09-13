@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "node build.js --production",
-    "dev": "node build.js --watch",
-    "tailwindcss": "npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css --watch"
+    "dev": "node build.js --watch"
   },
   "devDependencies": {
     "@jgoz/esbuild-plugin-livereload": "^2.1.3",

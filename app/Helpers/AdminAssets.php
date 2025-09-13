@@ -44,13 +44,52 @@ class AdminAssets
                 true
             );
 
-            // Localize script with REST API data
+            // Get posts data for immediate rendering
+            $posts_data = $this->getPostsData();
+
+            // Localize script with REST API data and posts
             wp_localize_script('fanculo-app', 'wpApiSettings', [
                 'root' => esc_url_raw(rest_url()),
                 'nonce' => wp_create_nonce('wp_rest'),
+                'posts' => $posts_data,
             ]);
 
             // Livereload is handled by esbuild plugin, no need for additional script
         }
+    }
+
+    private function getPostsData()
+    {
+        $posts = get_posts([
+            'post_type' => 'funculo',
+            'numberposts' => 100,
+            'post_status' => 'any',
+            'meta_query' => [],
+        ]);
+
+        $grouped = [
+            'blocks' => [],
+            'symbols' => [],
+            'scss-partials' => []
+        ];
+
+        foreach ($posts as $post) {
+            $terms = wp_get_post_terms($post->ID, 'funculo_type');
+
+            if (!empty($terms) && !is_wp_error($terms)) {
+                $term_slug = $terms[0]->slug;
+
+                if (isset($grouped[$term_slug])) {
+                    $grouped[$term_slug][] = [
+                        'id' => $post->ID,
+                        'title' => [
+                            'rendered' => get_the_title($post)
+                        ]
+                    ];
+                }
+            }
+        }
+
+        return $grouped;
     }
 }
