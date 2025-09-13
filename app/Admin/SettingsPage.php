@@ -1,15 +1,15 @@
 <?php
 
-namespace Marko\Fanculo\Admin;
+namespace Fanculo\Admin;
 
-use Marko\Fanculo\ViteAssets;
+use Fanculo\EsbuildAssets;
 
 class SettingsPage
 {
-    private $viteAssets;
+    private $esbuildAssets;
     public function __construct()
     {
-        $this->viteAssets = new ViteAssets();
+        $this->esbuildAssets = new EsbuildAssets();
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
     }
@@ -28,7 +28,7 @@ class SettingsPage
     public function enqueue_scripts($hook)
     {
         if ($hook === 'toplevel_page_fanculo-settings') {
-            $this->viteAssets->enqueueAssets();
+            $this->esbuildAssets->enqueueAssets();
         }
     }
 

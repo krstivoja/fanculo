@@ -1,13 +1,36 @@
 {
   "name": "fanculo",
-  "version": "0.0.1",
-  "description": "Build gutenberg blocks without screaming in the screen",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "node build.js --watch",
+    "build": "node build.js --production",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/krstivoja/fanculo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/krstivoja/fanculo/issues"
+  },
+  "homepage": "https://github.com/krstivoja/fanculo#readme",
+  "dependencies": {
+    "esbuild": "^0.25.9",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
   },
   "devDependencies": {
-    "vite": "^5.0.0"
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "livereload": "^0.10.3",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5"
   }
 }
