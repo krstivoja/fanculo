@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import EditorList from './components/editor/EditorList';
 import './style.css';
 
 // Hardcoded taxonomy terms - they won't change
@@ -84,27 +85,8 @@ const App = () => {
         <div id="editor">
             <header id="editor-header">Header</header>
 
-            <aside id="editor-list">
-                <h2>Fanculo Posts ({totalPosts})</h2>
-
-                {TAXONOMY_TERMS.map(term => (
-                    <div key={term.slug} className="mb-6">
-                        <h3 className="text-lg font-semibold mb-2" style={{ color: term.color }}>
-                            <span className="mr-2">{term.icon}</span>
-                            {term.name} ({groupedPosts[term.slug].length})
-                        </h3>
-                        {groupedPosts[term.slug].length > 0 ? (
-                            <ul className="list-disc list-inside space-y-1">
-                                {groupedPosts[term.slug].map(post => (
-                                    <li key={post.id}>{post.title.rendered}</li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-gray-500">No {term.name.toLowerCase()} found</p>
-                        )}
-                    </div>
-                ))}
-            </aside>
+            <EditorList groupedPosts={groupedPosts} />
+            
             <main id="editor-content">
                 <h1>Post title</h1>
 
