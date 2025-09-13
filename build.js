@@ -14,6 +14,20 @@ const config = {
     entryNames: "[name]", // This will create index.js in dist/
     minify: isProduction,
     sourcemap: !isProduction,
+    jsx: 'automatic',
+    jsxImportSource: 'react',
+    loader: {
+        '.js': 'jsx',  // Allow JSX in .js files
+        '.jsx': 'jsx',
+        '.ts': 'tsx',
+        '.tsx': 'tsx',
+        '.css': 'css',
+        '.png': 'file',
+        '.jpg': 'file',
+        '.jpeg': 'file',
+        '.gif': 'file',
+        '.svg': 'dataurl'
+    },
     plugins: [
         tailwindPlugin({
             cssModules: {

@@ -39,10 +39,11 @@ This creates a minified production build in the `/dist` folder.
   ├── main.tsx                    # React entry point
   ├── App.tsx                     # Main React component
 /app/
+  ├── App.php                     # Main application initialization
   ├── Admin/
   │   └── SettingsPage.php        # WordPress admin page
   ├── Helpers/
-  │   └── EsbuildAssets.php       # Asset loading class
+  │   └── AdminAssets.php         # Admin asset loading class
 /dist/                            # Built assets (auto-generated)
 build.js                          # esbuild configuration
 fanculo.php                       # Main plugin file
@@ -50,11 +51,12 @@ fanculo.php                       # Main plugin file
 
 ## How It Works
 
-1. **React App**: Located in `/src/`, the React app mounts to a `#app` div in the WordPress admin
-2. **Asset Loading**: `EsbuildAssets.php` handles loading the built JavaScript files
-3. **Live Reload**: In development mode (`FANCULO_DEV_MODE=true`), LiveReload script is automatically injected
-4. **WordPress Integration**: The admin page is created via `SettingsPage.php`
-5. **Namespace**: Uses `Fanculo\` namespace (e.g., `Fanculo\Admin\SettingsPage`)
+1. **Application Bootstrap**: `App.php` handles all plugin initialization using singleton pattern
+2. **React App**: Located in `/src/`, the React app mounts to a `#app` div in the WordPress admin
+3. **Asset Loading**: `AdminAssets.php` handles loading the built JavaScript and CSS files
+4. **Live Reload**: In development mode (`.dev-mode` file exists), LiveReload script is automatically injected
+5. **WordPress Integration**: The admin page is created via `SettingsPage.php`
+6. **Namespace**: Uses `Fanculo\` namespace (e.g., `Fanculo\Admin\SettingsPage`)
 
 ## Usage
 

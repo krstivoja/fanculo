@@ -1,5 +1,11 @@
-import './input.css';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
 
-console.log('marko 3');
-
-let marko = '<button class="bg-blue-500">a</button>';
+document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('fanculo-app');
+    if (container) {
+        const root = createRoot(container);
+        root.render(<App />);
+    }
+});

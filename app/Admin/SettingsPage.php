@@ -2,14 +2,14 @@
 
 namespace Fanculo\Admin;
 
-use Fanculo\Helpers\EsbuildAssets;
+use Fanculo\Helpers\AdminAssets;
 
 class SettingsPage
 {
-    private $esbuildAssets;
+    private $adminAssets;
     public function __construct()
     {
-        $this->esbuildAssets = new EsbuildAssets();
+        $this->adminAssets = new AdminAssets();
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
     }
@@ -28,7 +28,7 @@ class SettingsPage
     public function enqueue_scripts($hook)
     {
         if ($hook === 'toplevel_page_fanculo-settings') {
-            $this->esbuildAssets->enqueueAssets();
+            $this->adminAssets->enqueueAssets();
         }
     }
 
@@ -36,7 +36,7 @@ class SettingsPage
     {
         ?>
         <div class="wrap">
-            <div id="app">App</div>
+            <div id="fanculo-app"></div>
         </div>
         <?php
     }

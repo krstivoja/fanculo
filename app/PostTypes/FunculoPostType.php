@@ -50,7 +50,7 @@ class FunculoPostType
             'supports'              => ['title', 'editor', 'custom-fields'],
             'taxonomies'            => ['funculo_type'],
             'hierarchical'          => false,
-            'public'                => false,
+            'public'                => true,
             'show_ui'               => true,
             'show_in_menu'          => true,
             'menu_position'         => 25,

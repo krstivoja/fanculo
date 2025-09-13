@@ -2,7 +2,7 @@
 
 namespace Fanculo\Helpers;
 
-class EsbuildAssets
+class AdminAssets
 {
     private $buildPath;
     private $buildUrl;
@@ -39,7 +39,7 @@ class EsbuildAssets
             wp_enqueue_script(
                 'fanculo-app',
                 $this->buildUrl . 'index.js',
-                array(),
+                array('jquery'),
                 filemtime($jsFile),
                 true
             );
@@ -50,16 +50,7 @@ class EsbuildAssets
                 'nonce' => wp_create_nonce('wp_rest'),
             ]);
 
-            // Add livereload script in development
-            if ($this->isDevMode()) {
-                wp_enqueue_script(
-                    'fanculo-livereload',
-                    'http://localhost:35729/livereload.js',
-                    array(),
-                    '1.0.0',
-                    true
-                );
-            }
+            // Livereload is handled by esbuild plugin, no need for additional script
         }
     }
 }
