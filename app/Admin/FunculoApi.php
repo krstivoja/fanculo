@@ -2,8 +2,8 @@
 
 namespace Fanculo\Admin;
 
-use Fanculo\PostTypes\FunculoPostType;
-use Fanculo\Taxonomies\FunculoTypeTaxonomy;
+use Fanculo\Content\FunculoPostType;
+use Fanculo\Content\FunculoTypeTaxonomy;
 
 class FunculoApi
 {

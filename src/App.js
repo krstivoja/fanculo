@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import EditorList from './components/editor/EditorList';
 import EditorHeader from './components/editor/EditorHeader';
+import EditorMain from './components/editor/EditorMain';
+import EditorSettings from './components/editor/EditorSettings';
 import './style.css';
 
 
@@ -83,25 +85,9 @@ const App = () => {
 
             <div className='flex w-full flex-1 min-h-0'>
                 <EditorList groupedPosts={groupedPosts} selectedPost={selectedPost} onPostSelect={setSelectedPost} />
-                
-                <main id="editor-content" className="flex-1 p-4">
-                    {selectedPost ? (
-                        <div>
-                            <h1>{selectedPost.title.rendered}</h1>
-                            <p>ID: {selectedPost.id}</p>
-                        </div>
-                    ) : (
-                        <div className="flex items-center justify-center h-full text-contrast">
-                            Select a post from the sidebar
-                        </div>
-                    )}
-                </main>
-
-                <aside id="editor-settings">
-                    Settings
-                </aside>
+                <EditorMain selectedPost={selectedPost} />
+                <EditorSettings selectedPost={selectedPost} />
             </div>
-
 
         </div>
     );

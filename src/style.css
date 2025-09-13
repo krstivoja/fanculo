@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import './styles/reset-wp.css';
 
+:root {
+    --sidebar: 350px;
+}
+
 @theme {
     --color-*: initial;
     --color-base: #191c22;

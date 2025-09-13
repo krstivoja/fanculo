@@ -7,7 +7,9 @@ const EditorHeader = () => {
 
   const handleCreatePost = async (postData) => {
     try {
-      const response = await fetch('/wp-json/wp/v2/funculos', {
+      console.log('Creating post with data:', postData);
+
+      const response = await fetch('/wp-json/funculo/v1/posts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -16,13 +18,13 @@ const EditorHeader = () => {
         body: JSON.stringify({
           title: postData.title,
           status: 'publish',
-          funculo_type: [postData.type]
+          taxonomy_term: postData.type
         })
       });
 
       if (response.ok) {
         const newPost = await response.json();
-        // console.log('Post created as published:', newPost);
+        console.log('Post created successfully:', newPost);
         // Optionally refresh the post list or add to state
       } else {
         console.error('Failed to create post:', response.statusText);
