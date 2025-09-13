@@ -1,0 +1,202 @@
+import React, { useState, useEffect } from 'react'
+import PostList from './PostList'
+import TaxonomyFilter from './TaxonomyFilter'
+import SearchBox from './SearchBox'
+
+interface Term {
+  id: number
+  slug: string
+  name: string
+  description: string
+  count: number
+}
+
+interface Post {
+  id: number
+  title: string
+  slug: string
+  status: string
+  date: string
+  modified: string
+  excerpt: string
+  terms: Array<{
+    id: number
+    slug: string
+    name: string
+  }>
+  edit_url: string
+  meta: any
+}
+
+interface ApiResponse {
+  posts: Post[]
+  total: number
+  total_pages: number
+  current_page: number
+}
+
+const Sidebar: React.FC = () => {
+  const [posts, setPosts] = useState<Post[]>([])
+  const [terms, setTerms] = useState<Term[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedTerm, setSelectedTerm] = useState<string>('')
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
+
+  // Fetch taxonomy terms on component mount
+  useEffect(() => {
+    fetchTaxonomyTerms()
+  }, [])
+
+  // Fetch posts when filters change
+  useEffect(() => {
+    fetchPosts()
+  }, [selectedTerm, searchQuery, currentPage])
+
+  const fetchTaxonomyTerms = async () => {
+    try {
+      const response = await fetch('/wp-json/funculo/v1/taxonomy-terms', {
+        headers: {
+          'X-WP-Nonce': (window as any).wpApiSettings?.nonce || '',
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setTerms(data.terms)
+      }
+    } catch (error) {
+      console.error('Error fetching taxonomy terms:', error)
+    }
+  }
+
+  const fetchPosts = async () => {
+    setLoading(true)
+
+    try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        per_page: '10',
+      })
+
+      if (selectedTerm) {
+        params.append('taxonomy_filter', selectedTerm)
+      }
+
+      if (searchQuery) {
+        params.append('search', searchQuery)
+      }
+
+      const response = await fetch(`/wp-json/funculo/v1/posts?${params}`, {
+        headers: {
+          'X-WP-Nonce': (window as any).wpApiSettings?.nonce || '',
+        },
+      })
+
+      if (response.ok) {
+        const data: ApiResponse = await response.json()
+        setPosts(data.posts)
+        setTotalPages(data.total_pages)
+        setTotal(data.total)
+      }
+    } catch (error) {
+      console.error('Error fetching posts:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleTermFilter = (termSlug: string) => {
+    setSelectedTerm(termSlug)
+    setCurrentPage(1) // Reset to first page when filtering
+  }
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query)
+    setCurrentPage(1) // Reset to first page when searching
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const getTermBadgeClass = (termSlug: string) => {
+    switch (termSlug) {
+      case 'blocks':
+        return 'term-badge blocks'
+      case 'symbols':
+        return 'term-badge symbols'
+      case 'scss-partials':
+        return 'term-badge scss-partials'
+      default:
+        return 'term-badge'
+    }
+  }
+
+  return (
+    <div className="funculo-sidebar">
+      <div className="sidebar-header">
+        <h3>Funculo Components</h3>
+        <p className="total-count">{total} items</p>
+      </div>
+
+      <div className="sidebar-filters">
+        <SearchBox
+          value={searchQuery}
+          onSearch={handleSearch}
+          placeholder="Search components..."
+        />
+
+        <TaxonomyFilter
+          terms={terms}
+          selectedTerm={selectedTerm}
+          onTermSelect={handleTermFilter}
+        />
+      </div>
+
+      <div className="sidebar-content">
+        {loading ? (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Loading components...</p>
+          </div>
+        ) : (
+          <>
+            <PostList
+              posts={posts}
+              getTermBadgeClass={getTermBadgeClass}
+            />
+
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="pagination-btn"
+                >
+                  Previous
+                </button>
+
+                <span className="pagination-info">
+                  Page {currentPage} of {totalPages}
+                </span>
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="pagination-btn"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default Sidebar

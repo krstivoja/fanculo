@@ -1,0 +1,97 @@
+import React from 'react'
+
+interface Term {
+  id: number
+  slug: string
+  name: string
+  description: string
+  count: number
+}
+
+interface TaxonomyFilterProps {
+  terms: Term[]
+  selectedTerm: string
+  onTermSelect: (termSlug: string) => void
+}
+
+const TaxonomyFilter: React.FC<TaxonomyFilterProps> = ({
+  terms,
+  selectedTerm,
+  onTermSelect,
+}) => {
+  const getTermIcon = (termSlug: string) => {
+    switch (termSlug) {
+      case 'blocks':
+        return '🧱'
+      case 'symbols':
+        return '🔣'
+      case 'scss-partials':
+        return '🎨'
+      default:
+        return '📄'
+    }
+  }
+
+  const getTermColor = (termSlug: string) => {
+    switch (termSlug) {
+      case 'blocks':
+        return '#00a32a'
+      case 'symbols':
+        return '#ff6900'
+      case 'scss-partials':
+        return '#8e44ad'
+      default:
+        return '#007cba'
+    }
+  }
+
+  return (
+    <div className="taxonomy-filter">
+      <h4>Filter by Type</h4>
+
+      <div className="filter-options">
+        <button
+          className={`filter-option ${selectedTerm === '' ? 'active' : ''}`}
+          onClick={() => onTermSelect('')}
+        >
+          <span className="filter-icon">📋</span>
+          <span className="filter-name">All Types</span>
+          <span className="filter-count">
+            {terms.reduce((total, term) => total + term.count, 0)}
+          </span>
+        </button>
+
+        {terms.map((term) => (
+          <button
+            key={term.id}
+            className={`filter-option ${selectedTerm === term.slug ? 'active' : ''}`}
+            onClick={() => onTermSelect(term.slug)}
+            style={{ '--term-color': getTermColor(term.slug) } as React.CSSProperties}
+          >
+            <span className="filter-icon">{getTermIcon(term.slug)}</span>
+            <span className="filter-name">{term.name}</span>
+            <span className="filter-count">{term.count}</span>
+          </button>
+        ))}
+      </div>
+
+      {selectedTerm && (
+        <div className="active-filter">
+          <span>Filtered by: </span>
+          <span className="active-term">
+            {terms.find(t => t.slug === selectedTerm)?.name}
+          </span>
+          <button
+            className="clear-filter"
+            onClick={() => onTermSelect('')}
+            title="Clear filter"
+          >
+            ×
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default TaxonomyFilter

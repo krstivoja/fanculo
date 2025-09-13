@@ -38,5 +38,8 @@ add_action('plugins_loaded', function() {
 
     // Initialize meta box helper
     new \Fanculo\Helpers\MetaBoxHelper();
+
+    // Initialize REST API
+    new \Fanculo\Admin\FunculoApi();
 });
 

@@ -32,6 +32,12 @@ class EsbuildAssets
                 true
             );
 
+            // Localize script with REST API data
+            wp_localize_script('fanculo-app', 'wpApiSettings', [
+                'root' => esc_url_raw(rest_url()),
+                'nonce' => wp_create_nonce('wp_rest'),
+            ]);
+
             // Add livereload script in development
             if ($this->isDevMode()) {
                 wp_enqueue_script(
