@@ -78,7 +78,6 @@ Navigate to **WordPress Admin → Fanculo** to see your React app.
 
 The build is configured in `build.js` with:
 - **esbuild** for fast bundling
-- **TypeScript** support
 - **JSX** with React 19
 - **File loaders** for images and assets
 - **Source maps** in development
@@ -95,3 +94,9 @@ The build is configured in `build.js` with:
 - Node.js
 - WordPress
 - PHP 7.4+
+
+## Dependencies
+
+- **esbuild** - Fast JavaScript bundler
+- **React 19** - UI library
+- **livereload** - Development live reload functionality
