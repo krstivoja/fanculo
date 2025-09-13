@@ -10,6 +10,7 @@ const App = () => {
         'scss-partials': []
     });
     const [loading, setLoading] = useState(true);
+    const [selectedPost, setSelectedPost] = useState(null);
 
     const fetchPosts = async () => {
         try {
@@ -97,10 +98,19 @@ const App = () => {
             </header>
 
             <div className='flex w-full flex-1 min-h-0'>
-                <EditorList groupedPosts={groupedPosts} />
+                <EditorList groupedPosts={groupedPosts} selectedPost={selectedPost} onPostSelect={setSelectedPost} />
                 
-                <main id="editor-content">
-                    <h1>Post title</h1>
+                <main id="editor-content" className="flex-1 p-4">
+                    {selectedPost ? (
+                        <div>
+                            <h1>{selectedPost.title.rendered}</h1>
+                            <p>ID: {selectedPost.id}</p>
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-contrast">
+                            Select a post from the sidebar
+                        </div>
+                    )}
                 </main>
 
                 <aside id="editor-settings">

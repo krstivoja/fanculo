@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TAXONOMY_TERMS } from '../../constants/taxonomy';
 
-const EditorList = ({ groupedPosts }) => {
+const EditorList = ({ groupedPosts, selectedPost, onPostSelect }) => {
   const [activeTab, setActiveTab] = useState('blocks');
   const totalPosts = groupedPosts.blocks.length + groupedPosts.symbols.length + groupedPosts['scss-partials'].length;
 
@@ -34,7 +34,15 @@ const EditorList = ({ groupedPosts }) => {
             {groupedPosts[term.slug].length > 0 ? (
               <ul className="overflow-y-auto h-full">
                 {groupedPosts[term.slug].map(post => (
-                  <li key={post.id}>
+                  <li
+                    key={post.id}
+                    onClick={() => onPostSelect(post)}
+                    className={`cursor-pointer p-2 rounded ${
+                      selectedPost?.id === post.id
+                        ? 'bg-action text-highlight hover:bg-action'
+                        : 'hover:bg-action/10'
+                    }`}
+                  >
                     {post.title.rendered}
                   </li>
                 ))}
