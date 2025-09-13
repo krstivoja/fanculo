@@ -31,59 +31,8 @@ class BlocksMetaBox extends AbstractMetaBox
             return; // Don't show this metabox
         }
 
-        $this->renderNonce();
-
-        // Get current values
-        $phpCode = $this->getMetaValue($post->ID, '_funculo_block_php');
-        $scssCode = $this->getMetaValue($post->ID, '_funculo_block_scss');
-        $jsCode = $this->getMetaValue($post->ID, '_funculo_block_js');
-        $attributes = $this->getMetaValue($post->ID, '_funculo_block_attributes');
-        $settings = $this->getMetaValue($post->ID, '_funculo_block_settings');
-
-        ?>
-        <div class="funculo-metabox-container">
-            <table class="form-table" role="presentation">
-                <tbody>
-                    <?php
-                    $this->renderCodeField(
-                        '_funculo_block_php',
-                        'PHP Code',
-                        $phpCode,
-                        'php'
-                    );
-
-                    $this->renderCodeField(
-                        '_funculo_block_scss',
-                        'SCSS Code',
-                        $scssCode,
-                        'scss'
-                    );
-
-                    $this->renderCodeField(
-                        '_funculo_block_js',
-                        'JavaScript Code',
-                        $jsCode,
-                        'javascript'
-                    );
-
-                    $this->renderJsonField(
-                        '_funculo_block_attributes',
-                        'Block Attributes',
-                        $attributes,
-                        '{"title": {"type": "string", "default": ""}}'
-                    );
-
-                    $this->renderJsonField(
-                        '_funculo_block_settings',
-                        'Block Settings',
-                        $settings,
-                        '{"category": "common", "icon": "block-default"}'
-                    );
-                    ?>
-                </tbody>
-            </table>
-        </div>
-        <?php
+        // React container - React will handle the forms
+        echo '<div id="blocks-metabox-react" data-post-id="' . $post->ID . '" data-type="blocks"></div>';
     }
 
     protected function saveFields($postId)

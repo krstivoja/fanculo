@@ -31,27 +31,8 @@ class SCSSPartialsMetaBox extends AbstractMetaBox
             return; // Don't show this metabox
         }
 
-        $this->renderNonce();
-
-        // Get current values
-        $scssCode = $this->getMetaValue($post->ID, '_funculo_scss_partial_scss');
-
-        ?>
-        <div class="funculo-metabox-container">
-            <table class="form-table" role="presentation">
-                <tbody>
-                    <?php
-                    $this->renderCodeField(
-                        '_funculo_scss_partial_scss',
-                        'SCSS Code',
-                        $scssCode,
-                        'scss'
-                    );
-                    ?>
-                </tbody>
-            </table>
-        </div>
-        <?php
+        // React container - React will handle the forms
+        echo '<div id="scss-partials-metabox-react" data-post-id="' . $post->ID . '" data-type="scss-partials"></div>';
     }
 
     protected function saveFields($postId)

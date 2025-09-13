@@ -31,27 +31,8 @@ class SymbolsMetaBox extends AbstractMetaBox
             return; // Don't show this metabox
         }
 
-        $this->renderNonce();
-
-        // Get current values
-        $phpCode = $this->getMetaValue($post->ID, '_funculo_symbol_php');
-
-        ?>
-        <div class="funculo-metabox-container">
-            <table class="form-table" role="presentation">
-                <tbody>
-                    <?php
-                    $this->renderCodeField(
-                        '_funculo_symbol_php',
-                        'PHP Code',
-                        $phpCode,
-                        'php'
-                    );
-                    ?>
-                </tbody>
-            </table>
-        </div>
-        <?php
+        // React container - React will handle the forms
+        echo '<div id="symbols-metabox-react" data-post-id="' . $post->ID . '" data-type="symbols"></div>';
     }
 
     protected function saveFields($postId)
