@@ -21,12 +21,24 @@ class EsbuildAssets
 
     public function enqueueAssets()
     {
-        $jsFile = $this->buildPath . 'main.js';
+        $jsFile = $this->buildPath . 'index.js';
+        $cssFile = $this->buildPath . 'index.css';
 
+        // Enqueue CSS
+        if (file_exists($cssFile)) {
+            wp_enqueue_style(
+                'fanculo-app',
+                $this->buildUrl . 'index.css',
+                array(),
+                filemtime($cssFile)
+            );
+        }
+
+        // Enqueue JavaScript
         if (file_exists($jsFile)) {
             wp_enqueue_script(
                 'fanculo-app',
-                $this->buildUrl . 'main.js',
+                $this->buildUrl . 'index.js',
                 array(),
                 filemtime($jsFile),
                 true
