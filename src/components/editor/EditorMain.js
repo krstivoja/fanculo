@@ -1,4 +1,5 @@
 import React from 'react';
+import { Textarea } from '../ui';
 
 const EditorMain = ({ selectedPost }) => {
   return (
@@ -7,6 +8,16 @@ const EditorMain = ({ selectedPost }) => {
         <div>
           <h1>{selectedPost.title.rendered}</h1>
           <p>ID: {selectedPost.id}</p>
+
+          <p>PHP</p>
+          <Textarea></Textarea>
+          <p>SCSS</p>
+          <Textarea></Textarea>
+          <p>JS</p>
+          <Textarea></Textarea>
+          <p>Attributes</p>
+          <Textarea></Textarea>
+
         </div>
       ) : (
         <div className="flex items-center justify-center h-full text-contrast">

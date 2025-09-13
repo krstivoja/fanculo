@@ -11,7 +11,7 @@ const Textarea = ({
   disabled = false,
   ...props
 }) => {
-  const baseClasses = 'w-full px-3 py-2 border border-outline rounded-md bg-surface text-base font-mono resize-y focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent';
+  const baseClasses = 'w-full !bg-base-alt !text-contrast';
   const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : '';
 
   return (
