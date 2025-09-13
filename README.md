@@ -9,11 +9,8 @@ A WordPress plugin with React frontend built using esbuild.
 npm install
 ```
 
-### 2. Configure Development Mode
-Set up your environment by editing the `.env` file:
-```bash
-FANCULO_DEV_MODE=true
-```
+### 2. Build Assets
+No additional configuration needed - the build process automatically determines the mode.
 
 ## Development
 
@@ -49,7 +46,6 @@ This creates a minified production build in the `/dist` folder.
 /dist/                            # Built assets (auto-generated)
 build.js                          # esbuild configuration
 fanculo.php                       # Main plugin file
-.env                              # Environment configuration
 ```
 
 ## How It Works
@@ -70,9 +66,21 @@ fanculo.php                       # Main plugin file
 ### WordPress Admin Page
 Navigate to **WordPress Admin → Fanculo** to see your React app.
 
-### Environment Modes
-- **Development**: Set `FANCULO_DEV_MODE=true` in `.env` for live reload
-- **Production**: Set `FANCULO_DEV_MODE=false` or remove the line
+### Build Modes
+
+The build process automatically determines the mode:
+
+- **Development Mode** (`npm run dev`):
+  - Enables livereload script injection
+  - Creates `.dev-mode` marker file
+  - Watches for file changes
+  - Use for active development
+
+- **Production Mode** (`npm run build`):
+  - Disables livereload
+  - Removes `.dev-mode` marker file
+  - Creates minified assets
+  - Use for testing/staging/production
 
 ## Build Configuration
 
@@ -99,4 +107,4 @@ The build is configured in `build.js` with:
 
 - **esbuild** - Fast JavaScript bundler
 - **React 19** - UI library
-- **livereload** - Development live reload functionality
+- **@jgoz/esbuild-plugin-livereload** - Integrated live reload for esbuild

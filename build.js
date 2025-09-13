@@ -1,6 +1,6 @@
 const esbuild = require('esbuild')
 const path = require('path')
-const livereload = require('livereload')
+const { livereloadPlugin } = require('@jgoz/esbuild-plugin-livereload')
 
 const isProduction = process.argv.includes('--production')
 const isWatch = process.argv.includes('--watch')
@@ -32,6 +32,7 @@ const config = {
   minify: isProduction,
   metafile: true,
   plugins: [
+    ...(isWatch && !isProduction ? [livereloadPlugin({ port: 35729 })] : []),
     {
       name: 'build-logger',
       setup(build) {
@@ -41,6 +42,17 @@ const config = {
             result.errors.forEach(error => console.error(error))
           } else {
             console.log(`✅ Build completed in ${isProduction ? 'production' : 'development'} mode`)
+
+            // Create/remove dev mode marker file
+            const fs = require('fs')
+            const devMarkerPath = path.join(__dirname, 'dist', '.dev-mode')
+
+            if (isWatch && !isProduction) {
+              fs.writeFileSync(devMarkerPath, 'dev')
+            } else if (fs.existsSync(devMarkerPath)) {
+              fs.unlinkSync(devMarkerPath)
+            }
+
             if (result.metafile) {
               const outputs = Object.keys(result.metafile.outputs)
               outputs.forEach(output => {
@@ -58,19 +70,13 @@ const config = {
 async function build() {
   try {
     if (isWatch) {
-      // Start livereload server
-      const liveReloadServer = livereload.createServer({
-        port: 35729,
-        exts: ['js', 'tsx', 'ts', 'jsx', 'css']
-      })
-      liveReloadServer.watch(path.join(__dirname, 'dist'))
-      console.log('🔄 LiveReload server started on port 35729')
-
       const context = await esbuild.context(config)
       await context.watch()
       console.log('👀 Watching for changes...')
-      console.log('💡 Add this script tag to your WordPress admin page for live reload:')
-      console.log('<script src="http://localhost:35729/livereload.js"></script>')
+      if (!isProduction) {
+        console.log('🔄 LiveReload server started on port 35729')
+        console.log('💡 LiveReload script will be auto-injected in development mode')
+      }
     } else {
       await esbuild.build(config)
     }

@@ -26,6 +26,6 @@
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
-    "livereload": "^0.10.3"
+    "@jgoz/esbuild-plugin-livereload": "^2.1.3"
   }
 }

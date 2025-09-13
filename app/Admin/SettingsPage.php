@@ -2,7 +2,7 @@
 
 namespace Fanculo\Admin;
 
-use Fanculo\EsbuildAssets;
+use Fanculo\Helpers\EsbuildAssets;
 
 class SettingsPage
 {
@@ -36,7 +36,6 @@ class SettingsPage
     {
         ?>
         <div class="wrap">
-            <h1>Fanculo Settings</h1>
             <div id="app">App</div>
         </div>
         <?php

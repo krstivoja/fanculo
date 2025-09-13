@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo;
+namespace Fanculo\Helpers;
 
 class EsbuildAssets
 {
@@ -15,14 +15,8 @@ class EsbuildAssets
 
     private function isDevMode()
     {
-        $envFile = plugin_dir_path(__FILE__) . '../../.env';
-
-        if (file_exists($envFile)) {
-            $envContent = file_get_contents($envFile);
-            return strpos($envContent, 'FANCULO_DEV_MODE=true') !== false;
-        }
-
-        return false;
+        $devMarkerFile = $this->buildPath . '.dev-mode';
+        return file_exists($devMarkerFile);
     }
 
     public function enqueueAssets()

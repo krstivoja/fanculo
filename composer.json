@@ -2,7 +2,7 @@
     "name": "marko/fanculo",
     "autoload": {
         "psr-4": {
-            "Marko\\Fanculo\\": "app/"
+            "Fanculo\\": "app/"
         }
     },
     "authors": [
