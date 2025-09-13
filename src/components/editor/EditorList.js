@@ -2,35 +2,61 @@ import React, { useState, useEffect } from 'react';
 
 // Hardcoded taxonomy terms - they won't change
 const TAXONOMY_TERMS = [
-    { slug: 'blocks', name: 'Blocks', icon: '🧱', color: '#00a32a' },
-    { slug: 'symbols', name: 'Symbols', icon: '🔣', color: '#ff6900' },
-    { slug: 'scss-partials', name: 'SCSS Partials', icon: '🎨', color: '#8e44ad' }
+    { slug: 'blocks', name: 'Blocks' },
+    { slug: 'symbols', name: 'Symbols' },
+    { slug: 'scss-partials', name: 'SCSS Partials'  }
 ];
 
 const EditorList = ({ groupedPosts }) => {
+  const [activeTab, setActiveTab] = useState('blocks');
   const totalPosts = groupedPosts.blocks.length + groupedPosts.symbols.length + groupedPosts['scss-partials'].length;
 
   return (
     <aside id="editor-list">
-      <h2>Fanculo Posts ({totalPosts})</h2>
+      {/* <h2>Fanculo Posts ({totalPosts})</h2> */}
 
-      {TAXONOMY_TERMS.map(term => (
-        <div key={term.slug} className="mb-6">
-          <h3 className="text-lg font-semibold mb-2" style={{ color: term.color }}>
-            <span className="mr-2">{term.icon}</span>
+      {/* Tab Navigation */}
+      <div className="tab-nav">
+        {TAXONOMY_TERMS.map(term => (
+          <button
+            key={term.slug}
+            className={`tab-button ${activeTab === term.slug ? 'active' : ''}`}
+            onClick={() => setActiveTab(term.slug)}
+            style={{
+              borderBottomColor: activeTab === term.slug ? term.color : 'transparent',
+              color: activeTab === term.slug ? term.color : '#666'
+            }}
+          >
             {term.name} ({groupedPosts[term.slug].length})
-          </h3>
-          {groupedPosts[term.slug].length > 0 ? (
-            <ul className="list-disc list-inside space-y-1">
-              {groupedPosts[term.slug].map(post => (
-                <li key={post.id}>{post.title.rendered}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500">No {term.name.toLowerCase()} found</p>
-          )}
-        </div>
-      ))}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      <div className="tab-content">
+        {TAXONOMY_TERMS.map(term => (
+          <div
+            key={term.slug}
+            className={`tab-panel ${activeTab === term.slug ? 'active' : ''}`}
+          >
+            {activeTab === term.slug && (
+              <>
+                {groupedPosts[term.slug].length > 0 ? (
+                  <ul className="post-list">
+                    {groupedPosts[term.slug].map(post => (
+                      <li key={post.id} className="post-item">
+                        {post.title.rendered}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="empty-state">No {term.name.toLowerCase()} found</p>
+                )}
+              </>
+            )}
+          </div>
+        ))}
+      </div>
     </aside>
   );
 };

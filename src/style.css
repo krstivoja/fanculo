@@ -10,32 +10,32 @@
 }
 
 
-
 #editor {
-    border: 2px solid red;
+    border: 10px solid red;
     display: flex;
+    flex-direction: column;
     height: calc(100vh - 32px);
     height: calc(100vh - 100px);
-    flex-wrap: wrap;
 }
 
 #editor-header {
-    border: 2px solid rgb(255, 255, 47);
+    border: 5px solid rgb(255, 255, 47);
     width: 100%;
 }
 
 #editor-content {
-    border: 2px solid greenyellow;
+    border: 5px solid rgb(101, 168, 0);
     flex-grow: 1;
     height: fit-content;
 }
 
 
 #editor-list {
-    border: 2px solid blue;
+    border: 5px solid rgb(75, 75, 255);
     overflow: scroll;
 }
 
 #editor-settings {
-    border: 2px solid violet;
+    border: 5px solid violet;
 }
+

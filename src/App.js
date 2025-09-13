@@ -83,19 +83,20 @@ const App = () => {
 
     return (
         <div id="editor">
-            <header id="editor-header">Header</header>
+            <header id="editor-header" className='h-fit'>Header</header>
 
-            <EditorList groupedPosts={groupedPosts} />
-            
-            <main id="editor-content">
-                <h1>Post title</h1>
-
+            <div className='flex w-full  border-[10px] border-solid border-[olive] grow'>
+                <EditorList groupedPosts={groupedPosts} />
                 
-            </main>
+                <main id="editor-content">
+                    <h1>Post title</h1>
+                </main>
 
-            <aside id="editor-settings">
-                Settings
-            </aside>
+                <aside id="editor-settings">
+                    Settings
+                </aside>
+            </div>
+
 
         </div>
     );
