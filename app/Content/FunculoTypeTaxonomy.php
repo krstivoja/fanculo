@@ -1,8 +1,8 @@
 <?php
 
-namespace Fanculo\Taxonomies;
+namespace Fanculo\Content;
 
-use Fanculo\PostTypes\FunculoPostType;
+use Fanculo\Content\FunculoPostType;
 
 class FunculoTypeTaxonomy
 {

@@ -4,8 +4,8 @@ namespace Fanculo;
 
 use Fanculo\Admin\SettingsPage;
 use Fanculo\Admin\FunculoApi;
-use Fanculo\PostTypes\FunculoPostType;
-use Fanculo\Taxonomies\FunculoTypeTaxonomy;
+use Fanculo\Content\FunculoPostType;
+use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Helpers\MetaBoxHelper;
 
 class App
@@ -34,7 +34,7 @@ class App
         new FunculoPostType();
         new FunculoTypeTaxonomy();
 
-        // Initialize meta box helper
+        // Initialize metaboxes
         new MetaBoxHelper();
 
         // Initialize REST API

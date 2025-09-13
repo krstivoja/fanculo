@@ -2,7 +2,7 @@
 
 namespace Fanculo\MetaBoxes;
 
-class SymbolsMetaBoxes extends AbstractMetaBox
+class SymbolsMetaBox extends AbstractMetaBox
 {
     public function __construct()
     {
@@ -16,6 +16,21 @@ class SymbolsMetaBoxes extends AbstractMetaBox
 
     public function renderMetaBox($post)
     {
+        // Check if this post is assigned to symbols taxonomy
+        $terms = wp_get_post_terms($post->ID, 'funculo_type');
+        $hasSymbolsTerm = false;
+
+        foreach ($terms as $term) {
+            if ($term->slug === 'symbols') {
+                $hasSymbolsTerm = true;
+                break;
+            }
+        }
+
+        if (!$hasSymbolsTerm) {
+            return; // Don't show this metabox
+        }
+
         $this->renderNonce();
 
         // Get current values
@@ -36,27 +51,20 @@ class SymbolsMetaBoxes extends AbstractMetaBox
                 </tbody>
             </table>
         </div>
-
-        <style>
-            .funculo-metabox-container .form-table th {
-                width: 150px;
-                vertical-align: top;
-                padding-top: 15px;
-            }
-            .funculo-code-editor {
-                font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-                font-size: 13px;
-                line-height: 1.4;
-            }
-        </style>
         <?php
     }
 
     protected function saveFields($postId)
     {
-        if (isset($_POST['_funculo_symbol_php'])) {
-            $value = sanitize_textarea_field($_POST['_funculo_symbol_php']);
-            $this->saveMetaValue($postId, '_funculo_symbol_php', $value);
+        $fields = [
+            '_funculo_symbol_php'
+        ];
+
+        foreach ($fields as $field) {
+            if (isset($_POST[$field])) {
+                $value = sanitize_textarea_field($_POST[$field]);
+                $this->saveMetaValue($postId, $field, $value);
+            }
         }
     }
 }

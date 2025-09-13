@@ -2,7 +2,7 @@
 
 namespace Fanculo\MetaBoxes;
 
-class BlocksMetaBoxes extends AbstractMetaBox
+class BlocksMetaBox extends AbstractMetaBox
 {
     public function __construct()
     {
@@ -16,6 +16,21 @@ class BlocksMetaBoxes extends AbstractMetaBox
 
     public function renderMetaBox($post)
     {
+        // Check if this post is assigned to blocks taxonomy
+        $terms = wp_get_post_terms($post->ID, 'funculo_type');
+        $hasBlocksTerm = false;
+
+        foreach ($terms as $term) {
+            if ($term->slug === 'blocks') {
+                $hasBlocksTerm = true;
+                break;
+            }
+        }
+
+        if (!$hasBlocksTerm) {
+            return; // Don't show this metabox
+        }
+
         $this->renderNonce();
 
         // Get current values
@@ -68,19 +83,6 @@ class BlocksMetaBoxes extends AbstractMetaBox
                 </tbody>
             </table>
         </div>
-
-        <style>
-            .funculo-metabox-container .form-table th {
-                width: 150px;
-                vertical-align: top;
-                padding-top: 15px;
-            }
-            .funculo-code-editor, .funculo-json-editor {
-                font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-                font-size: 13px;
-                line-height: 1.4;
-            }
-        </style>
         <?php
     }
 

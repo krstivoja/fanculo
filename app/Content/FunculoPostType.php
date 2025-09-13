@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\PostTypes;
+namespace Fanculo\Content;
 
 class FunculoPostType
 {
@@ -47,7 +47,7 @@ class FunculoPostType
             'label'                 => 'Funculo',
             'description'           => 'Custom post type for Funculo components',
             'labels'                => $labels,
-            'supports'              => ['title', 'editor', 'custom-fields'],
+            'supports'              => ['title'],
             'taxonomies'            => ['funculo_type'],
             'hierarchical'          => false,
             'public'                => true,

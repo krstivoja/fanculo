@@ -2,24 +2,17 @@
 
 namespace Fanculo\MetaBoxes;
 
-use Fanculo\PostTypes\FunculoPostType;
-
 abstract class AbstractMetaBox
 {
     protected $metaBoxId;
     protected $title;
-    protected $context;
-    protected $priority;
-    protected $fields;
+    protected $context = 'normal';
+    protected $priority = 'default';
 
     public function __construct()
     {
-        $this->context = 'normal';
-        $this->priority = 'default';
-        $this->fields = [];
-
         add_action('add_meta_boxes', [$this, 'addMetaBox']);
-        add_action('save_post', [$this, 'saveMetaBox']);
+        add_action('save_post', [$this, 'savePost']);
     }
 
     public function addMetaBox()
@@ -28,7 +21,7 @@ abstract class AbstractMetaBox
             $this->metaBoxId,
             $this->title,
             [$this, 'renderMetaBox'],
-            FunculoPostType::getPostType(),
+            'funculo',
             $this->context,
             $this->priority
         );
@@ -36,131 +29,99 @@ abstract class AbstractMetaBox
 
     abstract public function renderMetaBox($post);
 
-    public function saveMetaBox($postId)
+    public function savePost($postId)
     {
-        // Verify nonce
-        if (!isset($_POST[$this->metaBoxId . '_nonce']) ||
-            !wp_verify_nonce($_POST[$this->metaBoxId . '_nonce'], $this->metaBoxId . '_save')) {
-            return;
-        }
-
-        // Check if user has permission to edit
-        if (!current_user_can('edit_post', $postId)) {
-            return;
-        }
-
-        // Check if not an autosave
-        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
-            return;
-        }
-
-        // Check post type
-        if (get_post_type($postId) !== FunculoPostType::getPostType()) {
+        if (!$this->canSave($postId)) {
             return;
         }
 
         $this->saveFields($postId);
     }
 
-    abstract protected function saveFields($postId);
+    protected function canSave($postId)
+    {
+        if (!isset($_POST['funculo_meta_box_nonce']) ||
+            !wp_verify_nonce($_POST['funculo_meta_box_nonce'], 'funculo_meta_box_nonce')) {
+            return false;
+        }
+
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return false;
+        }
+
+        if (!current_user_can('edit_post', $postId)) {
+            return false;
+        }
+
+        return true;
+    }
 
     protected function renderNonce()
     {
-        wp_nonce_field($this->metaBoxId . '_save', $this->metaBoxId . '_nonce');
+        wp_nonce_field('funculo_meta_box_nonce', 'funculo_meta_box_nonce');
     }
 
-    protected function renderTextField($fieldName, $label, $value = '', $placeholder = '')
+    protected function getMetaValue($postId, $key, $default = '')
+    {
+        $value = get_post_meta($postId, $key, true);
+        return $value ? $value : $default;
+    }
+
+    protected function saveMetaValue($postId, $key, $value)
+    {
+        update_post_meta($postId, $key, $value);
+    }
+
+    protected function renderCodeField($name, $label, $value, $language = 'php')
     {
         ?>
         <tr>
             <th scope="row">
-                <label for="<?php echo esc_attr($fieldName); ?>"><?php echo esc_html($label); ?></label>
+                <label for="<?php echo esc_attr($name); ?>">
+                    <?php echo esc_html($label); ?>
+                </label>
             </th>
             <td>
-                <input type="text"
-                       id="<?php echo esc_attr($fieldName); ?>"
-                       name="<?php echo esc_attr($fieldName); ?>"
-                       value="<?php echo esc_attr($value); ?>"
-                       placeholder="<?php echo esc_attr($placeholder); ?>"
-                       class="regular-text" />
+                <textarea
+                    id="<?php echo esc_attr($name); ?>"
+                    name="<?php echo esc_attr($name); ?>"
+                    class="funculo-code-editor"
+                    rows="15"
+                    cols="100"
+                    style="width: 100%; font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace; font-size: 13px;"
+                    placeholder="Enter <?php echo esc_attr($language); ?> code..."
+                ><?php echo esc_textarea($value); ?></textarea>
             </td>
         </tr>
         <?php
     }
 
-    protected function renderTextareaField($fieldName, $label, $value = '', $placeholder = '', $rows = 10)
+    protected function renderJsonField($name, $label, $value, $placeholder = '{}')
     {
-        ?>
-        <tr>
-            <th scope="row">
-                <label for="<?php echo esc_attr($fieldName); ?>"><?php echo esc_html($label); ?></label>
-            </th>
-            <td>
-                <textarea id="<?php echo esc_attr($fieldName); ?>"
-                          name="<?php echo esc_attr($fieldName); ?>"
-                          placeholder="<?php echo esc_attr($placeholder); ?>"
-                          rows="<?php echo esc_attr($rows); ?>"
-                          class="large-text code"><?php echo esc_textarea($value); ?></textarea>
-            </td>
-        </tr>
-        <?php
-    }
-
-    protected function renderCodeField($fieldName, $label, $value = '', $language = 'php')
-    {
-        ?>
-        <tr>
-            <th scope="row">
-                <label for="<?php echo esc_attr($fieldName); ?>"><?php echo esc_html($label); ?></label>
-            </th>
-            <td>
-                <textarea id="<?php echo esc_attr($fieldName); ?>"
-                          name="<?php echo esc_attr($fieldName); ?>"
-                          rows="15"
-                          class="large-text code funculo-code-editor"
-                          data-language="<?php echo esc_attr($language); ?>"><?php echo esc_textarea($value); ?></textarea>
-                <p class="description">
-                    <?php printf('Enter %s code here.', strtoupper($language)); ?>
-                </p>
-            </td>
-        </tr>
-        <?php
-    }
-
-    protected function renderJsonField($fieldName, $label, $value = '', $placeholder = '{}')
-    {
-        $jsonValue = is_array($value) ? json_encode($value, JSON_PRETTY_PRINT) : $value;
-        ?>
-        <tr>
-            <th scope="row">
-                <label for="<?php echo esc_attr($fieldName); ?>"><?php echo esc_html($label); ?></label>
-            </th>
-            <td>
-                <textarea id="<?php echo esc_attr($fieldName); ?>"
-                          name="<?php echo esc_attr($fieldName); ?>"
-                          placeholder="<?php echo esc_attr($placeholder); ?>"
-                          rows="10"
-                          class="large-text code funculo-json-editor"><?php echo esc_textarea($jsonValue); ?></textarea>
-                <p class="description">
-                    Enter valid JSON data.
-                </p>
-            </td>
-        </tr>
-        <?php
-    }
-
-    protected function getMetaValue($postId, $metaKey, $default = '')
-    {
-        $value = get_post_meta($postId, $metaKey, true);
-        return !empty($value) ? $value : $default;
-    }
-
-    protected function saveMetaValue($postId, $metaKey, $value)
-    {
-        if (empty($value)) {
-            delete_post_meta($postId, $metaKey);
-        } else {
-            update_post_meta($postId, $metaKey, $value);
+        if (is_array($value) || is_object($value)) {
+            $value = json_encode($value, JSON_PRETTY_PRINT);
         }
+        ?>
+        <tr>
+            <th scope="row">
+                <label for="<?php echo esc_attr($name); ?>">
+                    <?php echo esc_html($label); ?>
+                </label>
+            </th>
+            <td>
+                <textarea
+                    id="<?php echo esc_attr($name); ?>"
+                    name="<?php echo esc_attr($name); ?>"
+                    class="funculo-json-editor"
+                    rows="8"
+                    cols="100"
+                    style="width: 100%; font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace; font-size: 13px;"
+                    placeholder="<?php echo esc_attr($placeholder); ?>"
+                ><?php echo esc_textarea($value); ?></textarea>
+            </td>
+        </tr>
+        <?php
     }
+
+    abstract protected function saveFields($postId);
 }
