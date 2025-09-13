@@ -1,31 +1,21 @@
 {
   "name": "fanculo",
   "version": "1.0.0",
-  "description": "",
+  "description": "A WordPress plugin with React frontend built using esbuild.",
   "main": "index.js",
   "scripts": {
-    "dev": "node build.js --watch",
     "build": "node build.js --production",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/krstivoja/fanculo.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/krstivoja/fanculo/issues"
-  },
-  "homepage": "https://github.com/krstivoja/fanculo#readme",
-  "dependencies": {
-    "esbuild": "^0.25.9",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "dev": "node build.js --watch",
+    "tailwindcss": "npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css --watch"
   },
   "devDependencies": {
-    "@jgoz/esbuild-plugin-livereload": "^2.1.3"
+    "esbuild": "0.25.9",
+    "esbuild-plugin-tailwindcss": "^2.1.0"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.13",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tailwindcss": "^4.1.13"
   }
 }
