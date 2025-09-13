@@ -1,7 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '../ui';
+import AddPostModal from './AddPostModal';
 
 const EditorHeader = () => {
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const handleCreatePost = async (postData) => {
+    try {
+      const response = await fetch('/wp-json/wp/v2/funculos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-WP-Nonce': window.wpApiSettings.nonce
+        },
+        body: JSON.stringify({
+          title: postData.title,
+          status: 'publish',
+          funculo_type: [postData.type]
+        })
+      });
+
+      if (response.ok) {
+        const newPost = await response.json();
+        // console.log('Post created as published:', newPost);
+        // Optionally refresh the post list or add to state
+      } else {
+        console.error('Failed to create post:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error creating post:', error);
+    }
+  };
   return (
     <header id="editor-header" className='h-fit border-b border-solid border-outline flex items-center justify-between'>
       <div className='flex gap-4 items-center'>
@@ -14,11 +43,22 @@ const EditorHeader = () => {
           </svg>
         </div>
 
-        <Button variant="secondary">Add new</Button>
+        <Button
+          variant="secondary"
+          onClick={() => setIsAddModalOpen(true)}
+        >
+          Add new
+        </Button>
       </div>
       <div className='flex gap-4 justify-center mr-4'>
         <Button variant="secondary">Save</Button>
       </div>
+
+      <AddPostModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onCreate={handleCreatePost}
+      />
     </header>
   );
 };

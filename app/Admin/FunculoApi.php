@@ -63,7 +63,7 @@ class FunculoApi
                         }
                     ],
                     'status' => [
-                        'default' => 'draft',
+                        'default' => 'publish',
                         'sanitize_callback' => 'sanitize_text_field',
                         'validate_callback' => function($param) {
                             return in_array($param, ['draft', 'publish', 'private']);
