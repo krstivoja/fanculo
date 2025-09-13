@@ -6,7 +6,7 @@ const EditorList = ({ groupedPosts }) => {
   const totalPosts = groupedPosts.blocks.length + groupedPosts.symbols.length + groupedPosts['scss-partials'].length;
 
   return (
-    <aside id="editor-list" className='flex flex-col h-full border-r border-solid border-outline'>
+    <aside id="editor-list" className='flex flex-col h-full border-r border-solid border-outline w-[400px]'>
       {/* <h2>Fanculo Posts ({totalPosts})</h2> */}
 
       {/* Tab Navigation */}
@@ -15,7 +15,7 @@ const EditorList = ({ groupedPosts }) => {
           {TAXONOMY_TERMS.map(term => (
             <button
               key={term.slug}
-              className={`p-2 px-4 rounded-md  ${activeTab === term.slug ? '!text-highlight bg-action' : ''}`}
+              className={`p-2 px-4 rounded-md grow  ${activeTab === term.slug ? '!text-highlight bg-action' : ''}`}
               onClick={() => setActiveTab(term.slug)}
             >
               {term.name}
@@ -25,7 +25,7 @@ const EditorList = ({ groupedPosts }) => {
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-hidden min-h-0">
+      <div className="flex-1 overflow-hidden min-h-0 px-4 pb-4">
         {TAXONOMY_TERMS.map(term => (
           <div
             key={term.slug}
