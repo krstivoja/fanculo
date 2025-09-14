@@ -6,21 +6,46 @@ class AdminAssets
 {
     private $buildPath;
     private $buildUrl;
+    private $initialized = false;
 
     public function __construct()
     {
-        $this->buildPath = plugin_dir_path(__FILE__) . '../../dist/';
-        $this->buildUrl = plugin_dir_url(__FILE__) . '../../dist/';
+        // Don't initialize paths in constructor - wait until WordPress is ready
+    }
+
+    private function initializePaths()
+    {
+        if ($this->initialized) {
+            return;
+        }
+
+        if (function_exists('plugin_dir_path') && function_exists('plugin_dir_url')) {
+            $this->buildPath = plugin_dir_path(__FILE__) . '../../dist/';
+            $this->buildUrl = plugin_dir_url(__FILE__) . '../../dist/';
+            $this->initialized = true;
+        }
     }
 
     private function isDevMode()
     {
+        $this->initializePaths();
+
+        if (!$this->initialized) {
+            return false;
+        }
+
         $devMarkerFile = $this->buildPath . '.dev-mode';
         return file_exists($devMarkerFile);
     }
 
     public function enqueueAssets()
     {
+        $this->initializePaths();
+
+        if (!$this->initialized || !function_exists('wp_enqueue_style')) {
+            return;
+        }
+
         $jsFile = $this->buildPath . 'index.js';
         $cssFile = $this->buildPath . 'index.css';
 
@@ -53,6 +78,11 @@ class AdminAssets
 
     private function getPostsData()
     {
+        // Only get posts if WordPress functions are available
+        if (!function_exists('get_posts')) {
+            return ['blocks' => [], 'symbols' => [], 'scss-partials' => []];
+        }
+
         $posts = get_posts([
             'post_type' => 'funculo',
             'numberposts' => 100,
@@ -88,6 +118,12 @@ class AdminAssets
 
     public function outputModuleScript()
     {
+        $this->initializePaths();
+
+        if (!$this->initialized) {
+            return;
+        }
+
         $jsFile = $this->buildPath . 'index.js';
         if (file_exists($jsFile)) {
             echo '<script type="module" src="' . esc_url($this->buildUrl . 'index.js') . '?ver=' . filemtime($jsFile) . '"></script>' . "\n";

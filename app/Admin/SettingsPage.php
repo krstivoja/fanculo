@@ -10,8 +10,12 @@ class SettingsPage
     public function __construct()
     {
         $this->adminAssets = new AdminAssets();
-        add_action('admin_menu', [$this, 'add_admin_menu']);
-        add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
+
+        // Only add actions if WordPress functions are available
+        if (function_exists('add_action')) {
+            add_action('admin_menu', [$this, 'add_admin_menu']);
+            add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
+        }
     }
 
     public function add_admin_menu()

@@ -3,9 +3,9 @@
 namespace Fanculo;
 
 use Fanculo\Admin\SettingsPage;
-use Fanculo\Admin\FunculoApi;
-use Fanculo\Content\FunculoPostType;
-use Fanculo\Content\FunculoTypeTaxonomy;
+use Fanculo\Admin\Api\Api;
+use Fanculo\Admin\Content\FunculoPostType;
+use Fanculo\Admin\Content\FunculoTypeTaxonomy;
 use Fanculo\Helpers\MetaBoxHelper;
 use Fanculo\Services\FileGenerationHooks;
 
@@ -39,7 +39,7 @@ class App
         new MetaBoxHelper();
 
         // Initialize REST API
-        new FunculoApi();
+        new Api();
 
         // Initialize file generation system
         new FileGenerationHooks();

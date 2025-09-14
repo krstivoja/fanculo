@@ -1,136 +1,13 @@
 <?php
 
-namespace Fanculo\Admin;
+namespace Fanculo\Admin\Api;
 
-use Fanculo\Content\FunculoPostType;
-use Fanculo\Content\FunculoTypeTaxonomy;
+use Fanculo\Admin\Content\FunculoPostType;
+use Fanculo\Admin\Content\FunculoTypeTaxonomy;
 use Fanculo\Services\FileGenerationService;
 
-class FunculoApi
+class PostsApiController
 {
-    public function __construct()
-    {
-        add_action('rest_api_init', [$this, 'registerRoutes']);
-    }
-
-    public function registerRoutes()
-    {
-        register_rest_route('funculo/v1', '/posts', [
-            [
-                'methods' => 'GET',
-                'callback' => [$this, 'getPosts'],
-                'permission_callback' => [$this, 'checkPermissions'],
-                'args' => [
-                    'taxonomy_filter' => [
-                        'default' => '',
-                        'sanitize_callback' => 'sanitize_text_field',
-                    ],
-                    'search' => [
-                        'default' => '',
-                        'sanitize_callback' => 'sanitize_text_field',
-                    ],
-                    'per_page' => [
-                        'default' => 20,
-                        'sanitize_callback' => 'absint',
-                    ],
-                    'page' => [
-                        'default' => 1,
-                        'sanitize_callback' => 'absint',
-                    ],
-                ],
-            ],
-            [
-                'methods' => 'POST',
-                'callback' => [$this, 'createPost'],
-                'permission_callback' => [$this, 'checkCreatePermissions'],
-                'args' => [
-                    'title' => [
-                        'required' => true,
-                        'sanitize_callback' => 'sanitize_text_field',
-                        'validate_callback' => function($param) {
-                            return !empty(trim($param));
-                        }
-                    ],
-                    'taxonomy_term' => [
-                        'required' => true,
-                        'sanitize_callback' => 'sanitize_text_field',
-                        'validate_callback' => function($param) {
-                            $validTerms = [
-                                FunculoTypeTaxonomy::getTermBlocks(),
-                                FunculoTypeTaxonomy::getTermSymbols(),
-                                FunculoTypeTaxonomy::getTermScssPartials()
-                            ];
-                            return in_array($param, $validTerms);
-                        }
-                    ],
-                    'status' => [
-                        'default' => 'publish',
-                        'sanitize_callback' => 'sanitize_text_field',
-                        'validate_callback' => function($param) {
-                            return in_array($param, ['draft', 'publish', 'private']);
-                        }
-                    ],
-                ],
-            ]
-        ]);
-
-        register_rest_route('funculo/v1', '/taxonomy-terms', [
-            'methods' => 'GET',
-            'callback' => [$this, 'getTaxonomyTerms'],
-            'permission_callback' => [$this, 'checkPermissions'],
-        ]);
-
-        register_rest_route('funculo/v1', '/post/(?P<id>\d+)', [
-            [
-                'methods' => 'GET',
-                'callback' => [$this, 'getPost'],
-                'permission_callback' => [$this, 'checkPermissions'],
-            ],
-            [
-                'methods' => 'PUT',
-                'callback' => [$this, 'updatePost'],
-                'permission_callback' => [$this, 'checkCreatePermissions'],
-                'args' => [
-                    'meta' => [
-                        'required' => false,
-                        'validate_callback' => function($param) {
-                            return is_array($param);
-                        }
-                    ],
-                    'title' => [
-                        'required' => false,
-                        'sanitize_callback' => 'sanitize_text_field',
-                        'validate_callback' => function($param) {
-                            return !empty(trim($param));
-                        }
-                    ],
-                ],
-            ]
-        ]);
-
-        register_rest_route('funculo/v1', '/block-categories', [
-            'methods' => 'GET',
-            'callback' => [$this, 'getBlockCategories'],
-            'permission_callback' => [$this, 'checkPermissions'],
-        ]);
-
-        register_rest_route('funculo/v1', '/regenerate-files', [
-            'methods' => 'POST',
-            'callback' => [$this, 'regenerateFiles'],
-            'permission_callback' => [$this, 'checkCreatePermissions'],
-        ]);
-    }
-
-    public function checkPermissions()
-    {
-        return current_user_can('edit_posts');
-    }
-
-    public function checkCreatePermissions()
-    {
-        return current_user_can('publish_posts');
-    }
-
     public function getPosts($request)
     {
         $args = [
@@ -193,29 +70,6 @@ class FunculoApi
             'total' => $query->found_posts,
             'total_pages' => $query->max_num_pages,
             'current_page' => $request->get_param('page'),
-        ], 200);
-    }
-
-    public function getTaxonomyTerms($request)
-    {
-        $terms = get_terms([
-            'taxonomy' => FunculoTypeTaxonomy::getTaxonomy(),
-            'hide_empty' => false,
-        ]);
-
-        $termData = [];
-        foreach ($terms as $term) {
-            $termData[] = [
-                'id' => $term->term_id,
-                'slug' => $term->slug,
-                'name' => $term->name,
-                'description' => $term->description,
-                'count' => $term->count,
-            ];
-        }
-
-        return new \WP_REST_Response([
-            'terms' => $termData,
         ], 200);
     }
 
@@ -310,39 +164,6 @@ class FunculoApi
         ], 201);
     }
 
-    private function getPostMeta($postId, $terms)
-    {
-        $meta = [];
-
-        foreach ($terms as $term) {
-            switch ($term['slug']) {
-                case FunculoTypeTaxonomy::getTermBlocks():
-                    $meta['blocks'] = [
-                        'php' => get_post_meta($postId, '_funculo_block_php', true),
-                        'scss' => get_post_meta($postId, '_funculo_block_scss', true),
-                        'js' => get_post_meta($postId, '_funculo_block_js', true),
-                        'attributes' => get_post_meta($postId, '_funculo_block_attributes', true),
-                        'settings' => get_post_meta($postId, '_funculo_block_settings', true),
-                    ];
-                    break;
-
-                case FunculoTypeTaxonomy::getTermSymbols():
-                    $meta['symbols'] = [
-                        'php' => get_post_meta($postId, '_funculo_symbol_php', true),
-                    ];
-                    break;
-
-                case FunculoTypeTaxonomy::getTermScssPartials():
-                    $meta['scss_partials'] = [
-                        'scss' => get_post_meta($postId, '_funculo_scss_partial_scss', true),
-                    ];
-                    break;
-            }
-        }
-
-        return $meta;
-    }
-
     public function updatePost($request)
     {
         $postId = $request->get_param('id');
@@ -389,6 +210,39 @@ class FunculoApi
         return $this->getPost($request);
     }
 
+    private function getPostMeta($postId, $terms)
+    {
+        $meta = [];
+
+        foreach ($terms as $term) {
+            switch ($term['slug']) {
+                case FunculoTypeTaxonomy::getTermBlocks():
+                    $meta['blocks'] = [
+                        'php' => get_post_meta($postId, '_funculo_block_php', true),
+                        'scss' => get_post_meta($postId, '_funculo_block_scss', true),
+                        'js' => get_post_meta($postId, '_funculo_block_js', true),
+                        'attributes' => get_post_meta($postId, '_funculo_block_attributes', true),
+                        'settings' => get_post_meta($postId, '_funculo_block_settings', true),
+                    ];
+                    break;
+
+                case FunculoTypeTaxonomy::getTermSymbols():
+                    $meta['symbols'] = [
+                        'php' => get_post_meta($postId, '_funculo_symbol_php', true),
+                    ];
+                    break;
+
+                case FunculoTypeTaxonomy::getTermScssPartials():
+                    $meta['scss_partials'] = [
+                        'scss' => get_post_meta($postId, '_funculo_scss_partial_scss', true),
+                    ];
+                    break;
+            }
+        }
+
+        return $meta;
+    }
+
     private function updatePostMeta($postId, $metaData)
     {
         // Update blocks meta
@@ -425,57 +279,6 @@ class FunculoApi
             if (isset($scssPartials['scss'])) {
                 update_post_meta($postId, '_funculo_scss_partial_scss', sanitize_textarea_field($scssPartials['scss']));
             }
-        }
-    }
-
-    public function getBlockCategories()
-    {
-        // Simple test response first
-        $test_categories = [
-            ['value' => 'text', 'label' => 'Text'],
-            ['value' => 'media', 'label' => 'Media'],
-            ['value' => 'design', 'label' => 'Design'],
-            ['value' => 'widgets', 'label' => 'Widgets'],
-            ['value' => 'theme', 'label' => 'Theme'],
-            ['value' => 'embed', 'label' => 'Embeds']
-        ];
-
-        error_log('Returning test categories: ' . print_r($test_categories, true));
-
-        return rest_ensure_response($test_categories);
-    }
-
-    private function formatCategoryTitle($slug)
-    {
-        // Handle common category name mappings
-        $titles = [
-            'text' => 'Text',
-            'media' => 'Media',
-            'design' => 'Design',
-            'widgets' => 'Widgets',
-            'theme' => 'Theme',
-            'embed' => 'Embeds',
-            'reusable' => 'Reusable Blocks',
-            'formatting' => 'Formatting',
-            'layout' => 'Layout Elements',
-            'common' => 'Common Blocks'
-        ];
-
-        return isset($titles[$slug]) ? $titles[$slug] : ucwords(str_replace(['-', '_'], ' ', $slug));
-    }
-
-    public function regenerateFiles($request)
-    {
-        try {
-            $fileGenerationService = new FileGenerationService();
-            $fileGenerationService->regenerateAllFiles();
-
-            return new \WP_REST_Response([
-                'success' => true,
-                'message' => 'All files have been regenerated successfully.'
-            ], 200);
-        } catch (\Exception $e) {
-            return new \WP_Error('regeneration_failed', 'Failed to regenerate files: ' . $e->getMessage(), ['status' => 500]);
         }
     }
 }

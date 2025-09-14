@@ -2,8 +2,8 @@
 
 namespace Fanculo\Services;
 
-use Fanculo\Content\FunculoPostType;
-use Fanculo\Content\FunculoTypeTaxonomy;
+use Fanculo\Admin\Content\FunculoPostType;
+use Fanculo\Admin\Content\FunculoTypeTaxonomy;
 
 class FileGenerationService
 {
