@@ -6,10 +6,15 @@ const EditorList = ({ groupedPosts, selectedPost, onPostSelect }) => {
   const [activeTab, setActiveTab] = useState('blocks');
   const totalPosts = groupedPosts.blocks.length + groupedPosts.symbols.length + groupedPosts['scss-partials'].length;
 
-  // Get the appropriate icon for a post
+  // Get the appropriate icon for a post (only for blocks)
   const getPostIcon = (post, termSlug) => {
+    // Only show icons for blocks
+    if (termSlug !== 'blocks') {
+      return null;
+    }
+
     // For blocks, check if there's a custom icon in settings
-    if (termSlug === 'blocks' && post.meta?.blocks?.settings) {
+    if (post.meta?.blocks?.settings) {
       try {
         // Check if settings is already an object or needs parsing
         let settings;
@@ -18,7 +23,7 @@ const EditorList = ({ groupedPosts, selectedPost, onPostSelect }) => {
         } else {
           settings = post.meta.blocks.settings;
         }
-        
+
         if (settings && settings.icon) {
           return `dashicons-${settings.icon}`;
         }
@@ -27,17 +32,8 @@ const EditorList = ({ groupedPosts, selectedPost, onPostSelect }) => {
       }
     }
 
-    // Default icons based on term
-    switch (termSlug) {
-      case 'blocks':
-        return 'dashicons-search';
-      case 'symbols':
-        return 'dashicons-star-filled';
-      case 'scss-partials':
-        return 'dashicons-art';
-      default:
-        return 'dashicons-admin-post';
-    }
+    // Default icon for blocks
+    return 'dashicons-search';
   };
 
   return (
@@ -73,6 +69,8 @@ const EditorList = ({ groupedPosts, selectedPost, onPostSelect }) => {
                   // Get the actual term slug from the post's terms
                   const postTermSlug = post.terms && post.terms.length > 0 ? post.terms[0].slug : term.slug;
 
+                  const iconClass = getPostIcon(post, postTermSlug);
+
                   return (
                     <li
                       key={post.id}
@@ -83,7 +81,7 @@ const EditorList = ({ groupedPosts, selectedPost, onPostSelect }) => {
                           : 'hover:bg-action/10'
                       }`}
                     >
-                      <span className={`dashicons ${getPostIcon(post, postTermSlug)} text-sm`}></span>
+                      {iconClass && <span className={`dashicons ${iconClass} text-sm`}></span>}
                       <span>{post.title}</span>
                     </li>
                   );

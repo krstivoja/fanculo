@@ -20,11 +20,11 @@ const EditorMain = ({ selectedPost, metaData, onMetaChange, onTitleUpdate }) => 
     const termSlug = selectedPost.terms[0].slug;
     switch (termSlug) {
       case 'blocks':
-        return <BlockIcon size={24} />;
+        return <BlockIcon size={48} />;
       case 'symbols':
-        return <SymbolIcon size={24} />;
+        return <SymbolIcon size={48} />;
       case 'scss-partials':
-        return <StyleIcon size={24} />;
+        return <StyleIcon size={48} />;
       default:
         return null;
     }
@@ -44,16 +44,14 @@ const EditorMain = ({ selectedPost, metaData, onMetaChange, onTitleUpdate }) => 
     <main id="editor-content" className="flex-1 p-4 grow overflow-y-auto">
       {selectedPost ? (
         <div className="max-w-4xl mx-auto">
-          <div className="mb-6 pb-4 border-b border-outline">
-            <h1
-              className="text-2xl font-bold mb-2 text-action cursor-pointer hover:text-highlight transition-colors flex items-center gap-3"
+          <h1
+              className="!text-5xl font-bold cursor-pointer hover:!text-highlight hover:underline !flex items-center gap-3 !mb-8"
               onClick={handleTitleClick}
               title="Click to edit title"
             >
-              {getTypeIcon()}
+              <span className='bg-highlight/10 p-2 rounded-full'>{getTypeIcon()}</span>
               {selectedPost.title?.rendered || selectedPost.title || 'Untitled Post'}
             </h1>
-          </div>
 
           <MetaboxContainer
             selectedPost={selectedPost}
