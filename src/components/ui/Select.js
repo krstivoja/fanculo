@@ -2,7 +2,7 @@ import React from 'react';
 
 const Select = ({ value, onChange, options, placeholder, className = '', error, disabled, ...props }) => {
   return (
-    <div className="w-full">
+    <>
       <select
         value={value}
         onChange={onChange}
@@ -24,7 +24,7 @@ const Select = ({ value, onChange, options, placeholder, className = '', error, 
       {error && (
         <p className="mt-2 text-xs text-red-600 font-medium">{error}</p>
       )}
-    </div>
+    </>
   );
 };
 

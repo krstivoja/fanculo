@@ -32,11 +32,6 @@ const EditorMain = ({ selectedPost, metaData, onMetaChange, onTitleUpdate }) => 
             >
               {selectedPost.title?.rendered || selectedPost.title || 'Untitled Post'}
             </h1>
-            <div className="flex gap-4 text-sm text-contrast">
-              <span>ID: {selectedPost.id}</span>
-              <span>Type: {selectedPost.terms?.[0]?.name || 'N/A'}</span>
-              <span>Slug: {selectedPost.slug || 'N/A'}</span>
-            </div>
           </div>
 
           <MetaboxContainer

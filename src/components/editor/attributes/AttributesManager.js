@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../../ui';
-import { useAttributeDragDrop } from './hooks/useAttributeDragDrop';
 import { useAttributeOperations } from './hooks/useAttributeOperations';
 import AttributeItem from './AttributeItem';
 import {
@@ -120,7 +119,6 @@ const AttributesManager = ({ blockMeta, onMetaChange, blockId }) => {
     };
 
     // Initialize hooks with callbacks
-    const dragDropHandlers = useAttributeDragDrop(attributes, updateParentStateWithAttributes);
     const operationHandlers = useAttributeOperations(attributes, updateParentStateWithAttributes);
 
     // Handle blur events to save changes
@@ -164,13 +162,8 @@ const AttributesManager = ({ blockMeta, onMetaChange, blockId }) => {
                         key={attribute.id || index}
                         attribute={attribute}
                         index={index}
-                        dragDropHandlers={dragDropHandlers}
                         operationHandlers={operationHandlers}
                         onBlur={updateParentState}
-                        dragDropState={{
-                            dragIndex: dragDropHandlers.dragIndex,
-                            dropIndex: dragDropHandlers.dropIndex
-                        }}
                     />
                 ))}
             </div>

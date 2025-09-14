@@ -30,7 +30,7 @@ const AttributeCodeExample = ({ attribute, attributeIndex }) => {
 
     return (
         <div className="mt-4">
-            <pre className="theme-github shadow-3xl text-sm relative overflow-hidden max-w-full tab-size h-full">
+            <pre className="relative !bg-[black] rounded-md">
                 <span className="hljs mb-0 p-4 pr-12 block min-h-full overflow-auto">
                     <code className="!text-xs !p-0 whitespace-pre-wrap">
                         {codeExample}
