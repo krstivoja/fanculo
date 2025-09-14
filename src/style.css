@@ -20,28 +20,18 @@
 }
 
 #editor {
-    /* border: 10px solid red; */
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 32px);
     height: 100vh;
-    /* height: calc(100vh - 100px); */
 }
 
 #editor-header {
-    /* border: 5px solid rgb(255, 255, 47); */
     width: 100%;
 }
 
 #editor-content {
-    /* border: 5px solid rgb(101, 168, 0); */
     flex-grow: 1;
     height: fit-content;
-}
-
-
-#editor-settings {
-    /* border: 5px solid violet; */
 }
 
 
