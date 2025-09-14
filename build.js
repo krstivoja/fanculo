@@ -16,6 +16,8 @@ const config = {
     sourcemap: !isProduction,
     jsx: 'automatic',
     jsxImportSource: 'react',
+    format: 'esm',
+    target: 'es2020',
     loader: {
         '.js': 'jsx',  // Allow JSX in .js files
         '.jsx': 'jsx',
@@ -42,6 +44,10 @@ const config = {
             })
         ] : [])
     ],
+    define: {
+        'process.env.NODE_ENV': isProduction ? '"production"' : '"development"'
+    },
+    external: [],
 };
 
 async function build() {

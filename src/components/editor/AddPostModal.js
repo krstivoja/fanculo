@@ -1,10 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Input } from '../ui';
 import { TAXONOMY_TERMS } from '../../constants/taxonomy';
+import { BlockIcon, SymbolIcon, StyleIcon } from '../icons';
 
 const AddPostModal = ({ isOpen, onClose, onCreate }) => {
   const [title, setTitle] = useState('');
   const [selectedType, setSelectedType] = useState('blocks');
+
+  const getIconComponent = (slug) => {
+    const iconClass = `w-5 h-5 transition-colors duration-200 ${
+      selectedType === slug ? 'text-action' : 'text-contrast'
+    }`;
+    
+    switch (slug) {
+      case 'blocks': return <BlockIcon className={iconClass} />;
+      case 'symbols': return <SymbolIcon className={iconClass} />;
+      case 'scss-partials': return <StyleIcon className={iconClass} />;
+      default: return null;
+    }
+  };
 
   // Reset form state when modal opens
   useEffect(() => {
@@ -35,21 +49,21 @@ const AddPostModal = ({ isOpen, onClose, onCreate }) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleCancel} title="Add New Post">
+    <Modal isOpen={isOpen} onClose={handleCancel}>
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Post Type Selection */}
         <div>
           <label className="block text-sm font-medium text-highlight mb-3">
             Post Type
           </label>
-          <div className="space-y-2">
+          <div className="flex gap-4">
             {TAXONOMY_TERMS.map(term => (
               <label
                 key={term.slug}
-                className={`flex items-center space-x-3 cursor-pointer p-3 rounded-lg border transition-colors ${
+                className={`flex items-center space-x-3 cursor-pointer p-3 rounded-lg border transition-all duration-200 flex flex-col ${
                   selectedType === term.slug 
-                    ? 'bg-blue-50 border-blue-200' 
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'bg-action/10 border-action shadow-sm ring-2 ring-action/20' 
+                    : 'border-outline hover:border-contrast hover:bg-base-alt'
                 }`}
               >
                 <input
@@ -61,15 +75,24 @@ const AddPostModal = ({ isOpen, onClose, onCreate }) => {
                     console.log('Radio changed to:', e.target.value); // Debug log
                     setSelectedType(e.target.value);
                   }}
-                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2"
+                  className={`w-4 h-4 border-2 transition-all duration-200 ${
+                    selectedType === term.slug
+                      ? 'border-action bg-action'
+                      : 'border-outline bg-base hover:border-contrast'
+                  } focus:ring-2 focus:ring-action/30 focus:ring-offset-1`}
                   style={{
-                    accentColor: term.color,
-                    color: term.color
+                    accentColor: selectedType === term.slug ? term.color : undefined
                   }}
                 />
-                <span className="flex items-center space-x-2">
-                  <span>{term.icon}</span>
-                  <span className="text-contrast">{term.name}</span>
+                <span className="flex flex-col items-center space-x-2">
+                  {getIconComponent(term.slug)}
+                  <span className={`font-medium transition-colors duration-200 ${
+                    selectedType === term.slug 
+                      ? 'text-action' 
+                      : 'text-contrast'
+                  }`}>
+                    {term.name}
+                  </span>
                 </span>
               </label>
             ))}
