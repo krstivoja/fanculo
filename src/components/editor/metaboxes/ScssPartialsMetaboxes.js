@@ -9,12 +9,7 @@ const ScssPartialsMetaboxes = ({ metaData, onChange }) => {
   const scssPartials = metaData?.scss_partials || {};
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold border-b border-outline pb-2">
-        SCSS Partial Configuration
-      </h3>
-
-      <div className="space-y-2">
+    <div className="space-y-2">
         <label className="block text-sm font-medium text-highlight">
           SCSS Code <span className="text-red-500">*</span>
         </label>
@@ -26,7 +21,6 @@ const ScssPartialsMetaboxes = ({ metaData, onChange }) => {
           placeholder="Enter SCSS partial code..."
         />
       </div>
-    </div>
   );
 };
 

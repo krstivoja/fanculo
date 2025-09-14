@@ -45,11 +45,11 @@ const EditorMain = ({ selectedPost, metaData, onMetaChange, onTitleUpdate }) => 
       {selectedPost ? (
         <div className="max-w-4xl mx-auto">
           <h1
-              className="!text-5xl font-bold cursor-pointer hover:!text-highlight hover:underline !flex items-center gap-3 !mb-8"
+              className="!text-5xl font-semibold cursor-pointer hover:!text-highlight hover:underline !flex items-center gap-3 !mb-8"
               onClick={handleTitleClick}
               title="Click to edit title"
             >
-              <span className='bg-highlight/10 p-2 rounded-full'>{getTypeIcon()}</span>
+              <span className='bg-base-alt p-2 rounded-full'>{getTypeIcon()}</span>
               {selectedPost.title?.rendered || selectedPost.title || 'Untitled Post'}
             </h1>
 
