@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Modal = ({ isOpen, onClose, children, title }) => {
+const Modal = ({ isOpen, onClose, children, title, size = 'default' }) => {
   // Prevent body scroll when modal is open
   React.useEffect(() => {
     if (isOpen) {
@@ -10,6 +10,19 @@ const Modal = ({ isOpen, onClose, children, title }) => {
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
+
+  const getSizeClasses = () => {
+    switch (size) {
+      case 'small':
+        return 'max-w-[400px]';
+      case 'medium':
+        return 'max-w-[800px]';
+      case 'large':
+        return 'max-w-[1200px]';
+      default:
+        return 'max-w-[500px]';
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -22,7 +35,7 @@ const Modal = ({ isOpen, onClose, children, title }) => {
       />
 
       {/* Modal */}
-      <div className="relative bg-base border border-outline rounded-lg shadow-2xl max-w-md w-full z-10 animate-in fade-in duration-200">
+      <div className={`relative bg-base border border-outline rounded-lg shadow-2xl ${getSizeClasses()} w-full z-10 animate-in fade-in duration-200`}>
         {/* Header */}
         {title && (
           <div className="px-6 py-4 border-b border-outline">

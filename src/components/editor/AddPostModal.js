@@ -8,14 +8,14 @@ const AddPostModal = ({ isOpen, onClose, onCreate }) => {
   const [selectedType, setSelectedType] = useState('blocks');
 
   const getIconComponent = (slug) => {
-    const iconClass = `w-5 h-5 transition-colors duration-200 ${
+    const iconClass = `transition-colors duration-200 ${
       selectedType === slug ? 'text-action' : 'text-contrast'
     }`;
     
     switch (slug) {
-      case 'blocks': return <BlockIcon className={iconClass} />;
-      case 'symbols': return <SymbolIcon className={iconClass} />;
-      case 'scss-partials': return <StyleIcon className={iconClass} />;
+      case 'blocks': return <BlockIcon size={32} className={iconClass} />;
+      case 'symbols': return <SymbolIcon size={32} className={iconClass} />;
+      case 'scss-partials': return <StyleIcon size={32} className={iconClass} />;
       default: return null;
     }
   };
@@ -65,7 +65,26 @@ const AddPostModal = ({ isOpen, onClose, onCreate }) => {
                     ? 'bg-action/10 border-action shadow-sm ring-2 ring-action/20' 
                     : 'border-outline hover:border-contrast hover:bg-base-alt'
                 }`}
+                style={{ flex: '1 0 0' }} // allow equal width, but not forced min-width
               >
+
+                 <span className="flex flex-col items-center space-y-3">
+                   <div className={`w-16 h-16 flex items-center justify-center rounded-lg transition-all duration-200 ${
+                     selectedType === term.slug 
+                       ? 'bg-action/20' 
+                       : 'bg-outline/20'
+                   }`}>
+                     {getIconComponent(term.slug)}
+                   </div>
+                   <span className={`font-medium transition-colors duration-200 text-sm ${
+                     selectedType === term.slug 
+                       ? 'text-action' 
+                       : 'text-contrast'
+                   }`}>
+                     {term.name}
+                   </span>
+                 </span>
+
                 <input
                   type="radio"
                   name="postType"
@@ -84,16 +103,7 @@ const AddPostModal = ({ isOpen, onClose, onCreate }) => {
                     accentColor: selectedType === term.slug ? term.color : undefined
                   }}
                 />
-                <span className="flex flex-col items-center space-x-2">
-                  {getIconComponent(term.slug)}
-                  <span className={`font-medium transition-colors duration-200 ${
-                    selectedType === term.slug 
-                      ? 'text-action' 
-                      : 'text-contrast'
-                  }`}>
-                    {term.name}
-                  </span>
-                </span>
+
               </label>
             ))}
           </div>
