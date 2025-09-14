@@ -12,6 +12,8 @@ const config = {
     bundle: true,
     outdir: "dist", // Changed to outdir to match PHP expectations
     entryNames: "[name]", // This will create index.js in dist/
+    chunkNames: "chunks/[name]-[hash]", // Name pattern for code split chunks
+    splitting: true, // Enable code splitting
     minify: isProduction,
     sourcemap: !isProduction,
     jsx: 'automatic',

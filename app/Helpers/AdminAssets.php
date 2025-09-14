@@ -34,27 +34,20 @@ class AdminAssets
             );
         }
 
-        // Enqueue JavaScript
+        // Enqueue JavaScript as ES module
         if (file_exists($jsFile)) {
-            wp_enqueue_script(
-                'fanculo-app',
-                $this->buildUrl . 'index.js',
-                array('jquery'),
-                filemtime($jsFile),
-                true
-            );
-
             // Get posts data for immediate rendering
             $posts_data = $this->getPostsData();
 
-            // Localize script with REST API data and posts
-            wp_localize_script('fanculo-app', 'wpApiSettings', [
+            // Output data as inline script before the module
+            wp_add_inline_script('jquery', 'window.wpApiSettings = ' . json_encode([
                 'root' => esc_url_raw(rest_url()),
                 'nonce' => wp_create_nonce('wp_rest'),
                 'posts' => $posts_data,
-            ]);
+            ]), 'after');
 
-            // Livereload is handled by esbuild plugin, no need for additional script
+            // Add the module script manually in footer
+            add_action('admin_print_footer_scripts', [$this, 'outputModuleScript']);
         }
     }
 
@@ -91,5 +84,13 @@ class AdminAssets
         }
 
         return $grouped;
+    }
+
+    public function outputModuleScript()
+    {
+        $jsFile = $this->buildPath . 'index.js';
+        if (file_exists($jsFile)) {
+            echo '<script type="module" src="' . esc_url($this->buildUrl . 'index.js') . '?ver=' . filemtime($jsFile) . '"></script>' . "\n";
+        }
     }
 }

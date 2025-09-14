@@ -88,13 +88,15 @@ const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges }) => {
         </Button>
       </div>
 
-      <Suspense fallback={null}>
-        <AddPostModal
-          isOpen={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
-          onCreate={handleCreatePost}
-        />
-      </Suspense>
+      {isAddModalOpen && (
+        <Suspense fallback={null}>
+          <AddPostModal
+            isOpen={isAddModalOpen}
+            onClose={() => setIsAddModalOpen(false)}
+            onCreate={handleCreatePost}
+          />
+        </Suspense>
+      )}
     </header>
   );
 };

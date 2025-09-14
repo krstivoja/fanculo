@@ -45,14 +45,16 @@ const EditorMain = ({ selectedPost, metaData, onMetaChange, onTitleUpdate }) => 
             onMetaChange={onMetaChange}
           />
 
-          <Suspense fallback={null}>
-            <EditTitleModal
-              isOpen={isEditTitleModalOpen}
-              onClose={() => setIsEditTitleModalOpen(false)}
-              currentTitle={selectedPost.title?.rendered || selectedPost.title}
-              onSave={handleTitleSave}
-            />
-          </Suspense>
+          {isEditTitleModalOpen && (
+            <Suspense fallback={null}>
+              <EditTitleModal
+                isOpen={isEditTitleModalOpen}
+                onClose={() => setIsEditTitleModalOpen(false)}
+                currentTitle={selectedPost.title?.rendered || selectedPost.title}
+                onSave={handleTitleSave}
+              />
+            </Suspense>
+          )}
         </div>
       ) : (
         <div className="flex items-center justify-center h-full text-contrast">
