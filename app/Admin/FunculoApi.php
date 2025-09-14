@@ -4,6 +4,7 @@ namespace Fanculo\Admin;
 
 use Fanculo\Content\FunculoPostType;
 use Fanculo\Content\FunculoTypeTaxonomy;
+use Fanculo\Services\FileGenerationService;
 
 class FunculoApi
 {
@@ -111,6 +112,12 @@ class FunculoApi
             'methods' => 'GET',
             'callback' => [$this, 'getBlockCategories'],
             'permission_callback' => [$this, 'checkPermissions'],
+        ]);
+
+        register_rest_route('funculo/v1', '/regenerate-files', [
+            'methods' => 'POST',
+            'callback' => [$this, 'regenerateFiles'],
+            'permission_callback' => [$this, 'checkCreatePermissions'],
         ]);
     }
 
@@ -272,8 +279,12 @@ class FunculoApi
             wp_set_post_terms($postId, [$term->term_id], FunculoTypeTaxonomy::getTaxonomy());
         }
 
-        // Get the created post data
+        // Get the created post data and trigger file generation
         $post = get_post($postId);
+        if ($post) {
+            $fileGenerationService = new FileGenerationService();
+            $fileGenerationService->generateFilesOnPostSave($postId, $post, false);
+        }
         $terms = wp_get_post_terms($post->ID, FunculoTypeTaxonomy::getTaxonomy());
         $termData = [];
 
@@ -323,7 +334,7 @@ class FunculoApi
 
                 case FunculoTypeTaxonomy::getTermScssPartials():
                     $meta['scss_partials'] = [
-                        'scss' => get_post_meta($postId, '_funculo_scss_partial', true),
+                        'scss' => get_post_meta($postId, '_funculo_scss_partial_scss', true),
                     ];
                     break;
             }
@@ -367,6 +378,13 @@ class FunculoApi
             $this->updatePostMeta($postId, $metaData);
         }
 
+        // Trigger file generation after meta update
+        $post = get_post($postId);
+        if ($post) {
+            $fileGenerationService = new FileGenerationService();
+            $fileGenerationService->generateFilesOnPostSave($postId, $post, true);
+        }
+
         // Return updated post data
         return $this->getPost($request);
     }
@@ -405,7 +423,7 @@ class FunculoApi
         if (isset($metaData['scss_partials'])) {
             $scssPartials = $metaData['scss_partials'];
             if (isset($scssPartials['scss'])) {
-                update_post_meta($postId, '_funculo_scss_partial', sanitize_textarea_field($scssPartials['scss']));
+                update_post_meta($postId, '_funculo_scss_partial_scss', sanitize_textarea_field($scssPartials['scss']));
             }
         }
     }
@@ -444,5 +462,20 @@ class FunculoApi
         ];
 
         return isset($titles[$slug]) ? $titles[$slug] : ucwords(str_replace(['-', '_'], ' ', $slug));
+    }
+
+    public function regenerateFiles($request)
+    {
+        try {
+            $fileGenerationService = new FileGenerationService();
+            $fileGenerationService->regenerateAllFiles();
+
+            return new \WP_REST_Response([
+                'success' => true,
+                'message' => 'All files have been regenerated successfully.'
+            ], 200);
+        } catch (\Exception $e) {
+            return new \WP_Error('regeneration_failed', 'Failed to regenerate files: ' . $e->getMessage(), ['status' => 500]);
+        }
     }
 }

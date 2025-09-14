@@ -7,6 +7,7 @@ use Fanculo\Admin\FunculoApi;
 use Fanculo\Content\FunculoPostType;
 use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Helpers\MetaBoxHelper;
+use Fanculo\Services\FileGenerationHooks;
 
 class App
 {
@@ -39,5 +40,8 @@ class App
 
         // Initialize REST API
         new FunculoApi();
+
+        // Initialize file generation system
+        new FileGenerationHooks();
     }
 }
