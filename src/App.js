@@ -125,8 +125,10 @@ const App = () => {
         }
     };
 
-    const fetchPosts = async () => {
+    const fetchPosts = async (showLoading = true) => {
         try {
+            if (showLoading) setLoading(true);
+
             // Use the custom Funculo API which includes taxonomy terms and meta data
             const response = await fetch('/wp-json/funculo/v1/posts?per_page=100', {
                 headers: {
@@ -170,8 +172,13 @@ const App = () => {
                 'scss-partials': []
             });
         } finally {
-            setLoading(false);
+            if (showLoading) setLoading(false);
         }
+    };
+
+    // Function to refresh the posts list (can be called after creating new posts)
+    const refreshPosts = () => {
+        fetchPosts(false);
     };
 
     useEffect(() => {
@@ -190,10 +197,16 @@ const App = () => {
                 onSave={handleSave}
                 saveStatus={saveStatus}
                 hasUnsavedChanges={saveStatus === 'unsaved'}
+                onPostsRefresh={refreshPosts}
             />
 
             <div className='flex w-full flex-1 min-h-0'>
-                <EditorList groupedPosts={groupedPosts} selectedPost={selectedPost} onPostSelect={handlePostSelect} />
+                <EditorList
+                    groupedPosts={groupedPosts}
+                    selectedPost={selectedPost}
+                    onPostSelect={handlePostSelect}
+                    onPostsRefresh={refreshPosts}
+                />
                 <EditorMain
                     selectedPost={selectedPost}
                     metaData={metaData}

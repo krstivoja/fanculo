@@ -5,7 +5,7 @@ import { LogoIcon } from '../icons';
 // Lazy load AddPostModal - only loads when needed
 const AddPostModal = lazy(() => import('./AddPostModal'));
 
-const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges }) => {
+const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Handle Ctrl+S / Cmd+S keyboard shortcut
@@ -43,7 +43,11 @@ const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges }) => {
       if (response.ok) {
         const newPost = await response.json();
         console.log('Post created successfully:', newPost);
-        // Optionally refresh the post list or add to state
+
+        // Refresh the posts list to show the new post
+        if (onPostsRefresh) {
+          onPostsRefresh();
+        }
       } else {
         console.error('Failed to create post:', response.statusText);
       }

@@ -133,6 +133,16 @@ class PostsApiController
             wp_set_post_terms($postId, [$term->term_id], FunculoTypeTaxonomy::getTaxonomy());
         }
 
+        // Set default category for blocks
+        if ($taxonomyTerm === 'blocks') {
+            $defaultSettings = [
+                'description' => '',
+                'category' => 'text', // First category from BlockCategoriesApiController
+                'icon' => 'search'
+            ];
+            update_post_meta($postId, '_funculo_block_settings', json_encode($defaultSettings));
+        }
+
         // Get the created post data and trigger file generation
         $post = get_post($postId);
         if ($post) {
