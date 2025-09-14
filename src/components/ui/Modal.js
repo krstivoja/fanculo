@@ -11,6 +11,23 @@ const Modal = ({ isOpen, onClose, children, title, size = 'default' }) => {
     };
   }, [isOpen]);
 
+  // Handle ESC key to close modal
+  React.useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscKey);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [isOpen, onClose]);
+
   const getSizeClasses = () => {
     switch (size) {
       case 'small':

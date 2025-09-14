@@ -6,6 +6,7 @@ import { BlockIcon, SymbolIcon, StyleIcon } from '../icons';
 const AddPostModal = ({ isOpen, onClose, onCreate }) => {
   const [title, setTitle] = useState('');
   const [selectedType, setSelectedType] = useState('blocks');
+  const [titleError, setTitleError] = useState('');
 
   const getIconComponent = (slug) => {
     
@@ -22,26 +23,36 @@ const AddPostModal = ({ isOpen, onClose, onCreate }) => {
     if (isOpen) {
       setTitle('');
       setSelectedType('blocks');
+      setTitleError('');
     }
   }, [isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Submitting with selectedType:', selectedType); // Debug log
-    if (title.trim()) {
-      onCreate({
-        title: title.trim(),
-        type: selectedType
-      });
-      setTitle('');
-      setSelectedType('blocks');
-      onClose();
+
+    // Validate title
+    if (!title.trim()) {
+      setTitleError('Title is required');
+      return;
     }
+
+    // Clear any previous errors
+    setTitleError('');
+
+    onCreate({
+      title: title.trim(),
+      type: selectedType
+    });
+    setTitle('');
+    setSelectedType('blocks');
+    onClose();
   };
 
   const handleCancel = () => {
     setTitle('');
     setSelectedType('blocks');
+    setTitleError('');
     onClose();
   };
 
@@ -51,7 +62,7 @@ const AddPostModal = ({ isOpen, onClose, onCreate }) => {
         {/* Post Type Selection */}
         <div>
           <label className="block text-sm font-medium text-highlight mb-3">
-            Post Type
+            Component Type
           </label>
           <div className="flex gap-4">
             {TAXONOMY_TERMS.map(term => (
@@ -99,14 +110,19 @@ const AddPostModal = ({ isOpen, onClose, onCreate }) => {
         {/* Title Input */}
         <div>
           <label className="block text-sm font-medium text-highlight mb-2">
-            Title
+            {selectedType === 'blocks' && 'Block Title'}
+            {selectedType === 'symbols' && 'Symbol Title'}
+            {selectedType === 'scss-partials' && 'SCSS Partial Title'}
           </label>
           <Input
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (titleError) setTitleError(''); // Clear error when user starts typing
+            }}
             placeholder="Enter post title"
-            className="w-full"
+            error={titleError}
             autoFocus
           />
         </div>
@@ -123,7 +139,6 @@ const AddPostModal = ({ isOpen, onClose, onCreate }) => {
           <Button
             type="submit"
             variant="primary"
-            disabled={!title.trim()}
           >
             Create
           </Button>

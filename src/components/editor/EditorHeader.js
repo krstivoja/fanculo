@@ -63,6 +63,7 @@ const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges }) => {
         )}
         <Button
           variant="secondary"
+          className=' !bg-action !text-highlight'
           onClick={onSave}
           disabled={saveStatus === 'saving'}
         >

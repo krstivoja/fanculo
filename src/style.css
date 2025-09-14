@@ -9,11 +9,14 @@
 @theme {
     --color-*: initial;
     --color-base: #191c22;
-    --color-base-alt: #191c22;
+    --color-base-alt: #272c35;
     --color-contrast: #aab2c0;
     --color-highlight: white;
     --color-action: #5858eb;
-    --color-outline: #32373e;
+    --color-action: #0499FF;
+    --color-outline: #393e46;
+    --color-error: red;
+    --color-warning: #ffdd00;
 
     --font-xs: 11px;
 }
