@@ -28,7 +28,7 @@ const MetaboxContainer = ({ selectedPost, metaData, onMetaChange }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <>
 
       {postType === 'blocks' && (
         <BlocksMetaboxes
@@ -56,7 +56,7 @@ const MetaboxContainer = ({ selectedPost, metaData, onMetaChange }) => {
           <p>No metaboxes available for this post type</p>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

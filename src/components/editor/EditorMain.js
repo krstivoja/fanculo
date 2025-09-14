@@ -41,17 +41,17 @@ const EditorMain = ({ selectedPost, metaData, onMetaChange, onTitleUpdate }) => 
   };
 
   return (
-    <main id="editor-content" className="flex-1 p-4 grow overflow-y-auto">
+    <main id="editor-content" className="flex-1 grow overflow-y-auto">
       {selectedPost ? (
-        <div className="max-w-4xl mx-auto">
+        <>
           <h1
-              className="!text-5xl font-semibold cursor-pointer hover:!text-highlight hover:underline !flex items-center gap-3 !mb-8"
-              onClick={handleTitleClick}
-              title="Click to edit title"
-            >
-              <span className='bg-base-alt p-2 rounded-full'>{getTypeIcon()}</span>
-              {selectedPost.title?.rendered || selectedPost.title || 'Untitled Post'}
-            </h1>
+            className="!text-5xl font-semibold cursor-pointer hover:!text-highlight hover:underline !flex items-center gap-3 !px-8 !py-4"
+            onClick={handleTitleClick}
+            title="Click to edit title"
+          >
+            <span className='bg-base-alt p-2 rounded-full'>{getTypeIcon()}</span>
+            {selectedPost.title?.rendered || selectedPost.title || 'Untitled Post'}
+          </h1>
 
           <MetaboxContainer
             selectedPost={selectedPost}
@@ -69,7 +69,7 @@ const EditorMain = ({ selectedPost, metaData, onMetaChange, onTitleUpdate }) => 
               />
             </Suspense>
           )}
-        </div>
+        </>
       ) : (
         <div className="flex items-center justify-center h-full text-contrast">
           <div className="text-center">

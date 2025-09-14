@@ -9,18 +9,13 @@ const SymbolsMetaboxes = ({ metaData, onChange }) => {
   const symbols = metaData?.symbols || {};
 
   return (
-    <div className="space-y-2">
-        <label className="block text-sm font-medium text-highlight">
-          PHP Code <span className="text-red-500">*</span>
-        </label>
-        <MonacoEditor
-          value={symbols.php || ''}
-          onChange={(e) => handleMetaChange('php', e.target.value)}
-          language="php"
-          height="400px"
-          placeholder="Enter PHP code for the symbol..."
-        />
-      </div>
+    <MonacoEditor
+      value={symbols.php || ''}
+      onChange={(e) => handleMetaChange('php', e.target.value)}
+      language="php"
+      height="400px"
+      placeholder="Enter PHP code for the symbol..."
+    />
   );
 };
 

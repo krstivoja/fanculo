@@ -19,10 +19,10 @@ const BlocksMetaboxes = ({ metaData, onChange }) => {
   ];
 
   return (
-    <div className="space-y-4">
+    <>
 
       {/* Tab Navigation */}
-      <div className="flex p-1 border border-solid border-outline rounded-md bg-base-alt">
+      <div className="p-8 py-4">
         {tabs.map(tab => (
           <Button
             key={tab.id}
@@ -46,23 +46,18 @@ const BlocksMetaboxes = ({ metaData, onChange }) => {
                 blockId="current-block"
               />
             ) : (
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-highlight">
-                  {tab.label} Code {tab.required && <span className="text-red-500">*</span>}
-                </label>
-                <MonacoEditor
+              <MonacoEditor
                   value={blocks[tab.id] || ''}
                   onChange={(e) => handleMetaChange(tab.id, e.target.value)}
                   language={tab.language || 'plaintext'}
                   height="300px"
                   placeholder={tab.placeholder}
                 />
-              </div>
             )}
           </div>
         ))}
       </div>
-    </div>
+    </>
   );
 };
 

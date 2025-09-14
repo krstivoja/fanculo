@@ -17,7 +17,7 @@ const MonacoEditor = ({
   };
 
   return (
-    <div className={`border border-outline rounded-md overflow-hidden ${className}`}>
+    <div className={` ${className}`}>
       <Editor
         height={height}
         language={language}
