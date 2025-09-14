@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import './styles/reset-wp.css';
+@import './styles/form.css'; 
 
 :root {
     --sidebar: 350px;
@@ -13,6 +14,8 @@
     --color-highlight: white;
     --color-action: #5858eb;
     --color-outline: #32373e;
+
+    --font-xs: 11px;
 }
 
 #fanculo-app {

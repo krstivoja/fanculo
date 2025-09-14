@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TAXONOMY_TERMS } from '../../constants/taxonomy';
+import { Button } from '../ui';
 
 const EditorList = ({ groupedPosts, selectedPost, onPostSelect }) => {
   const [activeTab, setActiveTab] = useState('blocks');
@@ -13,13 +14,14 @@ const EditorList = ({ groupedPosts, selectedPost, onPostSelect }) => {
       <div className='p-3'>
         <div className="flex p-1 border border-solid border-outline rounded-md">
           {TAXONOMY_TERMS.map(term => (
-            <button
+            <Button
               key={term.slug}
-              className={`p-2 px-4 rounded-md grow  ${activeTab === term.slug ? '!text-highlight bg-action' : ''}`}
+              variant={activeTab === term.slug ? 'primary' : 'ghost'}
+              className="grow"
               onClick={() => setActiveTab(term.slug)}
             >
               {term.name}
-            </button>
+            </Button>
           ))}
         </div>
       </div>

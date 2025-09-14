@@ -1,0 +1,40 @@
+input[type=color], input[type=date], input[type=datetime-local], input[type=datetime], input[type=email], input[type=month], input[type=number], input[type=password], input[type=search], input[type=tel], input[type=text], input[type=time], input[type=url], input[type=week], select, textarea {
+    box-shadow: 0 0 0 transparent;
+    border-radius: 4px;
+
+    @apply bg-base-alt text-contrast border border-solid border-outline px-4 py-2;
+}
+
+input[type=checkbox]:focus, input[type=color]:focus, input[type=date]:focus, input[type=datetime-local]:focus, input[type=datetime]:focus, input[type=email]:focus, input[type=month]:focus, input[type=number]:focus, input[type=password]:focus, input[type=radio]:focus, input[type=search]:focus, input[type=tel]:focus, input[type=text]:focus, input[type=time]:focus, input[type=url]:focus, input[type=week]:focus, select:focus, textarea:focus {
+
+    @apply !border-action shadow-none !outline-action/40 outline-3 -outline-offset-3;
+}
+
+.radio-input {
+    @apply !bg-base-alt border-outline border-solid border;
+}
+
+.radio-input:checked {
+    background: var(--wp-components-color-accent, var(--wp-admin-theme-color, #3858e9));
+    border-color: var(--wp-components-color-accent, var(--wp-admin-theme-color, #3858e9));
+    height: 16px;
+    width: 16px;
+    min-width: 16px;
+    max-width: 16px;
+    position: relative;
+}
+
+.radio-input:checked::before {
+    content: "";
+    border-radius: 50%;
+    box-sizing: inherit;
+    width: 12px;
+    height: 12px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* transform: translate(-50%, -50%); */
+    margin: 0;
+    background-color: #fff;
+    border: 4px solid #fff;
+}
