@@ -45,7 +45,7 @@ const EditorMain = ({ selectedPost, metaData, onMetaChange, onTitleUpdate }) => 
       {selectedPost ? (
         <>
           <h1
-            className="!text-5xl font-semibold cursor-pointer hover:!text-highlight hover:underline !flex items-center gap-3 !px-8 !py-4"
+            className="!text-5xl font-semibold cursor-pointer hover:!text-highlight hover:underline !flex items-center gap-3 !p-8"
             onClick={handleTitleClick}
             title="Click to edit title"
           >

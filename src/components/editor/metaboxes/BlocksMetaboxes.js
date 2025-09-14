@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, MonacoEditor, Textarea } from '../../ui';
+import { MonacoEditor, Textarea } from '../../ui';
 import AttributesManager from '../attributes/AttributesManager';
 
 const BlocksMetaboxes = ({ metaData, onChange }) => {
@@ -22,17 +22,20 @@ const BlocksMetaboxes = ({ metaData, onChange }) => {
     <>
 
       {/* Tab Navigation */}
-      <div className="p-8 py-4">
-        {tabs.map(tab => (
-          <Button
-            key={tab.id}
-            variant={activeTab === tab.id ? 'primary' : 'ghost'}
-            className="grow"
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.label}
-          </Button>
-        ))}
+      <div className='p-8 pt-0'>
+        <div className="p-0 border-b border-b-solid border-b-outline w-full flex mb-8">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              className={`p-4 !text-[1rem] text-contrast hover:text-highlight transition-colors ${
+                activeTab === tab.id ? 'border-b-[2px] border-b-solid border-b-action !text-highlight' : ''
+              }`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tab Content */}
@@ -47,12 +50,12 @@ const BlocksMetaboxes = ({ metaData, onChange }) => {
               />
             ) : (
               <MonacoEditor
-                  value={blocks[tab.id] || ''}
-                  onChange={(e) => handleMetaChange(tab.id, e.target.value)}
-                  language={tab.language || 'plaintext'}
-                  height="300px"
-                  placeholder={tab.placeholder}
-                />
+                value={blocks[tab.id] || ''}
+                onChange={(e) => handleMetaChange(tab.id, e.target.value)}
+                language={tab.language || 'plaintext'}
+                height="300px"
+                placeholder={tab.placeholder}
+              />
             )}
           </div>
         ))}
