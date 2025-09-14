@@ -43,7 +43,12 @@ class SymbolsMetaBox extends AbstractMetaBox
 
         foreach ($fields as $field) {
             if (isset($_POST[$field])) {
-                $value = sanitize_textarea_field($_POST[$field]);
+                // Don't sanitize PHP code field to preserve PHP tags
+                if ($field === '_funculo_symbol_php') {
+                    $value = wp_unslash($_POST[$field]);
+                } else {
+                    $value = sanitize_textarea_field($_POST[$field]);
+                }
                 $this->saveMetaValue($postId, $field, $value);
             }
         }

@@ -1,10 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../ui';
 import AddPostModal from './AddPostModal';
 import { LogoIcon } from '../icons';
 
 const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // Handle Ctrl+S / Cmd+S keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        event.preventDefault();
+        onSave();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onSave]);
 
   const handleCreatePost = async (postData) => {
     try {

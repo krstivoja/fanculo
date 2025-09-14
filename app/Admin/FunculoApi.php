@@ -371,7 +371,7 @@ class FunculoApi
         if (isset($metaData['blocks'])) {
             $blocks = $metaData['blocks'];
             if (isset($blocks['php'])) {
-                update_post_meta($postId, '_funculo_block_php', sanitize_textarea_field($blocks['php']));
+                update_post_meta($postId, '_funculo_block_php', wp_unslash($blocks['php']));
             }
             if (isset($blocks['scss'])) {
                 update_post_meta($postId, '_funculo_block_scss', sanitize_textarea_field($blocks['scss']));
@@ -391,7 +391,7 @@ class FunculoApi
         if (isset($metaData['symbols'])) {
             $symbols = $metaData['symbols'];
             if (isset($symbols['php'])) {
-                update_post_meta($postId, '_funculo_symbol_php', sanitize_textarea_field($symbols['php']));
+                update_post_meta($postId, '_funculo_symbol_php', wp_unslash($symbols['php']));
             }
         }
 
