@@ -69,6 +69,34 @@ const App = () => {
         setSaveStatus('unsaved');
     };
 
+    // Update post title
+    const handleTitleUpdate = async (newTitle) => {
+        if (!selectedPost?.id) return;
+
+        try {
+            const response = await fetch(`/wp-json/funculo/v1/post/${selectedPost.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-WP-Nonce': window.wpApiSettings.nonce
+                },
+                body: JSON.stringify({
+                    title: newTitle
+                })
+            });
+
+            if (response.ok) {
+                const updatedPost = await response.json();
+                setSelectedPost(updatedPost);
+            } else {
+                throw new Error('Failed to update title');
+            }
+        } catch (error) {
+            console.error('Error updating title:', error);
+            throw error;
+        }
+    };
+
     // Save meta data
     const handleSave = async () => {
         if (!selectedPost?.id) return;
@@ -185,6 +213,7 @@ const App = () => {
                     selectedPost={selectedPost}
                     metaData={metaData}
                     onMetaChange={handleMetaChange}
+                    onTitleUpdate={handleTitleUpdate}
                 />
                 <EditorSettings selectedPost={selectedPost} />
             </div>

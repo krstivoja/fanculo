@@ -96,6 +96,13 @@ class FunculoApi
                             return is_array($param);
                         }
                     ],
+                    'title' => [
+                        'required' => false,
+                        'sanitize_callback' => 'sanitize_text_field',
+                        'validate_callback' => function($param) {
+                            return !empty(trim($param));
+                        }
+                    ],
                 ],
             ]
         ]);
@@ -323,10 +330,30 @@ class FunculoApi
     {
         $postId = $request->get_param('id');
         $metaData = $request->get_param('meta');
+        $title = $request->get_param('title');
 
         $post = get_post($postId);
         if (!$post || $post->post_type !== FunculoPostType::getPostType()) {
             return new \WP_Error('post_not_found', 'Post not found', ['status' => 404]);
+        }
+
+        // Update post title and slug if provided
+        if ($title) {
+            // Generate slug from title
+            $slug = sanitize_title($title);
+
+            // Ensure slug is unique
+            $slug = wp_unique_post_slug($slug, $postId, 'publish', FunculoPostType::getPostType(), 0);
+
+            $updated = wp_update_post([
+                'ID' => $postId,
+                'post_title' => $title,
+                'post_name' => $slug,
+            ]);
+
+            if (is_wp_error($updated)) {
+                return new \WP_Error('title_update_failed', 'Failed to update post title and slug', ['status' => 500]);
+            }
         }
 
         // Update meta fields if provided
