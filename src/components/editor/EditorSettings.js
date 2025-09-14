@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Textarea, Select } from '../ui';
+import { Textarea, Select, DashiconButton } from '../ui';
 
 const EditorSettings = ({ selectedPost, metaData, onMetaChange }) => {
   const [blockCategories, setBlockCategories] = useState([]);
@@ -18,6 +18,7 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange }) => {
   const settings = getSettings();
   const [description, setDescription] = useState(settings.description || '');
   const [category, setCategory] = useState(settings.category || '');
+  const [icon, setIcon] = useState(settings.icon || 'search');
 
   // Fetch block categories on component mount
   useEffect(() => {
@@ -63,15 +64,17 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange }) => {
     const currentSettings = getSettings();
     setDescription(currentSettings.description || '');
     setCategory(currentSettings.category || '');
+    setIcon(currentSettings.icon || 'search');
   }, [selectedPost, metaData]);
 
   // Update settings in metaData when local state changes
-  const updateSettings = (newDescription, newCategory) => {
+  const updateSettings = (newDescription, newCategory, newIcon) => {
     const currentSettings = getSettings();
     const updatedSettings = {
       ...currentSettings,
       description: newDescription,
-      category: newCategory
+      category: newCategory,
+      icon: newIcon
     };
 
     if (onMetaChange) {
@@ -82,13 +85,18 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange }) => {
   const handleDescriptionChange = (e) => {
     const newDescription = e.target.value;
     setDescription(newDescription);
-    updateSettings(newDescription, category);
+    updateSettings(newDescription, category, icon);
   };
 
   const handleCategoryChange = (e) => {
     const newCategory = e.target.value;
     setCategory(newCategory);
-    updateSettings(description, newCategory);
+    updateSettings(description, newCategory, icon);
+  };
+
+  const handleIconChange = (newIcon) => {
+    setIcon(newIcon);
+    updateSettings(description, category, newIcon);
   };
 
   if (!selectedPost) {
@@ -139,6 +147,12 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange }) => {
                 disabled={loadingCategories}
               />
             </div>
+
+            <DashiconButton
+              selectedIcon={icon}
+              onIconSelect={handleIconChange}
+              label="Block Dashicon"
+            />
           </div>
         )}
       </div>

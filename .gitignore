@@ -4,3 +4,5 @@
 
 .DS_store
 composer.lock
+
+/examples/
