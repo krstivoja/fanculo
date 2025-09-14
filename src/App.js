@@ -19,7 +19,6 @@ const App = () => {
 
     // Fetch individual post with full data when selected
     const handlePostSelect = async (post) => {
-        console.log('Post selected:', post);
 
         // If the post already has terms and meta, use it directly
         if (post.terms && post.terms.length > 0) {
@@ -39,7 +38,6 @@ const App = () => {
 
             if (response.ok) {
                 const fullPost = await response.json();
-                console.log('Full post data:', fullPost);
                 setSelectedPost(fullPost);
                 setMetaData(fullPost.meta || {});
                 setSaveStatus('');
@@ -141,9 +139,7 @@ const App = () => {
             }
 
             const data = await response.json();
-            console.log('API Response:', data);
             const posts = data.posts || [];
-            console.log('Posts received:', posts);
 
             // Pre-allocate arrays for better performance
             const grouped = {
@@ -155,21 +151,15 @@ const App = () => {
             // Group posts by their taxonomy terms
             for (let i = 0; i < posts.length; i++) {
                 const post = posts[i];
-                console.log('Processing post:', post);
                 const terms = post.terms;
 
                 if (terms && terms.length > 0) {
                     const termSlug = terms[0].slug;
-                    console.log('Post has term slug:', termSlug);
                     if (grouped[termSlug]) {
                         grouped[termSlug].push(post);
                     }
-                } else {
-                    console.log('Post has no terms:', post);
                 }
             }
-
-            console.log('Grouped posts:', grouped);
 
             setGroupedPosts(grouped);
         } catch (error) {
@@ -185,14 +175,9 @@ const App = () => {
     };
 
     useEffect(() => {
-        // Try to use pre-loaded data first
-        if (window.wpApiSettings?.posts) {
-            setGroupedPosts(window.wpApiSettings.posts);
-            setLoading(false);
-        } else {
-            // Fallback to API call
-            fetchPosts();
-        }
+        // Always use the API call to get full meta data
+        // The pre-loaded data doesn't include the full meta structure
+        fetchPosts();
     }, []);
 
     if (loading) return <div>Loading...</div>;

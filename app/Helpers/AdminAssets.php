@@ -49,12 +49,15 @@ class AdminAssets
         $jsFile = $this->buildPath . 'index.js';
         $cssFile = $this->buildPath . 'index.css';
 
+        // Enqueue dashicons first
+        wp_enqueue_style('dashicons');
+
         // Enqueue CSS
         if (file_exists($cssFile)) {
             wp_enqueue_style(
                 'fanculo-app',
                 $this->buildUrl . 'index.css',
-                array(),
+                array('dashicons'),
                 filemtime($cssFile)
             );
         }
