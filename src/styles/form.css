@@ -1,7 +1,4 @@
 input[type=color], input[type=date], input[type=datetime-local], input[type=datetime], input[type=email], input[type=month], input[type=number], input[type=password], input[type=search], input[type=tel], input[type=text], input[type=time], input[type=url], input[type=week], select, textarea {
-    box-shadow: 0 0 0 transparent;
-    border-radius: 4px;
-
     @apply bg-base-alt text-contrast border border-solid border-outline px-4 py-2;
 }
 

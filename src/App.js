@@ -221,8 +221,6 @@ const App = () => {
                     onMetaChange={handleMetaChange}
                 />
             </div>
-
-
         </div>
     );
 };
