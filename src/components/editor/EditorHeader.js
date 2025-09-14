@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Button } from '../ui';
-import AddPostModal from './AddPostModal';
 import { LogoIcon } from '../icons';
+
+// Lazy load AddPostModal - only loads when needed
+const AddPostModal = lazy(() => import('./AddPostModal'));
 
 const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -86,11 +88,13 @@ const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges }) => {
         </Button>
       </div>
 
-      <AddPostModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onCreate={handleCreatePost}
-      />
+      <Suspense fallback={null}>
+        <AddPostModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onCreate={handleCreatePost}
+        />
+      </Suspense>
     </header>
   );
 };

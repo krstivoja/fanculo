@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import MetaboxContainer from './metaboxes/MetaboxContainer';
-import EditTitleModal from './EditTitleModal';
+
+// Lazy load EditTitleModal - only loads when title is clicked
+const EditTitleModal = lazy(() => import('./EditTitleModal'));
 
 const EditorMain = ({ selectedPost, metaData, onMetaChange, onTitleUpdate }) => {
   const [isEditTitleModalOpen, setIsEditTitleModalOpen] = useState(false);
@@ -43,12 +45,14 @@ const EditorMain = ({ selectedPost, metaData, onMetaChange, onTitleUpdate }) => 
             onMetaChange={onMetaChange}
           />
 
-          <EditTitleModal
-            isOpen={isEditTitleModalOpen}
-            onClose={() => setIsEditTitleModalOpen(false)}
-            currentTitle={selectedPost.title?.rendered || selectedPost.title}
-            onSave={handleTitleSave}
-          />
+          <Suspense fallback={null}>
+            <EditTitleModal
+              isOpen={isEditTitleModalOpen}
+              onClose={() => setIsEditTitleModalOpen(false)}
+              currentTitle={selectedPost.title?.rendered || selectedPost.title}
+              onSave={handleTitleSave}
+            />
+          </Suspense>
         </div>
       ) : (
         <div className="flex items-center justify-center h-full text-contrast">
