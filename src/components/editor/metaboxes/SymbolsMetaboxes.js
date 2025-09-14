@@ -1,5 +1,5 @@
 import React from 'react';
-import MetaboxTextarea from './MetaboxTextarea';
+import { MonacoEditor } from '../../ui';
 
 const SymbolsMetaboxes = ({ metaData, onChange }) => {
   const handleMetaChange = (field, value) => {
@@ -10,17 +10,22 @@ const SymbolsMetaboxes = ({ metaData, onChange }) => {
 
   return (
     <div className="space-y-4">
+      <h3 className="text-lg font-semibold border-b border-outline pb-2">
+        Symbol Configuration
+      </h3>
 
-      <MetaboxTextarea
-        label="PHP Code"
-        name="php"
-        value={symbols.php}
-        onChange={(value) => handleMetaChange('php', value)}
-        placeholder="Enter PHP code for the symbol..."
-        rows={10}
-        language="php"
-        required
-      />
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-highlight">
+          PHP Code <span className="text-red-500">*</span>
+        </label>
+        <MonacoEditor
+          value={symbols.php || ''}
+          onChange={(e) => handleMetaChange('php', e.target.value)}
+          language="php"
+          height="400px"
+          placeholder="Enter PHP code for the symbol..."
+        />
+      </div>
     </div>
   );
 };
