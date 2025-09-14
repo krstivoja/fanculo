@@ -15,15 +15,11 @@ const BlocksMetaboxes = ({ metaData, onChange }) => {
     { id: 'php', label: 'PHP', language: 'php', rows: 8, required: true, placeholder: 'Enter PHP code for the block...' },
     { id: 'scss', label: 'SCSS', language: 'scss', rows: 6, placeholder: 'Enter SCSS styles for the block...' },
     { id: 'js', label: 'JavaScript', language: 'js', rows: 6, placeholder: 'Enter JavaScript code for the block...' },
-    { id: 'attributes', label: 'Attributes', language: 'json', rows: 4, placeholder: '{"attribute": {"type": "string", "default": ""}}' },
-    { id: 'settings', label: 'Settings', rows: 4, placeholder: 'Additional block settings...' }
+    { id: 'attributes', label: 'Attributes', language: 'json', rows: 4, placeholder: '{"attribute": {"type": "string", "default": ""}}' }
   ];
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold border-b border-outline pb-2">
-        Block Configuration
-      </h3>
 
       {/* Tab Navigation */}
       <div className="flex p-1 border border-solid border-outline rounded-md bg-base-alt">

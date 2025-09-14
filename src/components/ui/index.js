@@ -3,3 +3,4 @@ export { default as Input } from './Input';
 export { default as Modal } from './Modal';
 export { default as Textarea } from './Textarea';
 export { default as RadioInput } from './RadioInput';
+export { default as Select } from './Select';

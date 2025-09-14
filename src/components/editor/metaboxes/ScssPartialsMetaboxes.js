@@ -10,9 +10,6 @@ const ScssPartialsMetaboxes = ({ metaData, onChange }) => {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold border-b border-outline pb-2">
-        SCSS Partial Configuration
-      </h3>
 
       <MetaboxTextarea
         label="SCSS Code"

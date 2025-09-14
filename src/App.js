@@ -215,7 +215,11 @@ const App = () => {
                     onMetaChange={handleMetaChange}
                     onTitleUpdate={handleTitleUpdate}
                 />
-                <EditorSettings selectedPost={selectedPost} />
+                <EditorSettings
+                    selectedPost={selectedPost}
+                    metaData={metaData}
+                    onMetaChange={handleMetaChange}
+                />
             </div>
 
         </div>
