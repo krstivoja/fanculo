@@ -10,6 +10,10 @@ input[type=checkbox]:focus, input[type=color]:focus, input[type=date]:focus, inp
     @apply !border-action shadow-none !outline-action/40 outline-3 -outline-offset-3;
 }
 
+.wp-core-ui select {
+    @apply bg-base-alt text-contrast border border-solid border-outline px-4 py-1 w-full focus:text-highlight hover:text-highlight;
+}
+
 .radio-input {
     @apply !bg-base-alt border-outline border-solid border;
 }

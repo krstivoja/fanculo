@@ -7,9 +7,7 @@ const Select = ({ value, onChange, options, placeholder, className = '', error, 
         value={value}
         onChange={onChange}
         disabled={disabled}
-        className={`px-3 py-2 bg-base-alt border rounded-md text-contrast focus:outline-none focus:ring-2 focus:ring-action/30 transition-colors w-full ${
-          error ? 'border-red-500 focus:border-red-500 focus:ring-red-500/30' : 'border-outline focus:border-action'
-        } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+        className={` ${className}`}
         {...props}
       >
         {placeholder && (
