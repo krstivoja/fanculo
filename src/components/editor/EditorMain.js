@@ -1,27 +1,32 @@
 import React from 'react';
-import { Textarea } from '../ui';
+import MetaboxContainer from './metaboxes/MetaboxContainer';
 
-const EditorMain = ({ selectedPost }) => {
+const EditorMain = ({ selectedPost, metaData, onMetaChange }) => {
   return (
-    <main id="editor-content" className="flex-1 p-4 grow">
+    <main id="editor-content" className="flex-1 p-4 grow overflow-y-auto">
       {selectedPost ? (
-        <div>
-          <h1>{selectedPost.title.rendered}</h1>
-          <p>ID: {selectedPost.id}</p>
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-6 pb-4 border-b border-outline">
+            <h1 className="text-2xl font-bold mb-2">{selectedPost.title.rendered}</h1>
+            <div className="flex gap-4 text-sm text-contrast">
+              <span>ID: {selectedPost.id}</span>
+              <span>Type: {selectedPost.terms?.[0]?.name || 'N/A'}</span>
+              <span>Status: {selectedPost.status || 'N/A'}</span>
+            </div>
+          </div>
 
-          <p>PHP</p>
-          <Textarea></Textarea>
-          <p>SCSS</p>
-          <Textarea></Textarea>
-          <p>JS</p>
-          <Textarea></Textarea>
-          <p>Attributes</p>
-          <Textarea></Textarea>
-
+          <MetaboxContainer
+            selectedPost={selectedPost}
+            metaData={metaData}
+            onMetaChange={onMetaChange}
+          />
         </div>
       ) : (
         <div className="flex items-center justify-center h-full text-contrast">
-          Select a post from the sidebar
+          <div className="text-center">
+            <div className="text-xl mb-2">📝</div>
+            <div>Select a post from the sidebar to start editing</div>
+          </div>
         </div>
       )}
     </main>

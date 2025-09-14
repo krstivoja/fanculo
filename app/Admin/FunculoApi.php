@@ -80,9 +80,24 @@ class FunculoApi
         ]);
 
         register_rest_route('funculo/v1', '/post/(?P<id>\d+)', [
-            'methods' => 'GET',
-            'callback' => [$this, 'getPost'],
-            'permission_callback' => [$this, 'checkPermissions'],
+            [
+                'methods' => 'GET',
+                'callback' => [$this, 'getPost'],
+                'permission_callback' => [$this, 'checkPermissions'],
+            ],
+            [
+                'methods' => 'PUT',
+                'callback' => [$this, 'updatePost'],
+                'permission_callback' => [$this, 'checkCreatePermissions'],
+                'args' => [
+                    'meta' => [
+                        'required' => false,
+                        'validate_callback' => function($param) {
+                            return is_array($param);
+                        }
+                    ],
+                ],
+            ]
         ]);
     }
 
@@ -302,5 +317,63 @@ class FunculoApi
         }
 
         return $meta;
+    }
+
+    public function updatePost($request)
+    {
+        $postId = $request->get_param('id');
+        $metaData = $request->get_param('meta');
+
+        $post = get_post($postId);
+        if (!$post || $post->post_type !== FunculoPostType::getPostType()) {
+            return new \WP_Error('post_not_found', 'Post not found', ['status' => 404]);
+        }
+
+        // Update meta fields if provided
+        if ($metaData) {
+            $this->updatePostMeta($postId, $metaData);
+        }
+
+        // Return updated post data
+        return $this->getPost($request);
+    }
+
+    private function updatePostMeta($postId, $metaData)
+    {
+        // Update blocks meta
+        if (isset($metaData['blocks'])) {
+            $blocks = $metaData['blocks'];
+            if (isset($blocks['php'])) {
+                update_post_meta($postId, '_funculo_block_php', sanitize_textarea_field($blocks['php']));
+            }
+            if (isset($blocks['scss'])) {
+                update_post_meta($postId, '_funculo_block_scss', sanitize_textarea_field($blocks['scss']));
+            }
+            if (isset($blocks['js'])) {
+                update_post_meta($postId, '_funculo_block_js', sanitize_textarea_field($blocks['js']));
+            }
+            if (isset($blocks['attributes'])) {
+                update_post_meta($postId, '_funculo_block_attributes', sanitize_textarea_field($blocks['attributes']));
+            }
+            if (isset($blocks['settings'])) {
+                update_post_meta($postId, '_funculo_block_settings', sanitize_textarea_field($blocks['settings']));
+            }
+        }
+
+        // Update symbols meta
+        if (isset($metaData['symbols'])) {
+            $symbols = $metaData['symbols'];
+            if (isset($symbols['php'])) {
+                update_post_meta($postId, '_funculo_symbol_php', sanitize_textarea_field($symbols['php']));
+            }
+        }
+
+        // Update SCSS partials meta
+        if (isset($metaData['scss_partials'])) {
+            $scssPartials = $metaData['scss_partials'];
+            if (isset($scssPartials['scss'])) {
+                update_post_meta($postId, '_funculo_scss_partial', sanitize_textarea_field($scssPartials['scss']));
+            }
+        }
     }
 }

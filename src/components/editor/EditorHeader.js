@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '../ui';
 import AddPostModal from './AddPostModal';
 
-const EditorHeader = () => {
+const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const handleCreatePost = async (postData) => {
@@ -52,8 +52,26 @@ const EditorHeader = () => {
           Add new
         </Button>
       </div>
-      <div className='flex gap-4 justify-center mr-4'>
-        <Button variant="secondary">Save</Button>
+      <div className='flex gap-4 justify-center mr-4 items-center'>
+        {saveStatus === 'unsaved' && (
+          <span className="text-sm text-yellow-600">Unsaved changes</span>
+        )}
+        {saveStatus === 'saving' && (
+          <span className="text-sm text-blue-600">Saving...</span>
+        )}
+        {saveStatus === 'saved' && (
+          <span className="text-sm text-green-600">Saved</span>
+        )}
+        {saveStatus === 'error' && (
+          <span className="text-sm text-red-600">Error saving</span>
+        )}
+        <Button
+          variant="secondary"
+          onClick={onSave}
+          disabled={saveStatus === 'saving'}
+        >
+          Save
+        </Button>
       </div>
 
       <AddPostModal

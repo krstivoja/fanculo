@@ -24,13 +24,7 @@ class MetaBoxHelper
 
     public function enqueueScripts($hook)
     {
-        // Only load on post edit screen for funculo post type
-        if (('post.php' === $hook || 'post-new.php' === $hook)) {
-            global $post;
-            if ($post && $post->post_type === 'funculo') {
-                $adminAssets = new \Fanculo\Helpers\AdminAssets();
-                $adminAssets->enqueueAssets();
-            }
-        }
+        // Assets are only loaded on the plugin settings page
+        // No assets needed on post edit screens
     }
 }

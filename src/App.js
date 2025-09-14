@@ -14,11 +14,95 @@ const App = () => {
     });
     const [loading, setLoading] = useState(true);
     const [selectedPost, setSelectedPost] = useState(null);
+    const [metaData, setMetaData] = useState({});
+    const [saveStatus, setSaveStatus] = useState('');
+
+    // Fetch individual post with full data when selected
+    const handlePostSelect = async (post) => {
+        console.log('Post selected:', post);
+
+        // If the post already has terms and meta, use it directly
+        if (post.terms && post.terms.length > 0) {
+            setSelectedPost(post);
+            setMetaData(post.meta || {});
+            setSaveStatus('');
+            return;
+        }
+
+        // Otherwise, fetch full post data from the API
+        try {
+            const response = await fetch(`/wp-json/funculo/v1/post/${post.id}`, {
+                headers: {
+                    'X-WP-Nonce': window.wpApiSettings.nonce
+                }
+            });
+
+            if (response.ok) {
+                const fullPost = await response.json();
+                console.log('Full post data:', fullPost);
+                setSelectedPost(fullPost);
+                setMetaData(fullPost.meta || {});
+                setSaveStatus('');
+            } else {
+                console.error('Failed to fetch full post data');
+                setSelectedPost(post);
+                setMetaData({});
+                setSaveStatus('');
+            }
+        } catch (error) {
+            console.error('Error fetching post:', error);
+            setSelectedPost(post);
+            setMetaData({});
+            setSaveStatus('');
+        }
+    };
+
+    // Handle meta field changes
+    const handleMetaChange = (section, field, value) => {
+        setMetaData(prev => ({
+            ...prev,
+            [section]: {
+                ...prev[section],
+                [field]: value
+            }
+        }));
+        setSaveStatus('unsaved');
+    };
+
+    // Save meta data
+    const handleSave = async () => {
+        if (!selectedPost?.id) return;
+
+        setSaveStatus('saving');
+
+        try {
+            const response = await fetch(`/wp-json/funculo/v1/post/${selectedPost.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-WP-Nonce': window.wpApiSettings.nonce
+                },
+                body: JSON.stringify({
+                    meta: metaData
+                })
+            });
+
+            if (response.ok) {
+                setSaveStatus('saved');
+                setTimeout(() => setSaveStatus(''), 3000);
+            } else {
+                setSaveStatus('error');
+            }
+        } catch (error) {
+            console.error('Error saving metaboxes:', error);
+            setSaveStatus('error');
+        }
+    };
 
     const fetchPosts = async () => {
         try {
-            // Optimized query: only get what we need
-            const response = await fetch('/wp-json/wp/v2/funculos?per_page=100&_fields=id,title,funculo_type&_embed=wp:term', {
+            // Use the custom Funculo API which includes taxonomy terms and meta data
+            const response = await fetch('/wp-json/funculo/v1/posts?per_page=100', {
                 headers: {
                     'X-WP-Nonce': window.wpApiSettings.nonce
                 }
@@ -29,7 +113,9 @@ const App = () => {
             }
 
             const data = await response.json();
-            const posts = Array.isArray(data) ? data : [];
+            console.log('API Response:', data);
+            const posts = data.posts || [];
+            console.log('Posts received:', posts);
 
             // Pre-allocate arrays for better performance
             const grouped = {
@@ -38,18 +124,24 @@ const App = () => {
                 'scss-partials': []
             };
 
-            // Faster grouping with direct property access
+            // Group posts by their taxonomy terms
             for (let i = 0; i < posts.length; i++) {
                 const post = posts[i];
-                const terms = post._embedded?.['wp:term']?.[0];
+                console.log('Processing post:', post);
+                const terms = post.terms;
 
                 if (terms && terms.length > 0) {
                     const termSlug = terms[0].slug;
+                    console.log('Post has term slug:', termSlug);
                     if (grouped[termSlug]) {
                         grouped[termSlug].push(post);
                     }
+                } else {
+                    console.log('Post has no terms:', post);
                 }
             }
+
+            console.log('Grouped posts:', grouped);
 
             setGroupedPosts(grouped);
         } catch (error) {
@@ -81,11 +173,19 @@ const App = () => {
 
     return (
         <div id="editor">
-            <EditorHeader />
+            <EditorHeader
+                onSave={handleSave}
+                saveStatus={saveStatus}
+                hasUnsavedChanges={saveStatus === 'unsaved'}
+            />
 
             <div className='flex w-full flex-1 min-h-0'>
-                <EditorList groupedPosts={groupedPosts} selectedPost={selectedPost} onPostSelect={setSelectedPost} />
-                <EditorMain selectedPost={selectedPost} />
+                <EditorList groupedPosts={groupedPosts} selectedPost={selectedPost} onPostSelect={handlePostSelect} />
+                <EditorMain
+                    selectedPost={selectedPost}
+                    metaData={metaData}
+                    onMetaChange={handleMetaChange}
+                />
                 <EditorSettings selectedPost={selectedPost} />
             </div>
 
