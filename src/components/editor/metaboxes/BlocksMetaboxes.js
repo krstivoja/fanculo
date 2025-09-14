@@ -1,12 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import MetaboxTextarea from './MetaboxTextarea';
+import { Button } from '../../ui';
 
 const BlocksMetaboxes = ({ metaData, onChange }) => {
+  const [activeTab, setActiveTab] = useState('php');
+
   const handleMetaChange = (field, value) => {
     onChange('blocks', field, value);
   };
 
   const blocks = metaData?.blocks || {};
+
+  const tabs = [
+    { id: 'php', label: 'PHP', language: 'php', rows: 8, required: true, placeholder: 'Enter PHP code for the block...' },
+    { id: 'scss', label: 'SCSS', language: 'scss', rows: 6, placeholder: 'Enter SCSS styles for the block...' },
+    { id: 'js', label: 'JavaScript', language: 'js', rows: 6, placeholder: 'Enter JavaScript code for the block...' },
+    { id: 'attributes', label: 'Attributes', language: 'json', rows: 4, placeholder: '{"attribute": {"type": "string", "default": ""}}' },
+    { id: 'settings', label: 'Settings', rows: 4, placeholder: 'Additional block settings...' }
+  ];
 
   return (
     <div className="space-y-4">
@@ -14,55 +25,37 @@ const BlocksMetaboxes = ({ metaData, onChange }) => {
         Block Configuration
       </h3>
 
-      <MetaboxTextarea
-        label="PHP Code"
-        name="php"
-        value={blocks.php}
-        onChange={(value) => handleMetaChange('php', value)}
-        placeholder="Enter PHP code for the block..."
-        rows={8}
-        language="php"
-        required
-      />
+      {/* Tab Navigation */}
+      <div className="flex p-1 border border-solid border-outline rounded-md bg-base-alt">
+        {tabs.map(tab => (
+          <Button
+            key={tab.id}
+            variant={activeTab === tab.id ? 'primary' : 'ghost'}
+            className="grow"
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </Button>
+        ))}
+      </div>
 
-      <MetaboxTextarea
-        label="SCSS Styles"
-        name="scss"
-        value={blocks.scss}
-        onChange={(value) => handleMetaChange('scss', value)}
-        placeholder="Enter SCSS styles for the block..."
-        rows={6}
-        language="scss"
-      />
-
-      <MetaboxTextarea
-        label="JavaScript"
-        name="js"
-        value={blocks.js}
-        onChange={(value) => handleMetaChange('js', value)}
-        placeholder="Enter JavaScript code for the block..."
-        rows={6}
-        language="js"
-      />
-
-      <MetaboxTextarea
-        label="Block Attributes"
-        name="attributes"
-        value={blocks.attributes}
-        onChange={(value) => handleMetaChange('attributes', value)}
-        placeholder='{"attribute": {"type": "string", "default": ""}}'
-        rows={4}
-        language="json"
-      />
-
-      <MetaboxTextarea
-        label="Block Settings"
-        name="settings"
-        value={blocks.settings}
-        onChange={(value) => handleMetaChange('settings', value)}
-        placeholder="Additional block settings..."
-        rows={4}
-      />
+      {/* Tab Content */}
+      <div className="min-h-[200px]">
+        {tabs.map(tab => (
+          <div key={tab.id} className={activeTab === tab.id ? 'block' : 'hidden'}>
+            <MetaboxTextarea
+              label={`${tab.label} Code`}
+              name={tab.id}
+              value={blocks[tab.id]}
+              onChange={(value) => handleMetaChange(tab.id, value)}
+              placeholder={tab.placeholder}
+              rows={tab.rows}
+              language={tab.language}
+              required={tab.required}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
