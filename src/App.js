@@ -97,30 +97,44 @@ const App = () => {
 
     // Save meta data
     const handleSave = async () => {
-        if (!selectedPost?.id) return;
-
         setSaveStatus('saving');
 
         try {
-            const response = await fetch(`/wp-json/funculo/v1/post/${selectedPost.id}`, {
-                method: 'PUT',
+            if (selectedPost?.id) {
+                // Save specific post meta data
+                const response = await fetch(`/wp-json/funculo/v1/post/${selectedPost.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': window.wpApiSettings.nonce
+                    },
+                    body: JSON.stringify({
+                        meta: metaData
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to save post data');
+                }
+            }
+
+            // Generate files (works with or without selected post)
+            const generateResponse = await fetch('/wp-json/funculo/v1/generate-files', {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-WP-Nonce': window.wpApiSettings.nonce
-                },
-                body: JSON.stringify({
-                    meta: metaData
-                })
+                }
             });
 
-            if (response.ok) {
+            if (generateResponse.ok) {
                 setSaveStatus('saved');
                 setTimeout(() => setSaveStatus(''), 3000);
             } else {
                 setSaveStatus('error');
             }
         } catch (error) {
-            console.error('Error saving metaboxes:', error);
+            console.error('Error saving/generating:', error);
             setSaveStatus('error');
         }
     };
