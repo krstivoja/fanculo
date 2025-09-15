@@ -58,7 +58,7 @@ const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh })
   return (
     <header id="editor-header" className='h-fit border-b border-solid border-outline flex items-center justify-between'>
       <div className='flex gap-4 items-center'>
-        <div className=' bg-contrast text-base p-3 w-fit'>
+        <div className=' bg-contrast text-base-1 p-3 w-fit'>
           <LogoIcon />
         </div>
 

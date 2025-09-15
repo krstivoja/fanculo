@@ -11,7 +11,7 @@ const Textarea = ({
   disabled = false,
   ...props
 }) => {
-  const baseClasses = 'w-full !bg-base-alt !text-contrast';
+  const baseClasses = 'w-full !bg-base-2 !text-contrast';
   const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : '';
 
   return (

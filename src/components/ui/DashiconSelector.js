@@ -42,8 +42,8 @@ const DashiconSelector = ({ isOpen, onClose, selectedIcon, onSelect }) => {
             <button
               key={icon}
               type="button"
-              className={`p-4 text-center rounded hover:bg-base-alt transition-colors ${
-                selectedIcon === icon ? 'bg-accent text-base' : 'text-highlight'
+              className={`p-4 text-center rounded hover:bg-base-2 transition-colors ${
+                selectedIcon === icon ? 'bg-accent text-base-1' : 'text-highlight'
               }`}
               onClick={() => handleIconSelect(icon)}
             >

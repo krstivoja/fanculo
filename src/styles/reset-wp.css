@@ -1,5 +1,5 @@
 body {
-    @apply bg-base text-contrast;
+    @apply bg-base-1 text-contrast;
 }
 
 h1, h2, h3 {

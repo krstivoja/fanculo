@@ -6,7 +6,6 @@ const MonacoEditor = ({
   onChange,
   language = 'javascript',
   height = '300px',
-  className = '',
   placeholder,
   ...props
 }) => {
@@ -17,7 +16,7 @@ const MonacoEditor = ({
   };
 
   return (
-    <div className={` ${className}`}>
+    
       <Editor
         height={height}
         language={language}
@@ -46,7 +45,6 @@ const MonacoEditor = ({
         }}
         {...props}
       />
-    </div>
   );
 };
 

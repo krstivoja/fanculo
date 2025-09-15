@@ -8,7 +8,7 @@ const Input = ({ type = 'text', placeholder, value, onChange, className = '', er
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className={`px-2 py-1 bg-base-alt border rounded-md text-contrast placeholder-contrast/60 focus:outline-none focus:ring-2 focus:ring-action/30 transition-colors w-full ${
+        className={`px-2 py-1 bg-base-2 border rounded-md text-contrast placeholder-contrast/60 focus:outline-none focus:ring-2 focus:ring-action/30 transition-colors w-full ${
           error ? 'border-warning focus:border-warning focus:ring-warning/30' : 'border-outline focus:border-action'
         } ${className}`}
         {...props}

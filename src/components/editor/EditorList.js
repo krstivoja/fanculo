@@ -42,7 +42,7 @@ const EditorList = ({ groupedPosts, selectedPost, onPostSelect }) => {
 
       {/* Tab Navigation */}
       <div className='p-3'>
-        <div className="flex p-1 border border-solid border-outline rounded-md bg-base-alt">
+        <div className="flex p-1 border border-solid border-outline rounded-md bg-base-2">
           {TAXONOMY_TERMS.map(term => (
             <Button
               key={term.slug}

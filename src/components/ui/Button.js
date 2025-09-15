@@ -3,8 +3,10 @@ import React from 'react';
 const Button = ({ children, onClick, variant = 'primary', className = '', ...props }) => {
   const getVariantClasses = (variant) => {
     switch (variant) {
-      case 'primary':
+      case 'action':
         return 'bg-action text-highlight hover:bg-action/80 border-action';
+      case 'primary':
+        return 'bg-base-3 text-highlight border-base-3';
       case 'secondary':
         return 'bg-transparent text-contrast border-outline hover:bg-outline hover:text-highlight';
       case 'ghost':

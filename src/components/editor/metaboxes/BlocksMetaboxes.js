@@ -22,7 +22,7 @@ const BlocksMetaboxes = ({ metaData, onChange }) => {
     <>
 
       {/* Tab Navigation */}
-      <div className='p-8 pt-0'>
+      <div className='px-8 py-0'>
         <div className="p-0 border-b border-b-solid border-b-outline w-full flex mb-8">
           {tabs.map(tab => (
             <button
@@ -39,7 +39,7 @@ const BlocksMetaboxes = ({ metaData, onChange }) => {
       </div>
 
       {/* Tab Content */}
-      <div className="min-h-[300px]">
+      <>
         {tabs.map(tab => (
           <div key={tab.id} className={activeTab === tab.id ? 'block' : 'hidden'}>
             {tab.isAttributesTab ? (
@@ -59,7 +59,7 @@ const BlocksMetaboxes = ({ metaData, onChange }) => {
             )}
           </div>
         ))}
-      </div>
+      </>
     </>
   );
 };

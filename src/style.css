@@ -8,8 +8,9 @@
 
 @theme {
     --color-*: initial;
-    --color-base: #191c22;
-    --color-base-alt: #272c35;
+    --color-base-1: #191c22;
+    --color-base-2: #272c35;
+    --color-base-3: #5a606d;
     --color-contrast: #aab2c0;
     --color-highlight: white;
     --color-action: #5858eb;
@@ -22,7 +23,7 @@
 }
 
 #fanculo-app {
-    @apply fixed h-full w-full z-[99999] top-0 left-0 bg-base;
+    @apply fixed h-full w-full z-[99999] top-0 left-0 bg-base-1;
 }
 
 #editor {
@@ -41,3 +42,15 @@
 }
 
 
+
+
+
+
+.monaco-editor .view-overlays .current-line-exact {
+    border: 2px solid #5a606d5c !important;
+}
+
+.monaco-editor, .monaco-diff-editor, .monaco-component {
+    --vscode-editor-background: #272c35 !important;
+    --vscode-editorGutter-background: #272c35 !important;
+}

@@ -71,7 +71,7 @@ const AddPostModal = ({ isOpen, onClose, onCreate }) => {
                 className={`flex items-center gap-4 cursor-pointer p-3 rounded-lg border transition-all duration-200 flex flex-col ${
                   selectedType === term.slug 
                     ? 'bg-action text-highlight border-action shadow-sm ring-2 ring-action/20' 
-                    : 'border-outline hover:border-contrast hover:bg-base-alt'
+                    : 'border-outline hover:border-contrast hover:bg-base-2'
                 }`}
                 style={{ flex: '1 0 0' }} // allow equal width, but not forced min-width
               >

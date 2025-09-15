@@ -52,7 +52,7 @@ const Modal = ({ isOpen, onClose, children, title, size = 'default' }) => {
       />
 
       {/* Modal */}
-      <div className={`relative bg-base border border-outline rounded-lg shadow-2xl ${getSizeClasses()} w-full z-10 animate-in fade-in duration-200`}>
+      <div className={`relative bg-base-1 border border-outline rounded-lg shadow-2xl ${getSizeClasses()} w-full z-10 animate-in fade-in duration-200`}>
         {/* Header */}
         {title && (
           <div className="px-6 py-4 border-b border-outline">
