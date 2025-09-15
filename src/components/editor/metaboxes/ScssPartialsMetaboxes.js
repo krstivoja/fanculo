@@ -11,12 +11,12 @@ const ScssPartialsMetaboxes = ({ metaData, onChange, titleComponent }) => {
   return (
     <>
       {/* Header with Title */}
-      <header className="flex-shrink-0">
+      <header className="flex-shrink-0 pb-4">
         {titleComponent}
       </header>
 
       {/* Content */}
-      <div className="relative flex-1 min-h-0">
+      <div className="relative flex-1 min-h-0 [&>section]:!h-full">
         <MonacoEditor
           value={scssPartials.scss || ''}
           onChange={(e) => handleMetaChange('scss', e.target.value)}

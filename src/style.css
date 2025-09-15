@@ -31,7 +31,7 @@
     flex-direction: column;
     height: 100vh;
 
-    border: 5px solid red;
+    /* border: 5px solid red; */
 }
 
 #editor-header {
@@ -40,7 +40,7 @@
 
 #editor-content {
     flex-grow: 1;
-    border: 5px solid lime;
+    /* border: 5px solid lime; */
 }
 
 

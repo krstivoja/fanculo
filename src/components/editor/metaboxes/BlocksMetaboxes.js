@@ -25,7 +25,7 @@ const BlocksMetaboxes = ({ metaData, onChange, titleComponent }) => {
         {titleComponent}
 
         {/* Tab Navigation */}
-        <div className='px-8 py-0'>
+        <div className='p-8 pt-0'>
           <div className="p-0 border-b border-b-solid border-b-outline w-full flex">
             {tabs.map(tab => (
               <button
@@ -45,7 +45,7 @@ const BlocksMetaboxes = ({ metaData, onChange, titleComponent }) => {
       {/* Tab Content */}
       <>
         {tabs.map(tab => (
-          <div key={tab.id} className={`h-full relative border-[5px] border-solid border-[yellow] ${activeTab === tab.id ? 'block' : 'hidden'}`}>
+          <div key={tab.id} className={`h-full relative [&>section]:!h-full ${activeTab === tab.id ? 'block' : 'hidden'}`}>
             {tab.isAttributesTab ? (
               <div className="h-full p-8">
                 <AttributesManager
