@@ -119,7 +119,7 @@ const App = () => {
             }
 
             // Generate files (works with or without selected post)
-            const generateResponse = await fetch('/wp-json/funculo/v1/generate-files', {
+            const generateResponse = await fetch('/wp-json/funculo/v1/regenerate-files', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
