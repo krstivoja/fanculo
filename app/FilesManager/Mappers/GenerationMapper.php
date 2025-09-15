@@ -1,0 +1,92 @@
+<?php
+
+namespace Fanculo\FilesManager\Mappers;
+
+use Fanculo\FilesManager\Contracts\FileGeneratorInterface;
+use Fanculo\FilesManager\Generators\RenderFileGenerator;
+use Fanculo\FilesManager\Generators\ViewFileGenerator;
+use Fanculo\FilesManager\Generators\StyleFileGenerator;
+use Fanculo\FilesManager\Generators\BlockJsonGenerator;
+use Fanculo\FilesManager\Generators\SymbolFileGenerator;
+use Fanculo\FilesManager\Generators\ScssPartialGenerator;
+use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+
+class GenerationMapper
+{
+    private $generators = [];
+    private $contentTypeMap = [];
+
+    public function __construct()
+    {
+        $this->initializeGenerators();
+        $this->buildContentTypeMap();
+    }
+
+    public function getGeneratorsForContentType(string $contentType): array
+    {
+        if (!isset($this->contentTypeMap[$contentType])) {
+            error_log("GenerationMapper: No generators found for content type: $contentType");
+            return [];
+        }
+
+        return $this->contentTypeMap[$contentType];
+    }
+
+    public function getAllGenerators(): array
+    {
+        return $this->generators;
+    }
+
+    public function getContentTypeMapping(): array
+    {
+        return [
+            FunculoTypeTaxonomy::getTermBlocks() => [
+                'generators' => ['render', 'view', 'style', 'block_json'],
+                'directory' => 'block-specific', // Each block gets its own directory
+                'description' => 'WordPress blocks with render.php, view.js, style.scss, and block.json'
+            ],
+            FunculoTypeTaxonomy::getTermSymbols() => [
+                'generators' => ['symbol'],
+                'directory' => 'symbols',
+                'description' => 'PHP symbol files in symbols/ directory'
+            ],
+            FunculoTypeTaxonomy::getTermScssPartials() => [
+                'generators' => ['scss_partial'],
+                'directory' => 'scss',
+                'description' => 'SCSS partial files in scss/ directory'
+            ]
+        ];
+    }
+
+    private function initializeGenerators(): void
+    {
+        $this->generators = [
+            'render' => new RenderFileGenerator(),
+            'view' => new ViewFileGenerator(),
+            'style' => new StyleFileGenerator(),
+            'block_json' => new BlockJsonGenerator(),
+            'symbol' => new SymbolFileGenerator(),
+            'scss_partial' => new ScssPartialGenerator()
+        ];
+    }
+
+    private function buildContentTypeMap(): void
+    {
+        foreach ($this->generators as $name => $generator) {
+            foreach ([
+                FunculoTypeTaxonomy::getTermBlocks(),
+                FunculoTypeTaxonomy::getTermSymbols(),
+                FunculoTypeTaxonomy::getTermScssPartials()
+            ] as $contentType) {
+                if ($generator->canGenerate($contentType)) {
+                    if (!isset($this->contentTypeMap[$contentType])) {
+                        $this->contentTypeMap[$contentType] = [];
+                    }
+                    $this->contentTypeMap[$contentType][$name] = $generator;
+                }
+            }
+        }
+
+        error_log("GenerationMapper: Built content type map with " . count($this->contentTypeMap) . " content types");
+    }
+}

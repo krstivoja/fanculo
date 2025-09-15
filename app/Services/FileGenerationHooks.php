@@ -2,15 +2,15 @@
 
 namespace Fanculo\Services;
 
-use Fanculo\Services\FileGenerationService;
+use Fanculo\FilesManager\FilesManagerService;
 
 class FileGenerationHooks
 {
-    private $fileGenerationService;
+    private $filesManagerService;
 
     public function __construct()
     {
-        $this->fileGenerationService = new FileGenerationService();
+        $this->filesManagerService = new FilesManagerService();
         $this->initializeHooks();
     }
 
@@ -45,7 +45,7 @@ class FileGenerationHooks
         }
 
         // Generate files
-        $this->fileGenerationService->generateFilesOnPostSave($postId, $post, $update);
+        $this->filesManagerService->generateFilesOnPostSave($postId, $post, $update);
     }
 
     public function onPostUpdated($postId, $postAfter, $postBefore)
@@ -61,7 +61,7 @@ class FileGenerationHooks
         }
 
         // Handle rename if slug changed
-        $this->fileGenerationService->handlePostRename($postId, $postAfter, $postBefore);
+        $this->filesManagerService->handlePostRename($postId, $postAfter, $postBefore);
     }
 
     public function onPostDelete($postId)
@@ -72,12 +72,12 @@ class FileGenerationHooks
         }
 
         // Handle post deletion
-        $this->fileGenerationService->handlePostDeletion($postId);
+        $this->filesManagerService->handlePostDeletion($postId);
     }
 
     public function regenerateAllFiles()
     {
-        return $this->fileGenerationService->regenerateAllFiles();
+        return $this->filesManagerService->regenerateAllFiles();
     }
 
     public function testFileGeneration()
@@ -86,7 +86,7 @@ class FileGenerationHooks
             wp_die('Unauthorized');
         }
 
-        $result = $this->fileGenerationService->debugTest();
+        $result = $this->filesManagerService->debugTest();
         echo $result;
         wp_die();
     }

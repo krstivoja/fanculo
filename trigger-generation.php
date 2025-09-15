@@ -3,12 +3,12 @@
 require_once '../../../wp-load.php';
 
 // Trigger file generation for all posts
-use Fanculo\Services\FileGenerationService;
+use Fanculo\FilesManager\FilesManagerService;
 
 if (current_user_can('manage_options')) {
     echo "<h2>Fanculo File Generation Test</h2>";
 
-    $service = new FileGenerationService();
+    $service = new FilesManagerService();
 
     // First, test directory creation
     echo "<h3>Testing Directory Creation</h3>";

@@ -3,12 +3,12 @@
 require_once '../../../wp-load.php';
 
 // Test file generation
-use Fanculo\Services\FileGenerationService;
+use Fanculo\FilesManager\FilesManagerService;
 
 if (current_user_can('manage_options')) {
     echo "Starting file generation test...\n";
 
-    $service = new FileGenerationService();
+    $service = new FilesManagerService();
     echo $service->debugTest();
     echo "\n";
 

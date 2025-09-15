@@ -4,7 +4,7 @@ namespace Fanculo\Admin\Api;
 
 use Fanculo\Admin\Content\FunculoPostType;
 use Fanculo\Admin\Content\FunculoTypeTaxonomy;
-use Fanculo\Services\FileGenerationService;
+use Fanculo\FilesManager\FilesManagerService;
 
 class PostsApiController
 {
@@ -146,8 +146,8 @@ class PostsApiController
         // Get the created post data and trigger file generation
         $post = get_post($postId);
         if ($post) {
-            $fileGenerationService = new FileGenerationService();
-            $fileGenerationService->generateFilesOnPostSave($postId, $post, false);
+            $filesManagerService = new FilesManagerService();
+            $filesManagerService->generateFilesOnPostSave($postId, $post, false);
         }
         $terms = wp_get_post_terms($post->ID, FunculoTypeTaxonomy::getTaxonomy());
         $termData = [];
@@ -212,8 +212,8 @@ class PostsApiController
         // Trigger file generation after meta update
         $post = get_post($postId);
         if ($post) {
-            $fileGenerationService = new FileGenerationService();
-            $fileGenerationService->generateFilesOnPostSave($postId, $post, true);
+            $filesManagerService = new FilesManagerService();
+            $filesManagerService->generateFilesOnPostSave($postId, $post, true);
         }
 
         // Return updated post data

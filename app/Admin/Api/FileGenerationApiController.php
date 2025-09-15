@@ -2,15 +2,15 @@
 
 namespace Fanculo\Admin\Api;
 
-use Fanculo\Services\FileGenerationService;
+use Fanculo\FilesManager\FilesManagerService;
 
 class FileGenerationApiController
 {
     public function regenerateFiles($request)
     {
         try {
-            $fileGenerationService = new FileGenerationService();
-            $fileGenerationService->regenerateAllFiles();
+            $filesManagerService = new FilesManagerService();
+            $filesManagerService->regenerateAllFiles();
 
             return new \WP_REST_Response([
                 'success' => true,
