@@ -30,6 +30,8 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
+
+    border: 5px solid red;
 }
 
 #editor-header {
@@ -38,7 +40,7 @@
 
 #editor-content {
     flex-grow: 1;
-    height: fit-content;
+    border: 5px solid lime;
 }
 
 

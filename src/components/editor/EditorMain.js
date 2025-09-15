@@ -41,24 +41,23 @@ const EditorMain = ({ selectedPost, metaData, onMetaChange, onTitleUpdate }) => 
   };
 
   return (
-    <main id="editor-content" className="flex-1 grow overflow-y-auto">
+    <main id="editor-content" className="flex-1 grow overflow-y-auto flex flex-col">
       {selectedPost ? (
         <>
-          <header>
-            <h1
-              className="!text-5xl font-semibold cursor-pointer hover:!text-highlight hover:underline !flex items-center gap-3 !p-8 !pb-4"
-              onClick={handleTitleClick}
-              title="Click to edit title"
-            >
-              <span className='bg-base-2 p-2 rounded-full'>{getTypeIcon()}</span>
-              {selectedPost.title?.rendered || selectedPost.title || 'Untitled Post'}
-            </h1>
-          </header>
-
           <MetaboxContainer
             selectedPost={selectedPost}
             metaData={metaData}
             onMetaChange={onMetaChange}
+            titleComponent={
+              <h1
+                className="!text-5xl font-semibold cursor-pointer hover:!text-highlight hover:underline !flex items-center gap-3 !p-8 !pb-4"
+                onClick={handleTitleClick}
+                title="Click to edit title"
+              >
+                <span className='bg-base-2 p-2 rounded-full'>{getTypeIcon()}</span>
+                {selectedPost.title?.rendered || selectedPost.title || 'Untitled Post'}
+              </h1>
+            }
           />
 
           {isEditTitleModalOpen && (

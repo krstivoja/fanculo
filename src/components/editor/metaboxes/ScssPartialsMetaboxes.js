@@ -1,7 +1,7 @@
 import React from 'react';
 import { MonacoEditor } from '../../ui';
 
-const ScssPartialsMetaboxes = ({ metaData, onChange }) => {
+const ScssPartialsMetaboxes = ({ metaData, onChange, titleComponent }) => {
   const handleMetaChange = (field, value) => {
     onChange('scss_partials', field, value);
   };
@@ -9,13 +9,23 @@ const ScssPartialsMetaboxes = ({ metaData, onChange }) => {
   const scssPartials = metaData?.scss_partials || {};
 
   return (
-    <MonacoEditor
-      value={scssPartials.scss || ''}
-      onChange={(e) => handleMetaChange('scss', e.target.value)}
-      language="scss"
-      height="400px"
-      placeholder="Enter SCSS partial code..."
-    />
+    <>
+      {/* Header with Title */}
+      <header className="flex-shrink-0">
+        {titleComponent}
+      </header>
+
+      {/* Content */}
+      <div className="relative flex-1 min-h-0">
+        <MonacoEditor
+          value={scssPartials.scss || ''}
+          onChange={(e) => handleMetaChange('scss', e.target.value)}
+          language="scss"
+          className="absolute inset-0"
+          placeholder="Enter SCSS partial code..."
+        />
+      </div>
+    </>
   );
 };
 

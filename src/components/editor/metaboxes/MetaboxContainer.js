@@ -3,7 +3,7 @@ import BlocksMetaboxes from './BlocksMetaboxes';
 import SymbolsMetaboxes from './SymbolsMetaboxes';
 import ScssPartialsMetaboxes from './ScssPartialsMetaboxes';
 
-const MetaboxContainer = ({ selectedPost, metaData, onMetaChange }) => {
+const MetaboxContainer = ({ selectedPost, metaData, onMetaChange, titleComponent }) => {
 
   // Determine post type from terms
   const getPostType = () => {
@@ -29,11 +29,11 @@ const MetaboxContainer = ({ selectedPost, metaData, onMetaChange }) => {
 
   return (
     <>
-
       {postType === 'blocks' && (
         <BlocksMetaboxes
           metaData={metaData}
           onChange={handleMetaChange}
+          titleComponent={titleComponent}
         />
       )}
 
@@ -41,6 +41,7 @@ const MetaboxContainer = ({ selectedPost, metaData, onMetaChange }) => {
         <SymbolsMetaboxes
           metaData={metaData}
           onChange={handleMetaChange}
+          titleComponent={titleComponent}
         />
       )}
 
@@ -48,6 +49,7 @@ const MetaboxContainer = ({ selectedPost, metaData, onMetaChange }) => {
         <ScssPartialsMetaboxes
           metaData={metaData}
           onChange={handleMetaChange}
+          titleComponent={titleComponent}
         />
       )}
 
