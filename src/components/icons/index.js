@@ -6,3 +6,4 @@ export { default as SettingsIcon } from './SettingsIcon';
 export { default as StyleIcon } from './StyleIcon';
 export { default as SymbolIcon } from './SymbolIcon';
 export { default as SymbolsIcon } from './SymbolsIcon';
+export { default as TrashIcon } from './TrashIcon';

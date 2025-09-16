@@ -66,6 +66,40 @@ class DirectoryManager
         return $this->baseDir;
     }
 
+    public function deleteBlockDirectory(string $blockSlug): bool
+    {
+        $blockDir = $this->baseDir . '/' . $blockSlug;
+
+        if (!file_exists($blockDir)) {
+            error_log("DirectoryManager: Block directory does not exist: $blockDir");
+            return true;
+        }
+
+        error_log("DirectoryManager: Deleting block directory: $blockDir");
+        $this->deleteDirectory($blockDir);
+        return true;
+    }
+
+    public function deleteFile(string $relativePath): bool
+    {
+        $filepath = $this->baseDir . '/' . $relativePath;
+
+        if (!file_exists($filepath)) {
+            error_log("DirectoryManager: File does not exist: $filepath");
+            return true;
+        }
+
+        $result = unlink($filepath);
+
+        if ($result) {
+            error_log("DirectoryManager: Successfully deleted file: $filepath");
+        } else {
+            error_log("DirectoryManager: Failed to delete file: $filepath");
+        }
+
+        return $result;
+    }
+
     private function deleteDirectory(string $dir): void
     {
         if (!is_dir($dir)) {

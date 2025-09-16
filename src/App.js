@@ -195,6 +195,19 @@ const App = () => {
         fetchPosts(false);
     };
 
+    // Handle post deletion
+    const handlePostDelete = (deletedPostId) => {
+        // Clear selected post if it was the one deleted
+        if (selectedPost && selectedPost.id === deletedPostId) {
+            setSelectedPost(null);
+            setMetaData({});
+            setSaveStatus('');
+        }
+
+        // Refresh the posts list to remove the deleted post
+        refreshPosts();
+    };
+
     useEffect(() => {
         // Always use the API call to get full meta data
         // The pre-loaded data doesn't include the full meta structure
@@ -231,6 +244,7 @@ const App = () => {
                     selectedPost={selectedPost}
                     metaData={metaData}
                     onMetaChange={handleMetaChange}
+                    onPostDelete={handlePostDelete}
                 />
             </div>
         </div>

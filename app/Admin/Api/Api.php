@@ -113,6 +113,11 @@ class Api
                         }
                     ],
                 ],
+            ],
+            [
+                'methods' => 'DELETE',
+                'callback' => [$this->postsController, 'deletePost'],
+                'permission_callback' => [$this, 'checkDeletePermissions'],
             ]
         ]);
 
@@ -146,5 +151,10 @@ class Api
     public function checkCreatePermissions()
     {
         return current_user_can('publish_posts');
+    }
+
+    public function checkDeletePermissions()
+    {
+        return current_user_can('delete_posts');
     }
 }

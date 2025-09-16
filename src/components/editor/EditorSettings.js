@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Textarea, Select, DashiconButton } from '../ui';
+import { TrashIcon } from '../icons';
+import Button from '../ui/Button';
 
-const EditorSettings = ({ selectedPost, metaData, onMetaChange }) => {
+const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) => {
   const [blockCategories, setBlockCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Parse settings from metaData
   const getSettings = () => {
@@ -99,6 +102,41 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange }) => {
     updateSettings(description, category, newIcon);
   };
 
+  const handleDelete = async () => {
+    if (!selectedPost) return;
+
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete "${selectedPost.title}"? This will also delete associated files and cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch(`/wp-json/funculo/v1/post/${selectedPost.id}`, {
+        method: 'DELETE',
+        headers: {
+          'X-WP-Nonce': window.wpApiSettings.nonce
+        }
+      });
+
+      if (response.ok) {
+        if (onPostDelete) {
+          onPostDelete(selectedPost.id);
+        }
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete post');
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      alert('Failed to delete post: ' + error.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (!selectedPost) {
     return null;
   }
@@ -108,9 +146,11 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange }) => {
 
   return (
     <aside id="editor-settings" className='grow max-w-[var(--sidebar)] border-l border-solid border-outline p-4'>
-      <h3 className="text-lg font-semibold border-b border-outline pb-2 mb-4">
-        Settings
-      </h3>
+      <div className="flex items-center justify-between border-b border-outline pb-2 mb-4">
+        <h3 className="text-lg font-semibold">
+          Settings
+        </h3>        
+      </div>
 
       <div className="space-y-4">
         <div className="text-sm text-contrast space-y-2">
@@ -156,6 +196,20 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange }) => {
           </div>
         )}
       </div>
+      
+      
+      <h4 className='!mt-12 pt-6 border-t border-outline border-t-solid'>Dangerous area</h4>
+
+      <Button
+          onClick={handleDelete}
+          disabled={isDeleting}
+          variant="secondary"
+          title="Delete permanently"
+          className='flex'
+        >
+          <TrashIcon className="w-5 h-5 mr-2" />
+          {isDeleting ? 'Deleting...' : 'Delete Permanently'}
+        </Button>
     </aside>
   );
 };

@@ -12,7 +12,7 @@ const Button = ({ children, onClick, variant = 'primary', className = '', ...pro
       case 'ghost':
         return 'bg-transparent text-contrast border-transparent hover:bg-outline hover:text-highlight';
       case 'destroy':
-        return 'bg-red-600 text-white hover:bg-red-700 border-red-600';
+        return 'bg-error/10 text-error hover:bg-error/30 border-error';
       default:
         return 'bg-action text-highlight hover:bg-action/80 border-action';
     }

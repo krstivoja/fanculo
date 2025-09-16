@@ -5,6 +5,7 @@ namespace Fanculo\Admin\Api;
 use Fanculo\Admin\Content\FunculoPostType;
 use Fanculo\Admin\Content\FunculoTypeTaxonomy;
 use Fanculo\FilesManager\FilesManagerService;
+use Fanculo\FilesManager\Services\DirectoryManager;
 
 class PostsApiController
 {
@@ -290,5 +291,51 @@ class PostsApiController
                 update_post_meta($postId, '_funculo_scss_partial_scss', sanitize_textarea_field($scssPartials['scss']));
             }
         }
+    }
+
+    public function deletePost($request)
+    {
+        $postId = $request->get_param('id');
+        $post = get_post($postId);
+
+        if (!$post || $post->post_type !== FunculoPostType::getPostType()) {
+            return new \WP_Error('post_not_found', 'Post not found', ['status' => 404]);
+        }
+
+        // Get post terms to determine what files to delete
+        $terms = wp_get_post_terms($post->ID, FunculoTypeTaxonomy::getTaxonomy());
+        $directoryManager = new DirectoryManager();
+
+        // Delete associated files based on post type
+        foreach ($terms as $term) {
+            switch ($term->slug) {
+                case FunculoTypeTaxonomy::getTermBlocks():
+                    // Delete block folder in fanculo-blocks directory
+                    $directoryManager->deleteBlockDirectory($post->post_name);
+                    break;
+
+                case FunculoTypeTaxonomy::getTermSymbols():
+                    // Delete symbols file
+                    $directoryManager->deleteFile('symbols/' . $post->post_name . '.php');
+                    break;
+
+                case FunculoTypeTaxonomy::getTermScssPartials():
+                    // Delete SCSS partial file
+                    $directoryManager->deleteFile('scss/' . $post->post_name . '.scss');
+                    break;
+            }
+        }
+
+        // Permanently delete the post (skip trash)
+        $deleted = wp_delete_post($postId, true);
+
+        if (!$deleted) {
+            return new \WP_Error('delete_failed', 'Failed to delete post', ['status' => 500]);
+        }
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'message' => 'Post and associated files deleted successfully'
+        ], 200);
     }
 }
