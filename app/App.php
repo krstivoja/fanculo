@@ -8,6 +8,7 @@ use Fanculo\Admin\Content\FunculoPostType;
 use Fanculo\Admin\Content\FunculoTypeTaxonomy;
 use Fanculo\Helpers\MetaBoxHelper;
 use Fanculo\Services\FileGenerationHooks;
+use Fanculo\Services\BlockRegistrationHooks;
 
 class App
 {
@@ -43,5 +44,8 @@ class App
 
         // Initialize file generation system
         new FileGenerationHooks();
+
+        // Initialize block loading system
+        new BlockRegistrationHooks();
     }
 }

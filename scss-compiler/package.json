@@ -1,0 +1,23 @@
+{
+  "name": "sass-npm-build",
+  "version": "1.0.0",
+  "description": "SCSS compilation using NPM build process",
+  "main": "index.js",
+  "scripts": {
+    "build": "node build.js",
+    "update-sass": "npm update sass && npm run build",
+    "version-check": "npm list sass immutable"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "immutable": "^5.1.2",
+    "sass": "1.92.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.5",
+    "terser": "^5.41.0"
+  }
+}

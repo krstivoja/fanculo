@@ -1,0 +1,15 @@
+{
+  "buildDate": "2025-09-16T15:30:13.827Z",
+  "versions": {
+    "sass": "1.92.1",
+    "immutable": "5.1.2"
+  },
+  "files": {
+    "sass.dart.min.js": "2.9MB (43% smaller than original)",
+    "sass-bundle.min.js": "66.8KB (tree-shaken)",
+    "sass-bundle.js": "160.8KB (readable)"
+  },
+  "staticFiles": {
+    "styles.css": "1.0KB (static)"
+  }
+}

@@ -21,6 +21,17 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Define plugin constants
+define('FANCULO_URL', plugin_dir_url(__FILE__));
+define('FANCULO_PATH', plugin_dir_path(__FILE__));
+define('FANCULO_VERSION', '0.0.1');
+
+// Define blocks directory - save to wp-content/plugins/fanculo-blocks
+$blocks_dir_name = 'fanculo-blocks';
+$blocks_path = WP_PLUGIN_DIR . '/' . $blocks_dir_name;
+define('FANCULO_BLOCKS_DIR', $blocks_path);
+define('FANCULO_BLOCKS_URL', plugins_url($blocks_dir_name));
+
 
 // Require Composer autoloader
 if (file_exists(__DIR__ . '/vendor/autoload.php')) {

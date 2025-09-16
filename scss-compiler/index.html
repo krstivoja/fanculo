@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Sass NPM Live Compiler (esbuild optimized)</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <h1>SCSS Live Compiler (esbuild + tree-shaking)</h1>
+    <div class="status" id="status">🔄 Loading optimized Sass compiler...</div>
+    
+    <div class="container">
+      <div class="section">
+        <h2>SCSS Input:</h2>
+        <textarea id="scss" placeholder="Enter your SCSS code here...">@use "sass:color";
+
+$primary-color: #007bff;
+$secondary-color: #6c757d;
+$border-radius: 4px;
+
+.button {
+  background-color: $primary-color;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: $border-radius;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: color.scale($primary-color, $lightness: -10%);
+  }
+  
+  &.secondary {
+    background-color: $secondary-color;
+    
+    &:hover {
+      background-color: color.scale($secondary-color, $lightness: -10%);
+    }
+  }
+}</textarea>
+        <button id="compileButton">Compile SCSS</button>
+      </div>
+      
+      <div class="section">
+        <h2>CSS Output:</h2>
+        <pre id="output">Click "Compile SCSS" to see the compiled CSS...</pre>
+      </div>
+    </div>
+
+    <!-- Modern bundled approach with tree-shaking -->
+    <script src="./dist/sass-bundle.min.js"></script>
+    <script>
+      let sassCompiler;
+
+      async function initializeSassCompiler() {
+        if (sassCompiler) return sassCompiler;
+        
+        const status = document.getElementById("status");
+        
+        try {
+          status.textContent = "🔄 Loading esbuild-optimized Dart Sass...";
+          
+          // Use the bundled SassCompiler class
+          sassCompiler = new window.SassBundled.default();
+          await sassCompiler.initialize();
+          
+          status.textContent = "✅ esbuild-optimized Dart Sass loaded successfully!";
+          status.className = "status success";
+          
+          console.log("Tree-shaken Dart Sass initialized successfully!");
+          return sassCompiler;
+        } catch (error) {
+          status.textContent = "⚠️ Failed to load Sass: " + error.message;
+          status.className = "status error";
+          console.error("Failed to initialize Sass:", error);
+          throw error;
+        }
+      }
+
+      async function compile() {
+        const output = document.getElementById("output");
+        const scss = document.getElementById("scss").value;
+
+        if (!scss.trim()) {
+          output.textContent = "⚠️ Please enter some SCSS code to compile.";
+          return;
+        }
+
+        try {
+          output.textContent = "🔄 Compiling...";
+          
+          // Initialize Sass if not already done
+          if (!sassCompiler) {
+            await initializeSassCompiler();
+          }
+
+          // Compile SCSS using bundled Dart Sass
+          const result = await sassCompiler.compileString(scss);
+          
+          output.textContent = result.css;
+          console.log("Compilation successful with tree-shaken dependencies!");
+          
+        } catch (e) {
+          output.textContent = "⚠️ Compilation Error: " + e.message;
+          console.error("Compilation error:", e);
+        }
+      }
+
+      // Event listeners
+      document.getElementById("compileButton").addEventListener("click", compile);
+      
+      // Auto-compile on input change (with debouncing)
+      let timeout;
+      document.getElementById("scss").addEventListener("input", function() {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          if (sassCompiler) compile();
+        }, 500);
+      });
+
+      // Initialize and compile on load
+      window.addEventListener('load', async () => {
+        try {
+          await initializeSassCompiler();
+          setTimeout(compile, 100);
+        } catch (error) {
+          document.getElementById("output").textContent = "⚠️ Failed to initialize: " + error.message;
+        }
+      });
+    </script>
+  </body>
+</html>
