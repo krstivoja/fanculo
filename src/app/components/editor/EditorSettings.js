@@ -159,17 +159,15 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
           <div className="flex p-1 border border-solid border-outline rounded-md bg-base-2">
             <Button
               variant={activeTab === 'settings' ? 'primary' : 'ghost'}
-              className="px-4 py-3 text-sm font-medium border-b-2 transition-colors"
+              className="grow px-4 py-2 text-sm font-medium border-b-2 transition-colors"
               onClick={() => setActiveTab('settings')}
-              className="grow"
             >
               Block Settings
             </Button>
             <Button
               variant={activeTab === 'partials' ? 'primary' : 'ghost'}
-              className="px-4 py-3 text-sm font-medium border-b-2 transition-colors"
+              className="grow px-4 py-2 text-sm font-medium border-b-2 transition-colors"
               onClick={() => setActiveTab('partials')}
-              className="grow"
             >
               SCSS Partials
             </Button>
