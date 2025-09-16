@@ -5,7 +5,7 @@ const Toast = ({
   type = 'error',
   isVisible,
   onClose,
-  duration = 500000,
+  duration = 5000,
   title = null
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
