@@ -120,6 +120,39 @@ const App = () => {
         setShowToast(false);
     };
 
+    // Handle opening partial for editing from toast
+    const handleOpenPartial = async (partialName) => {
+        try {
+            // Find the partial post by title/name
+            const response = await fetch('/wp-json/funculo/v1/posts?per_page=100', {
+                headers: {
+                    'X-WP-Nonce': window.wpApiSettings.nonce
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const posts = data.posts || [];
+
+                // Find the partial with matching title
+                const targetPartial = posts.find(post =>
+                    post.terms?.some(term => term.slug === 'scss-partials') &&
+                    (post.title?.rendered === partialName || post.title === partialName)
+                );
+
+                if (targetPartial) {
+                    // Close the toast and navigate to the partial
+                    setShowToast(false);
+                    await handlePostSelect(targetPartial);
+                } else {
+                    console.error('Partial not found:', partialName);
+                }
+            }
+        } catch (error) {
+            console.error('Error opening partial:', error);
+        }
+    };
+
     // Get current partials data for compilation
     const getCurrentPartials = async () => {
         try {
@@ -377,6 +410,7 @@ const App = () => {
                     title="SCSS Compilation Error"
                     isVisible={showToast && scssError}
                     onClose={handleToastClose}
+                    onOpenPartial={handleOpenPartial}
                 />
 
             </>
@@ -422,6 +456,7 @@ const App = () => {
                 title="SCSS Compilation Error"
                 isVisible={showToast && scssError}
                 onClose={handleToastClose}
+                onOpenPartial={handleOpenPartial}
             />
 
         </>

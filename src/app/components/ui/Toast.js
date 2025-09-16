@@ -5,8 +5,9 @@ const Toast = ({
   type = 'error',
   isVisible,
   onClose,
-  duration = 5000,
-  title = null
+  duration = 500000,
+  title = null,
+  onOpenPartial = null
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -29,6 +30,21 @@ const Toast = ({
     setTimeout(() => {
       onClose();
     }, 300);
+  };
+
+  // Parse error message to extract partial information
+  const getPartialFromError = () => {
+    if (!message) return null;
+
+    const partialMatch = message.match(/📍 Error location: (?:Included )?Partial: (\w+)/i);
+    return partialMatch ? partialMatch[1] : null;
+  };
+
+  const handleOpenPartial = () => {
+    const partialName = getPartialFromError();
+    if (partialName && onOpenPartial) {
+      onOpenPartial(partialName);
+    }
   };
 
 
@@ -78,6 +94,14 @@ const Toast = ({
           <div className={`text-xs ${styles.content} p-2 rounded font-mono whitespace-pre-wrap `}>
             {message}
           </div>
+          {getPartialFromError() && onOpenPartial && (
+            <button
+              onClick={handleOpenPartial}
+              className="mt-4 px-4 py-2 bg-base-1 text-highlight text-xs rounded cursor-pointer"
+            >
+              Open {getPartialFromError()} for editing
+            </button>
+          )}
         </div>
         <button
           onClick={handleClose}
