@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Textarea, Select, DashiconButton } from '../ui';
 import { TrashIcon } from '../icons';
 import Button from '../ui/Button';
+import ScssPartialsManager from './ScssPartialsManager';
 
 const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) => {
   const [blockCategories, setBlockCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [activeTab, setActiveTab] = useState('settings');
 
   // Parse settings from metaData
   const getSettings = () => {
@@ -145,71 +147,118 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
   const isBlockType = selectedPost.terms && selectedPost.terms.some(term => term.slug === 'blocks');
 
   return (
-    <aside id="editor-settings" className='grow max-w-[var(--sidebar)] border-l border-solid border-outline p-4'>
-      <div className="flex items-center justify-between border-b border-outline pb-2 mb-4">
-        <h3 className="text-lg font-semibold">
-          Settings
-        </h3>        
+    <aside id="editor-settings" className='grow max-w-[var(--sidebar)] border-l border-solid border-outline flex flex-col'>
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-outline p-4">
+        <h3 className="text-lg font-semibold">Settings</h3>
       </div>
 
-      <div className="space-y-4">
-        <div className="text-sm text-contrast space-y-2">
-          <div><strong>ID:</strong> {selectedPost.id}</div>
-          <div><strong>Type:</strong> {selectedPost.terms?.[0]?.name || 'N/A'}</div>
-          <div><strong>Slug:</strong> {selectedPost.slug || 'N/A'}</div>
+      {/* Tab Navigation for Blocks */}
+      {isBlockType && (
+        <div className="border-b border-outline px-4">
+          <div className="flex">
+            <button
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'settings'
+                  ? 'border-action text-action'
+                  : 'border-transparent text-contrast hover:text-highlight'
+              }`}
+              onClick={() => setActiveTab('settings')}
+            >
+              Block Settings
+            </button>
+            <button
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'partials'
+                  ? 'border-action text-action'
+                  : 'border-transparent text-contrast hover:text-highlight'
+              }`}
+              onClick={() => setActiveTab('partials')}
+            >
+              SCSS Partials
+            </button>
+          </div>
         </div>
+      )}
 
-        {isBlockType && (
-          <div className="space-y-4 pt-4 border-t border-outline">
-            <h4 className="font-medium text-highlight">Block Configuration</h4>
+      {/* Tab Content */}
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        {/* Settings Tab */}
+        {(!isBlockType || activeTab === 'settings') && (
+          <div className="flex-1 p-4 overflow-y-auto">
+            <div className="space-y-4">
+              <div className="text-sm text-contrast space-y-2">
+                <div><strong>ID:</strong> {selectedPost.id}</div>
+                <div><strong>Type:</strong> {selectedPost.terms?.[0]?.name || 'N/A'}</div>
+                <div><strong>Slug:</strong> {selectedPost.slug || 'N/A'}</div>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-highlight mb-2">
-                Description
-              </label>
-              <Textarea
-                value={description}
-                onChange={handleDescriptionChange}
-                placeholder="Enter block description..."
-                rows={4}
-              />
+              {isBlockType && (
+                <div className="space-y-4 pt-4 border-t border-outline">
+                  <h4 className="font-medium text-highlight">Block Configuration</h4>
+
+                  <div>
+                    <label className="block text-sm font-medium text-highlight mb-2">
+                      Description
+                    </label>
+                    <Textarea
+                      value={description}
+                      onChange={handleDescriptionChange}
+                      placeholder="Enter block description..."
+                      rows={4}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-highlight mb-2">
+                      Category
+                    </label>
+                    <Select
+                      value={category}
+                      onChange={handleCategoryChange}
+                      options={blockCategories}
+                      placeholder={loadingCategories ? "Loading categories..." : "Select category"}
+                      disabled={loadingCategories}
+                    />
+                  </div>
+
+                  <DashiconButton
+                    selectedIcon={icon}
+                    onIconSelect={handleIconChange}
+                    label="Block Dashicon"
+                  />
+                </div>
+              )}
+
+              {/* Danger Zone */}
+              <div className="pt-6 border-t border-outline space-y-4">
+                <h4 className="font-medium text-highlight">Dangerous area</h4>
+                <Button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  variant="secondary"
+                  title="Delete permanently"
+                  className="flex items-center gap-2"
+                >
+                  <TrashIcon className="w-5 h-5" />
+                  {isDeleting ? 'Deleting...' : 'Delete Permanently'}
+                </Button>
+              </div>
             </div>
+          </div>
+        )}
 
-            <div>
-              <label className="block text-sm font-medium text-highlight mb-2">
-                Category
-              </label>
-              <Select
-                value={category}
-                onChange={handleCategoryChange}
-                options={blockCategories}
-                placeholder={loadingCategories ? "Loading categories..." : "Select category"}
-                disabled={loadingCategories}
-              />
-            </div>
-
-            <DashiconButton
-              selectedIcon={icon}
-              onIconSelect={handleIconChange}
-              label="Block Dashicon"
+        {/* SCSS Partials Tab */}
+        {isBlockType && activeTab === 'partials' && (
+          <div className="flex-1 p-4 overflow-hidden">
+            <ScssPartialsManager
+              selectedPost={selectedPost}
+              metaData={metaData}
+              onMetaChange={onMetaChange}
             />
           </div>
         )}
       </div>
-      
-      
-      <h4 className='!mt-12 pt-6 border-t border-outline border-t-solid'>Dangerous area</h4>
-
-      <Button
-          onClick={handleDelete}
-          disabled={isDeleting}
-          variant="secondary"
-          title="Delete permanently"
-          className='flex'
-        >
-          <TrashIcon className="w-5 h-5 mr-2" />
-          {isDeleting ? 'Deleting...' : 'Delete Permanently'}
-        </Button>
     </aside>
   );
 };

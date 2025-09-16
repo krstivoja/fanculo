@@ -5,6 +5,8 @@ namespace Fanculo\Admin\Api;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
+use Fanculo\Admin\Content\FunculoPostType;
+use Fanculo\Admin\Content\FunculoTypeTaxonomy;
 
 class ScssCompilerApiController
 {
@@ -86,5 +88,117 @@ class ScssCompilerApiController
             'css_content' => $css_content ?: '',
             'compiled_at' => $compiled_at ? date('c', $compiled_at) : null
         ], 200);
+    }
+
+    /**
+     * Get all available SCSS partials
+     *
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response|WP_Error
+     */
+    public function getScssPartials(WP_REST_Request $request)
+    {
+        try {
+            // Get all SCSS partials posts
+            $partials = get_posts([
+                'post_type' => FunculoPostType::getPostType(),
+                'post_status' => 'publish',
+                'numberposts' => -1,
+                'tax_query' => [
+                    [
+                        'taxonomy' => FunculoTypeTaxonomy::getTaxonomy(),
+                        'field' => 'slug',
+                        'terms' => FunculoTypeTaxonomy::getTermScssPartials()
+                    ]
+                ]
+            ]);
+
+            $formatted_partials = [];
+            $global_partials = [];
+            $available_partials = [];
+
+            foreach ($partials as $partial) {
+                $is_global = get_post_meta($partial->ID, 'funculo_scss_is_global', true);
+                $global_order = get_post_meta($partial->ID, 'funculo_scss_global_order', true);
+
+                $partial_data = [
+                    'id' => $partial->ID,
+                    'title' => $partial->post_title,
+                    'slug' => $partial->post_name,
+                    'is_global' => (bool) $is_global,
+                    'global_order' => $global_order ? (int) $global_order : 999
+                ];
+
+                error_log("SCSS Partial Debug - ID: {$partial->ID}, Title: {$partial->post_title}, is_global meta: " . var_export($is_global, true) . ", bool cast: " . var_export((bool) $is_global, true));
+
+                // Check if is_global is explicitly set to '1' (string) or 1 (int) or true (bool)
+                if ($is_global === '1' || $is_global === 1 || $is_global === true) {
+                    $global_partials[] = $partial_data;
+                } else {
+                    $available_partials[] = $partial_data;
+                }
+            }
+
+            // Sort global partials by order
+            usort($global_partials, function($a, $b) {
+                return $a['global_order'] - $b['global_order'];
+            });
+
+            // Sort available partials by title
+            usort($available_partials, function($a, $b) {
+                return strcmp($a['title'], $b['title']);
+            });
+
+            return new WP_REST_Response([
+                'global_partials' => $global_partials,
+                'available_partials' => $available_partials
+            ], 200);
+
+        } catch (\Exception $e) {
+            return new WP_Error('fetch_partials_error', $e->getMessage(), ['status' => 500]);
+        }
+    }
+
+    /**
+     * Update global setting for an SCSS partial
+     *
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response|WP_Error
+     */
+    public function updatePartialGlobalSetting(WP_REST_Request $request)
+    {
+        $post_id = $request->get_param('id');
+        $is_global = $request->get_param('is_global');
+        $global_order = $request->get_param('global_order');
+
+        if (!$post_id) {
+            return new WP_Error('missing_post_id', 'Post ID is required', ['status' => 400]);
+        }
+
+        // Verify the post exists and is an SCSS partial
+        $post = get_post($post_id);
+        if (!$post) {
+            return new WP_Error('post_not_found', 'Post not found', ['status' => 404]);
+        }
+
+        try {
+            // Update global setting
+            update_post_meta($post_id, 'funculo_scss_is_global', $is_global ? 1 : 0);
+
+            // Update global order if provided
+            if ($global_order !== null) {
+                update_post_meta($post_id, 'funculo_scss_global_order', (int) $global_order);
+            }
+
+            return new WP_REST_Response([
+                'success' => true,
+                'post_id' => $post_id,
+                'is_global' => (bool) $is_global,
+                'global_order' => $global_order
+            ], 200);
+
+        } catch (\Exception $e) {
+            return new WP_Error('update_global_setting_error', $e->getMessage(), ['status' => 500]);
+        }
     }
 }

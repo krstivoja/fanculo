@@ -168,6 +168,29 @@ class Api
                 ],
             ]
         ]);
+
+        // SCSS partials routes
+        register_rest_route('funculo/v1', '/scss-partials', [
+            'methods' => 'GET',
+            'callback' => [$this->scssCompilerController, 'getScssPartials'],
+            'permission_callback' => [$this, 'checkPermissions'],
+        ]);
+
+        register_rest_route('funculo/v1', '/scss-partial/(?P<id>\d+)/global-setting', [
+            'methods' => 'POST',
+            'callback' => [$this->scssCompilerController, 'updatePartialGlobalSetting'],
+            'permission_callback' => [$this, 'checkCreatePermissions'],
+            'args' => [
+                'is_global' => [
+                    'required' => true,
+                    'type' => 'boolean',
+                ],
+                'global_order' => [
+                    'required' => false,
+                    'type' => 'integer',
+                ],
+            ],
+        ]);
     }
 
     public function checkPermissions()

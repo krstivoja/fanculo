@@ -31,8 +31,31 @@ class SassCompiler {
 
   async loadDartSass() {
     return new Promise((resolve, reject) => {
+      // Get the plugin base URL dynamically
+      const getPluginBaseUrl = () => {
+        if (window.funculoSettings && window.funculoSettings.pluginUrl) {
+          return window.funculoSettings.pluginUrl;
+        }
+
+        const scripts = document.getElementsByTagName('script');
+        for (let script of scripts) {
+          if (script.src && script.src.includes('/fanculo/')) {
+            const pluginUrl = script.src.substring(0, script.src.indexOf('/fanculo/')) + '/fanculo/';
+            return pluginUrl;
+          }
+        }
+
+        const currentUrl = window.location.origin + window.location.pathname;
+        if (currentUrl.includes('/wp-admin/')) {
+          const baseUrl = currentUrl.substring(0, currentUrl.indexOf('/wp-admin/')) + '/wp-content/plugins/fanculo/';
+          return baseUrl;
+        }
+
+        return '/wp-content/plugins/fanculo/';
+      };
+
       const script = document.createElement('script');
-      script.src = './sass.dart.min.js';
+      script.src = getPluginBaseUrl() + 'dist/scss-compiler/sass.dart.min.js';
       script.onload = () => {
         try {
           // Get the Sass library from global exports (Dart Sass pattern)

@@ -50,6 +50,7 @@ const MetaboxContainer = ({ selectedPost, metaData, onMetaChange, titleComponent
           metaData={metaData}
           onChange={handleMetaChange}
           titleComponent={titleComponent}
+          selectedPost={selectedPost}
         />
       )}
 

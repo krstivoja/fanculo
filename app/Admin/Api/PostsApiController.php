@@ -234,6 +234,7 @@ class PostsApiController
                         'js' => get_post_meta($postId, '_funculo_block_js', true),
                         'attributes' => get_post_meta($postId, '_funculo_block_attributes', true),
                         'settings' => get_post_meta($postId, '_funculo_block_settings', true),
+                        'selected_partials' => get_post_meta($postId, '_funculo_block_selected_partials', true),
                     ];
                     break;
 
@@ -273,6 +274,9 @@ class PostsApiController
             }
             if (isset($blocks['settings'])) {
                 update_post_meta($postId, '_funculo_block_settings', sanitize_textarea_field($blocks['settings']));
+            }
+            if (isset($blocks['selected_partials'])) {
+                update_post_meta($postId, '_funculo_block_selected_partials', sanitize_textarea_field($blocks['selected_partials']));
             }
         }
 

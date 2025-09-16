@@ -59,13 +59,18 @@ const App = () => {
 
     // Handle meta field changes
     const handleMetaChange = (section, field, value) => {
-        setMetaData(prev => ({
-            ...prev,
-            [section]: {
-                ...prev[section],
-                [field]: value
-            }
-        }));
+        console.log('App.js handleMetaChange called:', { section, field, value });
+        setMetaData(prev => {
+            const newMetaData = {
+                ...prev,
+                [section]: {
+                    ...prev[section],
+                    [field]: value
+                }
+            };
+            console.log('New metaData after change:', newMetaData);
+            return newMetaData;
+        });
         setSaveStatus('unsaved');
     };
 
@@ -97,23 +102,63 @@ const App = () => {
         }
     };
 
+    // Get current partials data for compilation
+    const getCurrentPartials = async () => {
+        try {
+            // Get global partials from API
+            const partialsResponse = await fetch('/wp-json/funculo/v1/scss-partials', {
+                headers: {
+                    'X-WP-Nonce': window.wpApiSettings.nonce
+                }
+            });
+
+            let globalPartials = [];
+            if (partialsResponse.ok) {
+                const partialsData = await partialsResponse.json();
+                globalPartials = partialsData.global_partials || [];
+            }
+
+            // Get selected partials from current state
+            let selectedPartials = [];
+            const selectedPartialsString = metaData.blocks?.selected_partials;
+            if (selectedPartialsString) {
+                try {
+                    selectedPartials = JSON.parse(selectedPartialsString);
+                } catch (e) {
+                    console.warn('Failed to parse current selected partials:', e);
+                }
+            }
+
+            return { globalPartials, selectedPartials };
+        } catch (error) {
+            console.error('Error getting current partials:', error);
+            return { globalPartials: [], selectedPartials: [] };
+        }
+    };
+
     // Save meta data
     const handleSave = async () => {
         setSaveStatus('saving');
 
         try {
             if (selectedPost?.id) {
+                console.log('💾 Saving post data. MetaData being saved:', metaData);
+
                 // Check if this is a block (not SCSS partial) and has SCSS content
                 const hasScssContent = selectedPost.terms?.some(term => term.slug === 'blocks') &&
-                                     metaData.content?.scss;
+                                     metaData.blocks?.scss;
 
                 if (hasScssContent) {
                     console.log('🔄 Compiling SCSS for post:', selectedPost.title);
 
                     try {
-                        // Compile SCSS to CSS
-                        const scssContent = metaData.content.scss;
-                        const cssContent = await compileScss(scssContent);
+                        // Get current partials data for real-time compilation
+                        const currentPartials = await getCurrentPartials();
+                        console.log('🔍 Current partials for compilation:', currentPartials);
+
+                        // Compile SCSS to CSS with current partials support
+                        const scssContent = metaData.blocks.scss;
+                        const cssContent = await compileScss(scssContent, selectedPost.id, currentPartials);
 
                         console.log('✅ SCSS compiled successfully');
 
@@ -128,6 +173,7 @@ const App = () => {
                 }
 
                 // Save specific post meta data
+                console.log('📡 Sending PUT request to save meta data:', metaData);
                 const response = await fetch(`/wp-json/funculo/v1/post/${selectedPost.id}`, {
                     method: 'PUT',
                     headers: {
@@ -140,7 +186,11 @@ const App = () => {
                 });
 
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ Save failed:', response.status, errorText);
                     throw new Error('Failed to save post data');
+                } else {
+                    console.log('✅ Meta data saved successfully');
                 }
             }
 
