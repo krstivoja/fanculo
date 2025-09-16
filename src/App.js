@@ -3,6 +3,7 @@ import EditorList from './components/editor/EditorList';
 import EditorHeader from './components/editor/EditorHeader';
 import EditorMain from './components/editor/EditorMain';
 import EditorSettings from './components/editor/EditorSettings';
+import EditorNoPosts from './components/editor/EditorNoPosts';
 import './style.css';
 
 
@@ -178,6 +179,14 @@ const App = () => {
             }
 
             setGroupedPosts(grouped);
+
+            // Auto-select the first available post if none is selected
+            if (!selectedPost && showLoading) {
+                const firstPost = grouped.blocks[0] || grouped.symbols[0] || grouped['scss-partials'][0];
+                if (firstPost) {
+                    handlePostSelect(firstPost);
+                }
+            }
         } catch (error) {
             console.error('Error fetching posts:', error);
             setGroupedPosts({
@@ -208,6 +217,39 @@ const App = () => {
         refreshPosts();
     };
 
+    // Handle post creation
+    const handlePostCreate = async (postData) => {
+        try {
+            const response = await fetch('/wp-json/funculo/v1/posts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-WP-Nonce': window.wpApiSettings.nonce
+                },
+                body: JSON.stringify({
+                    title: postData.title,
+                    taxonomy_term: postData.type,
+                    status: 'publish'
+                })
+            });
+
+            if (response.ok) {
+                const newPost = await response.json();
+                // Refresh posts to include the new post
+                refreshPosts();
+                // Auto-select the newly created post
+                setTimeout(() => {
+                    handlePostSelect(newPost);
+                }, 100);
+            } else {
+                throw new Error('Failed to create post');
+            }
+        } catch (error) {
+            console.error('Error creating post:', error);
+            alert('Failed to create post: ' + error.message);
+        }
+    };
+
     useEffect(() => {
         // Always use the API call to get full meta data
         // The pre-loaded data doesn't include the full meta structure
@@ -217,6 +259,21 @@ const App = () => {
     if (loading) return <div>Loading...</div>;
 
     const totalPosts = groupedPosts.blocks.length + groupedPosts.symbols.length + groupedPosts['scss-partials'].length;
+
+    // Show empty state when no posts exist
+    if (totalPosts === 0) {
+        return (
+            <div id="editor">
+                <EditorHeader
+                    onSave={handleSave}
+                    saveStatus={saveStatus}
+                    hasUnsavedChanges={saveStatus === 'unsaved'}
+                    onPostsRefresh={refreshPosts}
+                />
+                <EditorNoPosts onPostCreate={handlePostCreate} />
+            </div>
+        );
+    }
 
     return (
         <div id="editor">
