@@ -149,34 +149,30 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
   return (
     <aside id="editor-settings" className='grow max-w-[var(--sidebar)] border-l border-solid border-outline flex flex-col'>
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-outline p-4">
+      {/* <div className="flex items-center justify-between border-b border-outline p-4">
         <h3 className="text-lg font-semibold">Settings</h3>
-      </div>
+      </div> */}
 
       {/* Tab Navigation for Blocks */}
       {isBlockType && (
-        <div className="border-b border-outline px-4">
-          <div className="flex">
-            <button
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'settings'
-                  ? 'border-action text-action'
-                  : 'border-transparent text-contrast hover:text-highlight'
-              }`}
+        <div className="p-3">
+          <div className="flex p-1 border border-solid border-outline rounded-md bg-base-2">
+            <Button
+              variant={activeTab === 'settings' ? 'primary' : 'ghost'}
+              className="px-4 py-3 text-sm font-medium border-b-2 transition-colors"
               onClick={() => setActiveTab('settings')}
+              className="grow"
             >
               Block Settings
-            </button>
-            <button
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'partials'
-                  ? 'border-action text-action'
-                  : 'border-transparent text-contrast hover:text-highlight'
-              }`}
+            </Button>
+            <Button
+              variant={activeTab === 'partials' ? 'primary' : 'ghost'}
+              className="px-4 py-3 text-sm font-medium border-b-2 transition-colors"
               onClick={() => setActiveTab('partials')}
+              className="grow"
             >
               SCSS Partials
-            </button>
+            </Button>
           </div>
         </div>
       )}
