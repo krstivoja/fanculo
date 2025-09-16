@@ -123,6 +123,9 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
     return selectedPartials.some(p => p.id === partialId);
   };
 
+  // Filter available partials to exclude selected ones
+  const inactivePartials = availablePartials.filter(partial => !isPartialSelected(partial.id));
+
   if (loading) {
     return <div className="p-4 text-center text-contrast">Loading partials...</div>;
   }
@@ -142,11 +145,7 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
                 key={partial.id}
                 className="flex items-center gap-3 p-3 bg-base-2 border border-outline rounded opacity-75"
               >
-                <span className="text-xs bg-action text-white px-2 py-1 rounded font-mono">
-                  {partial.global_order}
-                </span>
                 <span className="flex-1 text-sm">{partial.title}</span>
-                <span className="text-xs text-contrast">@import "{partial.slug}";</span>
               </div>
             ))}
           </div>
@@ -154,16 +153,12 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
       )}
 
       {/* Selected Partials Section */}
-      <div className="mb-6">
-        <h4 className="font-medium text-highlight mb-3">
-          Selected Partials {selectedPartials.length > 0 && `(${selectedPartials.length})`}
-        </h4>
+      {selectedPartials.length > 0 && (
+        <div className="mb-6">
+          <h4 className="font-medium text-highlight mb-3">
+            Included ({selectedPartials.length})
+          </h4>
 
-        {selectedPartials.length === 0 ? (
-          <div className="p-4 text-center text-contrast bg-base-2 border border-outline rounded">
-            No partials selected. Choose from available partials below.
-          </div>
-        ) : (
           <div className="space-y-2">
             {selectedPartials.map((partial, index) => (
               <div
@@ -174,11 +169,7 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
                 onDrop={(e) => handleDrop(e, index)}
                 className="flex items-center gap-3 p-3 bg-base-2 border border-outline rounded cursor-move hover:bg-base-3 transition-colors"
               >
-                <span className="text-xs bg-highlight text-white px-2 py-1 rounded font-mono">
-                  {globalPartials.length + partial.order}
-                </span>
                 <span className="flex-1 text-sm">{partial.title}</span>
-                <span className="text-xs text-contrast">@import "{partial.slug}";</span>
                 <Button
                   onClick={() => removePartial(partial.id)}
                   variant="secondary"
@@ -190,71 +181,38 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Available Partials Section */}
-      <div className="flex-1">
-        <h4 className="font-medium text-highlight mb-3">
-          Available Partials {availablePartials.length > 0 && `(${availablePartials.length})`}
-        </h4>
+      {/* Inactive Partials Section */}
+      {inactivePartials.length > 0 && (
+        <div className="flex-1">
+          <h4 className="font-medium text-highlight mb-3">
+            Inactive ({inactivePartials.length})
+          </h4>
 
-        {availablePartials.length === 0 ? (
-          <div className="p-4 text-center text-contrast bg-base-2 border border-outline rounded">
-            No additional partials available.
-          </div>
-        ) : (
           <div className="space-y-2 max-h-64 overflow-y-auto">
-            {availablePartials.map((partial) => (
+            {inactivePartials.map((partial) => (
               <div
                 key={partial.id}
                 className="flex items-center gap-3 p-3 bg-base-2 border border-outline rounded hover:bg-base-3 transition-colors"
               >
                 <span className="flex-1 text-sm">{partial.title}</span>
-                <span className="text-xs text-contrast">@import "{partial.slug}";</span>
                 <Button
                   onClick={() => addPartial(partial)}
-                  disabled={isPartialSelected(partial.id)}
                   variant="primary"
                   size="sm"
                   className="!p-1 !text-xs"
                 >
-                  {isPartialSelected(partial.id) ? '✓' : '+'}
+                  +
                 </Button>
               </div>
             ))}
           </div>
-        )}
-      </div>
-
-      {/* Save Reminder */}
-      {selectedPartials.length > 0 && (
-        <div className="mt-4 p-3 bg-action bg-opacity-10 border border-action rounded">
-          <div className="text-sm text-action">
-            💾 Remember to click the main <strong>"Save"</strong> button to persist your SCSS partials selection.
-          </div>
         </div>
       )}
 
-      {/* Import Preview */}
-      {(globalPartials.length > 0 || selectedPartials.length > 0) && (
-        <div className="mt-6 pt-4 border-t border-outline">
-          <h5 className="text-sm font-medium text-highlight mb-2">Import Order Preview:</h5>
-          <div className="text-xs font-mono bg-base-2 p-3 rounded border">
-            {globalPartials.map(p => (
-              <div key={`global-${p.id}`} className="text-action">
-                @import "{p.slug}"; // Global #{p.global_order}
-              </div>
-            ))}
-            {selectedPartials.map(p => (
-              <div key={`selected-${p.id}`} className="text-highlight">
-                @import "{p.slug}"; // Selected #{globalPartials.length + p.order}
-              </div>
-            ))}
-            <div className="text-contrast mt-2">// Your block styles...</div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

@@ -4,6 +4,7 @@ import EditorHeader from './components/editor/EditorHeader';
 import EditorMain from './components/editor/EditorMain';
 import EditorSettings from './components/editor/EditorSettings';
 import EditorNoPosts from './components/editor/EditorNoPosts';
+import { Toast } from './components/ui';
 import { compileScss, saveScssAndCss } from '../utils/scssCompiler';
 import './style.css';
 
@@ -18,6 +19,8 @@ const App = () => {
     const [selectedPost, setSelectedPost] = useState(null);
     const [metaData, setMetaData] = useState({});
     const [saveStatus, setSaveStatus] = useState('');
+    const [scssError, setScssError] = useState(null);
+    const [showToast, setShowToast] = useState(false);
 
     // Fetch individual post with full data when selected
     const handlePostSelect = async (post) => {
@@ -27,6 +30,7 @@ const App = () => {
             setSelectedPost(post);
             setMetaData(post.meta || {});
             setSaveStatus('');
+            setScssError(null);
             return;
         }
 
@@ -43,17 +47,20 @@ const App = () => {
                 setSelectedPost(fullPost);
                 setMetaData(fullPost.meta || {});
                 setSaveStatus('');
+                setScssError(null);
             } else {
                 console.error('Failed to fetch full post data');
                 setSelectedPost(post);
                 setMetaData({});
                 setSaveStatus('');
+                setScssError(null);
             }
         } catch (error) {
             console.error('Error fetching post:', error);
             setSelectedPost(post);
             setMetaData({});
             setSaveStatus('');
+            setScssError(null);
         }
     };
 
@@ -72,6 +79,12 @@ const App = () => {
             return newMetaData;
         });
         setSaveStatus('unsaved');
+
+        // Clear SCSS error when user makes changes
+        if (section === 'blocks' && field === 'scss') {
+            setScssError(null);
+            setShowToast(false);
+        }
     };
 
     // Update post title
@@ -100,6 +113,11 @@ const App = () => {
             console.error('Error updating title:', error);
             throw error;
         }
+    };
+
+    // Handle toast close
+    const handleToastClose = () => {
+        setShowToast(false);
     };
 
     // Get current partials data for compilation
@@ -166,8 +184,11 @@ const App = () => {
                         await saveScssAndCss(selectedPost.id, scssContent, cssContent);
 
                         console.log('✅ SCSS and CSS saved successfully');
-                    } catch (scssError) {
-                        console.error('❌ SCSS compilation failed:', scssError);
+                    } catch (compilationError) {
+                        console.error('❌ SCSS compilation failed:', compilationError);
+                        const errorMessage = compilationError.message || 'SCSS compilation failed';
+                        setScssError(errorMessage);
+                        setShowToast(true);
                         // Continue with normal save even if SCSS compilation fails
                     }
                 }
@@ -338,6 +359,32 @@ const App = () => {
     // Show empty state when no posts exist
     if (totalPosts === 0) {
         return (
+            <>
+                <div id="editor">
+                    <EditorHeader
+                        onSave={handleSave}
+                        saveStatus={saveStatus}
+                        hasUnsavedChanges={saveStatus === 'unsaved'}
+                        onPostsRefresh={refreshPosts}
+                    />
+                    <EditorNoPosts onPostCreate={handlePostCreate} />
+                </div>
+
+                {/* Toast for SCSS compilation errors */}
+                <Toast
+                    message={scssError}
+                    type="error"
+                    title="SCSS Compilation Error"
+                    isVisible={showToast && scssError}
+                    onClose={handleToastClose}
+                />
+
+            </>
+        );
+    }
+
+    return (
+        <>
             <div id="editor">
                 <EditorHeader
                     onSave={handleSave}
@@ -345,41 +392,39 @@ const App = () => {
                     hasUnsavedChanges={saveStatus === 'unsaved'}
                     onPostsRefresh={refreshPosts}
                 />
-                <EditorNoPosts onPostCreate={handlePostCreate} />
-            </div>
-        );
-    }
 
-    return (
-        <div id="editor">
-            <EditorHeader
-                onSave={handleSave}
-                saveStatus={saveStatus}
-                hasUnsavedChanges={saveStatus === 'unsaved'}
-                onPostsRefresh={refreshPosts}
+                <div className='flex w-full flex-1 min-h-0'>
+                    <EditorList
+                        groupedPosts={groupedPosts}
+                        selectedPost={selectedPost}
+                        onPostSelect={handlePostSelect}
+                        onPostsRefresh={refreshPosts}
+                    />
+                    <EditorMain
+                        selectedPost={selectedPost}
+                        metaData={metaData}
+                        onMetaChange={handleMetaChange}
+                        onTitleUpdate={handleTitleUpdate}
+                    />
+                    <EditorSettings
+                        selectedPost={selectedPost}
+                        metaData={metaData}
+                        onMetaChange={handleMetaChange}
+                        onPostDelete={handlePostDelete}
+                    />
+                </div>
+            </div>
+
+            {/* Toast for SCSS compilation errors */}
+            <Toast
+                message={scssError}
+                type="error"
+                title="SCSS Compilation Error"
+                isVisible={showToast && scssError}
+                onClose={handleToastClose}
             />
 
-            <div className='flex w-full flex-1 min-h-0'>
-                <EditorList
-                    groupedPosts={groupedPosts}
-                    selectedPost={selectedPost}
-                    onPostSelect={handlePostSelect}
-                    onPostsRefresh={refreshPosts}
-                />
-                <EditorMain
-                    selectedPost={selectedPost}
-                    metaData={metaData}
-                    onMetaChange={handleMetaChange}
-                    onTitleUpdate={handleTitleUpdate}
-                />
-                <EditorSettings
-                    selectedPost={selectedPost}
-                    metaData={metaData}
-                    onMetaChange={handleMetaChange}
-                    onPostDelete={handlePostDelete}
-                />
-            </div>
-        </div>
+        </>
     );
 };
 

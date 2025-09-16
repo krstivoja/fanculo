@@ -60,6 +60,7 @@ const EditorMain = ({ selectedPost, metaData, onMetaChange, onTitleUpdate }) => 
             }
           />
 
+
           {isEditTitleModalOpen && (
             <Suspense fallback={null}>
               <EditTitleModal
