@@ -63,7 +63,7 @@ class BlockJsonGenerator implements FileGeneratorInterface
             'textdomain' => 'fanculo-wp',
             'editorScript' => 'file:./index.js',
             // 'editorStyle' => 'file:./index.css',
-            'style' => 'file:./style-index.css',
+            'style' => 'file:./style.css',
             'render' => 'file:./render.php',
             'viewScript' => 'file:./view.js'
         ];

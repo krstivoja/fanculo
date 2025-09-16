@@ -4,6 +4,7 @@ import EditorHeader from './components/editor/EditorHeader';
 import EditorMain from './components/editor/EditorMain';
 import EditorSettings from './components/editor/EditorSettings';
 import EditorNoPosts from './components/editor/EditorNoPosts';
+import { compileScss, saveScssAndCss } from '../utils/scssCompiler';
 import './style.css';
 
 
@@ -102,6 +103,30 @@ const App = () => {
 
         try {
             if (selectedPost?.id) {
+                // Check if this is a block (not SCSS partial) and has SCSS content
+                const hasScssContent = selectedPost.terms?.some(term => term.slug === 'blocks') &&
+                                     metaData.content?.scss;
+
+                if (hasScssContent) {
+                    console.log('🔄 Compiling SCSS for post:', selectedPost.title);
+
+                    try {
+                        // Compile SCSS to CSS
+                        const scssContent = metaData.content.scss;
+                        const cssContent = await compileScss(scssContent);
+
+                        console.log('✅ SCSS compiled successfully');
+
+                        // Save both SCSS and compiled CSS
+                        await saveScssAndCss(selectedPost.id, scssContent, cssContent);
+
+                        console.log('✅ SCSS and CSS saved successfully');
+                    } catch (scssError) {
+                        console.error('❌ SCSS compilation failed:', scssError);
+                        // Continue with normal save even if SCSS compilation fails
+                    }
+                }
+
                 // Save specific post meta data
                 const response = await fetch(`/wp-json/funculo/v1/post/${selectedPost.id}`, {
                     method: 'PUT',

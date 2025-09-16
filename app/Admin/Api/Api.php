@@ -6,6 +6,7 @@ use Fanculo\Admin\Api\PostsApiController;
 use Fanculo\Admin\Api\TaxonomyApiController;
 use Fanculo\Admin\Api\BlockCategoriesApiController;
 use Fanculo\Admin\Api\FileGenerationApiController;
+use Fanculo\Admin\Api\ScssCompilerApiController;
 use Fanculo\Admin\Content\FunculoTypeTaxonomy;
 
 class Api
@@ -14,6 +15,7 @@ class Api
     private $taxonomyController;
     private $blockCategoriesController;
     private $fileGenerationController;
+    private $scssCompilerController;
 
     public function __construct()
     {
@@ -21,6 +23,7 @@ class Api
         $this->taxonomyController = new TaxonomyApiController();
         $this->blockCategoriesController = new BlockCategoriesApiController();
         $this->fileGenerationController = new FileGenerationApiController();
+        $this->scssCompilerController = new ScssCompilerApiController();
 
         add_action('rest_api_init', [$this, 'registerRoutes']);
     }
@@ -140,6 +143,30 @@ class Api
             'methods' => 'POST',
             'callback' => [$this->fileGenerationController, 'regenerateFiles'],
             'permission_callback' => [$this, 'checkCreatePermissions'],
+        ]);
+
+        // SCSS compilation routes
+        register_rest_route('funculo/v1', '/post/(?P<id>\d+)/scss', [
+            [
+                'methods' => 'GET',
+                'callback' => [$this->scssCompilerController, 'getScssContent'],
+                'permission_callback' => [$this, 'checkPermissions'],
+            ],
+            [
+                'methods' => 'POST',
+                'callback' => [$this->scssCompilerController, 'compileAndSaveScss'],
+                'permission_callback' => [$this, 'checkCreatePermissions'],
+                'args' => [
+                    'scss_content' => [
+                        'required' => false,
+                        'type' => 'string',
+                    ],
+                    'css_content' => [
+                        'required' => false,
+                        'type' => 'string',
+                    ],
+                ],
+            ]
         ]);
     }
 

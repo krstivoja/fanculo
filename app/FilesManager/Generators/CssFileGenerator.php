@@ -1,0 +1,65 @@
+<?php
+
+namespace Fanculo\FilesManager\Generators;
+
+use Fanculo\FilesManager\Contracts\FileGeneratorInterface;
+use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use WP_Post;
+
+class CssFileGenerator implements FileGeneratorInterface
+{
+    public function canGenerate(string $contentType): bool
+    {
+        return $contentType === FunculoTypeTaxonomy::getTermBlocks();
+    }
+
+    public function generate(int $postId, WP_Post $post, string $outputPath): bool
+    {
+        // Try to get compiled CSS first
+        $cssContent = get_post_meta($postId, 'funculo_css_content', true);
+
+        // If no compiled CSS, fall back to SCSS content as CSS (basic fallback)
+        if (empty($cssContent)) {
+            $scssContent = get_post_meta($postId, '_funculo_block_scss', true);
+            if (!empty($scssContent)) {
+                error_log("CssFileGenerator: No compiled CSS found, using SCSS as fallback for post ID: $postId");
+                $cssContent = $scssContent;
+            }
+        }
+
+        if (empty($cssContent)) {
+            error_log("CssFileGenerator: No CSS or SCSS content for post ID: $postId");
+            return false;
+        }
+
+        $filepath = $outputPath . '/' . $this->getGeneratedFileName($post);
+
+        error_log("CssFileGenerator: Writing style.css for {$post->post_name}");
+
+        return file_put_contents($filepath, $cssContent) !== false;
+    }
+
+    public function getRequiredMetaKeys(): array
+    {
+        return ['funculo_css_content', '_funculo_block_scss'];
+    }
+
+    public function getGeneratedFileName(WP_Post $post): string
+    {
+        return 'style.css';
+    }
+
+    public function getFileExtension(): string
+    {
+        return 'css';
+    }
+
+    public function validate(int $postId): bool
+    {
+        // Check if we have either compiled CSS or SCSS content
+        $cssContent = get_post_meta($postId, 'funculo_css_content', true);
+        $scssContent = get_post_meta($postId, '_funculo_block_scss', true);
+
+        return !empty($cssContent) || !empty($scssContent);
+    }
+}
