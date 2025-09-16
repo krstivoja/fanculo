@@ -32,7 +32,7 @@ class SassCompiler {
   async loadDartSass() {
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = './dist/sass.dart.min.js';
+      script.src = './sass.dart.min.js';
       script.onload = () => {
         try {
           // Get the Sass library from global exports (Dart Sass pattern)

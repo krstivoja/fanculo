@@ -37,13 +37,14 @@ function getPackageVersion(packageName) {
 
 async function build() {
   // log('🏗️  Building SCSS Live Compiler...', 'blue');
-  
-  // Clean dist directory
-  if (fs.existsSync('dist')) {
-    fs.rmSync('dist', { recursive: true });
-    log('✓ Cleaned dist directory', 'green');
+
+  // Clean scss-compiler dist directory
+  const distDir = 'dist/scss-compiler';
+  if (fs.existsSync(distDir)) {
+    fs.rmSync(distDir, { recursive: true });
+    log('✓ Cleaned scss-compiler dist directory', 'green');
   }
-  fs.mkdirSync('dist', { recursive: true });
+  fs.mkdirSync(distDir, { recursive: true });
 
   // Get package versions for documentation
   const sassVersion = getPackageVersion('sass');
@@ -55,7 +56,7 @@ async function build() {
   // 1. Copy and minify Dart Sass
   log('🔧 Processing Dart Sass...', 'blue');
   const sassSource = 'node_modules/sass/sass.dart.js';
-  const sassMinified = 'dist/sass.dart.min.js';
+  const sassMinified = 'dist/scss-compiler/sass.dart.min.js';
   
   if (!fs.existsSync(sassSource)) {
     log('❌ Error: sass.dart.js not found in node_modules/sass/', 'red');
@@ -76,19 +77,19 @@ async function build() {
   log('📦 Bundling dependencies with esbuild...', 'blue');
   
   try {
-    execSync(`npx esbuild src/bundle.js --bundle --minify --target=es2020 --format=iife --global-name=SassBundled --outfile=dist/sass-bundle.min.js`, {
+    execSync(`npx esbuild src/scss-compiler/bundle.js --bundle --minify --target=es2020 --format=iife --global-name=SassBundled --outfile=dist/scss-compiler/sass-bundle.min.js`, {
       stdio: 'inherit'
     });
-    
-    const bundleSize = (fs.statSync('dist/sass-bundle.min.js').size / 1024).toFixed(1);
+
+    const bundleSize = (fs.statSync('dist/scss-compiler/sass-bundle.min.js').size / 1024).toFixed(1);
     log(`✓ Dependencies bundled and tree-shaken: ${bundleSize}KB`, 'green');
-    
+
     // Also create a development version (not minified, easier to debug)
-    execSync(`npx esbuild src/bundle.js --bundle --target=es2020 --format=iife --global-name=SassBundled --outfile=dist/sass-bundle.js`, {
+    execSync(`npx esbuild src/scss-compiler/bundle.js --bundle --target=es2020 --format=iife --global-name=SassBundled --outfile=dist/scss-compiler/sass-bundle.js`, {
       stdio: 'inherit'
     });
-    
-    const devBundleSize = (fs.statSync('dist/sass-bundle.js').size / 1024).toFixed(1);
+
+    const devBundleSize = (fs.statSync('dist/scss-compiler/sass-bundle.js').size / 1024).toFixed(1);
     log(`✓ Development bundle created: ${devBundleSize}KB (readable)`, 'green');
     
   } catch (error) {
@@ -98,10 +99,20 @@ async function build() {
   
   // 3. Legacy wrapper no longer needed (using esbuild bundle instead)
   
-  // 4. CSS is now static in root (no compilation needed)
+  // 4. Copy static assets from src/scss-compiler to dist/scss-compiler
+  log('📄 Copying static assets...', 'blue');
 
-  // 5. HTML remains in root and references dist/ directly
-  log('📄 HTML stays in root, references built assets in dist/', 'blue');
+  // Copy CSS if it exists
+  const cssSource = 'src/scss-compiler/styles.css';
+  if (fs.existsSync(cssSource)) {
+    copyFile(cssSource, 'dist/scss-compiler/styles.css');
+  }
+
+  // Copy HTML if it exists
+  const htmlSource = 'src/scss-compiler/index.html';
+  if (fs.existsSync(htmlSource)) {
+    copyFile(htmlSource, 'dist/scss-compiler/index.html');
+  }
 
   // 6. Create build info
   const buildInfo = {
@@ -112,21 +123,27 @@ async function build() {
     },
     files: {
       'sass.dart.min.js': `${minifiedSize}MB (${savings}% smaller than original)`,
-      'sass-bundle.min.js': `${(fs.statSync('dist/sass-bundle.min.js').size / 1024).toFixed(1)}KB (tree-shaken)`,
-      'sass-bundle.js': `${(fs.statSync('dist/sass-bundle.js').size / 1024).toFixed(1)}KB (readable)`
+      'sass-bundle.min.js': `${(fs.statSync('dist/scss-compiler/sass-bundle.min.js').size / 1024).toFixed(1)}KB (tree-shaken)`,
+      'sass-bundle.js': `${(fs.statSync('dist/scss-compiler/sass-bundle.js').size / 1024).toFixed(1)}KB (readable)`
     },
-    staticFiles: {
-      'styles.css': `${(fs.statSync('styles.css').size / 1024).toFixed(1)}KB (static)`
-    }
+    staticFiles: {}
   };
-  
-  fs.writeFileSync('dist/build-info.json', JSON.stringify(buildInfo, null, 2));
+
+  // Add static files info if they exist
+  if (fs.existsSync('dist/scss-compiler/styles.css')) {
+    buildInfo.staticFiles['styles.css'] = `${(fs.statSync('dist/scss-compiler/styles.css').size / 1024).toFixed(1)}KB (static)`;
+  }
+  if (fs.existsSync('dist/scss-compiler/index.html')) {
+    buildInfo.staticFiles['index.html'] = `${(fs.statSync('dist/scss-compiler/index.html').size / 1024).toFixed(1)}KB (static)`;
+  }
+
+  fs.writeFileSync('dist/scss-compiler/build-info.json', JSON.stringify(buildInfo, null, 2));
   log('✓ Build info created', 'green');
 
   // Calculate total size
-  const totalSize = fs.readdirSync('dist')
+  const totalSize = fs.readdirSync('dist/scss-compiler')
     .reduce((total, file) => {
-      const filePath = path.join('dist', file);
+      const filePath = path.join('dist/scss-compiler', file);
       if (fs.statSync(filePath).isFile()) {
         return total + fs.statSync(filePath).size;
       }
@@ -134,8 +151,8 @@ async function build() {
     }, 0);
 
   log('\n🎉 Build complete!', 'green');
-  log(`📊 Total dist size: ${(totalSize / 1024 / 1024).toFixed(1)}MB`, 'yellow');
-  log('📁 Files built in dist/ directory', 'blue');
+  log(`📊 Total scss-compiler dist size: ${(totalSize / 1024 / 1024).toFixed(1)}MB`, 'yellow');
+  log('📁 Files built in dist/scss-compiler/ directory', 'blue');
   log('💡 Run "npm run serve" to test the built version', 'yellow');
 }
 

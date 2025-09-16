@@ -8,9 +8,9 @@ const isWatch = process.argv.includes('--watch');
 const isProduction = process.argv.includes('--production');
 
 const config = {
-    entryPoints: ["src/index.js"],
+    entryPoints: ["src/app/index.js"],
     bundle: true,
-    outdir: "dist", // Changed to outdir to match PHP expectations
+    outdir: "dist/app", // Changed to outdir to match PHP expectations
     entryNames: "[name]", // This will create index.js in dist/
     chunkNames: "chunks/[name]-[hash]", // Name pattern for code split chunks
     splitting: true, // Enable code splitting
@@ -55,7 +55,7 @@ const config = {
 async function build() {
     try {
         // Ensure dist directory exists
-        const distDir = path.join(__dirname, 'dist');
+        const distDir = path.join(__dirname, 'dist/app');
         if (!fs.existsSync(distDir)) {
             fs.mkdirSync(distDir, { recursive: true });
         }
@@ -65,7 +65,7 @@ async function build() {
             await context.watch();
 
             // Create dev mode marker file for PHP to detect
-            const devMarkerPath = path.join(__dirname, 'dist', '.dev-mode');
+            const devMarkerPath = path.join(__dirname, 'dist/app', '.dev-mode');
             fs.writeFileSync(devMarkerPath, 'dev');
 
             console.log("👀 Watching for changes...");
@@ -74,7 +74,7 @@ async function build() {
             // Clean up on exit
             process.on('SIGINT', () => {
                 console.log('\n🛑 Stopping development server...');
-                const devMarkerPath = path.join(__dirname, 'dist', '.dev-mode');
+                const devMarkerPath = path.join(__dirname, 'dist/app', '.dev-mode');
                 if (fs.existsSync(devMarkerPath)) {
                     fs.unlinkSync(devMarkerPath);
                 }
@@ -84,7 +84,7 @@ async function build() {
             await esbuild.build(config);
 
             // Remove dev mode marker in production
-            const devMarkerPath = path.join(__dirname, 'dist', '.dev-mode');
+            const devMarkerPath = path.join(__dirname, 'dist/app', '.dev-mode');
             if (fs.existsSync(devMarkerPath)) {
                 fs.unlinkSync(devMarkerPath);
             }

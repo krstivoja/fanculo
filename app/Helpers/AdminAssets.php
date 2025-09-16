@@ -20,8 +20,8 @@ class AdminAssets
         }
 
         if (function_exists('plugin_dir_path') && function_exists('plugin_dir_url')) {
-            $this->buildPath = plugin_dir_path(__FILE__) . '../../dist/';
-            $this->buildUrl = plugin_dir_url(__FILE__) . '../../dist/';
+            $this->buildPath = plugin_dir_path(__FILE__) . '../../dist/app/';
+            $this->buildUrl = plugin_dir_url(__FILE__) . '../../dist/app/';
             $this->initialized = true;
         }
     }
