@@ -2,6 +2,9 @@
 
 namespace Fanculo\FilesManager\Services;
 
+use Fanculo\FilesManager\Generators\IndexAssets;
+use Fanculo\FilesManager\Generators\Index;
+
 class DirectoryManager
 {
     private $baseDir;
@@ -47,6 +50,11 @@ class DirectoryManager
             error_log("DirectoryManager: Creating block directory: $blockDir");
             $result = wp_mkdir_p($blockDir);
             error_log("DirectoryManager: Block directory creation result: " . ($result ? 'success' : 'failed'));
+
+            if ($result) {
+                IndexAssets::generate($blockDir);
+                Index::generate($blockDir, $blockSlug);
+            }
         }
 
         return $blockDir;
@@ -117,4 +125,5 @@ class DirectoryManager
         }
         rmdir($dir);
     }
+
 }
