@@ -115,18 +115,39 @@ class BlockLoader
             return '<!-- Block rendered as empty -->';
         }
 
-        // Check if we're in editor context (REST API request)
-        $is_editor_context = defined('REST_REQUEST') && REST_REQUEST;
-
-        if (!$is_editor_context) {
-            // On frontend, replace <innerblocks /> with actual inner blocks content
-            $rendered_output = $this->processInnerBlocks($rendered_output, $content, $block);
-        }
+        // Always process InnerBlocks for both editor and frontend
+        $rendered_output = $this->processInnerBlocks($rendered_output, $content, $block);
 
         return $rendered_output;
     }
 
     private function processInnerBlocks(string $rendered_output, $content, $block): string
+    {
+        // Check if we're in editor context (REST API request)
+        $is_editor_context = defined('REST_REQUEST') && REST_REQUEST;
+
+        if ($is_editor_context) {
+            // Editor: Replace with placeholder for JavaScript to detect
+            $replacement = '<!--FANCULO_INNERBLOCKS_PLACEHOLDER-->';
+        } else {
+            // Frontend: Replace with actual inner blocks content
+            $replacement = $this->getInnerBlocksContent($content, $block);
+        }
+
+        // Replace InnerBlocks placeholders with appropriate content (case-insensitive)
+        $innerblocks_patterns = [
+            '/<innerblocks\s*\/?>/i',           // Self-closing: <innerblocks /> (any case)
+            '/<innerblocks><\/innerblocks>/i'   // With closing tag: <innerblocks></innerblocks> (any case)
+        ];
+
+        foreach ($innerblocks_patterns as $pattern) {
+            $rendered_output = preg_replace($pattern, $replacement, $rendered_output);
+        }
+
+        return $rendered_output;
+    }
+
+    private function getInnerBlocksContent($content, $block): string
     {
         $inner_blocks_content = '';
 
@@ -143,16 +164,6 @@ class BlockLoader
             $inner_blocks_content = $content;
         }
 
-        // Replace InnerBlocks placeholders with actual content (case-insensitive)
-        $innerblocks_patterns = [
-            '/<innerblocks\s*\/?>/i',           // Self-closing: <innerblocks /> (any case)
-            '/<innerblocks><\/innerblocks>/i'   // With closing tag: <innerblocks></innerblocks> (any case)
-        ];
-
-        foreach ($innerblocks_patterns as $pattern) {
-            $rendered_output = preg_replace($pattern, $inner_blocks_content, $rendered_output);
-        }
-
-        return $rendered_output;
+        return $inner_blocks_content;
     }
 }

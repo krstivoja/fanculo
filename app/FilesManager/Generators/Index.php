@@ -109,15 +109,36 @@ class Index
                     }
                 }, wp.element.createElement(Spinner));
             } else {
-                // Parse content and handle InnerBlocks replacement using shared utility
-                if (window.FanculoInnerBlocksParser) {
-                    blockContentToRender = window.FanculoInnerBlocksParser.parseHTMLWithInnerBlocks(
-                        staticContent,
-                        blockProps,
-                        { debug: true }
-                    );
+                // Check for InnerBlocks placeholder from PHP processing
+                if (staticContent.includes('<!--FANCULO_INNERBLOCKS_PLACEHOLDER-->')) {
+                    // Split content around placeholder and insert InnerBlocks component
+                    const parts = staticContent.split('<!--FANCULO_INNERBLOCKS_PLACEHOLDER-->');
+                    const elements = [];
+
+                    // Add content before InnerBlocks
+                    if (parts[0] && parts[0].trim()) {
+                        elements.push(wp.element.createElement('span', {
+                            key: 'before',
+                            dangerouslySetInnerHTML: { __html: parts[0] }
+                        }));
+                    }
+
+                    // Add InnerBlocks component
+                    elements.push(wp.element.createElement(InnerBlocks, {
+                        key: 'innerblocks'
+                    }));
+
+                    // Add content after InnerBlocks
+                    if (parts[1] && parts[1].trim()) {
+                        elements.push(wp.element.createElement('span', {
+                            key: 'after',
+                            dangerouslySetInnerHTML: { __html: parts[1] }
+                        }));
+                    }
+
+                    blockContentToRender = wp.element.createElement('div', blockProps, ...elements);
                 } else {
-                    // Fallback if utility not loaded
+                    // Regular content without InnerBlocks
                     blockContentToRender = wp.element.createElement('div', {
                         ...blockProps,
                         dangerouslySetInnerHTML: { __html: staticContent }
