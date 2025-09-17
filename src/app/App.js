@@ -5,9 +5,7 @@ import EditorMain from './components/editor/EditorMain';
 import EditorSettings from './components/editor/EditorSettings';
 import EditorNoPosts from './components/editor/EditorNoPosts';
 import { Toast } from './components/ui';
-import { compileScss, saveScssAndCss } from '../utils/scssCompiler';
-import apiClient from '../utils/FunculoApiClient.js';
-import errorHandler from '../utils/ApiErrorHandler.js';
+import { compileScss, apiClient, errorHandler } from '../utils';
 import './style.css';
 
 
@@ -178,7 +176,10 @@ const App = () => {
                         console.log('✅ SCSS compiled successfully');
 
                         // Save both SCSS and compiled CSS
-                        await saveScssAndCss(selectedPost.id, scssContent, cssContent);
+                        await apiClient.saveScssContent(selectedPost.id, {
+                            scss_content: scssContent,
+                            css_content: cssContent,
+                        });
 
                         console.log('✅ SCSS and CSS saved successfully');
                     } catch (compilationError) {

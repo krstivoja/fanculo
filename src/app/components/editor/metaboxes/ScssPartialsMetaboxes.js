@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MonacoEditor, Button } from '../../ui';
-import apiClient from '../../../../utils/FunculoApiClient.js';
+import { apiClient } from '../../../../utils';
 
 const ScssPartialsMetaboxes = ({ metaData, onChange, titleComponent, selectedPost }) => {
   const [isGlobal, setIsGlobal] = useState(false);

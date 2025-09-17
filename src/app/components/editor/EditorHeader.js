@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Button, Toast } from '../ui';
 import { LogoIcon } from '../icons';
-import apiClient from '../../../utils/FunculoApiClient.js';
+import { apiClient } from '../../../utils';
 
 // Lazy load AddPostModal - only loads when needed
 const AddPostModal = lazy(() => import('./AddPostModal'));

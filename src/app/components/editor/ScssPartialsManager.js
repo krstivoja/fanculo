@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../ui';
-import apiClient from '../../../utils/FunculoApiClient.js';
+import { apiClient } from '../../../utils';
 
 const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
   const [globalPartials, setGlobalPartials] = useState([]);

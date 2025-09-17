@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Textarea, Select, DashiconButton } from '../ui';
+import { Textarea, Select, DashiconButton, Button } from '../ui';
 import { TrashIcon } from '../icons';
-import Button from '../ui/Button';
 import ScssPartialsManager from './ScssPartialsManager';
-import apiClient from '../../../utils/FunculoApiClient.js';
+import { apiClient } from '../../../utils';
 
 const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) => {
   const [blockCategories, setBlockCategories] = useState([]);
