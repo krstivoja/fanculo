@@ -6,6 +6,7 @@ use Fanculo\Admin\Content\FunculoPostType;
 use Fanculo\Admin\Content\FunculoTypeTaxonomy;
 use Fanculo\FilesManager\FilesManagerService;
 use Fanculo\FilesManager\Services\DirectoryManager;
+use Fanculo\Admin\Api\Services\MetaKeysConstants;
 
 class PostsApiController
 {
@@ -141,7 +142,7 @@ class PostsApiController
                 'category' => 'text', // First category from BlockCategoriesApiController
                 'icon' => 'search'
             ];
-            update_post_meta($postId, '_funculo_block_settings', json_encode($defaultSettings));
+            update_post_meta($postId, MetaKeysConstants::BLOCK_SETTINGS, json_encode($defaultSettings));
         }
 
         // Get the created post data and trigger file generation
@@ -229,24 +230,24 @@ class PostsApiController
             switch ($term['slug']) {
                 case FunculoTypeTaxonomy::getTermBlocks():
                     $meta['blocks'] = [
-                        'php' => get_post_meta($postId, '_funculo_block_php', true),
-                        'scss' => get_post_meta($postId, '_funculo_block_scss', true),
-                        'js' => get_post_meta($postId, '_funculo_block_js', true),
-                        'attributes' => get_post_meta($postId, '_funculo_block_attributes', true),
-                        'settings' => get_post_meta($postId, '_funculo_block_settings', true),
-                        'selected_partials' => get_post_meta($postId, '_funculo_block_selected_partials', true),
+                        'php' => get_post_meta($postId, MetaKeysConstants::BLOCK_PHP, true),
+                        'scss' => get_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, true),
+                        'js' => get_post_meta($postId, MetaKeysConstants::BLOCK_JS, true),
+                        'attributes' => get_post_meta($postId, MetaKeysConstants::BLOCK_ATTRIBUTES, true),
+                        'settings' => get_post_meta($postId, MetaKeysConstants::BLOCK_SETTINGS, true),
+                        'selected_partials' => get_post_meta($postId, MetaKeysConstants::BLOCK_SELECTED_PARTIALS, true),
                     ];
                     break;
 
                 case FunculoTypeTaxonomy::getTermSymbols():
                     $meta['symbols'] = [
-                        'php' => get_post_meta($postId, '_funculo_symbol_php', true),
+                        'php' => get_post_meta($postId, MetaKeysConstants::SYMBOL_PHP, true),
                     ];
                     break;
 
                 case FunculoTypeTaxonomy::getTermScssPartials():
                     $meta['scss_partials'] = [
-                        'scss' => get_post_meta($postId, '_funculo_scss_partial_scss', true),
+                        'scss' => get_post_meta($postId, MetaKeysConstants::SCSS_PARTIAL_SCSS, true),
                     ];
                     break;
             }
@@ -261,22 +262,22 @@ class PostsApiController
         if (isset($metaData['blocks'])) {
             $blocks = $metaData['blocks'];
             if (isset($blocks['php'])) {
-                update_post_meta($postId, '_funculo_block_php', wp_unslash($blocks['php']));
+                update_post_meta($postId, MetaKeysConstants::BLOCK_PHP, wp_unslash($blocks['php']));
             }
             if (isset($blocks['scss'])) {
-                update_post_meta($postId, '_funculo_block_scss', sanitize_textarea_field($blocks['scss']));
+                update_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, sanitize_textarea_field($blocks['scss']));
             }
             if (isset($blocks['js'])) {
-                update_post_meta($postId, '_funculo_block_js', sanitize_textarea_field($blocks['js']));
+                update_post_meta($postId, MetaKeysConstants::BLOCK_JS, sanitize_textarea_field($blocks['js']));
             }
             if (isset($blocks['attributes'])) {
-                update_post_meta($postId, '_funculo_block_attributes', sanitize_textarea_field($blocks['attributes']));
+                update_post_meta($postId, MetaKeysConstants::BLOCK_ATTRIBUTES, sanitize_textarea_field($blocks['attributes']));
             }
             if (isset($blocks['settings'])) {
-                update_post_meta($postId, '_funculo_block_settings', sanitize_textarea_field($blocks['settings']));
+                update_post_meta($postId, MetaKeysConstants::BLOCK_SETTINGS, sanitize_textarea_field($blocks['settings']));
             }
             if (isset($blocks['selected_partials'])) {
-                update_post_meta($postId, '_funculo_block_selected_partials', sanitize_textarea_field($blocks['selected_partials']));
+                update_post_meta($postId, MetaKeysConstants::BLOCK_SELECTED_PARTIALS, sanitize_textarea_field($blocks['selected_partials']));
             }
         }
 
@@ -284,7 +285,7 @@ class PostsApiController
         if (isset($metaData['symbols'])) {
             $symbols = $metaData['symbols'];
             if (isset($symbols['php'])) {
-                update_post_meta($postId, '_funculo_symbol_php', wp_unslash($symbols['php']));
+                update_post_meta($postId, MetaKeysConstants::SYMBOL_PHP, wp_unslash($symbols['php']));
             }
         }
 
@@ -292,7 +293,7 @@ class PostsApiController
         if (isset($metaData['scss_partials'])) {
             $scssPartials = $metaData['scss_partials'];
             if (isset($scssPartials['scss'])) {
-                update_post_meta($postId, '_funculo_scss_partial_scss', sanitize_textarea_field($scssPartials['scss']));
+                update_post_meta($postId, MetaKeysConstants::SCSS_PARTIAL_SCSS, sanitize_textarea_field($scssPartials['scss']));
             }
         }
     }

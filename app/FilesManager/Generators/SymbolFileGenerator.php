@@ -4,6 +4,7 @@ namespace Fanculo\FilesManager\Generators;
 
 use Fanculo\FilesManager\Contracts\FileGeneratorInterface;
 use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use WP_Post;
 
 class SymbolFileGenerator implements FileGeneratorInterface
@@ -15,7 +16,7 @@ class SymbolFileGenerator implements FileGeneratorInterface
 
     public function generate(int $postId, WP_Post $post, string $outputPath): bool
     {
-        $phpContent = get_post_meta($postId, '_funculo_symbol_php', true);
+        $phpContent = get_post_meta($postId, MetaKeysConstants::SYMBOL_PHP, true);
 
         if (empty($phpContent)) {
             error_log("SymbolFileGenerator: No PHP content for post ID: $postId");
@@ -31,7 +32,7 @@ class SymbolFileGenerator implements FileGeneratorInterface
 
     public function getRequiredMetaKeys(): array
     {
-        return ['_funculo_symbol_php'];
+        return [MetaKeysConstants::SYMBOL_PHP];
     }
 
     public function getGeneratedFileName(WP_Post $post): string
@@ -46,7 +47,7 @@ class SymbolFileGenerator implements FileGeneratorInterface
 
     public function validate(int $postId): bool
     {
-        $phpContent = get_post_meta($postId, '_funculo_symbol_php', true);
+        $phpContent = get_post_meta($postId, MetaKeysConstants::SYMBOL_PHP, true);
         return !empty($phpContent);
     }
 }

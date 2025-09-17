@@ -4,6 +4,7 @@ namespace Fanculo\FilesManager\Generators;
 
 use Fanculo\FilesManager\Contracts\FileGeneratorInterface;
 use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use WP_Post;
 
 class BlockJsonGenerator implements FileGeneratorInterface
@@ -15,8 +16,8 @@ class BlockJsonGenerator implements FileGeneratorInterface
 
     public function generate(int $postId, WP_Post $post, string $outputPath): bool
     {
-        $attributes = get_post_meta($postId, '_funculo_block_attributes', true);
-        $settings = get_post_meta($postId, '_funculo_block_settings', true);
+        $attributes = get_post_meta($postId, MetaKeysConstants::BLOCK_ATTRIBUTES, true);
+        $settings = get_post_meta($postId, MetaKeysConstants::BLOCK_SETTINGS, true);
 
         $blockJson = $this->buildBlockJson($post, $attributes, $settings);
         $filepath = $outputPath . '/' . $this->getGeneratedFileName($post);
@@ -28,7 +29,7 @@ class BlockJsonGenerator implements FileGeneratorInterface
 
     public function getRequiredMetaKeys(): array
     {
-        return ['_funculo_block_attributes', '_funculo_block_settings'];
+        return [MetaKeysConstants::BLOCK_ATTRIBUTES, MetaKeysConstants::BLOCK_SETTINGS];
     }
 
     public function getGeneratedFileName(WP_Post $post): string

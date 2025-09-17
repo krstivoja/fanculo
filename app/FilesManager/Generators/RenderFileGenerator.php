@@ -4,6 +4,7 @@ namespace Fanculo\FilesManager\Generators;
 
 use Fanculo\FilesManager\Contracts\FileGeneratorInterface;
 use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use WP_Post;
 
 class RenderFileGenerator implements FileGeneratorInterface
@@ -15,7 +16,7 @@ class RenderFileGenerator implements FileGeneratorInterface
 
     public function generate(int $postId, WP_Post $post, string $outputPath): bool
     {
-        $phpContent = get_post_meta($postId, '_funculo_block_php', true);
+        $phpContent = get_post_meta($postId, MetaKeysConstants::BLOCK_PHP, true);
 
         if (empty($phpContent)) {
             error_log("RenderFileGenerator: No PHP content for post ID: $postId");
@@ -31,7 +32,7 @@ class RenderFileGenerator implements FileGeneratorInterface
 
     public function getRequiredMetaKeys(): array
     {
-        return ['_funculo_block_php'];
+        return [MetaKeysConstants::BLOCK_PHP];
     }
 
     public function getGeneratedFileName(WP_Post $post): string
@@ -46,7 +47,7 @@ class RenderFileGenerator implements FileGeneratorInterface
 
     public function validate(int $postId): bool
     {
-        $phpContent = get_post_meta($postId, '_funculo_block_php', true);
+        $phpContent = get_post_meta($postId, MetaKeysConstants::BLOCK_PHP, true);
         return !empty($phpContent);
     }
 }

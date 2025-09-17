@@ -7,6 +7,7 @@ use Fanculo\FilesManager\Services\FileWriter;
 use Fanculo\FilesManager\Mappers\GenerationMapper;
 use Fanculo\Admin\Content\FunculoPostType;
 use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use WP_Post;
 
 class FilesManagerService
@@ -184,7 +185,7 @@ class FilesManagerService
         foreach ($terms as $term) {
             if ($term->slug === FunculoTypeTaxonomy::getTermScssPartials()) {
                 // Check if this is a global SCSS partial
-                $isGlobal = get_post_meta($postId, '_funculo_scss_is_global', true);
+                $isGlobal = get_post_meta($postId, MetaKeysConstants::SCSS_IS_GLOBAL, true);
                 if ($isGlobal === '1' || $isGlobal === 1 || $isGlobal === true) {
                     error_log("FilesManagerService: Post $postId is a global SCSS partial - affects other posts");
                     return true; // This affects all blocks that use global partials
@@ -217,7 +218,7 @@ class FilesManagerService
             foreach ($terms as $term) {
                 if ($term->slug === FunculoTypeTaxonomy::getTermBlocks()) {
                     // Check if this block uses any global partials
-                    $selectedPartials = get_post_meta($post->ID, '_funculo_block_selected_partials', true);
+                    $selectedPartials = get_post_meta($post->ID, MetaKeysConstants::BLOCK_SELECTED_PARTIALS, true);
                     if (!empty($selectedPartials)) {
                         error_log("FilesManagerService: Regenerating block '{$post->post_name}' due to global SCSS changes");
                         $this->generateFilesForSinglePost($post->ID, $post);

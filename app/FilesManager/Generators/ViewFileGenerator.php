@@ -4,6 +4,7 @@ namespace Fanculo\FilesManager\Generators;
 
 use Fanculo\FilesManager\Contracts\FileGeneratorInterface;
 use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use WP_Post;
 
 class ViewFileGenerator implements FileGeneratorInterface
@@ -15,7 +16,7 @@ class ViewFileGenerator implements FileGeneratorInterface
 
     public function generate(int $postId, WP_Post $post, string $outputPath): bool
     {
-        $jsContent = get_post_meta($postId, '_funculo_block_js', true);
+        $jsContent = get_post_meta($postId, MetaKeysConstants::BLOCK_JS, true);
 
         if (empty($jsContent)) {
             error_log("ViewFileGenerator: No JS content for post ID: $postId");
@@ -31,7 +32,7 @@ class ViewFileGenerator implements FileGeneratorInterface
 
     public function getRequiredMetaKeys(): array
     {
-        return ['_funculo_block_js'];
+        return [MetaKeysConstants::BLOCK_JS];
     }
 
     public function getGeneratedFileName(WP_Post $post): string
@@ -46,7 +47,7 @@ class ViewFileGenerator implements FileGeneratorInterface
 
     public function validate(int $postId): bool
     {
-        $jsContent = get_post_meta($postId, '_funculo_block_js', true);
+        $jsContent = get_post_meta($postId, MetaKeysConstants::BLOCK_JS, true);
         return !empty($jsContent);
     }
 }

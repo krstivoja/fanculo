@@ -4,6 +4,7 @@ namespace Fanculo\FilesManager\Generators;
 
 use Fanculo\FilesManager\Contracts\FileGeneratorInterface;
 use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use WP_Post;
 
 class StyleFileGenerator implements FileGeneratorInterface
@@ -15,7 +16,7 @@ class StyleFileGenerator implements FileGeneratorInterface
 
     public function generate(int $postId, WP_Post $post, string $outputPath): bool
     {
-        $scssContent = get_post_meta($postId, '_funculo_block_scss', true);
+        $scssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, true);
 
         if (empty($scssContent)) {
             error_log("StyleFileGenerator: No SCSS content for post ID: $postId");
@@ -31,7 +32,7 @@ class StyleFileGenerator implements FileGeneratorInterface
 
     public function getRequiredMetaKeys(): array
     {
-        return ['_funculo_block_scss'];
+        return [MetaKeysConstants::BLOCK_SCSS];
     }
 
     public function getGeneratedFileName(WP_Post $post): string
@@ -46,7 +47,7 @@ class StyleFileGenerator implements FileGeneratorInterface
 
     public function validate(int $postId): bool
     {
-        $scssContent = get_post_meta($postId, '_funculo_block_scss', true);
+        $scssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, true);
         return !empty($scssContent);
     }
 }

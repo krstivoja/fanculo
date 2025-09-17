@@ -4,6 +4,7 @@ namespace Fanculo\FilesManager\Generators;
 
 use Fanculo\FilesManager\Contracts\FileGeneratorInterface;
 use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use WP_Post;
 
 class CssFileGenerator implements FileGeneratorInterface
@@ -16,11 +17,11 @@ class CssFileGenerator implements FileGeneratorInterface
     public function generate(int $postId, WP_Post $post, string $outputPath): bool
     {
         // Try to get compiled CSS first
-        $cssContent = get_post_meta($postId, 'funculo_css_content', true);
+        $cssContent = get_post_meta($postId, MetaKeysConstants::CSS_CONTENT, true);
 
         // If no compiled CSS, fall back to SCSS content as CSS (basic fallback)
         if (empty($cssContent)) {
-            $scssContent = get_post_meta($postId, '_funculo_block_scss', true);
+            $scssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, true);
             if (!empty($scssContent)) {
                 error_log("CssFileGenerator: No compiled CSS found, using SCSS as fallback for post ID: $postId");
                 $cssContent = $scssContent;
@@ -41,7 +42,7 @@ class CssFileGenerator implements FileGeneratorInterface
 
     public function getRequiredMetaKeys(): array
     {
-        return ['funculo_css_content', '_funculo_block_scss'];
+        return [MetaKeysConstants::CSS_CONTENT, MetaKeysConstants::BLOCK_SCSS];
     }
 
     public function getGeneratedFileName(WP_Post $post): string
@@ -57,8 +58,8 @@ class CssFileGenerator implements FileGeneratorInterface
     public function validate(int $postId): bool
     {
         // Check if we have either compiled CSS or SCSS content
-        $cssContent = get_post_meta($postId, 'funculo_css_content', true);
-        $scssContent = get_post_meta($postId, '_funculo_block_scss', true);
+        $cssContent = get_post_meta($postId, MetaKeysConstants::CSS_CONTENT, true);
+        $scssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, true);
 
         return !empty($cssContent) || !empty($scssContent);
     }

@@ -7,6 +7,7 @@ use WP_REST_Response;
 use WP_Error;
 use Fanculo\Admin\Content\FunculoPostType;
 use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use Fanculo\Admin\Api\Services\MetaKeysConstants;
 
 class ScssCompilerApiController
 {
@@ -35,15 +36,15 @@ class ScssCompilerApiController
         try {
             // Save SCSS content if provided
             if ($scss_content !== null) {
-                update_post_meta($post_id, 'funculo_scss_content', $scss_content);
+                update_post_meta($post_id, MetaKeysConstants::SCSS_CONTENT, $scss_content);
             }
 
             // Save compiled CSS content if provided
             if ($css_content !== null) {
-                update_post_meta($post_id, 'funculo_css_content', $css_content);
+                update_post_meta($post_id, MetaKeysConstants::CSS_CONTENT, $css_content);
 
                 // Also save compilation timestamp
-                update_post_meta($post_id, 'funculo_css_compiled_at', current_time('timestamp'));
+                update_post_meta($post_id, MetaKeysConstants::CSS_COMPILED_AT, current_time('timestamp'));
             }
 
             return new WP_REST_Response([
@@ -78,9 +79,9 @@ class ScssCompilerApiController
             return new WP_Error('post_not_found', 'Post not found', ['status' => 404]);
         }
 
-        $scss_content = get_post_meta($post_id, 'funculo_scss_content', true);
-        $css_content = get_post_meta($post_id, 'funculo_css_content', true);
-        $compiled_at = get_post_meta($post_id, 'funculo_css_compiled_at', true);
+        $scss_content = get_post_meta($post_id, MetaKeysConstants::SCSS_CONTENT, true);
+        $css_content = get_post_meta($post_id, MetaKeysConstants::CSS_CONTENT, true);
+        $compiled_at = get_post_meta($post_id, MetaKeysConstants::CSS_COMPILED_AT, true);
 
         return new WP_REST_Response([
             'post_id' => $post_id,
@@ -118,8 +119,8 @@ class ScssCompilerApiController
             $available_partials = [];
 
             foreach ($partials as $partial) {
-                $is_global = get_post_meta($partial->ID, 'funculo_scss_is_global', true);
-                $global_order = get_post_meta($partial->ID, 'funculo_scss_global_order', true);
+                $is_global = get_post_meta($partial->ID, MetaKeysConstants::SCSS_IS_GLOBAL, true);
+                $global_order = get_post_meta($partial->ID, MetaKeysConstants::SCSS_GLOBAL_ORDER, true);
 
                 $partial_data = [
                     'id' => $partial->ID,
@@ -183,11 +184,11 @@ class ScssCompilerApiController
 
         try {
             // Update global setting
-            update_post_meta($post_id, 'funculo_scss_is_global', $is_global ? 1 : 0);
+            update_post_meta($post_id, MetaKeysConstants::SCSS_IS_GLOBAL, $is_global ? 1 : 0);
 
             // Update global order if provided
             if ($global_order !== null) {
-                update_post_meta($post_id, 'funculo_scss_global_order', (int) $global_order);
+                update_post_meta($post_id, MetaKeysConstants::SCSS_GLOBAL_ORDER, (int) $global_order);
             }
 
             return new WP_REST_Response([
