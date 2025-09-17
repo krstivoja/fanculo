@@ -71,16 +71,16 @@ const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh })
       </div>
       <div className='flex gap-4 justify-center mr-4 items-center'>
         {saveStatus === 'unsaved' && (
-          <span className="text-sm text-yellow-600">Unsaved changes</span>
+          <span className="text-sm">Unsaved changes</span>
         )}
         {saveStatus === 'saving' && (
-          <span className="text-sm text-blue-600">Saving...</span>
+          <span className="text-sm">Saving...</span>
         )}
         {saveStatus === 'saved' && (
-          <span className="text-sm text-green-600">Saved</span>
+          <span className="text-sm"></span>
         )}
         {saveStatus === 'error' && (
-          <span className="text-sm text-red-600">Error saving</span>
+          <span className="text-sm">Error saving</span>
         )}
         <Button
           variant="secondary"
