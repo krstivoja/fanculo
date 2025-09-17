@@ -3,6 +3,8 @@
  * Uses the built SCSS compiler from dist/scss-compiler/
  */
 
+import apiClient from './FunculoApiClient.js';
+
 let sassCompiler = null;
 
 /**
@@ -148,40 +150,22 @@ async function initScssCompiler() {
  */
 export async function getBlockPartials(postId) {
     try {
-        // Get all available partials
-        const partialsResponse = await fetch(`${window.wpApiSettings.root}funculo/v1/scss-partials`, {
-            headers: {
-                'X-WP-Nonce': window.wpApiSettings.nonce,
-            },
-        });
-
-        if (!partialsResponse.ok) {
-            throw new Error('Failed to fetch partials');
-        }
-
-        const partialsData = await partialsResponse.json();
+        // Get all available partials using centralized API client
+        const partialsData = await apiClient.getScssPartials();
         console.log('🔍 Partials data from API:', partialsData);
 
-        // Get block's selected partials
-        const blockResponse = await fetch(`${window.wpApiSettings.root}funculo/v1/post/${postId}`, {
-            headers: {
-                'X-WP-Nonce': window.wpApiSettings.nonce,
-            },
-        });
-
+        // Get block's selected partials using centralized API client
+        const blockData = await apiClient.getPost(postId);
         let selectedPartials = [];
-        if (blockResponse.ok) {
-            const blockData = await blockResponse.json();
-            console.log('🔍 Block data from API:', blockData);
-            const selectedPartialsString = blockData.meta?.blocks?.selected_partials;
-            console.log('🔍 Selected partials string:', selectedPartialsString);
-            if (selectedPartialsString) {
-                try {
-                    selectedPartials = JSON.parse(selectedPartialsString);
-                    console.log('✅ Parsed selected partials:', selectedPartials);
-                } catch (e) {
-                    console.warn('Failed to parse selected partials:', e);
-                }
+        console.log('🔍 Block data from API:', blockData);
+        const selectedPartialsString = blockData.meta?.blocks?.selected_partials;
+        console.log('🔍 Selected partials string:', selectedPartialsString);
+        if (selectedPartialsString) {
+            try {
+                selectedPartials = JSON.parse(selectedPartialsString);
+                console.log('✅ Parsed selected partials:', selectedPartials);
+            } catch (e) {
+                console.warn('Failed to parse selected partials:', e);
             }
         }
 
@@ -398,16 +382,9 @@ ${originalLine} │ (error line)
  */
 async function getPartialScssContent(partialId) {
     try {
-        const response = await fetch(`${window.wpApiSettings.root}funculo/v1/post/${partialId}`, {
-            headers: {
-                'X-WP-Nonce': window.wpApiSettings.nonce,
-            },
-        });
-
-        if (response.ok) {
-            const partialData = await response.json();
-            return partialData.meta?.scss_partials?.scss || '';
-        }
+        // Use centralized API client to get partial content
+        const partialData = await apiClient.getPost(partialId);
+        return partialData.meta?.scss_partials?.scss || '';
     } catch (error) {
         console.warn(`Failed to fetch SCSS content for partial ${partialId}:`, error);
     }
@@ -622,23 +599,11 @@ export async function compileScss(scssCode, postId = null, currentPartials = nul
  */
 export async function saveScssAndCss(postId, scssContent, cssContent) {
     try {
-        const response = await fetch(`${window.wpApiSettings.root}funculo/v1/post/${postId}/scss`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-WP-Nonce': window.wpApiSettings.nonce,
-            },
-            body: JSON.stringify({
-                scss_content: scssContent,
-                css_content: cssContent,
-            }),
+        // Use centralized API client to save SCSS content
+        return await apiClient.saveScssContent(postId, {
+            scss_content: scssContent,
+            css_content: cssContent,
         });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        return await response.json();
     } catch (error) {
         console.error('Error saving SCSS and CSS:', error);
         throw error;
@@ -652,18 +617,8 @@ export async function saveScssAndCss(postId, scssContent, cssContent) {
  */
 export async function getScssContent(postId) {
     try {
-        const response = await fetch(`${window.wpApiSettings.root}funculo/v1/post/${postId}/scss`, {
-            method: 'GET',
-            headers: {
-                'X-WP-Nonce': window.wpApiSettings.nonce,
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        return await response.json();
+        // Use centralized API client to get SCSS content
+        return await apiClient.getScssContent(postId);
     } catch (error) {
         console.error('Error getting SCSS content:', error);
         throw error;

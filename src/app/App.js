@@ -6,6 +6,8 @@ import EditorSettings from './components/editor/EditorSettings';
 import EditorNoPosts from './components/editor/EditorNoPosts';
 import { Toast } from './components/ui';
 import { compileScss, saveScssAndCss } from '../utils/scssCompiler';
+import apiClient from '../utils/FunculoApiClient.js';
+import errorHandler from '../utils/ApiErrorHandler.js';
 import './style.css';
 
 
@@ -22,6 +24,17 @@ const App = () => {
     const [scssError, setScssError] = useState(null);
     const [showToast, setShowToast] = useState(false);
 
+    // Initialize error handler with Toast system
+    React.useEffect(() => {
+        errorHandler.setNotificationHandler({
+            show: (notification) => {
+                // Integrate with existing Toast system
+                setScssError(notification.message);
+                setShowToast(true);
+            }
+        });
+    }, []);
+
     // Fetch individual post with full data when selected
     const handlePostSelect = async (post) => {
 
@@ -34,30 +47,23 @@ const App = () => {
             return;
         }
 
-        // Otherwise, fetch full post data from the API
+        // Otherwise, fetch full post data from the API using centralized client
         try {
-            const response = await fetch(`/wp-json/funculo/v1/post/${post.id}`, {
-                headers: {
-                    'X-WP-Nonce': window.wpApiSettings.nonce
-                }
+            const fullPost = await apiClient.getPost(post.id);
+            setSelectedPost(fullPost);
+            setMetaData(fullPost.meta || {});
+            setSaveStatus('');
+            setScssError(null);
+        } catch (error) {
+            // Handle error with centralized error handler
+            const errorInfo = errorHandler.handleError(error, {
+                context: { action: 'fetch_post', postId: post.id },
+                customMessage: 'Failed to load post details. Using basic information.',
+                showNotification: false // Don't show notification, just log
             });
 
-            if (response.ok) {
-                const fullPost = await response.json();
-                setSelectedPost(fullPost);
-                setMetaData(fullPost.meta || {});
-                setSaveStatus('');
-                setScssError(null);
-            } else {
-                console.error('Failed to fetch full post data');
-                setSelectedPost(post);
-                setMetaData({});
-                setSaveStatus('');
-                setScssError(null);
-            }
-        } catch (error) {
-            console.error('Error fetching post:', error);
-            setSelectedPost(post);
+            console.error('Error fetching post data:', errorInfo);
+            setSelectedPost(post);  // Fallback to basic post data
             setMetaData({});
             setSaveStatus('');
             setScssError(null);
@@ -92,23 +98,9 @@ const App = () => {
         if (!selectedPost?.id) return;
 
         try {
-            const response = await fetch(`/wp-json/funculo/v1/post/${selectedPost.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-WP-Nonce': window.wpApiSettings.nonce
-                },
-                body: JSON.stringify({
-                    title: newTitle
-                })
-            });
-
-            if (response.ok) {
-                const updatedPost = await response.json();
-                setSelectedPost(updatedPost);
-            } else {
-                throw new Error('Failed to update title');
-            }
+            // Use centralized API client to update post title
+            const updatedPost = await apiClient.updatePost(selectedPost.id, { title: newTitle });
+            setSelectedPost(updatedPost);
         } catch (error) {
             console.error('Error updating title:', error);
             throw error;
@@ -123,30 +115,22 @@ const App = () => {
     // Handle opening partial for editing from toast
     const handleOpenPartial = async (partialName) => {
         try {
-            // Find the partial post by title/name
-            const response = await fetch('/wp-json/funculo/v1/posts?per_page=100', {
-                headers: {
-                    'X-WP-Nonce': window.wpApiSettings.nonce
-                }
-            });
+            // Find the partial post by title/name using centralized API client
+            const data = await apiClient.getPosts({ per_page: 100 });
+            const posts = data.posts || [];
 
-            if (response.ok) {
-                const data = await response.json();
-                const posts = data.posts || [];
+            // Find the partial with matching title
+            const targetPartial = posts.find(post =>
+                post.terms?.some(term => term.slug === 'scss-partials') &&
+                (post.title?.rendered === partialName || post.title === partialName)
+            );
 
-                // Find the partial with matching title
-                const targetPartial = posts.find(post =>
-                    post.terms?.some(term => term.slug === 'scss-partials') &&
-                    (post.title?.rendered === partialName || post.title === partialName)
-                );
-
-                if (targetPartial) {
-                    // Close the toast and navigate to the partial
-                    setShowToast(false);
-                    await handlePostSelect(targetPartial);
-                } else {
-                    console.error('Partial not found:', partialName);
-                }
+            if (targetPartial) {
+                // Close the toast and navigate to the partial
+                setShowToast(false);
+                await handlePostSelect(targetPartial);
+            } else {
+                console.error('Partial not found:', partialName);
             }
         } catch (error) {
             console.error('Error opening partial:', error);
@@ -156,18 +140,9 @@ const App = () => {
     // Get current partials data for compilation
     const getCurrentPartials = async () => {
         try {
-            // Get global partials from API
-            const partialsResponse = await fetch('/wp-json/funculo/v1/scss-partials', {
-                headers: {
-                    'X-WP-Nonce': window.wpApiSettings.nonce
-                }
-            });
-
-            let globalPartials = [];
-            if (partialsResponse.ok) {
-                const partialsData = await partialsResponse.json();
-                globalPartials = partialsData.global_partials || [];
-            }
+            // Get global partials using centralized API client
+            const partialsData = await apiClient.getScssPartials();
+            const globalPartials = partialsData.global_partials || [];
 
             // Get selected partials from current state
             let selectedPartials = [];
@@ -226,43 +201,16 @@ const App = () => {
                     }
                 }
 
-                // Save specific post meta data
-                console.log('📡 Sending PUT request to save meta data:', metaData);
-                const response = await fetch(`/wp-json/funculo/v1/post/${selectedPost.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-WP-Nonce': window.wpApiSettings.nonce
-                    },
-                    body: JSON.stringify({
-                        meta: metaData
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('❌ Save failed:', response.status, errorText);
-                    throw new Error('Failed to save post data');
-                } else {
-                    console.log('✅ Meta data saved successfully');
-                }
+                // Save specific post meta data using centralized API client
+                console.log('📡 Saving meta data via API client:', metaData);
+                await apiClient.updatePost(selectedPost.id, { meta: metaData });
+                console.log('✅ Meta data saved successfully');
             }
 
-            // Generate files (works with or without selected post)
-            const generateResponse = await fetch('/wp-json/funculo/v1/regenerate-files', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-WP-Nonce': window.wpApiSettings.nonce
-                }
-            });
-
-            if (generateResponse.ok) {
-                setSaveStatus('saved');
-                setTimeout(() => setSaveStatus(''), 3000);
-            } else {
-                setSaveStatus('error');
-            }
+            // Generate files using centralized API client
+            await apiClient.regenerateFiles();
+            setSaveStatus('saved');
+            setTimeout(() => setSaveStatus(''), 3000);
         } catch (error) {
             console.error('Error saving/generating:', error);
             setSaveStatus('error');
@@ -273,18 +221,8 @@ const App = () => {
         try {
             if (showLoading) setLoading(true);
 
-            // Use the custom Funculo API which includes taxonomy terms and meta data
-            const response = await fetch('/wp-json/funculo/v1/posts?per_page=100', {
-                headers: {
-                    'X-WP-Nonce': window.wpApiSettings.nonce
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
+            // Use the centralized API client to fetch posts
+            const data = await apiClient.getPosts({ per_page: 100 });
             const posts = data.posts || [];
 
             // Pre-allocate arrays for better performance
@@ -349,30 +287,19 @@ const App = () => {
     // Handle post creation
     const handlePostCreate = async (postData) => {
         try {
-            const response = await fetch('/wp-json/funculo/v1/posts', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-WP-Nonce': window.wpApiSettings.nonce
-                },
-                body: JSON.stringify({
-                    title: postData.title,
-                    taxonomy_term: postData.type,
-                    status: 'publish'
-                })
+            // Use centralized API client to create post
+            const newPost = await apiClient.createPost({
+                title: postData.title,
+                taxonomy_term: postData.type,
+                status: 'publish'
             });
 
-            if (response.ok) {
-                const newPost = await response.json();
-                // Refresh posts to include the new post
-                refreshPosts();
-                // Auto-select the newly created post
-                setTimeout(() => {
-                    handlePostSelect(newPost);
-                }, 100);
-            } else {
-                throw new Error('Failed to create post');
-            }
+            // Refresh posts to include the new post
+            refreshPosts();
+            // Auto-select the newly created post
+            setTimeout(() => {
+                handlePostSelect(newPost);
+            }, 100);
         } catch (error) {
             console.error('Error creating post:', error);
             alert('Failed to create post: ' + error.message);

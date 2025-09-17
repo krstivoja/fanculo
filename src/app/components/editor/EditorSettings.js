@@ -3,6 +3,7 @@ import { Textarea, Select, DashiconButton } from '../ui';
 import { TrashIcon } from '../icons';
 import Button from '../ui/Button';
 import ScssPartialsManager from './ScssPartialsManager';
+import apiClient from '../../../utils/FunculoApiClient.js';
 
 const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) => {
   const [blockCategories, setBlockCategories] = useState([]);
@@ -30,29 +31,9 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
     const fetchCategories = async () => {
       setLoadingCategories(true);
       try {
-        const response = await fetch('/wp-json/funculo/v1/block-categories', {
-          headers: {
-            'X-WP-Nonce': window.wpApiSettings.nonce
-          }
-        });
-
-        if (response.ok) {
-          const text = await response.text();
-          console.log('Categories response text:', text);
-
-          if (text) {
-            const categories = JSON.parse(text);
-            console.log('Parsed categories:', categories);
-            setBlockCategories(Array.isArray(categories) ? categories : []);
-          } else {
-            console.warn('Empty response from block categories API');
-            setBlockCategories([]);
-          }
-        } else {
-          console.error('Failed to fetch block categories:', response.status, response.statusText);
-          const errorText = await response.text();
-          console.error('Error response:', errorText);
-        }
+        const categories = await apiClient.getBlockCategories();
+        console.log('Categories response:', categories);
+        setBlockCategories(Array.isArray(categories) ? categories : []);
       } catch (error) {
         console.error('Error fetching block categories:', error);
         setBlockCategories([]);
@@ -116,20 +97,9 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
     setIsDeleting(true);
 
     try {
-      const response = await fetch(`/wp-json/funculo/v1/post/${selectedPost.id}`, {
-        method: 'DELETE',
-        headers: {
-          'X-WP-Nonce': window.wpApiSettings.nonce
-        }
-      });
-
-      if (response.ok) {
-        if (onPostDelete) {
-          onPostDelete(selectedPost.id);
-        }
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete post');
+      await apiClient.deletePost(selectedPost.id);
+      if (onPostDelete) {
+        onPostDelete(selectedPost.id);
       }
     } catch (error) {
       console.error('Error deleting post:', error);

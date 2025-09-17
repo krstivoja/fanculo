@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../ui';
+import apiClient from '../../../utils/FunculoApiClient.js';
 
 const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
   const [globalPartials, setGlobalPartials] = useState([]);
@@ -18,22 +19,12 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
 
   const loadPartials = async () => {
     try {
-      const response = await fetch('/wp-json/funculo/v1/scss-partials', {
-        headers: {
-          'X-WP-Nonce': window.wpApiSettings.nonce
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('SCSS Partials API Response:', data);
-        setGlobalPartials(data.global_partials || []);
-        setAvailablePartials(data.available_partials || []);
-        console.log('Global partials set:', data.global_partials || []);
-        console.log('Available partials set:', data.available_partials || []);
-      } else {
-        console.error('SCSS Partials API Error:', response.status, response.statusText);
-      }
+      const data = await apiClient.getScssPartials();
+      console.log('SCSS Partials API Response:', data);
+      setGlobalPartials(data.global_partials || []);
+      setAvailablePartials(data.available_partials || []);
+      console.log('Global partials set:', data.global_partials || []);
+      console.log('Available partials set:', data.available_partials || []);
     } catch (error) {
       console.error('Error loading partials:', error);
     } finally {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MonacoEditor, Button } from '../../ui';
+import apiClient from '../../../../utils/FunculoApiClient.js';
 
 const ScssPartialsMetaboxes = ({ metaData, onChange, titleComponent, selectedPost }) => {
   const [isGlobal, setIsGlobal] = useState(false);
@@ -21,20 +22,12 @@ const ScssPartialsMetaboxes = ({ metaData, onChange, titleComponent, selectedPos
 
   const loadGlobalSettings = async () => {
     try {
-      const response = await fetch(`/wp-json/funculo/v1/post/${selectedPost.id}`, {
-        headers: {
-          'X-WP-Nonce': window.wpApiSettings.nonce
-        }
-      });
+      const post = await apiClient.getPost(selectedPost.id);
+      const globalSetting = post.meta?.funculo_scss_is_global?.[0];
+      const globalOrderSetting = post.meta?.funculo_scss_global_order?.[0];
 
-      if (response.ok) {
-        const post = await response.json();
-        const globalSetting = post.meta?.funculo_scss_is_global?.[0];
-        const globalOrderSetting = post.meta?.funculo_scss_global_order?.[0];
-
-        setIsGlobal(globalSetting === '1');
-        setGlobalOrder(globalOrderSetting ? parseInt(globalOrderSetting) : 1);
-      }
+      setIsGlobal(globalSetting === '1');
+      setGlobalOrder(globalOrderSetting ? parseInt(globalOrderSetting) : 1);
     } catch (error) {
       console.error('Error loading global settings:', error);
     }
@@ -45,28 +38,13 @@ const ScssPartialsMetaboxes = ({ metaData, onChange, titleComponent, selectedPos
     setIsSavingGlobal(true);
 
     try {
-      const response = await fetch(`/wp-json/funculo/v1/scss-partial/${selectedPost.id}/global-setting`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-WP-Nonce': window.wpApiSettings.nonce,
-        },
-        body: JSON.stringify({
-          is_global: newGlobalValue,
-          global_order: globalOrder
-        }),
+      const result = await apiClient.updatePartialGlobalSettings(selectedPost.id, {
+        is_global: newGlobalValue,
+        global_order: globalOrder
       });
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Global setting save response:', result);
-        setIsGlobal(newGlobalValue);
-        console.log(`SCSS partial ${newGlobalValue ? 'enabled' : 'disabled'} globally`);
-      } else {
-        const errorText = await response.text();
-        console.error('Global setting save failed:', response.status, errorText);
-        throw new Error('Failed to update global setting: ' + response.status);
-      }
+      console.log('Global setting save response:', result);
+      setIsGlobal(newGlobalValue);
+      console.log(`SCSS partial ${newGlobalValue ? 'enabled' : 'disabled'} globally`);
     } catch (error) {
       console.error('Error updating global setting:', error);
       alert('Failed to update global setting: ' + error.message);
@@ -80,16 +58,9 @@ const ScssPartialsMetaboxes = ({ metaData, onChange, titleComponent, selectedPos
 
     if (isGlobal) {
       try {
-        await fetch(`/wp-json/funculo/v1/scss-partial/${selectedPost.id}/global-setting`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-WP-Nonce': window.wpApiSettings.nonce,
-          },
-          body: JSON.stringify({
-            is_global: true,
-            global_order: newOrder
-          }),
+        await apiClient.updatePartialGlobalSettings(selectedPost.id, {
+          is_global: true,
+          global_order: newOrder
         });
       } catch (error) {
         console.error('Error updating global order:', error);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Button, Toast } from '../ui';
 import { LogoIcon } from '../icons';
+import apiClient from '../../../utils/FunculoApiClient.js';
 
 // Lazy load AddPostModal - only loads when needed
 const AddPostModal = lazy(() => import('./AddPostModal'));
@@ -29,29 +30,17 @@ const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh })
     try {
       console.log('Creating post with data:', postData);
 
-      const response = await fetch('/wp-json/funculo/v1/posts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-WP-Nonce': window.wpApiSettings.nonce
-        },
-        body: JSON.stringify({
-          title: postData.title,
-          status: 'publish',
-          taxonomy_term: postData.type
-        })
+      const newPost = await apiClient.createPost({
+        title: postData.title,
+        status: 'publish',
+        taxonomy_term: postData.type
       });
 
-      if (response.ok) {
-        const newPost = await response.json();
-        console.log('Post created successfully:', newPost);
+      console.log('Post created successfully:', newPost);
 
-        // Refresh the posts list to show the new post
-        if (onPostsRefresh) {
-          onPostsRefresh();
-        }
-      } else {
-        console.error('Failed to create post:', response.statusText);
+      // Refresh the posts list to show the new post
+      if (onPostsRefresh) {
+        onPostsRefresh();
       }
     } catch (error) {
       console.error('Error creating post:', error);
@@ -69,26 +58,14 @@ const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh })
     try {
       console.log('Force regenerating all files...');
 
-      const response = await fetch('/wp-json/funculo/v1/force-regenerate-all', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-WP-Nonce': window.wpApiSettings.nonce
-        }
-      });
+      // Use centralized API client for force regeneration
+      const result = await apiClient.forceRegenerateAll();
+      console.log('All files regenerated successfully:', result);
+      setToast({ show: true, message: '✅ All files regenerated successfully!', type: 'success' });
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log('All files regenerated successfully:', result);
-        setToast({ show: true, message: '✅ All files regenerated successfully!', type: 'success' });
-
-        // Refresh posts list in case files were updated
-        if (onPostsRefresh) {
-          onPostsRefresh();
-        }
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      // Refresh posts list in case files were updated
+      if (onPostsRefresh) {
+        onPostsRefresh();
       }
     } catch (error) {
       console.error('Failed to regenerate files:', error);
