@@ -4,7 +4,6 @@ namespace Fanculo\FilesManager\Services;
 
 use Fanculo\FilesManager\Generators\IndexAssets;
 use Fanculo\FilesManager\Generators\Index;
-use Fanculo\FilesManager\Generators\BlockEditorUtils;
 
 class DirectoryManager
 {
@@ -23,7 +22,6 @@ class DirectoryManager
             error_log("DirectoryManager: Creating base directory: {$this->baseDir}");
             $result = wp_mkdir_p($this->baseDir);
             error_log("DirectoryManager: Base directory creation result: " . ($result ? 'success' : 'failed'));
-
             return $result;
         }
 
@@ -126,16 +124,6 @@ class DirectoryManager
             }
         }
         rmdir($dir);
-    }
-
-    /**
-     * Generate shared utilities that all blocks can use
-     */
-    private function generateSharedUtilities(): void
-    {
-        $utilsDir = $this->ensureSubdirectoryExists('utils');
-        BlockEditorUtils::generate($utilsDir);
-        error_log("DirectoryManager: Generated shared utilities in $utilsDir");
     }
 
 }

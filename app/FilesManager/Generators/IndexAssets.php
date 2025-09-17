@@ -9,11 +9,6 @@ class IndexAssets
         $indexAssetPath = $blockDir . '/index.asset.php';
         $version = time() . rand(100000, 999999);
 
-        // Get the relative path to the utils directory
-        $baseBlocksDir = dirname($blockDir);
-        $utilsPath = $baseBlocksDir . '/utils/block-editor-utils.js';
-        $relativeUtilsPath = '../utils/block-editor-utils.js';
-
         $content = <<<PHP
 <?php
     return array(
@@ -22,8 +17,7 @@ class IndexAssets
             'wp-blocks',
             'wp-element',
             'wp-i18n',
-            'wp-server-side-render',
-            'wp-components'
+            'wp-server-side-render'
         ),
         'version' => '{$version}'
     );
