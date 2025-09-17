@@ -11,25 +11,10 @@ class Index
         $content = <<<'JS'
 (function () {
     const { registerBlockType } = wp.blocks;
-    const { useBlockProps, InspectorControls, InnerBlocks } = wp.blockEditor;
-    const ServerSideRender = wp.serverSideRender;
-    const { useEffect, createElement } = wp.element;
+    const { useBlockProps, InspectorControls } = wp.blockEditor;
+    const { useEffect } = wp.element;
     const {
-        Panel,
         PanelBody,
-        PanelRow,
-        __experimentalInputControl: InputControl,
-        __experimentalNumberControl: NumberControl,
-        DatePicker,
-        Button,
-        Popover,
-        DropZone,
-        ColorPalette,
-        SelectControl,
-        RangeControl,
-        TextareaControl,
-        CheckboxControl,
-        RadioControl,
         Spinner
     } = wp.components;
 
@@ -41,9 +26,8 @@ class Index
             const [isStaticLoading, setIsStaticLoading] = wp.element.useState(true);
             const [debouncedAttributes, setDebouncedAttributes] = wp.element.useState(attributes);
 
-            // Performance optimizations
+            // Performance optimization - cache responses
             const [staticCache] = wp.element.useState(new Map());
-            const abortControllerRef = wp.element.useRef(null);
 
             // Get block metadata from WordPress (loaded from block.json)
             const blockType = wp.blocks.getBlockType('fanculo/BLOCK_SLUG_PLACEHOLDER');
@@ -70,12 +54,11 @@ class Index
 
             const renderPanel = editableAttributeKeys.length > 0;
 
-            // Debounce attributes changes
+            // Debounce attributes changes to avoid excessive API calls
             wp.element.useEffect(() => {
                 const timeoutId = setTimeout(() => {
                     setDebouncedAttributes(attributes);
-                }, 500);
-
+                }, 300);
                 return () => clearTimeout(timeoutId);
             }, [attributes]);
 
@@ -107,10 +90,8 @@ class Index
                     setStaticContent(response.rendered);
                     setIsStaticLoading(false);
                 }).catch(error => {
-                    console.error('Error fetching content:', error);
-                    const fallbackContent = `<div></div>`;
-                    staticCache.set(cacheKey, fallbackContent);
-                    setStaticContent(fallbackContent);
+                    console.error('Block render error:', error);
+                    setStaticContent('<div><!-- Block render error --></div>');
                     setIsStaticLoading(false);
                 });
             }, [debouncedAttributes]);
@@ -128,7 +109,7 @@ class Index
                     }
                 }, wp.element.createElement(Spinner));
             } else {
-                // Simple approach: wrap content in a div with blockProps and dangerouslySetInnerHTML
+                // Render server content
                 blockContentToRender = wp.element.createElement('div', {
                     ...blockProps,
                     dangerouslySetInnerHTML: { __html: staticContent }
