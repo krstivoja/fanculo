@@ -145,6 +145,13 @@ class Api
             'permission_callback' => [$this, 'checkCreatePermissions'],
         ]);
 
+        // Force regenerate all files (manual button)
+        register_rest_route('funculo/v1', '/force-regenerate-all', [
+            'methods' => 'POST',
+            'callback' => [$this->fileGenerationController, 'forceRegenerateAll'],
+            'permission_callback' => [$this, 'checkCreatePermissions'],
+        ]);
+
         // SCSS compilation routes
         register_rest_route('funculo/v1', '/post/(?P<id>\d+)/scss', [
             [

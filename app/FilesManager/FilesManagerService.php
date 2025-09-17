@@ -31,7 +31,17 @@ class FilesManagerService
             return;
         }
 
-        $this->regenerateAllFiles();
+        // Smart save: only regenerate what's needed
+        error_log("FilesManagerService: Using smart save - generating files for single post");
+        $this->generateFilesForSinglePost($postId, $post);
+
+        // Check if this post affects global files
+        if ($this->postAffectsGlobalFiles($postId, $post)) {
+            error_log("FilesManagerService: Post affects global files - regenerating global dependencies");
+            $this->regenerateGlobalFiles();
+        } else {
+            error_log("FilesManagerService: Post only affects itself - skipping global regeneration");
+        }
     }
 
     public function handlePostRename(int $postId, WP_Post $postAfter, WP_Post $postBefore): void
@@ -158,5 +168,65 @@ class FilesManagerService
                 error_log("FilesManagerService: Unknown content type: $contentType");
                 return $this->directoryManager->getBaseDirectory();
         }
+    }
+
+    /**
+     * Check if a post affects global files that would require regenerating other posts
+     */
+    private function postAffectsGlobalFiles(int $postId, WP_Post $post): bool
+    {
+        $terms = wp_get_post_terms($postId, FunculoTypeTaxonomy::getTaxonomy());
+
+        if (empty($terms) || is_wp_error($terms)) {
+            return false;
+        }
+
+        foreach ($terms as $term) {
+            if ($term->slug === FunculoTypeTaxonomy::getTermScssPartials()) {
+                // Check if this is a global SCSS partial
+                $isGlobal = get_post_meta($postId, '_funculo_scss_is_global', true);
+                if ($isGlobal === '1' || $isGlobal === 1 || $isGlobal === true) {
+                    error_log("FilesManagerService: Post $postId is a global SCSS partial - affects other posts");
+                    return true; // This affects all blocks that use global partials
+                }
+            }
+        }
+
+        error_log("FilesManagerService: Post $postId only affects its own files");
+        return false; // Only affects this post's files
+    }
+
+    /**
+     * Regenerate only global files and dependencies (not individual post files)
+     */
+    private function regenerateGlobalFiles(): void
+    {
+        error_log("FilesManagerService: Regenerating global files and dependencies");
+
+        // Get all posts that might need their files updated due to global changes
+        $posts = get_posts([
+            'post_type' => FunculoPostType::getPostType(),
+            'post_status' => 'publish',
+            'numberposts' => -1
+        ]);
+
+        // Regenerate files for posts that use global SCSS partials
+        foreach ($posts as $post) {
+            $terms = wp_get_post_terms($post->ID, FunculoTypeTaxonomy::getTaxonomy());
+
+            foreach ($terms as $term) {
+                if ($term->slug === FunculoTypeTaxonomy::getTermBlocks()) {
+                    // Check if this block uses any global partials
+                    $selectedPartials = get_post_meta($post->ID, '_funculo_block_selected_partials', true);
+                    if (!empty($selectedPartials)) {
+                        error_log("FilesManagerService: Regenerating block '{$post->post_name}' due to global SCSS changes");
+                        $this->generateFilesForSinglePost($post->ID, $post);
+                    }
+                    break;
+                }
+            }
+        }
+
+        error_log("FilesManagerService: Global files regeneration completed");
     }
 }

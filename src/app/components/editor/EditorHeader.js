@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { Button } from '../ui';
+import { Button, Toast } from '../ui';
 import { LogoIcon } from '../icons';
 
 // Lazy load AddPostModal - only loads when needed
@@ -7,6 +7,8 @@ const AddPostModal = lazy(() => import('./AddPostModal'));
 
 const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
 
   // Handle Ctrl+S / Cmd+S keyboard shortcut
   useEffect(() => {
@@ -55,6 +57,54 @@ const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh })
       console.error('Error creating post:', error);
     }
   };
+
+  const handleRegenerateAll = async () => {
+    if (!confirm('⚠️ Regenerate all files? This will forcefully recreate all files and may take several seconds.')) {
+      return;
+    }
+
+    setIsRegenerating(true);
+    setToast({ show: true, message: 'Starting full regeneration...', type: 'info' });
+
+    try {
+      console.log('Force regenerating all files...');
+
+      const response = await fetch('/wp-json/funculo/v1/force-regenerate-all', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-WP-Nonce': window.wpApiSettings.nonce
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('All files regenerated successfully:', result);
+        setToast({ show: true, message: '✅ All files regenerated successfully!', type: 'success' });
+
+        // Refresh posts list in case files were updated
+        if (onPostsRefresh) {
+          onPostsRefresh();
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Failed to regenerate files:', error);
+      setToast({ show: true, message: `❌ Failed to regenerate files: ${error.message}`, type: 'error' });
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
+  const showToast = (message, type = 'info') => {
+    setToast({ show: true, message, type });
+  };
+
+  const hideToast = () => {
+    setToast({ show: false, message: '', type: 'info' });
+  };
   return (
     <header id="editor-header" className='h-fit border-b border-solid border-outline flex items-center justify-between'>
       <div className='flex gap-4 items-center'>
@@ -67,6 +117,16 @@ const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh })
           onClick={() => setIsAddModalOpen(true)}
         >
           Add new
+        </Button>
+
+        <Button
+          variant="secondary"
+          onClick={handleRegenerateAll}
+          disabled={isRegenerating}
+          className="!bg-orange-600 !text-white hover:!bg-orange-700"
+          title="Force regenerate all files (use if files are out of sync)"
+        >
+          {isRegenerating ? 'Regenerating...' : 'Regenerate All'}
         </Button>
       </div>
       <div className='flex gap-4 justify-center mr-4 items-center'>
@@ -100,6 +160,14 @@ const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh })
             onCreate={handleCreatePost}
           />
         </Suspense>
+      )}
+
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={hideToast}
+        />
       )}
     </header>
   );

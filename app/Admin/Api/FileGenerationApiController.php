@@ -20,4 +20,32 @@ class FileGenerationApiController
             return new \WP_Error('regeneration_failed', 'Failed to regenerate files: ' . $e->getMessage(), ['status' => 500]);
         }
     }
+
+    /**
+     * Force regenerate all files (used by manual "Regenerate All" button)
+     */
+    public function forceRegenerateAll($request)
+    {
+        try {
+            error_log("FileGenerationApiController: Force regenerate all files requested");
+
+            $filesManagerService = new FilesManagerService();
+            $filesManagerService->regenerateAllFiles();
+
+            error_log("FileGenerationApiController: Force regeneration completed successfully");
+
+            return new \WP_REST_Response([
+                'success' => true,
+                'message' => 'All files have been forcefully regenerated successfully.',
+                'timestamp' => current_time('c')
+            ], 200);
+        } catch (\Exception $e) {
+            error_log("FileGenerationApiController: Force regeneration failed: " . $e->getMessage());
+
+            return new \WP_Error('force_regeneration_failed', 'Failed to force regenerate files: ' . $e->getMessage(), [
+                'status' => 500,
+                'timestamp' => current_time('c')
+            ]);
+        }
+    }
 }
