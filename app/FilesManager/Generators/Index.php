@@ -10,6 +10,112 @@ class Index
 
         $content = <<<'JS'
 (function () {
+    /**
+     * Block Editor Utilities - Inline version for each block
+     * Provides wrapper div removal and HTML parsing functionality
+     */
+    if (!window.FunculoBlockUtils) {
+        window.FunculoBlockUtils = (function() {
+            const { InnerBlocks } = wp.blockEditor;
+
+            function parseStaticHTMLWithDynamic(htmlString) {
+                if (!htmlString) return [];
+
+                const container = document.createElement('div');
+                container.innerHTML = htmlString.trim();
+
+                const convertDomToReact = (domNode) => {
+                    if (domNode.nodeType === Node.ELEMENT_NODE) {
+                        const tagName = domNode.tagName.toLowerCase();
+
+                        if (tagName === 'innerblocks') {
+                            return wp.element.createElement(InnerBlocks, {
+                                key: 'innerblocks',
+                                allowedBlocks: null,
+                                template: [['core/paragraph', { placeholder: 'Add your content here...' }]]
+                            });
+                        }
+
+                        const children = [];
+                        domNode.childNodes.forEach((child) => {
+                            const element = convertDomToReact(child);
+                            if (element !== null) {
+                                children.push(element);
+                            }
+                        });
+
+                        const props = {};
+                        for (const attr of domNode.attributes) {
+                            if (attr.name === 'class') {
+                                props.className = attr.value;
+                            } else if (attr.name === 'style') {
+                                const styleObject = {};
+                                attr.value.split(';').forEach(stylePair => {
+                                    const parts = stylePair.split(':');
+                                    if (parts.length === 2) {
+                                        const key = parts[0].trim().replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+                                        styleObject[key] = parts[1].trim();
+                                    }
+                                });
+                                props.style = styleObject;
+                            } else {
+                                props[attr.name] = attr.value;
+                            }
+                        }
+
+                        return wp.element.createElement(tagName, props, ...children);
+                    } else if (domNode.nodeType === Node.TEXT_NODE) {
+                        return domNode.textContent;
+                    }
+                    return null;
+                };
+
+                const elements = [];
+                container.childNodes.forEach((node) => {
+                    const element = convertDomToReact(node);
+                    if (element !== null) {
+                        elements.push(element);
+                    }
+                });
+
+                return elements;
+            }
+
+            function renderBlockContent(staticContent, blockProps) {
+                const parsedElements = parseStaticHTMLWithDynamic(staticContent);
+
+                if (parsedElements.length === 1) {
+                    // If only one root element, clone it and add blockProps (removes wrapper div)
+                    return wp.element.cloneElement(parsedElements[0], blockProps);
+                } else {
+                    // If multiple or no root elements, wrap in a div with blockProps
+                    return wp.element.createElement('div', blockProps, ...parsedElements);
+                }
+            }
+
+            function createLoadingElement(blockProps) {
+                const { Spinner } = wp.components;
+                return wp.element.createElement('div', {
+                    ...blockProps,
+                    key: 'loading',
+                    style: {
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        padding: '5px',
+                        minHeight: '20px'
+                    }
+                }, wp.element.createElement(Spinner));
+            }
+
+            return {
+                parseStaticHTMLWithDynamic,
+                renderBlockContent,
+                createLoadingElement
+            };
+        })();
+    }
+
     const { registerBlockType } = wp.blocks;
     const { useBlockProps, InspectorControls, InnerBlocks } = wp.blockEditor;
     const ServerSideRender = wp.serverSideRender;
@@ -115,24 +221,12 @@ class Index
                 });
             }, [debouncedAttributes]);
 
+            // Use Fanculo Block Utils for rendering (loaded from block-editor-utils.js)
             let blockContentToRender;
             if (isStaticLoading) {
-                blockContentToRender = wp.element.createElement('div', {
-                    key: 'loading',
-                    style: {
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        padding: '5px',
-                        minHeight: '20px'
-                    }
-                }, wp.element.createElement(Spinner));
+                blockContentToRender = window.FunculoBlockUtils.createLoadingElement(blockProps);
             } else {
-                // Simple approach: wrap content in a div with blockProps and dangerouslySetInnerHTML
-                blockContentToRender = wp.element.createElement('div', {
-                    ...blockProps,
-                    dangerouslySetInnerHTML: { __html: staticContent }
-                });
+                blockContentToRender = window.FunculoBlockUtils.renderBlockContent(staticContent, blockProps);
             }
 
             return wp.element.createElement(wp.element.Fragment, null,
