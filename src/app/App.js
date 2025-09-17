@@ -35,38 +35,20 @@ const App = () => {
         });
     }, []);
 
-    // Fetch individual post with full data when selected
+    // Fetch post with related data using optimized batch operation
     const handlePostSelect = async (post) => {
+        // Always use batch operation to get complete post data with related info
+        const postWithRelated = await apiClient.getPostWithRelated(post.id);
+        const fullPost = postWithRelated.post;
 
-        // If the post already has terms and meta, use it directly
-        if (post.terms && post.terms.length > 0) {
-            setSelectedPost(post);
-            setMetaData(post.meta || {});
-            setSaveStatus('');
-            setScssError(null);
-            return;
-        }
+        setSelectedPost(fullPost);
+        setMetaData(fullPost.meta || {});
+        setSaveStatus('');
+        setScssError(null);
 
-        // Otherwise, fetch full post data from the API using centralized client
-        try {
-            const fullPost = await apiClient.getPost(post.id);
-            setSelectedPost(fullPost);
-            setMetaData(fullPost.meta || {});
-            setSaveStatus('');
-            setScssError(null);
-        } catch (error) {
-            // Handle error with centralized error handler
-            const errorInfo = errorHandler.handleError(error, {
-                context: { action: 'fetch_post', postId: post.id },
-                customMessage: 'Failed to load post details. Using basic information.',
-                showNotification: false // Don't show notification, just log
-            });
-
-            console.error('Error fetching post data:', errorInfo);
-            setSelectedPost(post);  // Fallback to basic post data
-            setMetaData({});
-            setSaveStatus('');
-            setScssError(null);
+        // Store related data for potential use
+        if (postWithRelated.related) {
+            console.log('📦 Related data loaded:', Object.keys(postWithRelated.related));
         }
     };
 
@@ -128,7 +110,14 @@ const App = () => {
             if (targetPartial) {
                 // Close the toast and navigate to the partial
                 setShowToast(false);
-                await handlePostSelect(targetPartial);
+
+                // Always use optimized batch operation
+                const partialWithRelated = await apiClient.getPostWithRelated(targetPartial.id);
+                const fullPartial = partialWithRelated.post;
+                setSelectedPost(fullPartial);
+                setMetaData(fullPartial.meta || {});
+                setSaveStatus('');
+                setScssError(null);
             } else {
                 console.error('Partial not found:', partialName);
             }
@@ -201,14 +190,15 @@ const App = () => {
                     }
                 }
 
-                // Save specific post meta data using centralized API client
-                console.log('📡 Saving meta data via API client:', metaData);
-                await apiClient.updatePost(selectedPost.id, { meta: metaData });
-                console.log('✅ Meta data saved successfully');
+                // Use batch operation to save meta data and regenerate files in one request
+                console.log('📡 Saving meta data and regenerating files via batch API:', metaData);
+                await apiClient.savePostWithOperations(selectedPost.id, metaData, true);
+                console.log('✅ Meta data saved and files regenerated successfully');
+            } else {
+                // Just regenerate files if no meta changes
+                await apiClient.regenerateFiles();
             }
 
-            // Generate files using centralized API client
-            await apiClient.regenerateFiles();
             setSaveStatus('saved');
             setTimeout(() => setSaveStatus(''), 3000);
         } catch (error) {

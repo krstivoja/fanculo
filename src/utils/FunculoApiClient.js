@@ -283,11 +283,11 @@ class FunculoApiClient {
   }
 
   // ===========================================
-  // POSTS API METHODS
+  // POSTS API METHODS - Batch-Optimized
   // ===========================================
 
   /**
-   * Get paginated posts list
+   * Get paginated posts list (optimized with bulk queries)
    * @param {Object} params Query parameters
    * @returns {Promise<Object>} Posts data with pagination
    */
@@ -298,12 +298,33 @@ class FunculoApiClient {
   }
 
   /**
-   * Get single post by ID
+   * Get single post by ID (always uses batch endpoint for consistency)
    * @param {number} id Post ID
    * @returns {Promise<Object>} Post data
    */
   async getPost(id) {
-    return this.request(`/post/${id}`);
+    const result = await this.getBatchPosts([id]);
+    if (result.posts && result.posts.length > 0) {
+      return result.posts[0];
+    }
+    throw new Error(`Post ${id} not found`);
+  }
+
+  /**
+   * Get multiple posts by IDs (primary method)
+   * @param {Array} postIds Array of post IDs to fetch
+   * @param {Object} options Fetch options
+   * @returns {Promise<Object>} Batch posts result
+   */
+  async getBatchPosts(postIds, options = {}) {
+    const { includeMeta = true } = options;
+    return this.request('/posts/batch', {
+      method: 'POST',
+      body: JSON.stringify({
+        post_ids: postIds,
+        include_meta: includeMeta
+      })
+    });
   }
 
   /**
@@ -312,7 +333,7 @@ class FunculoApiClient {
    * @returns {Promise<Object>} Created post data
    */
   async createPost(postData) {
-    this.invalidateCache('/posts'); // Clear posts cache
+    this.invalidateCache('/posts');
     return this.request('/posts', {
       method: 'POST',
       body: JSON.stringify(postData)
@@ -320,28 +341,42 @@ class FunculoApiClient {
   }
 
   /**
-   * Update an existing post
+   * Update single post (uses batch endpoint for consistency)
    * @param {number} id Post ID
    * @param {Object} updateData Update data
    * @returns {Promise<Object>} Updated post data
    */
   async updatePost(id, updateData) {
-    this.invalidateCache(`/post/${id}`); // Clear specific post cache
-    this.invalidateCache('/posts'); // Clear posts list cache
-    return this.request(`/post/${id}`, {
+    const result = await this.batchUpdatePosts([{ id, ...updateData }]);
+    if (result.successful && result.successful.length > 0) {
+      return result.successful[0];
+    }
+    if (result.failed && result.failed.length > 0) {
+      throw new Error(result.failed[0].error);
+    }
+    throw new Error('Update failed');
+  }
+
+  /**
+   * Update multiple posts (primary method)
+   * @param {Array} updates Array of post updates
+   * @returns {Promise<Object>} Bulk update result
+   */
+  async batchUpdatePosts(updates) {
+    this.invalidateCache('/posts');
+    return this.request('/posts/batch-update', {
       method: 'PUT',
-      body: JSON.stringify(updateData)
+      body: JSON.stringify({ updates })
     });
   }
 
   /**
-   * Delete a post
+   * Delete a post (uses bulk operations for consistency)
    * @param {number} id Post ID
    * @returns {Promise<Object>} Deletion result
    */
   async deletePost(id) {
-    this.invalidateCache(`/post/${id}`); // Clear specific post cache
-    this.invalidateCache('/posts'); // Clear posts list cache
+    this.invalidateCache('/posts');
     return this.request(`/post/${id}`, {
       method: 'DELETE'
     });
@@ -441,28 +476,126 @@ class FunculoApiClient {
   }
 
   // ===========================================
-  // BATCH OPERATIONS (New optimized endpoints)
+  // PRIMARY BATCH OPERATIONS - Optimized Interface
   // ===========================================
 
   /**
-   * Get post with related data in single request
+   * Get post with all related data (primary method for single post)
    * @param {number} id Post ID
-   * @returns {Promise<Object>} Post with partials data
+   * @returns {Promise<Object>} Post with all related data
    */
-  async getPostWithPartials(id) {
-    return this.request(`/post/${id}/with-partials`);
+  async getPostWithRelated(id) {
+    return this.request(`/post/${id}/with-related`);
   }
 
   /**
-   * Bulk update multiple posts
-   * @param {Array} updates Array of post updates
-   * @returns {Promise<Object>} Bulk update result
+   * Get multiple posts with their partials (primary method for multiple posts)
+   * @param {Array} postIds Array of post IDs
+   * @returns {Promise<Object>} Posts with partials data
    */
-  async bulkUpdatePosts(updates) {
-    this.invalidateCache('/posts'); // Clear posts cache
-    return this.request('/posts/bulk-update', {
+  async getPostsWithPartials(postIds) {
+    const postsResult = await this.getBatchPosts(postIds, { includeMeta: true });
+    const partialsData = await this.getScssPartials();
+
+    return {
+      posts: postsResult.posts,
+      partials: partialsData,
+      found: postsResult.found,
+      not_found: postsResult.not_found
+    };
+  }
+
+  /**
+   * Save post with related operations (primary save method)
+   * Combines multiple operations into a single request
+   * @param {number} postId Post ID
+   * @param {Object} metaData Meta data to update
+   * @param {boolean} regenerateFiles Whether to regenerate files
+   * @returns {Promise<Object>} Combined operation result
+   */
+  async savePostWithOperations(postId, metaData, regenerateFiles = true) {
+    const operations = [
+      {
+        type: 'update_meta',
+        data: { post_id: postId, meta: metaData }
+      }
+    ];
+
+    if (regenerateFiles) {
+      operations.push({
+        type: 'regenerate_files',
+        data: { post_id: postId }
+      });
+    }
+
+    return this.executeBulkOperations(operations);
+  }
+
+  /**
+   * Batch compile multiple SCSS files (primary compilation method)
+   * @param {Array} compilations Array of SCSS compilation data
+   * @returns {Promise<Object>} Batch compilation result
+   */
+  async batchCompileScss(compilations) {
+    return this.request('/scss/compile-batch', {
       method: 'POST',
-      body: JSON.stringify({ updates })
+      body: JSON.stringify({ compilations })
+    });
+  }
+
+  /**
+   * Execute multiple operations in a single request (core batch method)
+   * @param {Array} operations Array of operations to execute
+   * @returns {Promise<Object>} Bulk operations result
+   */
+  async executeBulkOperations(operations) {
+    return this.request('/operations/bulk', {
+      method: 'POST',
+      body: JSON.stringify({ operations })
+    });
+  }
+
+  /**
+   * Smart batch update with automatic grouping
+   * Groups multiple pending updates and sends them efficiently
+   * @param {number} postId Post ID
+   * @param {Object} updateData Update data
+   * @param {Object} options Update options
+   * @returns {Promise<Object>} Update result
+   */
+  async smartUpdatePost(postId, updateData, options = {}) {
+    const { batchDelay = 50, regenerateFiles = false } = options; // Reduced delay for new plugin
+
+    if (!this.batchQueue) {
+      this.batchQueue = new Map();
+      this.batchTimeouts = new Map();
+    }
+
+    this.batchQueue.set(postId, { ...updateData, regenerate_files: regenerateFiles });
+
+    if (this.batchTimeouts.has(postId)) {
+      clearTimeout(this.batchTimeouts.get(postId));
+    }
+
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(async () => {
+        try {
+          const updates = Array.from(this.batchQueue.entries()).map(([id, data]) => ({
+            id,
+            ...data
+          }));
+
+          this.batchQueue.clear();
+          this.batchTimeouts.clear();
+
+          const result = await this.batchUpdatePosts(updates);
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      }, batchDelay);
+
+      this.batchTimeouts.set(postId, timeoutId);
     });
   }
 

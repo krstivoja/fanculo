@@ -198,6 +198,83 @@ class Api
                 ],
             ],
         ]);
+
+        // BATCH API ENDPOINTS - Phase 2.3
+
+        // Batch fetch multiple posts by IDs
+        register_rest_route('funculo/v1', '/posts/batch', [
+            'methods' => 'POST',
+            'callback' => [$this->postsController, 'getBatchPosts'],
+            'permission_callback' => [$this, 'checkPermissions'],
+            'args' => [
+                'post_ids' => [
+                    'required' => true,
+                    'type' => 'array',
+                    'validate_callback' => function($param) {
+                        return is_array($param) && !empty($param) && count($param) <= 50; // Limit to 50 posts
+                    }
+                ],
+                'include_meta' => [
+                    'default' => true,
+                    'type' => 'boolean',
+                ],
+            ],
+        ]);
+
+        // Batch update multiple posts
+        register_rest_route('funculo/v1', '/posts/batch-update', [
+            'methods' => 'PUT',
+            'callback' => [$this->postsController, 'batchUpdatePosts'],
+            'permission_callback' => [$this, 'checkCreatePermissions'],
+            'args' => [
+                'updates' => [
+                    'required' => true,
+                    'type' => 'array',
+                    'validate_callback' => function($param) {
+                        return is_array($param) && !empty($param) && count($param) <= 20; // Limit to 20 updates
+                    }
+                ],
+            ],
+        ]);
+
+        // Get post with all related data (partials, categories, etc.)
+        register_rest_route('funculo/v1', '/post/(?P<id>\d+)/with-related', [
+            'methods' => 'GET',
+            'callback' => [$this->postsController, 'getPostWithRelated'],
+            'permission_callback' => [$this, 'checkPermissions'],
+        ]);
+
+        // Batch SCSS compilation
+        register_rest_route('funculo/v1', '/scss/compile-batch', [
+            'methods' => 'POST',
+            'callback' => [$this->scssCompilerController, 'batchCompileScss'],
+            'permission_callback' => [$this, 'checkCreatePermissions'],
+            'args' => [
+                'compilations' => [
+                    'required' => true,
+                    'type' => 'array',
+                    'validate_callback' => function($param) {
+                        return is_array($param) && !empty($param) && count($param) <= 10; // Limit to 10 compilations
+                    }
+                ],
+            ],
+        ]);
+
+        // Bulk operations endpoint - execute multiple operations in single request
+        register_rest_route('funculo/v1', '/operations/bulk', [
+            'methods' => 'POST',
+            'callback' => [$this->postsController, 'executeBulkOperations'],
+            'permission_callback' => [$this, 'checkCreatePermissions'],
+            'args' => [
+                'operations' => [
+                    'required' => true,
+                    'type' => 'array',
+                    'validate_callback' => function($param) {
+                        return is_array($param) && !empty($param) && count($param) <= 15; // Limit to 15 operations
+                    }
+                ],
+            ],
+        ]);
     }
 
     public function checkPermissions()

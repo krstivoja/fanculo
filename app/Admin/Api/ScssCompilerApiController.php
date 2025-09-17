@@ -218,4 +218,76 @@ class ScssCompilerApiController
             return new WP_Error('update_global_setting_error', $e->getMessage(), ['status' => 500]);
         }
     }
+
+    // ===========================================
+    // BATCH API ENDPOINTS - Phase 2.3
+    // ===========================================
+
+    /**
+     * Batch compile multiple SCSS files in a single request
+     * Reduces multiple individual compilation requests
+     */
+    public function batchCompileScss(WP_REST_Request $request)
+    {
+        $startTime = microtime(true);
+        $compilations = $request->get_param('compilations');
+        $results = [
+            'successful' => [],
+            'failed' => [],
+            'total' => count($compilations),
+        ];
+
+        foreach ($compilations as $index => $compilation) {
+            if (!isset($compilation['post_id']) || !isset($compilation['scss_content'])) {
+                $results['failed'][] = [
+                    'index' => $index,
+                    'post_id' => $compilation['post_id'] ?? 'unknown',
+                    'error' => 'Post ID and SCSS content are required',
+                ];
+                continue;
+            }
+
+            $postId = (int)$compilation['post_id'];
+            $scssContent = $compilation['scss_content'];
+            $cssContent = $compilation['css_content'] ?? null;
+
+            try {
+                // Verify the post exists
+                $post = get_post($postId);
+                if (!$post) {
+                    throw new \Exception('Post not found');
+                }
+
+                // Save SCSS content
+                update_post_meta($postId, MetaKeysConstants::SCSS_CONTENT, $scssContent);
+
+                // Save CSS content if provided
+                if ($cssContent !== null) {
+                    update_post_meta($postId, MetaKeysConstants::CSS_CONTENT, $cssContent);
+                    update_post_meta($postId, MetaKeysConstants::CSS_COMPILED_AT, current_time('mysql'));
+                }
+
+                $results['successful'][] = [
+                    'index' => $index,
+                    'post_id' => $postId,
+                    'title' => get_the_title($postId),
+                    'compiled_at' => current_time('mysql'),
+                ];
+
+            } catch (\Exception $e) {
+                $results['failed'][] = [
+                    'index' => $index,
+                    'post_id' => $postId,
+                    'error' => $e->getMessage(),
+                ];
+            }
+        }
+
+        // Log performance
+        $this->bulkQueryService->logPerformance('batchCompileScss', $results['total'], $startTime);
+
+        $statusCode = empty($results['failed']) ? 200 : 207; // 207 Multi-Status for partial success
+
+        return new WP_REST_Response($results, $statusCode);
+    }
 }

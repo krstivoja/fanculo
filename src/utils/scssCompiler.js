@@ -149,38 +149,30 @@ async function initScssCompiler() {
  * @returns {Promise<object>} - Object with global and selected partials
  */
 export async function getBlockPartials(postId) {
-    try {
-        // Get all available partials using centralized API client
-        const partialsData = await apiClient.getScssPartials();
-        console.log('🔍 Partials data from API:', partialsData);
+    // Always use optimized batch operation for maximum performance
+    const postWithRelated = await apiClient.getPostWithRelated(postId);
+    console.log('🔍 Post with related data from batch API:', postWithRelated);
 
-        // Get block's selected partials using centralized API client
-        const blockData = await apiClient.getPost(postId);
-        let selectedPartials = [];
-        console.log('🔍 Block data from API:', blockData);
-        const selectedPartialsString = blockData.meta?.blocks?.selected_partials;
-        console.log('🔍 Selected partials string:', selectedPartialsString);
-        if (selectedPartialsString) {
-            try {
-                selectedPartials = JSON.parse(selectedPartialsString);
-                console.log('✅ Parsed selected partials:', selectedPartials);
-            } catch (e) {
-                console.warn('Failed to parse selected partials:', e);
-            }
+    const blockData = postWithRelated.post;
+    const partialsData = postWithRelated.related?.scss_partials;
+
+    let selectedPartials = [];
+    const selectedPartialsString = blockData.meta?.blocks?.selected_partials;
+    console.log('🔍 Selected partials string:', selectedPartialsString);
+
+    if (selectedPartialsString) {
+        try {
+            selectedPartials = JSON.parse(selectedPartialsString);
+            console.log('✅ Parsed selected partials:', selectedPartials);
+        } catch (e) {
+            console.warn('Failed to parse selected partials:', e);
         }
-
-        return {
-            globalPartials: partialsData.global_partials || [],
-            selectedPartials: selectedPartials || []
-        };
-
-    } catch (error) {
-        console.error('Error getting block partials:', error);
-        return {
-            globalPartials: [],
-            selectedPartials: []
-        };
     }
+
+    return {
+        globalPartials: partialsData?.global_partials || [],
+        selectedPartials: selectedPartials || []
+    };
 }
 
 /**
