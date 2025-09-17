@@ -18,107 +18,6 @@ class Index
         Spinner
     } = wp.components;
 
-    /**
-     * Parse HTML content and replace InnerBlocks tags with React components
-     */
-    function parseHTMLWithInnerBlocks(htmlContent, blockProps) {
-        if (!htmlContent || typeof htmlContent !== 'string') {
-            return wp.element.createElement('div', blockProps, 'No content');
-        }
-
-        // Check if HTML contains any InnerBlocks tags (case-insensitive)
-        const innerBlocksPattern = /<innerblocks\s*(?:[^>]*?)?\s*\/?>/gi;
-        const hasInnerBlocks = innerBlocksPattern.test(htmlContent);
-
-        console.log('HTML content:', htmlContent);
-        console.log('Has InnerBlocks:', hasInnerBlocks);
-
-        if (!hasInnerBlocks) {
-            // No InnerBlocks - use simple dangerouslySetInnerHTML approach
-            return wp.element.createElement('div', {
-                ...blockProps,
-                dangerouslySetInnerHTML: { __html: htmlContent }
-            });
-        }
-
-        // Parse HTML with InnerBlocks replacement
-        const segments = [];
-        let lastIndex = 0;
-        let match;
-
-        // Reset regex for global matching
-        innerBlocksPattern.lastIndex = 0;
-
-        while ((match = innerBlocksPattern.exec(htmlContent)) !== null) {
-            // Add HTML content before the InnerBlocks tag
-            if (match.index > lastIndex) {
-                const htmlSegment = htmlContent.substring(lastIndex, match.index);
-                if (htmlSegment.trim()) {
-                    segments.push({
-                        type: 'html',
-                        content: htmlSegment
-                    });
-                }
-            }
-
-            // Add InnerBlocks component
-            segments.push({
-                type: 'innerblocks',
-                content: match[0]
-            });
-
-            lastIndex = match.index + match[0].length;
-        }
-
-        // Add remaining HTML content after last InnerBlocks tag
-        if (lastIndex < htmlContent.length) {
-            const remainingHtml = htmlContent.substring(lastIndex);
-            if (remainingHtml.trim()) {
-                segments.push({
-                    type: 'html',
-                    content: remainingHtml
-                });
-            }
-        }
-
-        console.log('Parsed segments:', segments);
-
-        // Convert segments to React elements
-        const elements = segments.map((segment, index) => {
-            if (segment.type === 'innerblocks') {
-                return wp.element.createElement(InnerBlocks, {
-                    key: `innerblocks-${index}`
-                });
-            } else {
-                return wp.element.createElement('span', {
-                    key: `html-${index}`,
-                    dangerouslySetInnerHTML: { __html: segment.content }
-                });
-            }
-        });
-
-        // If we have multiple segments, wrap in container with blockProps
-        if (elements.length > 1) {
-            return wp.element.createElement('div', blockProps, ...elements);
-        } else if (elements.length === 1) {
-            // Single element - try to apply blockProps to it if possible
-            const element = elements[0];
-            if (element.type === 'div') {
-                return wp.element.cloneElement(element, {
-                    ...element.props,
-                    ...blockProps,
-                    key: undefined // Remove key from cloned element
-                });
-            } else {
-                // InnerBlocks component - wrap with blockProps
-                return wp.element.createElement('div', blockProps, element);
-            }
-        } else {
-            // No segments - return empty div
-            return wp.element.createElement('div', blockProps);
-        }
-    }
-
     registerBlockType('fanculo/BLOCK_SLUG_PLACEHOLDER', {
         edit: function (props) {
             const blockProps = useBlockProps();
@@ -210,8 +109,20 @@ class Index
                     }
                 }, wp.element.createElement(Spinner));
             } else {
-                // Parse content and handle InnerBlocks replacement
-                blockContentToRender = parseHTMLWithInnerBlocks(staticContent, blockProps);
+                // Parse content and handle InnerBlocks replacement using shared utility
+                if (window.FanculoInnerBlocksParser) {
+                    blockContentToRender = window.FanculoInnerBlocksParser.parseHTMLWithInnerBlocks(
+                        staticContent,
+                        blockProps,
+                        { debug: true }
+                    );
+                } else {
+                    // Fallback if utility not loaded
+                    blockContentToRender = wp.element.createElement('div', {
+                        ...blockProps,
+                        dangerouslySetInnerHTML: { __html: staticContent }
+                    });
+                }
             }
 
             return wp.element.createElement(wp.element.Fragment, null,
