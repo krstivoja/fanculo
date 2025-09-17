@@ -7,11 +7,21 @@ use Fanculo\Admin\Content\FunculoTypeTaxonomy;
 use Fanculo\FilesManager\FilesManagerService;
 use Fanculo\FilesManager\Services\DirectoryManager;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
+use Fanculo\Admin\Api\Services\BulkQueryService;
 
 class PostsApiController
 {
+    private $bulkQueryService;
+
+    public function __construct()
+    {
+        $this->bulkQueryService = new BulkQueryService();
+    }
+
     public function getPosts($request)
     {
+        $startTime = microtime(true);
+
         $args = [
             'post_type' => FunculoPostType::getPostType(),
             'post_status' => 'any',
@@ -39,19 +49,33 @@ class PostsApiController
         }
 
         $query = new \WP_Query($args);
+
+        if (empty($query->posts)) {
+            return new \WP_REST_Response([
+                'posts' => [],
+                'total' => 0,
+                'total_pages' => 0,
+                'current_page' => $request->get_param('page'),
+            ], 200);
+        }
+
+        // Extract post IDs for bulk operations
+        $postIds = wp_list_pluck($query->posts, 'ID');
+
+        // BULK OPERATION 1: Fetch all terms at once - eliminates N+1
+        $allTerms = $this->bulkQueryService->getBulkPostTerms($postIds, FunculoTypeTaxonomy::getTaxonomy());
+
+        // BULK OPERATION 2: Get optimized meta keys based on content types
+        $optimizedMetaKeys = $this->bulkQueryService->getOptimizedMetaKeys($allTerms);
+
+        // BULK OPERATION 3: Fetch all meta at once - eliminates N+1
+        $allMeta = $this->bulkQueryService->getBulkPostMeta($postIds, $optimizedMetaKeys);
+
+        // Build response with prefetched data - NO MORE INDIVIDUAL QUERIES
         $posts = [];
-
         foreach ($query->posts as $post) {
-            $terms = wp_get_post_terms($post->ID, FunculoTypeTaxonomy::getTaxonomy());
-            $termData = [];
-
-            foreach ($terms as $term) {
-                $termData[] = [
-                    'id' => $term->term_id,
-                    'slug' => $term->slug,
-                    'name' => $term->name,
-                ];
-            }
+            $postTerms = $allTerms[$post->ID] ?? [];
+            $postMeta = $allMeta[$post->ID] ?? [];
 
             $posts[] = [
                 'id' => $post->ID,
@@ -61,11 +85,14 @@ class PostsApiController
                 'date' => $post->post_date,
                 'modified' => $post->post_modified,
                 'excerpt' => wp_trim_words($post->post_content, 20),
-                'terms' => $termData,
+                'terms' => $postTerms,
                 'edit_url' => get_edit_post_link($post->ID),
-                'meta' => $this->getPostMeta($post->ID, $termData),
+                'meta' => $this->bulkQueryService->formatPostMeta($postMeta, $postTerms),
             ];
         }
+
+        // Log performance improvement
+        $this->bulkQueryService->logPerformance('getPosts', count($posts), $startTime);
 
         return new \WP_REST_Response([
             'posts' => $posts,
@@ -84,16 +111,14 @@ class PostsApiController
             return new \WP_Error('post_not_found', 'Post not found', ['status' => 404]);
         }
 
-        $terms = wp_get_post_terms($post->ID, FunculoTypeTaxonomy::getTaxonomy());
-        $termData = [];
+        // Use bulk operations for consistency (even for single post)
+        $allTerms = $this->bulkQueryService->getBulkPostTerms([$post->ID], FunculoTypeTaxonomy::getTaxonomy());
+        $postTerms = $allTerms[$post->ID] ?? [];
 
-        foreach ($terms as $term) {
-            $termData[] = [
-                'id' => $term->term_id,
-                'slug' => $term->slug,
-                'name' => $term->name,
-            ];
-        }
+        // Get optimized meta keys and fetch meta
+        $optimizedMetaKeys = $this->bulkQueryService->getOptimizedMetaKeys($allTerms);
+        $allMeta = $this->bulkQueryService->getBulkPostMeta([$post->ID], $optimizedMetaKeys);
+        $postMeta = $allMeta[$post->ID] ?? [];
 
         return new \WP_REST_Response([
             'id' => $post->ID,
@@ -103,9 +128,9 @@ class PostsApiController
             'status' => $post->post_status,
             'date' => $post->post_date,
             'modified' => $post->post_modified,
-            'terms' => $termData,
+            'terms' => $postTerms,
             'edit_url' => get_edit_post_link($post->ID),
-            'meta' => $this->getPostMeta($post->ID, $termData),
+            'meta' => $this->bulkQueryService->formatPostMeta($postMeta, $postTerms),
         ], 200);
     }
 
@@ -151,16 +176,15 @@ class PostsApiController
             $filesManagerService = new FilesManagerService();
             $filesManagerService->generateFilesOnPostSave($postId, $post, false);
         }
-        $terms = wp_get_post_terms($post->ID, FunculoTypeTaxonomy::getTaxonomy());
-        $termData = [];
 
-        foreach ($terms as $term) {
-            $termData[] = [
-                'id' => $term->term_id,
-                'slug' => $term->slug,
-                'name' => $term->name,
-            ];
-        }
+        // Use bulk operations for consistency
+        $allTerms = $this->bulkQueryService->getBulkPostTerms([$post->ID], FunculoTypeTaxonomy::getTaxonomy());
+        $postTerms = $allTerms[$post->ID] ?? [];
+
+        // Get optimized meta keys and fetch meta
+        $optimizedMetaKeys = $this->bulkQueryService->getOptimizedMetaKeys($allTerms);
+        $allMeta = $this->bulkQueryService->getBulkPostMeta([$post->ID], $optimizedMetaKeys);
+        $postMeta = $allMeta[$post->ID] ?? [];
 
         return new \WP_REST_Response([
             'id' => $post->ID,
@@ -170,9 +194,9 @@ class PostsApiController
             'date' => $post->post_date,
             'modified' => $post->post_modified,
             'excerpt' => wp_trim_words($post->post_content, 20),
-            'terms' => $termData,
+            'terms' => $postTerms,
             'edit_url' => get_edit_post_link($post->ID),
-            'meta' => $this->getPostMeta($post->ID, $termData),
+            'meta' => $this->bulkQueryService->formatPostMeta($postMeta, $postTerms),
         ], 201);
     }
 

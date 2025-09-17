@@ -8,9 +8,17 @@ use WP_Error;
 use Fanculo\Admin\Content\FunculoPostType;
 use Fanculo\Admin\Content\FunculoTypeTaxonomy;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
+use Fanculo\Admin\Api\Services\BulkQueryService;
 
 class ScssCompilerApiController
 {
+    private $bulkQueryService;
+
+    public function __construct()
+    {
+        $this->bulkQueryService = new BulkQueryService();
+    }
+
     /**
      * Compile SCSS content to CSS and save it as meta
      *
@@ -118,25 +126,33 @@ class ScssCompilerApiController
             $global_partials = [];
             $available_partials = [];
 
-            foreach ($partials as $partial) {
-                $is_global = get_post_meta($partial->ID, MetaKeysConstants::SCSS_IS_GLOBAL, true);
-                $global_order = get_post_meta($partial->ID, MetaKeysConstants::SCSS_GLOBAL_ORDER, true);
+            if (!empty($partials)) {
+                // BULK OPERATION: Fetch all meta at once - eliminates N+1 queries
+                $postIds = wp_list_pluck($partials, 'ID');
+                $metaKeys = [MetaKeysConstants::SCSS_IS_GLOBAL, MetaKeysConstants::SCSS_GLOBAL_ORDER];
+                $allMeta = $this->bulkQueryService->getBulkPostMeta($postIds, $metaKeys);
 
-                $partial_data = [
-                    'id' => $partial->ID,
-                    'title' => $partial->post_title,
-                    'slug' => $partial->post_name,
-                    'is_global' => (bool) $is_global,
-                    'global_order' => $global_order ? (int) $global_order : 999
-                ];
+                foreach ($partials as $partial) {
+                    $postMeta = $allMeta[$partial->ID] ?? [];
+                    $is_global = $postMeta[MetaKeysConstants::SCSS_IS_GLOBAL] ?? '';
+                    $global_order = $postMeta[MetaKeysConstants::SCSS_GLOBAL_ORDER] ?? '';
 
-                error_log("SCSS Partial Debug - ID: {$partial->ID}, Title: {$partial->post_title}, is_global meta: " . var_export($is_global, true) . ", bool cast: " . var_export((bool) $is_global, true));
+                    $partial_data = [
+                        'id' => $partial->ID,
+                        'title' => $partial->post_title,
+                        'slug' => $partial->post_name,
+                        'is_global' => (bool) $is_global,
+                        'global_order' => $global_order ? (int) $global_order : 999
+                    ];
 
-                // Check if is_global is explicitly set to '1' (string) or 1 (int) or true (bool)
-                if ($is_global === '1' || $is_global === 1 || $is_global === true) {
-                    $global_partials[] = $partial_data;
-                } else {
-                    $available_partials[] = $partial_data;
+                    error_log("SCSS Partial Debug - ID: {$partial->ID}, Title: {$partial->post_title}, is_global meta: " . var_export($is_global, true) . ", bool cast: " . var_export((bool) $is_global, true));
+
+                    // Check if is_global is explicitly set to '1' (string) or 1 (int) or true (bool)
+                    if ($is_global === '1' || $is_global === 1 || $is_global === true) {
+                        $global_partials[] = $partial_data;
+                    } else {
+                        $available_partials[] = $partial_data;
+                    }
                 }
             }
 
