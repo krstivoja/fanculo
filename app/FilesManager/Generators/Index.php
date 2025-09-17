@@ -4,9 +4,10 @@ namespace Fanculo\FilesManager\Generators;
 
 class Index
 {
-    public static function generate(string $blockDir, string $blockSlug): bool
+    public static function generate(string $blockDir, string $blockSlug, array $settings = []): bool
     {
         $indexJsPath = $blockDir . '/index.js';
+        $hasInnerBlocks = self::supportsInnerBlocks($settings);
 
         $content = <<<'JS'
 (function () {
@@ -109,31 +110,64 @@ class Index
                     }
                 }, wp.element.createElement(Spinner));
             } else {
-                // Check for InnerBlocks placeholder from PHP processing
-                if (staticContent.includes('<!--FANCULO_INNERBLOCKS_PLACEHOLDER-->')) {
-                    // Split content around placeholder and insert InnerBlocks component
-                    const parts = staticContent.split('<!--FANCULO_INNERBLOCKS_PLACEHOLDER-->');
+                // Check for <InnerBlocks /> tag from PHP processing
+                if (staticContent.includes('<InnerBlocks')) {
+                    // Replace <InnerBlocks /> with a placeholder for DOM parsing
+                    const processedContent = staticContent.replace(/<InnerBlocks\s*\/?>|<InnerBlocks><\/InnerBlocks>/gi, '<innerblocks-placeholder></innerblocks-placeholder>');
+
+                    // Create temporary div to parse HTML
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = processedContent;
+
+                    // Function to convert DOM nodes to React elements
+                    const domToReact = (node, index = 0) => {
+                        if (node.nodeType === Node.TEXT_NODE) {
+                            const text = node.textContent.trim();
+                            return text ? text : null;
+                        }
+
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            const tagName = node.tagName.toLowerCase();
+
+                            // Check if this is our InnerBlocks placeholder
+                            if (tagName === 'innerblocks-placeholder') {
+                                return wp.element.createElement(InnerBlocks, { key: `innerblocks-${index}` });
+                            }
+
+                            // Convert attributes
+                            const props = { key: `element-${tagName}-${index}` };
+                            for (let i = 0; i < node.attributes.length; i++) {
+                                const attr = node.attributes[i];
+                                let propName = attr.name;
+
+                                // Convert HTML attributes to React props
+                                if (propName === 'class') propName = 'className';
+                                if (propName === 'for') propName = 'htmlFor';
+                                props[propName] = attr.value;
+                            }
+
+                            // Convert child nodes
+                            const children = [];
+                            for (let i = 0; i < node.childNodes.length; i++) {
+                                const child = domToReact(node.childNodes[i], `${index}-${i}`);
+                                if (child !== null && child !== undefined) {
+                                    children.push(child);
+                                }
+                            }
+
+                            return wp.element.createElement(tagName, props, children.length > 0 ? children : null);
+                        }
+
+                        return null;
+                    };
+
+                    // Convert all child nodes
                     const elements = [];
-
-                    // Add content before InnerBlocks
-                    if (parts[0] && parts[0].trim()) {
-                        elements.push(wp.element.createElement('span', {
-                            key: 'before',
-                            dangerouslySetInnerHTML: { __html: parts[0] }
-                        }));
-                    }
-
-                    // Add InnerBlocks component
-                    elements.push(wp.element.createElement(InnerBlocks, {
-                        key: 'innerblocks'
-                    }));
-
-                    // Add content after InnerBlocks
-                    if (parts[1] && parts[1].trim()) {
-                        elements.push(wp.element.createElement('span', {
-                            key: 'after',
-                            dangerouslySetInnerHTML: { __html: parts[1] }
-                        }));
+                    for (let i = 0; i < tempDiv.childNodes.length; i++) {
+                        const element = domToReact(tempDiv.childNodes[i], i);
+                        if (element !== null && element !== undefined) {
+                            elements.push(element);
+                        }
                     }
 
                     blockContentToRender = wp.element.createElement('div', blockProps, ...elements);
@@ -157,7 +191,7 @@ class Index
             );
         },
         save: props => {
-            return wp.element.createElement(wp.element.Fragment);
+            SAVE_FUNCTION_PLACEHOLDER
         }
     });
 })();
@@ -165,6 +199,14 @@ JS;
 
         // Replace the placeholder with actual block slug
         $content = str_replace('BLOCK_SLUG_PLACEHOLDER', $blockSlug, $content);
+
+        // Replace save function based on InnerBlocks detection
+        if ($hasInnerBlocks) {
+            $saveFunction = 'return wp.element.createElement(InnerBlocks.Content);';
+        } else {
+            $saveFunction = 'return wp.element.createElement(wp.element.Fragment);';
+        }
+        $content = str_replace('SAVE_FUNCTION_PLACEHOLDER', $saveFunction, $content);
 
         $result = file_put_contents($indexJsPath, $content);
 
@@ -175,5 +217,10 @@ JS;
         }
 
         return $result !== false;
+    }
+
+    private static function supportsInnerBlocks(array $settings): bool
+    {
+        return !empty($settings['supportsInnerBlocks']);
     }
 }

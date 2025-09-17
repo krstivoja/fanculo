@@ -19,7 +19,7 @@ class BlockJsonGenerator implements FileGeneratorInterface
         $attributes = get_post_meta($postId, MetaKeysConstants::BLOCK_ATTRIBUTES, true);
         $settings = get_post_meta($postId, MetaKeysConstants::BLOCK_SETTINGS, true);
 
-        $blockJson = $this->buildBlockJson($post, $attributes, $settings);
+        $blockJson = $this->buildBlockJson($post, $attributes, $settings, $outputPath);
         $filepath = $outputPath . '/' . $this->getGeneratedFileName($post);
 
         error_log("BlockJsonGenerator: Writing block.json for {$post->post_name}");
@@ -47,7 +47,7 @@ class BlockJsonGenerator implements FileGeneratorInterface
         return true; // block.json is always generated for blocks
     }
 
-    private function buildBlockJson(WP_Post $post, $attributes, $settings): array
+    private function buildBlockJson(WP_Post $post, $attributes, $settings, string $outputPath): array
     {
         $blockJson = [
             '$schema' => 'https://schemas.wp.org/trunk/block.json',
@@ -69,6 +69,15 @@ class BlockJsonGenerator implements FileGeneratorInterface
             'viewScript' => 'file:./view.js'
         ];
 
+        // Check if the block uses InnerBlocks via settings
+        if ($this->supportsInnerBlocks($settings)) {
+            $blockJson['supports']['anchor'] = true;
+            $blockJson['supports']['spacing'] = [
+                'margin' => true,
+                'padding' => true
+            ];
+        }
+
         // Add attributes if available
         if (!empty($attributes)) {
             if (is_string($attributes)) {
@@ -81,18 +90,47 @@ class BlockJsonGenerator implements FileGeneratorInterface
             }
         }
 
-        // Add settings if available
+        // Add settings if available (excluding supportsInnerBlocks which is used for logic only)
         if (!empty($settings)) {
             if (is_string($settings)) {
                 $decodedSettings = json_decode($settings, true);
                 if (json_last_error() === JSON_ERROR_NONE) {
-                    $blockJson = array_merge($blockJson, $decodedSettings);
+                    $settingsToMerge = $this->filterSettingsForBlockJson($decodedSettings);
+                    $blockJson = array_merge($blockJson, $settingsToMerge);
                 }
             } elseif (is_array($settings)) {
-                $blockJson = array_merge($blockJson, $settings);
+                $settingsToMerge = $this->filterSettingsForBlockJson($settings);
+                $blockJson = array_merge($blockJson, $settingsToMerge);
             }
         }
 
         return $blockJson;
+    }
+
+    private function supportsInnerBlocks($settings): bool
+    {
+        if (empty($settings)) {
+            return false;
+        }
+
+        // Parse settings if it's a string
+        if (is_string($settings)) {
+            $decodedSettings = json_decode($settings, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return !empty($decodedSettings['supportsInnerBlocks']);
+            }
+        } elseif (is_array($settings)) {
+            return !empty($settings['supportsInnerBlocks']);
+        }
+
+        return false;
+    }
+
+    private function filterSettingsForBlockJson(array $settings): array
+    {
+        // Remove settings that are for generator logic only, not for block.json
+        $filtered = $settings;
+        unset($filtered['supportsInnerBlocks']);
+        return $filtered;
     }
 }

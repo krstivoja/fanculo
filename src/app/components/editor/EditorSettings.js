@@ -24,6 +24,7 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
   const [description, setDescription] = useState(settings.description || '');
   const [category, setCategory] = useState(settings.category || '');
   const [icon, setIcon] = useState(settings.icon || 'search');
+  const [supportsInnerBlocks, setSupportsInnerBlocks] = useState(settings.supportsInnerBlocks || false);
 
   // Fetch block categories on component mount
   useEffect(() => {
@@ -50,16 +51,18 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
     setDescription(currentSettings.description || '');
     setCategory(currentSettings.category || '');
     setIcon(currentSettings.icon || 'search');
+    setSupportsInnerBlocks(currentSettings.supportsInnerBlocks || false);
   }, [selectedPost, metaData]);
 
   // Update settings in metaData when local state changes
-  const updateSettings = (newDescription, newCategory, newIcon) => {
+  const updateSettings = (newDescription, newCategory, newIcon, newSupportsInnerBlocks) => {
     const currentSettings = getSettings();
     const updatedSettings = {
       ...currentSettings,
       description: newDescription,
       category: newCategory,
-      icon: newIcon
+      icon: newIcon,
+      supportsInnerBlocks: newSupportsInnerBlocks
     };
 
     if (onMetaChange) {
@@ -70,18 +73,24 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
   const handleDescriptionChange = (e) => {
     const newDescription = e.target.value;
     setDescription(newDescription);
-    updateSettings(newDescription, category, icon);
+    updateSettings(newDescription, category, icon, supportsInnerBlocks);
   };
 
   const handleCategoryChange = (e) => {
     const newCategory = e.target.value;
     setCategory(newCategory);
-    updateSettings(description, newCategory, icon);
+    updateSettings(description, newCategory, icon, supportsInnerBlocks);
   };
 
   const handleIconChange = (newIcon) => {
     setIcon(newIcon);
-    updateSettings(description, category, newIcon);
+    updateSettings(description, category, newIcon, supportsInnerBlocks);
+  };
+
+  const handleInnerBlocksChange = (e) => {
+    const newSupportsInnerBlocks = e.target.checked;
+    setSupportsInnerBlocks(newSupportsInnerBlocks);
+    updateSettings(description, category, icon, newSupportsInnerBlocks);
   };
 
   const handleDelete = async () => {
@@ -190,6 +199,23 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
                     onIconSelect={handleIconChange}
                     label="Block Dashicon"
                   />
+
+                  <div>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={supportsInnerBlocks}
+                        onChange={handleInnerBlocksChange}
+                        className="w-4 h-4 text-primary bg-base border-outline rounded focus:ring-primary focus:ring-2"
+                      />
+                      <span className="text-sm font-medium text-highlight">
+                        Enable InnerBlocks Support
+                      </span>
+                    </label>
+                    <p className="text-xs text-contrast mt-1 ml-7">
+                      Allows this block to contain other blocks as children. Use &lt;InnerBlocks /&gt; in your render.php file.
+                    </p>
+                  </div>
                 </div>
               )}
 
