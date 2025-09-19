@@ -5,8 +5,8 @@ namespace Fanculo\Admin\Api;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
-use Fanculo\Admin\Content\FunculoPostType;
-use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use Fanculo\Content\FunculoPostType;
+use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use Fanculo\Admin\Api\Services\BulkQueryService;
 

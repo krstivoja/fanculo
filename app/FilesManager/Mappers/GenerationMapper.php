@@ -10,7 +10,7 @@ use Fanculo\FilesManager\Generators\CssFileGenerator;
 use Fanculo\FilesManager\Generators\BlockJsonGenerator;
 use Fanculo\FilesManager\Generators\SymbolFileGenerator;
 use Fanculo\FilesManager\Generators\ScssPartialGenerator;
-use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use Fanculo\Content\FunculoTypeTaxonomy;
 
 class GenerationMapper
 {

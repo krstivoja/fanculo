@@ -3,7 +3,7 @@
 namespace Fanculo\FilesManager\Generators;
 
 use Fanculo\FilesManager\Contracts\FileGeneratorInterface;
-use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use WP_Post;
 

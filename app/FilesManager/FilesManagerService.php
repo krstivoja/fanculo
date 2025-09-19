@@ -5,8 +5,8 @@ namespace Fanculo\FilesManager;
 use Fanculo\FilesManager\Services\DirectoryManager;
 use Fanculo\FilesManager\Services\FileWriter;
 use Fanculo\FilesManager\Mappers\GenerationMapper;
-use Fanculo\Admin\Content\FunculoPostType;
-use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use Fanculo\Content\FunculoPostType;
+use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use WP_Post;
 

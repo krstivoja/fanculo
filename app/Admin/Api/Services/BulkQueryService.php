@@ -2,7 +2,7 @@
 
 namespace Fanculo\Admin\Api\Services;
 
-use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use Fanculo\Content\FunculoTypeTaxonomy;
 
 /**
  * Bulk Query Service for eliminating N+1 database queries

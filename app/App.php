@@ -4,8 +4,8 @@ namespace Fanculo;
 
 use Fanculo\Admin\SettingsPage;
 use Fanculo\Admin\Api\Api;
-use Fanculo\Admin\Content\FunculoPostType;
-use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use Fanculo\Content\FunculoPostType;
+use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Helpers\MetaBoxHelper;
 use Fanculo\Services\FileGenerationHooks;
 use Fanculo\Services\BlockRegistrationHooks;

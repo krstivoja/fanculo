@@ -2,7 +2,7 @@
 
 namespace Fanculo\Admin\Api\Services;
 
-use Fanculo\Admin\Content\FunculoPostType;
+use Fanculo\Content\FunculoPostType;
 
 /**
  * Meta Keys Migration Service

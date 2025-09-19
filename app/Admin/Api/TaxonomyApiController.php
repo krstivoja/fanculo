@@ -2,7 +2,7 @@
 
 namespace Fanculo\Admin\Api;
 
-use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use Fanculo\Content\FunculoTypeTaxonomy;
 
 class TaxonomyApiController
 {

@@ -7,7 +7,7 @@ use Fanculo\Admin\Api\TaxonomyApiController;
 use Fanculo\Admin\Api\BlockCategoriesApiController;
 use Fanculo\Admin\Api\FileGenerationApiController;
 use Fanculo\Admin\Api\ScssCompilerApiController;
-use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use Fanculo\Content\FunculoTypeTaxonomy;
 
 class Api
 {

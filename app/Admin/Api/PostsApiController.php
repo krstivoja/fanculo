@@ -2,8 +2,8 @@
 
 namespace Fanculo\Admin\Api;
 
-use Fanculo\Admin\Content\FunculoPostType;
-use Fanculo\Admin\Content\FunculoTypeTaxonomy;
+use Fanculo\Content\FunculoPostType;
+use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\FilesManager\FilesManagerService;
 use Fanculo\FilesManager\Services\DirectoryManager;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
