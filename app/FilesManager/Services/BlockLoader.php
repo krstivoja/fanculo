@@ -10,7 +10,6 @@ use function json_last_error;
 use function json_last_error_msg;
 use function register_block_type;
 use function is_wp_error;
-use function error_log;
 use function ob_start;
 use function ob_get_clean;
 use function preg_replace;

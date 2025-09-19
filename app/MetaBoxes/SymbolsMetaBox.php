@@ -45,19 +45,20 @@ class SymbolsMetaBox extends AbstractMetaBox
         ];
 
         foreach ($fields as $field) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verification handled in parent canSave() method
             if (isset($_POST[$field])) {
                 // Handle PHP code field with security validation
                 if ($field === '_funculo_symbol_php') {
-                    $value = $this->sanitizePhpCode($_POST[$field]);
-                    if (empty($value) && !empty($_POST[$field])) {
+                    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verification handled in parent canSave() method
+                    $value = $this->sanitizePhpCode(wp_unslash($_POST[$field]));
+                    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verification handled in parent canSave() method
+                    if (empty($value) && !empty(wp_unslash($_POST[$field]))) {
                         // PHP code validation failed - skip saving this field
-                        if (defined('WP_DEBUG') && WP_DEBUG) {
-                            error_log("Fanculo: Invalid PHP code rejected for post {$postId}");
-                        }
                         continue;
                     }
                 } else {
-                    $value = sanitize_textarea_field($_POST[$field]);
+                    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verification handled in parent canSave() method
+                    $value = sanitize_textarea_field(wp_unslash($_POST[$field]));
                 }
                 $this->saveMetaValue($postId, $field, $value);
             }

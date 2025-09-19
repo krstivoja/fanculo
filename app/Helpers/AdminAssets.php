@@ -86,12 +86,20 @@ class AdminAssets
             return ['blocks' => [], 'symbols' => [], 'scss-partials' => []];
         }
 
-        $posts = get_posts([
-            'post_type' => 'funculo',
-            'numberposts' => 100,
-            'post_status' => 'any',
-            'meta_query' => [],
-        ]);
+        // Cache the posts query for better performance
+        $cacheKey = 'fanculo_admin_posts_data';
+        $posts = wp_cache_get($cacheKey, 'fanculo_admin_data');
+
+        if (false === $posts) {
+            $posts = get_posts([
+                'post_type' => 'funculo',
+                'numberposts' => 100,
+                'post_status' => 'any',
+            ]);
+
+            // Cache for 5 minutes
+            wp_cache_set($cacheKey, $posts, 'fanculo_admin_data', 300);
+        }
 
         $grouped = [
             'blocks' => [],

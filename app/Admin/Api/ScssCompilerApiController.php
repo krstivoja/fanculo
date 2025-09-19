@@ -190,11 +190,11 @@ class ScssCompilerApiController
             $partials = wp_cache_get($cacheKey, 'fanculo_api_data');
 
             if (false === $partials) {
-                // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Cached query, acceptable performance
                 $partials = get_posts([
                     'post_type' => FunculoPostType::getPostType(),
                     'post_status' => 'publish',
                     'numberposts' => -1,
+                    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Cached query, acceptable performance
                     'tax_query' => [
                         [
                             'taxonomy' => FunculoTypeTaxonomy::getTaxonomy(),

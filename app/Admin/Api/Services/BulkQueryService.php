@@ -88,10 +88,14 @@ class BulkQueryService
         $metaKeyPlaceholders = implode(',', array_fill(0, count($metaKeys), '%s'));
 
         // Build the complete SQL with placeholders
-        $sql = "SELECT post_id, meta_key, meta_value
-                FROM {$wpdb->postmeta}
-                WHERE post_id IN ({$postIdPlaceholders})
-                AND meta_key IN ({$metaKeyPlaceholders})";
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->postmeta is safe
+        $sql = $wpdb->prepare(
+            "SELECT post_id, meta_key, meta_value
+            FROM {$wpdb->postmeta}
+            WHERE post_id IN ({$postIdPlaceholders})
+            AND meta_key IN ({$metaKeyPlaceholders})",
+            array_merge($postIds, $metaKeys)
+        );
 
         // Create cache key for this query
         $cacheKey = 'fanculo_bulk_meta_' . md5(serialize($postIds) . serialize($metaKeys));
@@ -100,12 +104,8 @@ class BulkQueryService
         if (false === $results) {
             // Execute prepared query directly
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Optimized bulk query with caching
-            $results = $wpdb->get_results(
-                $wpdb->prepare(
-                    $sql,
-                    array_merge($postIds, $metaKeys)
-                )
-            );
+            // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Query is already prepared above
+            $results = $wpdb->get_results($sql);
 
             // Cache for 5 minutes (300 seconds)
             wp_cache_set($cacheKey, $results, 'fanculo_bulk_queries', 300);

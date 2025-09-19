@@ -45,7 +45,9 @@ class SCSSPartialsMetaBox extends AbstractMetaBox
         ];
 
         foreach ($fields as $field) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verification handled in parent canSave() method
             if (isset($_POST[$field])) {
+                // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verification handled in parent canSave() method
                 $value = sanitize_textarea_field(wp_unslash($_POST[$field]));
                 $this->saveMetaValue($postId, $field, $value);
             }

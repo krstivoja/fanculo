@@ -131,12 +131,11 @@ class GlobalRegenerator
         $partials = wp_cache_get($cacheKey, 'fanculo_global_data');
 
         if (false === $partials) {
-            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Cached query for global partials
-            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Cached query for global partials
             $partials = get_posts([
                 'post_type' => FunculoPostType::getPostType(),
                 'post_status' => 'publish',
                 'numberposts' => -1,
+                // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Cached query for global partials
                 'tax_query' => [
                     [
                         'taxonomy' => FunculoTypeTaxonomy::getTaxonomy(),
@@ -144,6 +143,7 @@ class GlobalRegenerator
                         'terms' => FunculoTypeTaxonomy::getTermScssPartials()
                     ]
                 ],
+                // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Cached query for global partials
                 'meta_query' => [
                     [
                         'key' => MetaKeysConstants::SCSS_IS_GLOBAL,
@@ -169,11 +169,11 @@ class GlobalRegenerator
         $posts = wp_cache_get($cacheKey, 'fanculo_dependencies');
 
         if (false === $posts) {
-            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Cached query for dependency tracking
             $posts = get_posts([
                 'post_type' => FunculoPostType::getPostType(),
                 'post_status' => 'publish',
                 'numberposts' => -1,
+                // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Cached query for dependency tracking
                 'meta_query' => [
                     [
                         'key' => MetaKeysConstants::BLOCK_SELECTED_PARTIALS,
