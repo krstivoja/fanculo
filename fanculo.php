@@ -38,6 +38,11 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
     require_once __DIR__ . '/vendor/autoload.php';
 }
 
+// Load InnerBlocks processor
+if (file_exists(__DIR__ . '/inc/innerblocks-processor.php')) {
+    require_once __DIR__ . '/inc/innerblocks-processor.php';
+}
+
 // Initialize the plugin
 add_action('plugins_loaded', function() {
     \Fanculo\App::getInstance();

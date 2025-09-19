@@ -96,74 +96,32 @@ class BlockLoader
         $GLOBALS['content'] = $content;
         $GLOBALS['block'] = $block;
 
-        // Start output buffering
-        ob_start();
+        // Use the modern InnerBlocks processor if available, otherwise fallback to manual rendering
+        if (function_exists('nbnpx_process_innerblocks_template')) {
+            $rendered_output = nbnpx_process_innerblocks_template($render_file, $attributes, $content, $block);
+        } else {
+            // Fallback: manual rendering without InnerBlocks processing
+            // Start output buffering
+            ob_start();
 
-        // Make variables available to the render file
-        $block_attributes = $attributes;
-        $block_content = $content;
-        $block_instance = $block;
+            // Make variables available to the render file
+            $block_attributes = $attributes;
+            $block_content = $content;
+            $block_instance = $block;
 
-        // Include the render file
-        include $render_file;
+            // Include the render file
+            include $render_file;
 
-        // Get the buffered content
-        $rendered_output = ob_get_clean();
+            // Get the buffered content
+            $rendered_output = ob_get_clean();
+        }
 
         // If output is empty, return a message
         if (empty($rendered_output)) {
             return '<!-- Block rendered as empty -->';
         }
 
-        // Always process InnerBlocks for both editor and frontend
-        $rendered_output = $this->processInnerBlocks($rendered_output, $content, $block);
-
         return $rendered_output;
     }
 
-    private function processInnerBlocks(string $rendered_output, $content, $block): string
-    {
-        // Check if we're in editor context (REST API request)
-        $is_editor_context = defined('REST_REQUEST') && REST_REQUEST;
-
-        if ($is_editor_context) {
-            // Editor: Replace with placeholder for JavaScript to detect
-            $replacement = '<!--FANCULO_INNERBLOCKS_PLACEHOLDER-->';
-        } else {
-            // Frontend: Replace with actual inner blocks content
-            $replacement = $this->getInnerBlocksContent($content, $block);
-        }
-
-        // Replace InnerBlocks placeholders with appropriate content (case-insensitive)
-        $innerblocks_patterns = [
-            '/<innerblocks\s*\/?>/i',           // Self-closing: <innerblocks /> (any case)
-            '/<innerblocks><\/innerblocks>/i'   // With closing tag: <innerblocks></innerblocks> (any case)
-        ];
-
-        foreach ($innerblocks_patterns as $pattern) {
-            $rendered_output = preg_replace($pattern, $replacement, $rendered_output);
-        }
-
-        return $rendered_output;
-    }
-
-    private function getInnerBlocksContent($content, $block): string
-    {
-        $inner_blocks_content = '';
-
-        if (!empty($block->inner_blocks)) {
-            foreach ($block->inner_blocks as $inner_block) {
-                // Convert WP_Block object to array if needed
-                if ($inner_block instanceof \WP_Block) {
-                    $inner_blocks_content .= $inner_block->render();
-                } else {
-                    $inner_blocks_content .= render_block($inner_block);
-                }
-            }
-        } else if (!empty($content)) {
-            $inner_blocks_content = $content;
-        }
-
-        return $inner_blocks_content;
-    }
 }
