@@ -1,147 +1,5 @@
 # Fanculo Plugin Update Plan
 
-## Structure and Organization Refactoring
-
-### Current Issues Analysis:
-
-#### 1. **Misplaced Content Registration** ✅ COMPLETED
-**Problem**: `Admin/Content/` contains post type and taxonomy registration
-- `FunculoPostType.php` and `FunculoTypeTaxonomy.php` are core functionality, not admin-specific
-- Used by **18 files** across the entire codebase (FilesManager, API controllers, generators)
-- Registration happens on `init` hook, affects both frontend and admin
-
-**SOLUTION IMPLEMENTED:**
-- ✅ Created new `app/Content/` directory
-- ✅ Moved `FunculoPostType.php` to `Content/` with namespace `Fanculo\Content`
-- ✅ Moved `FunculoTypeTaxonomy.php` to `Content/` with namespace `Fanculo\Content`
-- ✅ Updated all 18 import statements across FilesManager, API controllers, and App.php
-- ✅ Removed empty `Admin/Content/` directory
-- ✅ All files pass PHP syntax validation
-
-#### 2. **Inconsistent Service/Hooks Naming**
-**Current naming inconsistencies**:
-- Hook classes: `FileGenerationHooks`, `BlockRegistrationHooks`, `InnerBlocksHooks`
-- Service classes: `FilesManagerService`, `BulkQueryService`
-- **Issue**: Hook classes have logic beyond just hooks, should be Services
-
-#### 3. **Directory Structure Problems**
-- Empty `Core/` directory (unused)
-- Content registration buried under `Admin/` when it's system-wide
-- Hook classes mixed with other services in `Services/`
-
-### Proposed Reorganization:
-
-#### **Phase 1: Content Registration Restructure** ✅ COMPLETED
-**Move**: `Admin/Content/` → `Content/` (neutral location)
-```
-app/Content/
-├── FunculoPostType.php      # namespace: Fanculo\Content
-└── FunculoTypeTaxonomy.php  # namespace: Fanculo\Content
-```
-
-**Benefits Achieved**:
-- ✅ Reflects true purpose (system-wide content registration)
-- ✅ More logical import path: `use Fanculo\Content\FunculoPostType`
-- ✅ Clear separation from admin-only features
-
-#### **Phase 2: Service/Hook Naming Consistency**
-**Rename for consistency** (all should be `...Service`):
-- `FileGenerationHooks` → `FileGenerationService`
-- `BlockRegistrationHooks` → `BlockRegistrationService`
-- `InnerBlocksHooks` → `InnerBlocksService`
-
-**Justification**: These classes do more than just hook registration - they contain business logic
-
-#### **Phase 3: Hook-Specific Organization** (Optional)
-**Create**: `Services/Hooks/` subdirectory for pure hook classes
-```
-app/Services/
-├── Hooks/                   # Pure hook management (future)
-├── FileGenerationService.php   # Business logic + hooks
-├── BlockRegistrationService.php # Business logic + hooks
-└── InnerBlocksService.php      # Business logic + hooks
-```
-
-### Migration Impact Analysis:
-
-#### **Files Requiring Updates (18 total)**:
-- `App.php` - Update imports and instantiation
-- All `FilesManager/` classes (10 files)
-- All `Admin/Api/` controllers (7 files)
-
-#### **Namespace Changes Required**:
-```php
-// FROM:
-use Fanculo\Admin\Content\FunculoPostType;
-use Fanculo\Admin\Content\FunculoTypeTaxonomy;
-
-// TO:
-use Fanculo\Content\FunculoPostType;
-use Fanculo\Content\FunculoTypeTaxonomy;
-```
-
-### Implementation Strategy:
-
-#### **Step 1**: Create new directories and move files ✅ COMPLETED
-- ✅ Create `app/Content/` directory
-- ✅ Move and update namespace in content registration files
-
-#### **Step 2**: Update all import statements across codebase ✅ COMPLETED
-- ✅ Systematic find/replace of namespace imports
-- ✅ Update all 18 affected files
-
-#### **Step 3**: Rename service classes for consistency (PENDING)
-- Rename hook classes to `...Service` pattern
-- Update references in `App.php`
-
-#### **Step 4**: Remove empty directories ✅ COMPLETED
-- ✅ Delete empty `Admin/Content/` directory
-- Consider removing empty `Core/` directory
-
-### Benefits:
-- ✅ **Logical Structure**: Content registration in neutral location
-- **Consistent Naming**: All service classes follow same pattern (PENDING)
-- ✅ **Better Maintainability**: Clear separation of concerns
-- ✅ **Accurate Imports**: Import paths reflect actual functionality
-
-## Hook Placement and Lifecycle Refactoring
-
-### Current Issues:
-1. **REST Route Registration**: All routes are registered in `Api.php` instead of individual controllers
-2. **Hook Timing**: Post type/taxonomy registration runs on `init` but without proper priority coordination
-3. **Architectural Coupling**: App class directly instantiates all services instead of delegating hook registration
-
-### Refactoring Plan:
-
-#### 1. Move REST Route Registration to Individual Controllers
-- **PostsApiController.php**: Add `registerRoutes()` method and hook to `rest_api_init`
-- **TaxonomyApiController.php**: Add `registerRoutes()` method and hook to `rest_api_init`
-- **BlockCategoriesApiController.php**: Add `registerRoutes()` method and hook to `rest_api_init`
-- **FileGenerationApiController.php**: Add `registerRoutes()` method and hook to `rest_api_init`
-- **ScssCompilerApiController.php**: Add `registerRoutes()` method and hook to `rest_api_init`
-
-#### 2. Refactor API.php
-- Remove the centralized `registerRoutes()` method
-- Remove the `rest_api_init` hook from Api class
-- Api class becomes just a container/coordinator that instantiates controllers
-- Controllers handle their own route registration
-
-#### 3. Improve Post Type/Taxonomy Registration Priority
-- **FunculoPostType.php**: Ensure `init` hook runs at priority 10 (default)
-- **FunculoTypeTaxonomy.php**: Change `init` hook priority to 15 to run after post type registration
-- This ensures proper dependency order
-
-#### 4. Update App.php Architecture
-- App remains responsible for instantiating classes
-- Each class becomes responsible for its own hook registration
-- Maintain clean separation of concerns
-
-### Benefits:
-- **Single Responsibility**: Each controller manages its own routes
-- **Better Hook Timing**: Proper priority ensures correct registration order
-- **Improved Maintainability**: Easier to locate and modify specific route logic
-- **Reduced Coupling**: Api class no longer needs to know about all routes
-
 ## FilesManager Refactoring
 
 ### Current Issues Analysis:
@@ -322,25 +180,7 @@ use Fanculo\Content\FunculoTypeTaxonomy;
 ## Implementation Priority
 
 1. **High Priority**: Security fixes (immediate risk)
-2. **Medium Priority**: Hook placement and lifecycle (architectural improvement)
-3. ⚡ **Medium Priority**: Structure organization (maintainability) - **75% COMPLETE**
-4. **Lower Priority**: FilesManager refactoring (performance optimization)
-
-## Recent Progress Summary
-
-### ✅ Content Registration Restructuring COMPLETED
-**What was accomplished:**
-- Moved `Admin/Content/FunculoPostType.php` → `Content/FunculoPostType.php`
-- Moved `Admin/Content/FunculoTypeTaxonomy.php` → `Content/FunculoTypeTaxonomy.php`
-- Updated namespace from `Fanculo\Admin\Content` to `Fanculo\Content`
-- Updated **18 files** across entire codebase with new imports
-- Removed empty `Admin/Content/` directory
-- All files pass PHP syntax validation
-
-**Next Steps:**
-- Complete Service/Hook naming consistency (FileGenerationHooks → FileGenerationService, etc.)
-- Move to Hook Placement & Lifecycle refactoring
-- Address Security fixes (highest priority)
+2. **Lower Priority**: FilesManager refactoring (performance optimization)
 
 ---
 
@@ -360,39 +200,9 @@ use Fanculo\Content\FunculoTypeTaxonomy;
 
 ---
 
-## Request 2: Hook Placement & Lifecycle (1-2 sessions)
 
-**Ask Claude to:**
-> "Refactor the hook placement and lifecycle management:
-> 1. Move REST route registration from Api.php to individual controllers
-> 2. Make each controller register its own routes on rest_api_init
-> 3. Fix post type/taxonomy registration priorities
-> 4. Update App.php to delegate hook registration to classes"
 
-**Estimated effort:** 1-2 coding sessions
-**Priority:** Medium (architectural improvement)
-
----
-
-## Request 3: Structure & Organization (1-2 sessions) ⚡ IN PROGRESS
-
-**Ask Claude to:**
-> ~~"Reorganize the directory structure and naming:~~
-> ~~1. Move Admin/Content/ to Content/ (affects 18 files)~~ ✅ COMPLETED
-> 2. Rename hook classes to service classes for consistency
-> ~~3. Update all namespace imports across the codebase~~ ✅ COMPLETED
-> ~~4. Clean up empty directories~~ ✅ COMPLETED
-
-**Progress:**
-- ✅ **Phase 1 Complete**: Content registration moved to neutral location
-- 🔄 **Phase 2 Remaining**: Service/Hook naming consistency
-
-**Estimated effort:** 0.5-1 coding session remaining
-**Priority:** Medium (maintainability)
-
----
-
-## Request 4: FilesManager Refactoring (2-3 sessions)
+## Request 2: FilesManager Refactoring (2-3 sessions)
 
 **Ask Claude to:**
 > "Split FilesManagerService into smaller, focused services:
@@ -403,7 +213,7 @@ use Fanculo\Content\FunculoTypeTaxonomy;
 > 5. Add performance guards to prevent unnecessary regeneration"
 
 **Estimated effort:** 2-3 coding sessions
-**Priority:** Lower (performance optimization)
+**Priority:** Medium (performance optimization)
 
 ---
 
@@ -439,8 +249,6 @@ Don't make any other structural changes - just security fixes.
 ## Order Recommendation:
 
 1. **Do security first** - critical vulnerabilities need immediate fixing
-2. **Do hook refactoring next** - sets up better architecture
-3. **Do structure reorganization** - easier after hooks are cleaned up
-4. **Do FilesManager last** - complex refactoring, lower priority
+2. **Do FilesManager refactoring** - performance optimization
 
 This approach lets you make steady progress while keeping each session focused and manageable.

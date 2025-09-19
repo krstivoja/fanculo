@@ -6,6 +6,26 @@ use Fanculo\Content\FunculoTypeTaxonomy;
 
 class TaxonomyApiController
 {
+    public function __construct()
+    {
+        add_action('rest_api_init', [$this, 'registerRoutes']);
+    }
+
+    public function registerRoutes()
+    {
+        // Taxonomy routes
+        register_rest_route('funculo/v1', '/taxonomy-terms', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getTaxonomyTerms'],
+            'permission_callback' => [$this, 'checkPermissions'],
+        ]);
+    }
+
+    public function checkPermissions()
+    {
+        return current_user_can('edit_posts');
+    }
+
     public function getTaxonomyTerms($request)
     {
         $terms = get_terms([

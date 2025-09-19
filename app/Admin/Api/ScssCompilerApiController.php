@@ -17,6 +17,83 @@ class ScssCompilerApiController
     public function __construct()
     {
         $this->bulkQueryService = new BulkQueryService();
+        add_action('rest_api_init', [$this, 'registerRoutes']);
+    }
+
+    public function registerRoutes()
+    {
+        // SCSS compilation routes
+        register_rest_route('funculo/v1', '/post/(?P<id>\d+)/scss', [
+            [
+                'methods' => 'GET',
+                'callback' => [$this, 'getScssContent'],
+                'permission_callback' => [$this, 'checkPermissions'],
+            ],
+            [
+                'methods' => 'POST',
+                'callback' => [$this, 'compileAndSaveScss'],
+                'permission_callback' => [$this, 'checkCreatePermissions'],
+                'args' => [
+                    'scss_content' => [
+                        'required' => false,
+                        'type' => 'string',
+                    ],
+                    'css_content' => [
+                        'required' => false,
+                        'type' => 'string',
+                    ],
+                ],
+            ]
+        ]);
+
+        // SCSS partials routes
+        register_rest_route('funculo/v1', '/scss-partials', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getScssPartials'],
+            'permission_callback' => [$this, 'checkPermissions'],
+        ]);
+
+        register_rest_route('funculo/v1', '/scss-partial/(?P<id>\d+)/global-setting', [
+            'methods' => 'POST',
+            'callback' => [$this, 'updatePartialGlobalSetting'],
+            'permission_callback' => [$this, 'checkCreatePermissions'],
+            'args' => [
+                'is_global' => [
+                    'required' => true,
+                    'type' => 'boolean',
+                ],
+                'global_order' => [
+                    'required' => false,
+                    'type' => 'integer',
+                ],
+            ],
+        ]);
+
+        // Batch SCSS compilation
+        register_rest_route('funculo/v1', '/scss/compile-batch', [
+            'methods' => 'POST',
+            'callback' => [$this, 'batchCompileScss'],
+            'permission_callback' => [$this, 'checkCreatePermissions'],
+            'args' => [
+                'compilations' => [
+                    'required' => true,
+                    'type' => 'array',
+                    'validate_callback' => function($param) {
+                        return is_array($param) && !empty($param) && count($param) <= 10;
+                    }
+                ],
+            ],
+        ]);
+    }
+
+    public function checkPermissions()
+    {
+        return current_user_can('edit_posts');
+    }
+
+    public function checkCreatePermissions()
+    {
+        return current_user_can('publish_posts');
     }
 
     /**

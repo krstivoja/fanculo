@@ -18,6 +18,178 @@ class PostsApiController
     public function __construct()
     {
         $this->bulkQueryService = new BulkQueryService();
+        add_action('rest_api_init', [$this, 'registerRoutes']);
+    }
+
+    public function registerRoutes()
+    {
+        // Posts routes
+        register_rest_route('funculo/v1', '/posts', [
+            [
+                'methods' => 'GET',
+                'callback' => [$this, 'getPosts'],
+                'permission_callback' => [$this, 'checkPermissions'],
+                'args' => [
+                    'taxonomy_filter' => [
+                        'default' => '',
+                        'sanitize_callback' => 'sanitize_text_field',
+                    ],
+                    'search' => [
+                        'default' => '',
+                        'sanitize_callback' => 'sanitize_text_field',
+                    ],
+                    'per_page' => [
+                        'default' => 20,
+                        'sanitize_callback' => 'absint',
+                    ],
+                    'page' => [
+                        'default' => 1,
+                        'sanitize_callback' => 'absint',
+                    ],
+                ],
+            ],
+            [
+                'methods' => 'POST',
+                'callback' => [$this, 'createPost'],
+                'permission_callback' => [$this, 'checkCreatePermissions'],
+                'args' => [
+                    'title' => [
+                        'required' => true,
+                        'sanitize_callback' => 'sanitize_text_field',
+                        'validate_callback' => function($param) {
+                            return !empty(trim($param));
+                        }
+                    ],
+                    'taxonomy_term' => [
+                        'required' => true,
+                        'sanitize_callback' => 'sanitize_text_field',
+                        'validate_callback' => function($param) {
+                            $validTerms = [
+                                FunculoTypeTaxonomy::getTermBlocks(),
+                                FunculoTypeTaxonomy::getTermSymbols(),
+                                FunculoTypeTaxonomy::getTermScssPartials()
+                            ];
+                            return in_array($param, $validTerms);
+                        }
+                    ],
+                    'status' => [
+                        'default' => 'publish',
+                        'sanitize_callback' => 'sanitize_text_field',
+                        'validate_callback' => function($param) {
+                            return in_array($param, ['draft', 'publish', 'private']);
+                        }
+                    ],
+                ],
+            ]
+        ]);
+
+        // Individual post routes
+        register_rest_route('funculo/v1', '/post/(?P<id>\d+)', [
+            [
+                'methods' => 'GET',
+                'callback' => [$this, 'getPost'],
+                'permission_callback' => [$this, 'checkPermissions'],
+            ],
+            [
+                'methods' => 'PUT',
+                'callback' => [$this, 'updatePost'],
+                'permission_callback' => [$this, 'checkCreatePermissions'],
+                'args' => [
+                    'meta' => [
+                        'required' => false,
+                        'validate_callback' => function($param) {
+                            return is_array($param);
+                        }
+                    ],
+                    'title' => [
+                        'required' => false,
+                        'sanitize_callback' => 'sanitize_text_field',
+                        'validate_callback' => function($param) {
+                            return !empty(trim($param));
+                        }
+                    ],
+                ],
+            ],
+            [
+                'methods' => 'DELETE',
+                'callback' => [$this, 'deletePost'],
+                'permission_callback' => [$this, 'checkDeletePermissions'],
+            ]
+        ]);
+
+        // Batch fetch multiple posts by IDs
+        register_rest_route('funculo/v1', '/posts/batch', [
+            'methods' => 'POST',
+            'callback' => [$this, 'getBatchPosts'],
+            'permission_callback' => [$this, 'checkPermissions'],
+            'args' => [
+                'post_ids' => [
+                    'required' => true,
+                    'type' => 'array',
+                    'validate_callback' => function($param) {
+                        return is_array($param) && !empty($param) && count($param) <= 50;
+                    }
+                ],
+                'include_meta' => [
+                    'default' => true,
+                    'type' => 'boolean',
+                ],
+            ],
+        ]);
+
+        // Batch update multiple posts
+        register_rest_route('funculo/v1', '/posts/batch-update', [
+            'methods' => 'PUT',
+            'callback' => [$this, 'batchUpdatePosts'],
+            'permission_callback' => [$this, 'checkCreatePermissions'],
+            'args' => [
+                'updates' => [
+                    'required' => true,
+                    'type' => 'array',
+                    'validate_callback' => function($param) {
+                        return is_array($param) && !empty($param) && count($param) <= 20;
+                    }
+                ],
+            ],
+        ]);
+
+        // Get post with all related data (partials, categories, etc.)
+        register_rest_route('funculo/v1', '/post/(?P<id>\d+)/with-related', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getPostWithRelated'],
+            'permission_callback' => [$this, 'checkPermissions'],
+        ]);
+
+        // Bulk operations endpoint - execute multiple operations in single request
+        register_rest_route('funculo/v1', '/operations/bulk', [
+            'methods' => 'POST',
+            'callback' => [$this, 'executeBulkOperations'],
+            'permission_callback' => [$this, 'checkCreatePermissions'],
+            'args' => [
+                'operations' => [
+                    'required' => true,
+                    'type' => 'array',
+                    'validate_callback' => function($param) {
+                        return is_array($param) && !empty($param) && count($param) <= 15;
+                    }
+                ],
+            ],
+        ]);
+    }
+
+    public function checkPermissions()
+    {
+        return current_user_can('edit_posts');
+    }
+
+    public function checkCreatePermissions()
+    {
+        return current_user_can('publish_posts');
+    }
+
+    public function checkDeletePermissions()
+    {
+        return current_user_can('delete_posts');
     }
 
     public function getPosts($request)

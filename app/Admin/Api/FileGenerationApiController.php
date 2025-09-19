@@ -6,6 +6,33 @@ use Fanculo\FilesManager\FilesManagerService;
 
 class FileGenerationApiController
 {
+    public function __construct()
+    {
+        add_action('rest_api_init', [$this, 'registerRoutes']);
+    }
+
+    public function registerRoutes()
+    {
+        // File generation routes
+        register_rest_route('funculo/v1', '/regenerate-files', [
+            'methods' => 'POST',
+            'callback' => [$this, 'regenerateFiles'],
+            'permission_callback' => [$this, 'checkCreatePermissions'],
+        ]);
+
+        // Force regenerate all files (manual button)
+        register_rest_route('funculo/v1', '/force-regenerate-all', [
+            'methods' => 'POST',
+            'callback' => [$this, 'forceRegenerateAll'],
+            'permission_callback' => [$this, 'checkCreatePermissions'],
+        ]);
+    }
+
+    public function checkCreatePermissions()
+    {
+        return current_user_can('publish_posts');
+    }
+
     public function regenerateFiles($request)
     {
         try {

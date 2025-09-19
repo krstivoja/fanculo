@@ -7,7 +7,7 @@ use Fanculo\FilesManager\Services\InnerBlocksProcessor;
 /**
  * Handles InnerBlocks-related WordPress hooks and script enqueuing
  */
-class InnerBlocksHooks
+class InnerBlocksService
 {
     public function __construct()
     {

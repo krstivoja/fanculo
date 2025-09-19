@@ -4,6 +4,26 @@ namespace Fanculo\Admin\Api;
 
 class BlockCategoriesApiController
 {
+    public function __construct()
+    {
+        add_action('rest_api_init', [$this, 'registerRoutes']);
+    }
+
+    public function registerRoutes()
+    {
+        // Block categories routes
+        register_rest_route('funculo/v1', '/block-categories', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getBlockCategories'],
+            'permission_callback' => [$this, 'checkPermissions'],
+        ]);
+    }
+
+    public function checkPermissions()
+    {
+        return current_user_can('edit_posts');
+    }
+
     public function getBlockCategories()
     {
         // Simple test response first

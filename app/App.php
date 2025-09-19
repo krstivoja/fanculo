@@ -7,9 +7,9 @@ use Fanculo\Admin\Api\Api;
 use Fanculo\Content\FunculoPostType;
 use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Helpers\MetaBoxHelper;
-use Fanculo\Services\FileGenerationHooks;
-use Fanculo\Services\BlockRegistrationHooks;
-use Fanculo\Services\InnerBlocksHooks;
+use Fanculo\Services\FileGenerationService;
+use Fanculo\Services\BlockRegistrationService;
+use Fanculo\Services\InnerBlocksService;
 
 class App
 {
@@ -44,12 +44,12 @@ class App
         new Api();
 
         // Initialize file generation system
-        new FileGenerationHooks();
+        new FileGenerationService();
 
         // Initialize block loading system
-        new BlockRegistrationHooks();
+        new BlockRegistrationService();
 
         // Initialize InnerBlocks processing system
-        new InnerBlocksHooks();
+        new InnerBlocksService();
     }
 }

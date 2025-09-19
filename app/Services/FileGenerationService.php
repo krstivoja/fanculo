@@ -4,7 +4,7 @@ namespace Fanculo\Services;
 
 use Fanculo\FilesManager\FilesManagerService;
 
-class FileGenerationHooks
+class FileGenerationService
 {
     private $filesManagerService;
 

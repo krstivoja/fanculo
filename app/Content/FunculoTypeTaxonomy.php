@@ -29,7 +29,7 @@ class FunculoTypeTaxonomy
 
     public function __construct()
     {
-        add_action('init', [$this, 'register']);
+        add_action('init', [$this, 'register'], 15);
         add_action('init', [$this, 'insertDefaultTerms'], 20);
     }
 

@@ -4,7 +4,7 @@ namespace Fanculo\Services;
 
 use Fanculo\FilesManager\Services\BlockLoader;
 
-class BlockRegistrationHooks
+class BlockRegistrationService
 {
     private $blockLoader;
 
@@ -21,9 +21,9 @@ class BlockRegistrationHooks
 
     public function registerBlocks(): void
     {
-        error_log('BlockRegistrationHooks: Starting block registration');
+        error_log('BlockRegistrationService: Starting block registration');
         $this->blockLoader->loadBlocks();
-        error_log('BlockRegistrationHooks: Block registration completed');
+        error_log('BlockRegistrationService: Block registration completed');
     }
 
 }
