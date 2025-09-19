@@ -8,6 +8,8 @@ use Fanculo\FilesManager\FilesManagerService;
 use Fanculo\FilesManager\Services\DirectoryManager;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use Fanculo\Admin\Api\Services\BulkQueryService;
+use Fanculo\Admin\Api\Security\PermissionValidator;
+use Fanculo\Admin\Api\Security\InputValidator;
 use Fanculo\Admin\Api\ScssCompilerApiController;
 use Fanculo\Admin\Api\BlockCategoriesApiController;
 
@@ -177,19 +179,51 @@ class PostsApiController
         ]);
     }
 
-    public function checkPermissions()
+    public function checkPermissions($request = null)
     {
-        return current_user_can('edit_posts');
+        // Basic permission check
+        if (!PermissionValidator::canReadPosts()) {
+            PermissionValidator::logSecurityEvent('read_permission_denied');
+            return false;
+        }
+
+        // For requests with post ID, check specific post permissions
+        if ($request && method_exists($request, 'get_param')) {
+            $postId = PermissionValidator::getValidatedPostId($request);
+            if ($postId) {
+                return PermissionValidator::canEditSpecificPost($postId);
+            }
+        }
+
+        return true;
     }
 
-    public function checkCreatePermissions()
+    public function checkCreatePermissions($request = null)
     {
-        return current_user_can('publish_posts');
+        if (!PermissionValidator::canCreatePosts()) {
+            PermissionValidator::logSecurityEvent('create_permission_denied');
+            return false;
+        }
+
+        return true;
     }
 
-    public function checkDeletePermissions()
+    public function checkDeletePermissions($request = null)
     {
-        return current_user_can('delete_posts');
+        if (!PermissionValidator::canDeletePosts()) {
+            PermissionValidator::logSecurityEvent('delete_permission_denied');
+            return false;
+        }
+
+        // For delete operations, always check specific post permissions
+        if ($request && method_exists($request, 'get_param')) {
+            $postId = PermissionValidator::getValidatedPostId($request);
+            if ($postId) {
+                return PermissionValidator::canDeleteSpecificPost($postId);
+            }
+        }
+
+        return false; // Require specific post ID for deletions
     }
 
     public function getPosts($request)
@@ -456,42 +490,100 @@ class PostsApiController
 
     private function updatePostMeta($postId, $metaData)
     {
-        // Update blocks meta
+        // Log meta update attempt for security auditing
+        PermissionValidator::logSecurityEvent('post_meta_update_attempt', [
+            'post_id' => $postId,
+            'meta_keys' => array_keys($metaData)
+        ]);
+
+        // Update blocks meta with security validation
         if (isset($metaData['blocks'])) {
             $blocks = $metaData['blocks'];
+
+            // CRITICAL SECURITY FIX: Validate PHP code
             if (isset($blocks['php'])) {
-                update_post_meta($postId, MetaKeysConstants::BLOCK_PHP, wp_unslash($blocks['php']));
+                $phpValidation = InputValidator::validatePhpCode($blocks['php']);
+                if ($phpValidation['valid']) {
+                    update_post_meta($postId, MetaKeysConstants::BLOCK_PHP, $phpValidation['code']);
+                } else {
+                    PermissionValidator::logSecurityEvent('dangerous_php_code_blocked', [
+                        'post_id' => $postId,
+                        'errors' => $phpValidation['errors'],
+                        'code_preview' => substr($blocks['php'], 0, 100)
+                    ]);
+                    // Don't update meta if validation fails
+                }
             }
+
+            // Validate and sanitize SCSS
             if (isset($blocks['scss'])) {
-                update_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, sanitize_textarea_field($blocks['scss']));
+                $scssValidation = InputValidator::validateScssCode($blocks['scss']);
+                if ($scssValidation['valid']) {
+                    update_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, $scssValidation['code']);
+                }
             }
+
+            // Validate and sanitize JavaScript
             if (isset($blocks['js'])) {
-                update_post_meta($postId, MetaKeysConstants::BLOCK_JS, sanitize_textarea_field($blocks['js']));
+                $jsValidation = InputValidator::validateJsCode($blocks['js']);
+                if ($jsValidation['valid']) {
+                    update_post_meta($postId, MetaKeysConstants::BLOCK_JS, $jsValidation['code']);
+                }
             }
+
+            // Validate JSON attributes
             if (isset($blocks['attributes'])) {
-                update_post_meta($postId, MetaKeysConstants::BLOCK_ATTRIBUTES, sanitize_textarea_field($blocks['attributes']));
+                $jsonValidation = InputValidator::validateJsonContent($blocks['attributes']);
+                if ($jsonValidation['valid']) {
+                    update_post_meta($postId, MetaKeysConstants::BLOCK_ATTRIBUTES, wp_json_encode($jsonValidation['data']));
+                }
             }
+
+            // Validate JSON settings
             if (isset($blocks['settings'])) {
-                update_post_meta($postId, MetaKeysConstants::BLOCK_SETTINGS, sanitize_textarea_field($blocks['settings']));
+                $jsonValidation = InputValidator::validateJsonContent($blocks['settings']);
+                if ($jsonValidation['valid']) {
+                    update_post_meta($postId, MetaKeysConstants::BLOCK_SETTINGS, wp_json_encode($jsonValidation['data']));
+                }
             }
+
+            // Sanitize selected partials
             if (isset($blocks['selected_partials'])) {
-                update_post_meta($postId, MetaKeysConstants::BLOCK_SELECTED_PARTIALS, sanitize_textarea_field($blocks['selected_partials']));
+                $sanitized = sanitize_text_field($blocks['selected_partials']);
+                update_post_meta($postId, MetaKeysConstants::BLOCK_SELECTED_PARTIALS, $sanitized);
             }
         }
 
-        // Update symbols meta
+        // Update symbols meta with security validation
         if (isset($metaData['symbols'])) {
             $symbols = $metaData['symbols'];
+
+            // CRITICAL SECURITY FIX: Validate PHP code
             if (isset($symbols['php'])) {
-                update_post_meta($postId, MetaKeysConstants::SYMBOL_PHP, wp_unslash($symbols['php']));
+                $phpValidation = InputValidator::validatePhpCode($symbols['php']);
+                if ($phpValidation['valid']) {
+                    update_post_meta($postId, MetaKeysConstants::SYMBOL_PHP, $phpValidation['code']);
+                } else {
+                    PermissionValidator::logSecurityEvent('dangerous_php_code_blocked', [
+                        'post_id' => $postId,
+                        'type' => 'symbol',
+                        'errors' => $phpValidation['errors'],
+                        'code_preview' => substr($symbols['php'], 0, 100)
+                    ]);
+                    // Don't update meta if validation fails
+                }
             }
         }
 
-        // Update SCSS partials meta
+        // Update SCSS partials meta with validation
         if (isset($metaData['scss_partials'])) {
             $scssPartials = $metaData['scss_partials'];
+
             if (isset($scssPartials['scss'])) {
-                update_post_meta($postId, MetaKeysConstants::SCSS_PARTIAL_SCSS, sanitize_textarea_field($scssPartials['scss']));
+                $scssValidation = InputValidator::validateScssCode($scssPartials['scss']);
+                if ($scssValidation['valid']) {
+                    update_post_meta($postId, MetaKeysConstants::SCSS_PARTIAL_SCSS, $scssValidation['code']);
+                }
             }
         }
     }
@@ -556,16 +648,47 @@ class PostsApiController
         $postIds = $request->get_param('post_ids');
         $includeMeta = $request->get_param('include_meta');
 
-        // Validate post IDs
+        // Security: Validate batch operation size
+        if (!is_array($postIds)) {
+            PermissionValidator::logSecurityEvent('batch_posts_invalid_input', [
+                'provided_type' => gettype($postIds)
+            ]);
+            return new \WP_Error('invalid_input', 'post_ids must be an array', ['status' => 400]);
+        }
+
+        $batchValidation = InputValidator::validateBatchArray($postIds, 50);
+        if (!$batchValidation['valid']) {
+            PermissionValidator::logSecurityEvent('batch_posts_validation_failed', [
+                'errors' => $batchValidation['errors'],
+                'array_size' => count($postIds)
+            ]);
+            return new \WP_Error('batch_validation_failed', implode(', ', $batchValidation['errors']), ['status' => 400]);
+        }
+
+        // Validate and sanitize post IDs
         $validPostIds = [];
         foreach ($postIds as $postId) {
-            if (is_numeric($postId)) {
+            if (is_numeric($postId) && (int)$postId > 0) {
                 $validPostIds[] = (int)$postId;
             }
         }
 
         if (empty($validPostIds)) {
+            PermissionValidator::logSecurityEvent('batch_posts_no_valid_ids', [
+                'original_count' => count($postIds)
+            ]);
             return new \WP_Error('invalid_post_ids', 'No valid post IDs provided', ['status' => 400]);
+        }
+
+        // Security: Check user can read these specific posts
+        foreach ($validPostIds as $postId) {
+            if (!PermissionValidator::canEditSpecificPost($postId)) {
+                PermissionValidator::logSecurityEvent('batch_posts_unauthorized_access', [
+                    'attempted_post_id' => $postId,
+                    'user_id' => get_current_user_id()
+                ]);
+                return new \WP_Error('unauthorized', "You don't have permission to access post ID: $postId", ['status' => 403]);
+            }
         }
 
         // Get posts using WP_Query for better performance

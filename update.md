@@ -1,92 +1,5 @@
 # Fanculo Plugin Update Plan
 
-## FilesManager Refactoring
-
-### Current Issues Analysis:
-- **FilesManagerService**: 233 lines, handling too many responsibilities
-- **Mixed concerns**: Orchestration, content type mapping, global impact detection, and write operations
-- **Full scans**: No guards against unnecessary regeneration on frequent edits
-- **Coupling**: FileWriter exists but generation logic is tightly coupled
-
-### Proposed Architecture Split:
-
-#### 1. **GenerationCoordinator** (New)
-**Location**: `app/FilesManager/Services/GenerationCoordinator.php`
-**Responsibilities**:
-- Orchestrates when/what to regenerate based on triggers
-- Implements idempotent operations with guards
-- Manages regeneration strategy (single post vs. full vs. global)
-- **Key Methods**:
-  - `handlePostSave(postId, post, update)` - Smart save logic with guards
-  - `handlePostRename(postId, postAfter, postBefore)` - Full regen trigger
-  - `handlePostDeletion(postId)` - Full regen trigger
-  - `shouldSkipRegeneration(postId, lastModified)` - Guard logic
-
-#### 2. **ContentTypeProcessor** (New)
-**Location**: `app/FilesManager/Services/ContentTypeProcessor.php`
-**Responsibilities**:
-- Maps content types to appropriate generators
-- Determines output paths for each content type
-- Validates content before processing
-- **Key Methods**:
-  - `processContentType(postId, post, contentType, outputPath)`
-  - `getOutputPathForContentType(contentType, post)`
-  - `validateContentForType(postId, contentType)`
-
-#### 3. **GlobalRegenerator** (New)
-**Location**: `app/FilesManager/Services/GlobalRegenerator.php`
-**Responsibilities**:
-- Detects global partial impacts
-- Handles global file regeneration efficiently
-- Manages cross-post dependencies
-- **Key Methods**:
-  - `detectGlobalImpact(postId, post)` - Check if affects global files
-  - `regenerateGlobalDependencies()` - Regen affected posts only
-  - `findPostsUsingGlobalPartials()` - Dependency detection
-
-#### 4. **Enhanced FileWriter Interface** (Refactor existing)
-**Location**: `app/FilesManager/Contracts/FileWriterInterface.php` + implementation
-**Responsibilities**:
-- Abstract all write operations behind interface
-- Add idempotent operation support
-- Enhanced validation and error handling
-- **New Methods**:
-  - `writeIfChanged(filepath, content)` - Idempotent writes
-  - `deleteIfExists(filepath)` - Safe deletion
-  - `isWriteRequired(filepath, content)` - Change detection
-
-### Guards & Performance Optimizations:
-
-#### **Edit Frequency Guards**:
-- Track last modification timestamps per post
-- Skip regeneration if content hasn't actually changed
-- Debounce rapid successive saves (admin autosave protection)
-
-#### **Full Regeneration Triggers** (Confirmed):
-- Post rename operations (slug changes)
-- Post deletion/trash operations
-- Manual "force regenerate all" button
-
-#### **Smart Regeneration**:
-- Single post save: Only regen that post + global impact check
-- Global SCSS partial save: Only regen dependent blocks
-- Regular content save: Skip if no meta changes detected
-
-### Migration Plan:
-
-1. **Create new service classes** while keeping FilesManagerService
-2. **Implement FileWriterInterface** and migrate existing FileWriter
-3. **Update GenerationCoordinator** to use new architecture
-4. **Replace FilesManagerService calls** in hooks and API controllers
-5. **Remove old FilesManagerService** once migration complete
-6. **Add performance guards** and idempotent operations
-
-### Benefits:
-- **Single Responsibility**: Each class has clear, focused purpose
-- **Performance**: Guards prevent unnecessary full scans
-- **Maintainability**: Easier to modify generation logic per content type
-- **Testability**: Smaller, focused classes easier to unit test
-- **Idempotency**: Safe to call operations multiple times
 
 ## Security and Capability Check Review
 
@@ -180,7 +93,6 @@
 ## Implementation Priority
 
 1. **High Priority**: Security fixes (immediate risk)
-2. **Lower Priority**: FilesManager refactoring (performance optimization)
 
 ---
 
@@ -202,20 +114,6 @@
 
 
 
-## Request 2: FilesManager Refactoring (2-3 sessions)
-
-**Ask Claude to:**
-> "Split FilesManagerService into smaller, focused services:
-> 1. Create GenerationCoordinator for orchestration
-> 2. Create ContentTypeProcessor for content type mapping
-> 3. Create GlobalRegenerator for global partial impacts
-> 4. Enhance FileWriter with idempotent operations
-> 5. Add performance guards to prevent unnecessary regeneration"
-
-**Estimated effort:** 2-3 coding sessions
-**Priority:** Medium (performance optimization)
-
----
 
 # Session Planning Tips
 
@@ -249,6 +147,5 @@ Don't make any other structural changes - just security fixes.
 ## Order Recommendation:
 
 1. **Do security first** - critical vulnerabilities need immediate fixing
-2. **Do FilesManager refactoring** - performance optimization
 
 This approach lets you make steady progress while keeping each session focused and manageable.
