@@ -1,19 +1,17 @@
 <?php
 /**
  * Plugin Name: Fanculo
- * Plugin URI: https://example.com/fanculo-wp
+ * Plugin URI: https://github.com/marko-krstic/fanculo
  * Description: Build gutenberg blocks without scraming in the screen.
  * Version: 0.0.1
  * Author: Marko Krstic
- * Author URI: https://example.com
+ * Author URI: https://dplugins.com/
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: fanculo-wp
- * Domain Path: /languages
+ * Text Domain: fanculo
  * Requires at least: 5.0
- * Tested up to: 6.4
+ * Tested up to: 6.8.2
  * Requires PHP: 8.0
- * Network: false
  */
 
 // Prevent direct access

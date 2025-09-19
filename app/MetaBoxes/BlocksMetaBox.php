@@ -32,7 +32,7 @@ class BlocksMetaBox extends AbstractMetaBox
         }
 
         // React container - React will handle the forms
-        echo '<div id="blocks-metabox-react" data-post-id="' . $post->ID . '" data-type="blocks"></div>';
+        echo '<div id="blocks-metabox-react" data-post-id="' . esc_attr($post->ID) . '" data-type="blocks"></div>';
     }
 
     protected function saveFields($postId)

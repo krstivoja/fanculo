@@ -32,7 +32,7 @@ class SCSSPartialsMetaBox extends AbstractMetaBox
         }
 
         // React container - React will handle the forms
-        echo '<div id="scss-partials-metabox-react" data-post-id="' . $post->ID . '" data-type="scss-partials"></div>';
+        echo '<div id="scss-partials-metabox-react" data-post-id="' . esc_attr($post->ID) . '" data-type="scss-partials"></div>';
     }
 
     protected function saveFields($postId)

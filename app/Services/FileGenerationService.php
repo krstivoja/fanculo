@@ -87,7 +87,7 @@ class FileGenerationService
         }
 
         $result = $this->filesManagerService->debugTest();
-        echo $result;
+        echo esc_html($result);
         wp_die();
     }
 }

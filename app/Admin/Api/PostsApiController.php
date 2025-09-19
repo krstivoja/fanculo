@@ -893,7 +893,7 @@ class PostsApiController
                 return ['post_id' => $data['post_id'], 'regenerated' => true];
 
             default:
-                throw new \Exception('Unknown operation type: ' . $type);
+                throw new \Exception('Unknown operation type: ' . esc_html($type));
         }
     }
 }

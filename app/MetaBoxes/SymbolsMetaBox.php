@@ -32,7 +32,7 @@ class SymbolsMetaBox extends AbstractMetaBox
         }
 
         // React container - React will handle the forms
-        echo '<div id="symbols-metabox-react" data-post-id="' . $post->ID . '" data-type="symbols"></div>';
+        echo '<div id="symbols-metabox-react" data-post-id="' . esc_attr($post->ID) . '" data-type="symbols"></div>';
     }
 
     protected function saveFields($postId)

@@ -129,7 +129,7 @@ class AdminAssets
 
         $jsFile = $this->buildPath . 'index.js';
         if (file_exists($jsFile)) {
-            echo '<script type="module" src="' . esc_url($this->buildUrl . 'index.js') . '?ver=' . filemtime($jsFile) . '"></script>' . "\n";
+            echo '<script type="module" src="' . esc_url($this->buildUrl . 'index.js') . '?ver=' . esc_attr(filemtime($jsFile)) . '"></script>' . "\n";
         }
     }
 }
