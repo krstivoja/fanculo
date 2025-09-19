@@ -19,13 +19,11 @@ class ViewFileGenerator implements FileGeneratorInterface
         $jsContent = get_post_meta($postId, MetaKeysConstants::BLOCK_JS, true);
 
         if (empty($jsContent)) {
-            error_log("ViewFileGenerator: No JS content for post ID: $postId");
             return false;
         }
 
         $filepath = $outputPath . '/' . $this->getGeneratedFileName($post);
 
-        error_log("ViewFileGenerator: Writing view.js for {$post->post_name}");
 
         return file_put_contents($filepath, $jsContent) !== false;
     }

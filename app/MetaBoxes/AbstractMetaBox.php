@@ -40,8 +40,11 @@ abstract class AbstractMetaBox
 
     protected function canSave($postId)
     {
-        if (!isset($_POST['funculo_meta_box_nonce']) ||
-            !wp_verify_nonce($_POST['funculo_meta_box_nonce'], 'funculo_meta_box_nonce')) {
+        $nonceAction = $this->getNonceAction();
+        $nonceName = $this->getNonceName();
+
+        if (!isset($_POST[$nonceName]) ||
+            !wp_verify_nonce(wp_unslash($_POST[$nonceName]), $nonceAction)) {
             return false;
         }
 
@@ -58,7 +61,17 @@ abstract class AbstractMetaBox
 
     protected function renderNonce()
     {
-        wp_nonce_field('funculo_meta_box_nonce', 'funculo_meta_box_nonce');
+        wp_nonce_field($this->getNonceAction(), $this->getNonceName());
+    }
+
+    protected function getNonceAction()
+    {
+        return 'funculo_' . $this->metaBoxId . '_nonce';
+    }
+
+    protected function getNonceName()
+    {
+        return $this->metaBoxId . '_nonce';
     }
 
     protected function getMetaValue($postId, $key, $default = '')
@@ -70,6 +83,63 @@ abstract class AbstractMetaBox
     protected function saveMetaValue($postId, $key, $value)
     {
         update_post_meta($postId, $key, $value);
+    }
+
+    protected function validatePhpCode($code)
+    {
+        if (empty($code)) {
+            return true;
+        }
+
+        if (!current_user_can('unfiltered_html')) {
+            return false;
+        }
+
+        // Basic validation without using eval()
+        // Check for dangerous functions and patterns
+        $dangerous_functions = [
+            'exec', 'shell_exec', 'system', 'passthru', 'eval', 'assert',
+            'file_get_contents', 'file_put_contents', 'fopen', 'fwrite',
+            'curl_exec', 'curl_init', 'fsockopen', 'pfsockopen'
+        ];
+
+        foreach ($dangerous_functions as $func) {
+            if (strpos($code, $func) !== false) {
+                return false;
+            }
+        }
+
+        // Use token_get_all to check for basic PHP syntax validity
+        $tokens = @token_get_all('<?php ' . $code);
+        if (empty($tokens)) {
+            return false;
+        }
+
+        // Check for balanced braces, brackets, and parentheses
+        $balance = ['{}' => 0, '[]' => 0, '()' => 0];
+        foreach ($tokens as $token) {
+            if (is_string($token)) {
+                switch ($token) {
+                    case '{': $balance['{}']++; break;
+                    case '}': $balance['{}']--; break;
+                    case '[': $balance['[]']++; break;
+                    case ']': $balance['[]']--; break;
+                    case '(': $balance['()']++; break;
+                    case ')': $balance['()']--; break;
+                }
+            }
+        }
+
+        return $balance['{}'] === 0 && $balance['[]'] === 0 && $balance['()'] === 0;
+    }
+
+    protected function sanitizePhpCode($code)
+    {
+        if (!$this->validatePhpCode($code)) {
+            return '';
+        }
+
+        return wp_unslash($code);
     }
 
     protected function renderCodeField($name, $label, $value, $language = 'php')

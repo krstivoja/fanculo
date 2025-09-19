@@ -19,13 +19,11 @@ class StyleFileGenerator implements FileGeneratorInterface
         $scssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, true);
 
         if (empty($scssContent)) {
-            error_log("StyleFileGenerator: No SCSS content for post ID: $postId");
             return false;
         }
 
         $filepath = $outputPath . '/' . $this->getGeneratedFileName($post);
 
-        error_log("StyleFileGenerator: Writing style.scss for {$post->post_name}");
 
         return file_put_contents($filepath, $scssContent) !== false;
     }

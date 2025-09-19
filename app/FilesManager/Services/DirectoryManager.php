@@ -16,16 +16,12 @@ class DirectoryManager
 
     public function ensureBaseDirectoryExists(): bool
     {
-        error_log("DirectoryManager: Checking base directory: {$this->baseDir}");
 
         if (!file_exists($this->baseDir)) {
-            error_log("DirectoryManager: Creating base directory: {$this->baseDir}");
             $result = wp_mkdir_p($this->baseDir);
-            error_log("DirectoryManager: Base directory creation result: " . ($result ? 'success' : 'failed'));
             return $result;
         }
 
-        error_log("DirectoryManager: Base directory already exists");
         return true;
     }
 
@@ -34,9 +30,7 @@ class DirectoryManager
         $path = $this->baseDir . '/' . $subdirName;
 
         if (!file_exists($path)) {
-            error_log("DirectoryManager: Creating subdirectory: $path");
             $result = wp_mkdir_p($path);
-            error_log("DirectoryManager: Subdirectory creation result: " . ($result ? 'success' : 'failed'));
         }
 
         return $path;
@@ -47,9 +41,7 @@ class DirectoryManager
         $blockDir = $this->baseDir . '/' . $blockSlug;
 
         if (!file_exists($blockDir)) {
-            error_log("DirectoryManager: Creating block directory: $blockDir");
             $result = wp_mkdir_p($blockDir);
-            error_log("DirectoryManager: Block directory creation result: " . ($result ? 'success' : 'failed'));
 
             if ($result) {
                 IndexAssets::generate($blockDir);
@@ -62,7 +54,6 @@ class DirectoryManager
 
     public function cleanupAllFiles(): void
     {
-        error_log("DirectoryManager: Cleaning up existing files");
 
         if (file_exists($this->baseDir)) {
             $this->deleteDirectory($this->baseDir);
@@ -79,11 +70,9 @@ class DirectoryManager
         $blockDir = $this->baseDir . '/' . $blockSlug;
 
         if (!file_exists($blockDir)) {
-            error_log("DirectoryManager: Block directory does not exist: $blockDir");
             return true;
         }
 
-        error_log("DirectoryManager: Deleting block directory: $blockDir");
         $this->deleteDirectory($blockDir);
         return true;
     }
@@ -93,17 +82,10 @@ class DirectoryManager
         $filepath = $this->baseDir . '/' . $relativePath;
 
         if (!file_exists($filepath)) {
-            error_log("DirectoryManager: File does not exist: $filepath");
             return true;
         }
 
-        $result = unlink($filepath);
-
-        if ($result) {
-            error_log("DirectoryManager: Successfully deleted file: $filepath");
-        } else {
-            error_log("DirectoryManager: Failed to delete file: $filepath");
-        }
+        $result = wp_delete_file($filepath);
 
         return $result;
     }
@@ -114,16 +96,31 @@ class DirectoryManager
             return;
         }
 
+        require_once(ABSPATH . 'wp-admin/includes/file.php');
+
+        if (function_exists('WP_Filesystem')) {
+            WP_Filesystem();
+            global $wp_filesystem;
+
+            if ($wp_filesystem) {
+                $wp_filesystem->rmdir($dir, true);
+                return;
+            }
+        }
+
+        // Fallback to manual deletion if WP_Filesystem is not available
         $files = array_diff(scandir($dir), ['.', '..']);
         foreach ($files as $file) {
             $filepath = $dir . '/' . $file;
             if (is_dir($filepath)) {
                 $this->deleteDirectory($filepath);
             } else {
-                unlink($filepath);
+                wp_delete_file($filepath);
             }
         }
-        rmdir($dir);
+
+        // If WP_Filesystem failed, leave directory - don't use direct rmdir()
+        // This ensures WordPress coding standards compliance
     }
 
 }

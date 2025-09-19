@@ -22,7 +22,6 @@ class BlockLoader
     public function loadBlocks(): void
     {
         if (!defined('FANCULO_BLOCKS_DIR')) {
-            error_log('FANCULO_BLOCKS_DIR constant is not defined');
             return;
         }
 
@@ -48,13 +47,11 @@ class BlockLoader
         // Read block.json content
         $block_json_content = file_get_contents($block_json);
         if ($block_json_content === false) {
-            error_log('BlockLoader: Error reading block.json from ' . $folder);
             return;
         }
 
         $block_data = json_decode($block_json_content, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            error_log('BlockLoader: Error parsing block.json from ' . $folder . ': ' . json_last_error_msg());
             return;
         }
 
@@ -72,11 +69,7 @@ class BlockLoader
 
         $result = register_block_type($block_json, $args);
 
-        if (is_wp_error($result)) {
-            error_log('BlockLoader: Error registering block from ' . $folder . ': ' . $result->get_error_message());
-        } else {
-            error_log('BlockLoader: Successfully registered block from ' . basename($folder));
-        }
+        // Block registration complete
     }
 
     private function renderDynamicBlock(string $folder, $attributes, $content, $block): string
@@ -84,7 +77,6 @@ class BlockLoader
         $render_file = $folder . '/render.php';
 
         if (!file_exists($render_file)) {
-            error_log('BlockLoader: Render file not found for block: ' . $folder);
             return '<!-- Render file not found -->';
         }
 

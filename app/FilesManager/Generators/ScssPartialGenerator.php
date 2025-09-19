@@ -19,13 +19,11 @@ class ScssPartialGenerator implements FileGeneratorInterface
         $scssContent = get_post_meta($postId, MetaKeysConstants::SCSS_PARTIAL_SCSS, true);
 
         if (empty($scssContent)) {
-            error_log("ScssPartialGenerator: No SCSS content for post ID: $postId");
             return false;
         }
 
         $filepath = $outputPath . '/' . $this->getGeneratedFileName($post);
 
-        error_log("ScssPartialGenerator: Writing SCSS partial for {$post->post_name}");
 
         return file_put_contents($filepath, $scssContent) !== false;
     }

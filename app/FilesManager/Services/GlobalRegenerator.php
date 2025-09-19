@@ -32,13 +32,11 @@ class GlobalRegenerator
                 // Check if this is a global SCSS partial
                 $isGlobal = get_post_meta($postId, MetaKeysConstants::SCSS_IS_GLOBAL, true);
                 if ($isGlobal === '1' || $isGlobal === 1 || $isGlobal === true) {
-                    error_log("GlobalRegenerator: Post $postId is a global SCSS partial - affects other posts");
                     return true; // This affects all blocks that use global partials
                 }
             }
         }
 
-        error_log("GlobalRegenerator: Post $postId only affects its own files");
         return false; // Only affects this post's files
     }
 
@@ -47,24 +45,19 @@ class GlobalRegenerator
      */
     public function regenerateGlobalDependencies(): void
     {
-        error_log("GlobalRegenerator: Regenerating global files and dependencies");
 
         // Get all posts that might need their files updated due to global changes
         $affectedPosts = $this->findPostsUsingGlobalPartials();
 
         if (empty($affectedPosts)) {
-            error_log("GlobalRegenerator: No posts affected by global changes");
             return;
         }
 
-        error_log("GlobalRegenerator: Found " . count($affectedPosts) . " posts affected by global changes");
 
         foreach ($affectedPosts as $post) {
-            error_log("GlobalRegenerator: Regenerating post '{$post->post_name}' due to global changes");
             $this->contentTypeProcessor->processContentType($post->ID, $post, FunculoTypeTaxonomy::getTermBlocks());
         }
 
-        error_log("GlobalRegenerator: Global dependencies regeneration completed");
     }
 
     /**

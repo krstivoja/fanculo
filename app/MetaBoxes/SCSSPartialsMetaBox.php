@@ -31,6 +31,9 @@ class SCSSPartialsMetaBox extends AbstractMetaBox
             return; // Don't show this metabox
         }
 
+        // Add nonce for security
+        $this->renderNonce();
+
         // React container - React will handle the forms
         echo '<div id="scss-partials-metabox-react" data-post-id="' . esc_attr($post->ID) . '" data-type="scss-partials"></div>';
     }

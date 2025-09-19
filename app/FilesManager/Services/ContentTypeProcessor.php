@@ -23,34 +23,24 @@ class ContentTypeProcessor
     public function processContentType(int $postId, WP_Post $post, string $contentType): void
     {
         if (!$this->validateContentForType($postId, $contentType)) {
-            error_log("ContentTypeProcessor: Validation failed for content type '$contentType' on post ID: $postId");
             return;
         }
 
         $generators = $this->generationMapper->getGeneratorsForContentType($contentType);
 
         if (empty($generators)) {
-            error_log("ContentTypeProcessor: No generators found for content type: $contentType");
             return;
         }
 
         $outputPath = $this->getOutputPathForContentType($contentType, $post);
 
-        error_log("ContentTypeProcessor: Processing content type '$contentType' for post '{$post->post_name}' -> $outputPath");
 
         foreach ($generators as $generatorName => $generator) {
             if (!$generator->validate($postId)) {
-                error_log("ContentTypeProcessor: Validation failed for generator '$generatorName' on post ID: $postId");
                 continue;
             }
 
-            $success = $generator->generate($postId, $post, $outputPath);
-
-            if ($success) {
-                error_log("ContentTypeProcessor: Successfully generated file using '$generatorName' for post '{$post->post_name}'");
-            } else {
-                error_log("ContentTypeProcessor: Failed to generate file using '$generatorName' for post '{$post->post_name}'");
-            }
+            $generator->generate($postId, $post, $outputPath);
         }
     }
 
@@ -70,7 +60,6 @@ class ContentTypeProcessor
                 return $this->directoryManager->ensureSubdirectoryExists('scss');
 
             default:
-                error_log("ContentTypeProcessor: Unknown content type: $contentType");
                 return $this->directoryManager->getBaseDirectory();
         }
     }
@@ -88,14 +77,12 @@ class ContentTypeProcessor
         ];
 
         if (!in_array($contentType, $validContentTypes)) {
-            error_log("ContentTypeProcessor: Invalid content type: $contentType");
             return false;
         }
 
         // Validate post exists and is published
         $post = get_post($postId);
         if (!$post || $post->post_status !== 'publish') {
-            error_log("ContentTypeProcessor: Post $postId is not published or doesn't exist");
             return false;
         }
 

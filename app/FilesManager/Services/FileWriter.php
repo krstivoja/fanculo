@@ -13,7 +13,6 @@ class FileWriter implements FileWriterInterface
         if (!file_exists($directory)) {
             $result = wp_mkdir_p($directory);
             if (!$result) {
-                error_log("FileWriter: Failed to create directory: $directory");
                 return false;
             }
         }
@@ -21,11 +20,9 @@ class FileWriter implements FileWriterInterface
         $result = file_put_contents($filepath, $content);
 
         if ($result === false) {
-            error_log("FileWriter: Failed to write file: $filepath");
             return false;
         }
 
-        error_log("FileWriter: Successfully wrote file: $filepath (" . strlen($content) . " bytes)");
         return true;
     }
 
@@ -57,7 +54,6 @@ class FileWriter implements FileWriterInterface
     public function writeIfChanged(string $filepath, string $content): bool
     {
         if (!$this->isWriteRequired($filepath, $content)) {
-            error_log("FileWriter: No write required for $filepath - content unchanged");
             return true;
         }
 
@@ -70,13 +66,7 @@ class FileWriter implements FileWriterInterface
             return true;
         }
 
-        $result = unlink($filepath);
-
-        if ($result) {
-            error_log("FileWriter: Successfully deleted file: $filepath");
-        } else {
-            error_log("FileWriter: Failed to delete file: $filepath");
-        }
+        $result = wp_delete_file($filepath);
 
         return $result;
     }

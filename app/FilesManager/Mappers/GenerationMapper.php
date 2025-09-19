@@ -26,7 +26,6 @@ class GenerationMapper
     public function getGeneratorsForContentType(string $contentType): array
     {
         if (!isset($this->contentTypeMap[$contentType])) {
-            error_log("GenerationMapper: No generators found for content type: $contentType");
             return [];
         }
 
@@ -89,6 +88,5 @@ class GenerationMapper
             }
         }
 
-        error_log("GenerationMapper: Built content type map with " . count($this->contentTypeMap) . " content types");
     }
 }

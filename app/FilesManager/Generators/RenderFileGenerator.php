@@ -19,13 +19,11 @@ class RenderFileGenerator implements FileGeneratorInterface
         $phpContent = get_post_meta($postId, MetaKeysConstants::BLOCK_PHP, true);
 
         if (empty($phpContent)) {
-            error_log("RenderFileGenerator: No PHP content for post ID: $postId");
             return false;
         }
 
         $filepath = $outputPath . '/' . $this->getGeneratedFileName($post);
 
-        error_log("RenderFileGenerator: Writing render.php for {$post->post_name}");
 
         return file_put_contents($filepath, $phpContent) !== false;
     }

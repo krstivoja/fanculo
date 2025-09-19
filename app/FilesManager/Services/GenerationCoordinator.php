@@ -24,29 +24,22 @@ class GenerationCoordinator
      */
     public function handlePostSave(int $postId, WP_Post $post, bool $update): void
     {
-        error_log("GenerationCoordinator: Processing post save for ID: $postId, type: {$post->post_type}");
 
         if ($post->post_type !== FunculoPostType::getPostType()) {
-            error_log("GenerationCoordinator: Skipping - wrong post type: {$post->post_type}");
             return;
         }
 
         // Guard: Skip if regeneration is not needed
         if ($this->shouldSkipRegeneration($postId, $post)) {
-            error_log("GenerationCoordinator: Skipping regeneration - no changes detected");
             return;
         }
 
         // Smart save: only regenerate what's needed
-        error_log("GenerationCoordinator: Using smart save - generating files for single post");
         $this->generateFilesForSinglePost($postId, $post);
 
         // Check if this post affects global files
         if ($this->globalRegenerator->detectGlobalImpact($postId, $post)) {
-            error_log("GenerationCoordinator: Post affects global files - regenerating global dependencies");
             $this->globalRegenerator->regenerateGlobalDependencies();
-        } else {
-            error_log("GenerationCoordinator: Post only affects itself - skipping global regeneration");
         }
     }
 
@@ -63,7 +56,6 @@ class GenerationCoordinator
             return;
         }
 
-        error_log("GenerationCoordinator: Post renamed from '{$postBefore->post_name}' to '{$postAfter->post_name}' - triggering full regeneration");
         $this->regenerateAllFiles();
     }
 
@@ -77,7 +69,6 @@ class GenerationCoordinator
             return;
         }
 
-        error_log("GenerationCoordinator: Post deleted (ID: $postId, slug: {$post->post_name}) - triggering full regeneration");
         $this->regenerateAllFiles();
     }
 
@@ -86,7 +77,6 @@ class GenerationCoordinator
      */
     public function regenerateAllFiles(): void
     {
-        error_log("GenerationCoordinator: Starting full regeneration of all files");
 
         $this->directoryManager->cleanupAllFiles();
 
@@ -96,10 +86,8 @@ class GenerationCoordinator
             'numberposts' => -1
         ]);
 
-        error_log("GenerationCoordinator: Found " . count($posts) . " posts to process");
 
         if (empty($posts)) {
-            error_log("GenerationCoordinator: No posts found, skipping file generation");
             return;
         }
 
@@ -109,7 +97,6 @@ class GenerationCoordinator
             $this->generateFilesForSinglePost($post->ID, $post);
         }
 
-        error_log("GenerationCoordinator: Full regeneration completed");
     }
 
     /**
@@ -119,7 +106,6 @@ class GenerationCoordinator
     {
         $terms = wp_get_post_terms($postId, FunculoTypeTaxonomy::getTaxonomy());
         if (empty($terms) || is_wp_error($terms)) {
-            error_log("GenerationCoordinator: No terms found for post ID: $postId");
             return;
         }
 

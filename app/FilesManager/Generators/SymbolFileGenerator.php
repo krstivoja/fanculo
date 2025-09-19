@@ -19,13 +19,11 @@ class SymbolFileGenerator implements FileGeneratorInterface
         $phpContent = get_post_meta($postId, MetaKeysConstants::SYMBOL_PHP, true);
 
         if (empty($phpContent)) {
-            error_log("SymbolFileGenerator: No PHP content for post ID: $postId");
             return false;
         }
 
         $filepath = $outputPath . '/' . $this->getGeneratedFileName($post);
 
-        error_log("SymbolFileGenerator: Writing symbol file for {$post->post_name}");
 
         return file_put_contents($filepath, $phpContent) !== false;
     }

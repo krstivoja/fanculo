@@ -22,7 +22,6 @@ class BlockJsonGenerator implements FileGeneratorInterface
         $blockJson = $this->buildBlockJson($post, $attributes, $settings);
         $filepath = $outputPath . '/' . $this->getGeneratedFileName($post);
 
-        error_log("BlockJsonGenerator: Writing block.json for {$post->post_name}");
 
         return file_put_contents($filepath, json_encode($blockJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) !== false;
     }

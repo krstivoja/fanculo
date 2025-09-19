@@ -65,18 +65,6 @@ class MetaKeysConstants
     /** @var string Order for global SCSS partials */
     const SCSS_GLOBAL_ORDER = '_funculo_scss_global_order';
 
-    // ============================================
-    // LEGACY META KEYS (for migration reference)
-    // ============================================
-
-    /** @var array Legacy keys that need migration to standardized format */
-    const LEGACY_KEYS = [
-        'funculo_scss_content' => self::SCSS_CONTENT,
-        'funculo_css_content' => self::CSS_CONTENT,
-        'funculo_css_compiled_at' => self::CSS_COMPILED_AT,
-        'funculo_scss_is_global' => self::SCSS_IS_GLOBAL,
-        'funculo_scss_global_order' => self::SCSS_GLOBAL_ORDER,
-    ];
 
     // ============================================
     // UTILITY METHODS
@@ -113,37 +101,6 @@ class MetaKeysConstants
         ];
     }
 
-    /**
-     * Get legacy to new key mapping
-     *
-     * @return array Mapping of legacy keys to new standardized keys
-     */
-    public static function getLegacyMapping(): array
-    {
-        return self::LEGACY_KEYS;
-    }
-
-    /**
-     * Check if a key is a legacy key that needs migration
-     *
-     * @param string $key The meta key to check
-     * @return bool True if key needs migration
-     */
-    public static function isLegacyKey(string $key): bool
-    {
-        return array_key_exists($key, self::LEGACY_KEYS);
-    }
-
-    /**
-     * Get the standardized version of a legacy key
-     *
-     * @param string $legacyKey The legacy meta key
-     * @return string|null The standardized key, or null if not found
-     */
-    public static function getStandardizedKey(string $legacyKey): ?string
-    {
-        return self::LEGACY_KEYS[$legacyKey] ?? null;
-    }
 
     /**
      * Get all block-related meta keys

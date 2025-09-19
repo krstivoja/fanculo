@@ -23,19 +23,16 @@ class CssFileGenerator implements FileGeneratorInterface
         if (empty($cssContent)) {
             $scssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, true);
             if (!empty($scssContent)) {
-                error_log("CssFileGenerator: No compiled CSS found, using SCSS as fallback for post ID: $postId");
                 $cssContent = $scssContent;
             }
         }
 
         if (empty($cssContent)) {
-            error_log("CssFileGenerator: No CSS or SCSS content for post ID: $postId");
             return false;
         }
 
         $filepath = $outputPath . '/' . $this->getGeneratedFileName($post);
 
-        error_log("CssFileGenerator: Writing style.css for {$post->post_name}");
 
         return file_put_contents($filepath, $cssContent) !== false;
     }

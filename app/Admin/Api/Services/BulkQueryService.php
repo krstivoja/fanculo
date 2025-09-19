@@ -32,7 +32,9 @@ class BulkQueryService
         ]);
 
         if (is_wp_error($allTerms)) {
-            error_log('BulkQueryService: Error fetching bulk terms: ' . $allTerms->get_error_message());
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('BulkQueryService: Error fetching bulk terms: ' . $allTerms->get_error_message());
+            }
             return [];
         }
 
@@ -72,20 +74,33 @@ class BulkQueryService
 
         global $wpdb;
 
-        // Build query to fetch all meta at once
+        // Sanitize input arrays
+        $postIds = array_map('absint', $postIds);
+        $metaKeys = array_map('sanitize_key', $metaKeys);
+
+        // Remove any invalid values
+        $postIds = array_filter($postIds);
+        $metaKeys = array_filter($metaKeys);
+
+        if (empty($postIds) || empty($metaKeys)) {
+            return [];
+        }
+
+        // Build placeholders safely
         $postIdPlaceholders = implode(',', array_fill(0, count($postIds), '%d'));
         $metaKeyPlaceholders = implode(',', array_fill(0, count($metaKeys), '%s'));
 
+        // Build the complete SQL with placeholders
+        $sql = "SELECT post_id, meta_key, meta_value
+                FROM {$wpdb->postmeta}
+                WHERE post_id IN ({$postIdPlaceholders})
+                AND meta_key IN ({$metaKeyPlaceholders})";
+
+        // Prepare query with all parameters
         $queryParams = array_merge($postIds, $metaKeys);
+        $preparedQuery = $wpdb->prepare($sql, $queryParams);
 
-        $query = $wpdb->prepare("
-            SELECT post_id, meta_key, meta_value
-            FROM {$wpdb->postmeta}
-            WHERE post_id IN ({$postIdPlaceholders})
-            AND meta_key IN ({$metaKeyPlaceholders})
-        ", $queryParams);
-
-        $results = $wpdb->get_results($query);
+        $results = $wpdb->get_results($preparedQuery);
 
         // Group meta by post ID and key
         $metaByPost = [];
@@ -253,12 +268,14 @@ class BulkQueryService
         $endTime = microtime(true);
         $duration = round(($endTime - $startTime) * 1000, 2); // Convert to milliseconds
 
-        error_log(sprintf(
-            'BulkQueryService: %s completed - %d posts processed in %s ms (avg: %s ms/post)',
-            $operation,
-            $postCount,
-            $duration,
-            $postCount > 0 ? round($duration / $postCount, 2) : 0
-        ));
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log(sprintf(
+                'BulkQueryService: %s completed - %d posts processed in %s ms (avg: %s ms/post)',
+                $operation,
+                $postCount,
+                $duration,
+                $postCount > 0 ? round($duration / $postCount, 2) : 0
+            ));
+        }
     }
 }

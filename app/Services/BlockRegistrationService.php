@@ -21,9 +21,7 @@ class BlockRegistrationService
 
     public function registerBlocks(): void
     {
-        error_log('BlockRegistrationService: Starting block registration');
         $this->blockLoader->loadBlocks();
-        error_log('BlockRegistrationService: Block registration completed');
     }
 
 }

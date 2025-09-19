@@ -67,19 +67,14 @@ class FilesManagerService
 
     public function debugTest(): string
     {
-        error_log("FilesManagerService: Debug test started - using new architecture");
-        error_log("FilesManagerService: Base dir: " . $this->directoryManager->getBaseDirectory());
-
         $this->directoryManager->ensureBaseDirectoryExists();
 
         $mapping = $this->generationMapper->getContentTypeMapping();
-        error_log("FilesManagerService: Content type mapping: " . print_r($mapping, true));
 
         // Test new architecture components
         $globalStats = $this->globalRegenerator->getGlobalImpactStats();
-        error_log("FilesManagerService: Global impact stats: " . print_r($globalStats, true));
 
-        return "Debug test completed with new architecture - check error logs";
+        return "Debug test completed with new architecture";
     }
 
     // Legacy support methods - kept for backwards compatibility

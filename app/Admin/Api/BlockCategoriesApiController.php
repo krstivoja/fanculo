@@ -36,7 +36,6 @@ class BlockCategoriesApiController
             ['value' => 'embed', 'label' => 'Embeds']
         ];
 
-        error_log('Returning test categories: ' . print_r($test_categories, true));
 
         return rest_ensure_response($test_categories);
     }

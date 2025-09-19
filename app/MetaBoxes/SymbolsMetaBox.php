@@ -31,6 +31,9 @@ class SymbolsMetaBox extends AbstractMetaBox
             return; // Don't show this metabox
         }
 
+        // Add nonce for security
+        $this->renderNonce();
+
         // React container - React will handle the forms
         echo '<div id="symbols-metabox-react" data-post-id="' . esc_attr($post->ID) . '" data-type="symbols"></div>';
     }
@@ -43,9 +46,16 @@ class SymbolsMetaBox extends AbstractMetaBox
 
         foreach ($fields as $field) {
             if (isset($_POST[$field])) {
-                // Don't sanitize PHP code field to preserve PHP tags
+                // Handle PHP code field with security validation
                 if ($field === '_funculo_symbol_php') {
-                    $value = wp_unslash($_POST[$field]);
+                    $value = $this->sanitizePhpCode($_POST[$field]);
+                    if (empty($value) && !empty($_POST[$field])) {
+                        // PHP code validation failed - skip saving this field
+                        if (defined('WP_DEBUG') && WP_DEBUG) {
+                            error_log("Fanculo: Invalid PHP code rejected for post {$postId}");
+                        }
+                        continue;
+                    }
                 } else {
                     $value = sanitize_textarea_field($_POST[$field]);
                 }
