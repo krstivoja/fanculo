@@ -15,6 +15,8 @@ use function ob_start;
 use function ob_get_clean;
 use function preg_replace;
 
+use Fanculo\FilesManager\Services\InnerBlocksProcessor;
+
 class BlockLoader
 {
     public function loadBlocks(): void
@@ -96,25 +98,8 @@ class BlockLoader
         $GLOBALS['content'] = $content;
         $GLOBALS['block'] = $block;
 
-        // Use the modern InnerBlocks processor if available, otherwise fallback to manual rendering
-        if (function_exists('nbnpx_process_innerblocks_template')) {
-            $rendered_output = nbnpx_process_innerblocks_template($render_file, $attributes, $content, $block);
-        } else {
-            // Fallback: manual rendering without InnerBlocks processing
-            // Start output buffering
-            ob_start();
-
-            // Make variables available to the render file
-            $block_attributes = $attributes;
-            $block_content = $content;
-            $block_instance = $block;
-
-            // Include the render file
-            include $render_file;
-
-            // Get the buffered content
-            $rendered_output = ob_get_clean();
-        }
+        // Use the InnerBlocks processor service
+        $rendered_output = InnerBlocksProcessor::processTemplate($render_file, $attributes, $content, $block);
 
         // If output is empty, return a message
         if (empty($rendered_output)) {

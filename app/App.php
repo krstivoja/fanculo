@@ -9,6 +9,7 @@ use Fanculo\Admin\Content\FunculoTypeTaxonomy;
 use Fanculo\Helpers\MetaBoxHelper;
 use Fanculo\Services\FileGenerationHooks;
 use Fanculo\Services\BlockRegistrationHooks;
+use Fanculo\Services\InnerBlocksHooks;
 
 class App
 {
@@ -47,5 +48,8 @@ class App
 
         // Initialize block loading system
         new BlockRegistrationHooks();
+
+        // Initialize InnerBlocks processing system
+        new InnerBlocksHooks();
     }
 }

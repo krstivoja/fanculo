@@ -1,6 +1,6 @@
 /**
- * Simple InnerBlocks inserter replacement utility
- * Uses WordPress globals - no compilation needed
+ * InnerBlocks parser utility for Fanculo blocks
+ * Handles replacement of fanculo-block-inserter divs with actual InnerBlocks components
  */
 
 (function() {
@@ -10,8 +10,8 @@
 	const { createElement } = wp.element;
 	const { InnerBlocks } = wp.blockEditor;
 
-	// Expose simple parser globally
-	window.NativeBlocksParser = {
+	// Expose parser globally for Fanculo blocks
+	window.FanculoInnerBlocksParser = {
 		/**
 		 * Create a React component that replaces inserter placeholders with InnerBlocks
 		 */
@@ -23,18 +23,18 @@
 			}
 
 			// Debug logging
-			console.log('NativeBlocksParser: Processing content:', serverContent);
+			console.log('FanculoInnerBlocksParser: Processing content:', serverContent);
 
 			// Quick check if content contains inserter placeholders
 			if (serverContent.indexOf('fanculo-block-inserter') === -1) {
-				console.log('NativeBlocksParser: No fanculo-block-inserter found, rendering as-is');
+				console.log('FanculoInnerBlocksParser: No fanculo-block-inserter found, rendering as-is');
 				// No placeholders - render server content as-is
 				return createElement('div', Object.assign({}, blockProps, {
 					dangerouslySetInnerHTML: { __html: serverContent }
 				}));
 			}
 
-			console.log('NativeBlocksParser: Found fanculo-block-inserter, processing...');
+			console.log('FanculoInnerBlocksParser: Found fanculo-block-inserter, processing...');
 
 			// Parse HTML content
 			const temp = document.createElement('div');
@@ -85,7 +85,7 @@
 			if (node.nodeType === Node.ELEMENT_NODE) {
 				// Check if this is our inserter placeholder
 				if (node.classList && node.classList.contains('fanculo-block-inserter')) {
-					console.log('NativeBlocksParser: Replacing fanculo-block-inserter with InnerBlocks component');
+					console.log('FanculoInnerBlocksParser: Replacing fanculo-block-inserter with InnerBlocks component');
 					// Replace with InnerBlocks component
 					const innerBlocksProps = Object.assign({ key: 'innerblocks-' + index }, options);
 					return createElement(InnerBlocks, innerBlocksProps);
@@ -122,5 +122,8 @@
 			return null;
 		}
 	};
+
+	// For backward compatibility, also expose as NativeBlocksParser
+	window.NativeBlocksParser = window.FanculoInnerBlocksParser;
 
 })();

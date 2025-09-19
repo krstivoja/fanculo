@@ -63,9 +63,9 @@ class Index
         const renderedContent = useMemo(() => {
             if (isLoading) return null;
 
-            // Use NativeBlocksParser if available to handle InnerBlocks inserters
-            if (window.NativeBlocksParser && window.NativeBlocksParser.createServerContentRenderer) {
-                return window.NativeBlocksParser.createServerContentRenderer(serverContent, blockProps, PARSER_OPTIONS);
+            // Use FanculoInnerBlocksParser if available to handle InnerBlocks inserters
+            if (window.FanculoInnerBlocksParser && window.FanculoInnerBlocksParser.createServerContentRenderer) {
+                return window.FanculoInnerBlocksParser.createServerContentRenderer(serverContent, blockProps, PARSER_OPTIONS);
             }
 
             // Fallback if parser is not loaded
