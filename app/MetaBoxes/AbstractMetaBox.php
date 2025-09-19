@@ -44,7 +44,7 @@ abstract class AbstractMetaBox
         $nonceName = $this->getNonceName();
 
         if (!isset($_POST[$nonceName]) ||
-            !wp_verify_nonce(wp_unslash($_POST[$nonceName]), $nonceAction)) {
+            !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST[$nonceName])), $nonceAction)) {
             return false;
         }
 

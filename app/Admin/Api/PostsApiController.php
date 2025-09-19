@@ -201,7 +201,6 @@ class PostsApiController
             'post_status' => 'any',
             'posts_per_page' => $request->get_param('per_page'),
             'paged' => $request->get_param('page'),
-            'meta_query' => [],
         ];
 
         // Add search functionality
@@ -213,6 +212,7 @@ class PostsApiController
         // Add taxonomy filter
         $taxonomyFilter = $request->get_param('taxonomy_filter');
         if (!empty($taxonomyFilter)) {
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- User-initiated filter, acceptable performance
             $args['tax_query'] = [
                 [
                     'taxonomy' => FunculoTypeTaxonomy::getTaxonomy(),

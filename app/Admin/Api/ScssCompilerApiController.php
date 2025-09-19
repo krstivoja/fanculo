@@ -185,19 +185,28 @@ class ScssCompilerApiController
     public function getScssPartials(WP_REST_Request $request)
     {
         try {
-            // Get all SCSS partials posts
-            $partials = get_posts([
-                'post_type' => FunculoPostType::getPostType(),
-                'post_status' => 'publish',
-                'numberposts' => -1,
-                'tax_query' => [
-                    [
-                        'taxonomy' => FunculoTypeTaxonomy::getTaxonomy(),
-                        'field' => 'slug',
-                        'terms' => FunculoTypeTaxonomy::getTermScssPartials()
+            // Get all SCSS partials posts with caching
+            $cacheKey = 'fanculo_scss_partials_api';
+            $partials = wp_cache_get($cacheKey, 'fanculo_api_data');
+
+            if (false === $partials) {
+                // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Cached query, acceptable performance
+                $partials = get_posts([
+                    'post_type' => FunculoPostType::getPostType(),
+                    'post_status' => 'publish',
+                    'numberposts' => -1,
+                    'tax_query' => [
+                        [
+                            'taxonomy' => FunculoTypeTaxonomy::getTaxonomy(),
+                            'field' => 'slug',
+                            'terms' => FunculoTypeTaxonomy::getTermScssPartials()
+                        ]
                     ]
-                ]
-            ]);
+                ]);
+
+                // Cache for 5 minutes
+                wp_cache_set($cacheKey, $partials, 'fanculo_api_data', 300);
+            }
 
             $formatted_partials = [];
             $global_partials = [];
@@ -222,10 +231,6 @@ class ScssCompilerApiController
                         'global_order' => $global_order ? (int) $global_order : 999
                     ];
 
-                    // Debug logging only in development mode
-                    if (defined('WP_DEBUG') && WP_DEBUG) {
-                        error_log("SCSS Partial Debug - ID: {$partial->ID}, Title: {$partial->post_title}, is_global meta: " . wp_json_encode($is_global) . ", bool cast: " . wp_json_encode((bool) $is_global));
-                    }
 
                     // Check if is_global is explicitly set to '1' (string) or 1 (int) or true (bool)
                     if ($is_global === '1' || $is_global === 1 || $is_global === true) {

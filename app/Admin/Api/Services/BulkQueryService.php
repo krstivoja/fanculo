@@ -32,9 +32,6 @@ class BulkQueryService
         ]);
 
         if (is_wp_error($allTerms)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('BulkQueryService: Error fetching bulk terms: ' . $allTerms->get_error_message());
-            }
             return [];
         }
 
@@ -96,11 +93,23 @@ class BulkQueryService
                 WHERE post_id IN ({$postIdPlaceholders})
                 AND meta_key IN ({$metaKeyPlaceholders})";
 
-        // Prepare query with all parameters
-        $queryParams = array_merge($postIds, $metaKeys);
-        $preparedQuery = $wpdb->prepare($sql, $queryParams);
+        // Create cache key for this query
+        $cacheKey = 'fanculo_bulk_meta_' . md5(serialize($postIds) . serialize($metaKeys));
+        $results = wp_cache_get($cacheKey, 'fanculo_bulk_queries');
 
-        $results = $wpdb->get_results($preparedQuery);
+        if (false === $results) {
+            // Execute prepared query directly
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Optimized bulk query with caching
+            $results = $wpdb->get_results(
+                $wpdb->prepare(
+                    $sql,
+                    array_merge($postIds, $metaKeys)
+                )
+            );
+
+            // Cache for 5 minutes (300 seconds)
+            wp_cache_set($cacheKey, $results, 'fanculo_bulk_queries', 300);
+        }
 
         // Group meta by post ID and key
         $metaByPost = [];
@@ -268,14 +277,6 @@ class BulkQueryService
         $endTime = microtime(true);
         $duration = round(($endTime - $startTime) * 1000, 2); // Convert to milliseconds
 
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log(sprintf(
-                'BulkQueryService: %s completed - %d posts processed in %s ms (avg: %s ms/post)',
-                $operation,
-                $postCount,
-                $duration,
-                $postCount > 0 ? round($duration / $postCount, 2) : 0
-            ));
-        }
+        // Performance logging removed for production
     }
 }

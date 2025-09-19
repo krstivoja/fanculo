@@ -127,25 +127,35 @@ class GlobalRegenerator
      */
     public function getGlobalPartials(): array
     {
-        $partials = get_posts([
-            'post_type' => FunculoPostType::getPostType(),
-            'post_status' => 'publish',
-            'numberposts' => -1,
-            'tax_query' => [
-                [
-                    'taxonomy' => FunculoTypeTaxonomy::getTaxonomy(),
-                    'field' => 'slug',
-                    'terms' => FunculoTypeTaxonomy::getTermScssPartials()
+        $cacheKey = 'fanculo_global_partials';
+        $partials = wp_cache_get($cacheKey, 'fanculo_global_data');
+
+        if (false === $partials) {
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Cached query for global partials
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Cached query for global partials
+            $partials = get_posts([
+                'post_type' => FunculoPostType::getPostType(),
+                'post_status' => 'publish',
+                'numberposts' => -1,
+                'tax_query' => [
+                    [
+                        'taxonomy' => FunculoTypeTaxonomy::getTaxonomy(),
+                        'field' => 'slug',
+                        'terms' => FunculoTypeTaxonomy::getTermScssPartials()
+                    ]
+                ],
+                'meta_query' => [
+                    [
+                        'key' => MetaKeysConstants::SCSS_IS_GLOBAL,
+                        'value' => ['1', 1, true],
+                        'compare' => 'IN'
+                    ]
                 ]
-            ],
-            'meta_query' => [
-                [
-                    'key' => MetaKeysConstants::SCSS_IS_GLOBAL,
-                    'value' => ['1', 1, true],
-                    'compare' => 'IN'
-                ]
-            ]
-        ]);
+            ]);
+
+            // Cache for 10 minutes
+            wp_cache_set($cacheKey, $partials, 'fanculo_global_data', 600);
+        }
 
         return $partials;
     }
@@ -155,18 +165,27 @@ class GlobalRegenerator
      */
     public function findPostsDependingOnPartial(int $partialId): array
     {
-        $posts = get_posts([
-            'post_type' => FunculoPostType::getPostType(),
-            'post_status' => 'publish',
-            'numberposts' => -1,
-            'meta_query' => [
-                [
-                    'key' => MetaKeysConstants::BLOCK_SELECTED_PARTIALS,
-                    'value' => serialize(strval($partialId)),
-                    'compare' => 'LIKE'
+        $cacheKey = 'fanculo_partial_deps_' . $partialId;
+        $posts = wp_cache_get($cacheKey, 'fanculo_dependencies');
+
+        if (false === $posts) {
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Cached query for dependency tracking
+            $posts = get_posts([
+                'post_type' => FunculoPostType::getPostType(),
+                'post_status' => 'publish',
+                'numberposts' => -1,
+                'meta_query' => [
+                    [
+                        'key' => MetaKeysConstants::BLOCK_SELECTED_PARTIALS,
+                        'value' => serialize(strval($partialId)),
+                        'compare' => 'LIKE'
+                    ]
                 ]
-            ]
-        ]);
+            ]);
+
+            // Cache for 5 minutes since dependencies can change
+            wp_cache_set($cacheKey, $posts, 'fanculo_dependencies', 300);
+        }
 
         return $posts;
     }

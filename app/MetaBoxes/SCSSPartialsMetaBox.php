@@ -46,7 +46,7 @@ class SCSSPartialsMetaBox extends AbstractMetaBox
 
         foreach ($fields as $field) {
             if (isset($_POST[$field])) {
-                $value = sanitize_textarea_field($_POST[$field]);
+                $value = sanitize_textarea_field(wp_unslash($_POST[$field]));
                 $this->saveMetaValue($postId, $field, $value);
             }
         }

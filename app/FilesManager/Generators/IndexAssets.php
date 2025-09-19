@@ -7,29 +7,21 @@ class IndexAssets
     public static function generate(string $blockDir): bool
     {
         $indexAssetPath = $blockDir . '/index.asset.php';
-        $version = time() . rand(100000, 999999);
+        $version = time() . wp_rand(100000, 999999);
 
-        $content = <<<PHP
-<?php
-    return array(
-        'dependencies' => array(
-            'wp-block-editor',
-            'wp-blocks',
-            'wp-element',
-            'wp-i18n',
-            'wp-server-side-render'
-        ),
-        'version' => '{$version}'
-    );
-PHP;
+        $content = '<?php' . "\n" .
+            'return array(' . "\n" .
+            '    \'dependencies\' => array(' . "\n" .
+            '        \'wp-block-editor\',' . "\n" .
+            '        \'wp-blocks\',' . "\n" .
+            '        \'wp-element\',' . "\n" .
+            '        \'wp-i18n\',' . "\n" .
+            '        \'wp-server-side-render\'' . "\n" .
+            '    ),' . "\n" .
+            '    \'version\' => \'' . $version . '\'' . "\n" .
+            ');';
 
         $result = file_put_contents($indexAssetPath, $content);
-
-        if ($result !== false) {
-            error_log("IndexAssets: Successfully created index.asset.php in $blockDir");
-        } else {
-            error_log("IndexAssets: Failed to create index.asset.php in $blockDir");
-        }
 
         return $result !== false;
     }
