@@ -301,6 +301,20 @@ const App = () => {
         // Always use the API call to get full meta data
         // The pre-loaded data doesn't include the full meta structure
         fetchPosts();
+
+        // Fetch and console log all registered blocks
+        const fetchRegisteredBlocks = async () => {
+            try {
+                const response = await apiClient.getRegisteredBlocks();
+                console.log('🧱 All Registered WordPress Blocks:', response.blocks);
+                console.log('📊 Total Blocks Count:', response.total);
+                console.log('🕐 Timestamp:', response.timestamp);
+            } catch (error) {
+                console.error('❌ Error fetching registered blocks:', error);
+            }
+        };
+
+        fetchRegisteredBlocks();
     }, []);
 
     if (loading) return <div>Loading...</div>;

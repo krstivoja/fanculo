@@ -475,6 +475,14 @@ class FunculoApiClient {
     return this.request('/taxonomy');
   }
 
+  /**
+   * Get all registered blocks
+   * @returns {Promise<Object>} All registered blocks data
+   */
+  async getRegisteredBlocks() {
+    return this.request('/registered-blocks');
+  }
+
   // ===========================================
   // PRIMARY BATCH OPERATIONS - Optimized Interface
   // ===========================================

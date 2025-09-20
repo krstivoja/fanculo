@@ -7,6 +7,7 @@ use Fanculo\Admin\Api\TaxonomyApiController;
 use Fanculo\Admin\Api\BlockCategoriesApiController;
 use Fanculo\Admin\Api\FileGenerationApiController;
 use Fanculo\Admin\Api\ScssCompilerApiController;
+use Fanculo\Admin\Api\RegisteredBlocksApiController;
 use Fanculo\Content\FunculoTypeTaxonomy;
 
 class Api
@@ -16,6 +17,7 @@ class Api
     private $blockCategoriesController;
     private $fileGenerationController;
     private $scssCompilerController;
+    private $registeredBlocksController;
 
     public function __construct()
     {
@@ -25,6 +27,7 @@ class Api
         $this->blockCategoriesController = new BlockCategoriesApiController();
         $this->fileGenerationController = new FileGenerationApiController();
         $this->scssCompilerController = new ScssCompilerApiController();
+        $this->registeredBlocksController = new RegisteredBlocksApiController();
     }
 
     // Note: Route registration is now handled by individual controllers
