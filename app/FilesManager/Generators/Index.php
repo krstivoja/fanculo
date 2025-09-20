@@ -58,19 +58,70 @@ class Index
 
         const blockProps = useBlockProps();
 
+        // Parse HTML and avoid extra wrapper
+        const parseServerContent = (htmlString) => {
+            if (!htmlString) return [];
+
+            const container = document.createElement('div');
+            container.innerHTML = htmlString.trim();
+
+            const convertDomToReact = (domNode) => {
+                if (domNode.nodeType === Node.ELEMENT_NODE) {
+                    const tagName = domNode.tagName.toLowerCase();
+
+                    const children = [];
+                    domNode.childNodes.forEach((child) => {
+                        const element = convertDomToReact(child);
+                        if (element !== null) {
+                            children.push(element);
+                        }
+                    });
+
+                    const props = {};
+                    for (const attr of domNode.attributes) {
+                        if (attr.name === 'class') {
+                            props.className = attr.value;
+                        } else {
+                            props[attr.name] = attr.value;
+                        }
+                    }
+
+                    return wp.element.createElement(tagName, props, ...children);
+                } else if (domNode.nodeType === Node.TEXT_NODE) {
+                    return domNode.textContent;
+                }
+                return null;
+            };
+
+            const elements = [];
+            container.childNodes.forEach((node) => {
+                const element = convertDomToReact(node);
+                if (element !== null) {
+                    elements.push(element);
+                }
+            });
+
+            return elements;
+        };
+
         // Memoize the parser call to prevent unnecessary re-renders
         const renderedContent = useMemo(() => {
             if (isLoading) return null;
 
-            // Use FanculoInnerBlocksParser if available to handle InnerBlocks inserters
-            if (window.FanculoInnerBlocksParser && window.FanculoInnerBlocksParser.createServerContentRenderer) {
-                return window.FanculoInnerBlocksParser.createServerContentRenderer(serverContent, blockProps, PARSER_OPTIONS);
-            }
+            // Skip FanculoInnerBlocksParser as it adds extra wrapper div
+            // if (window.FanculoInnerBlocksParser && window.FanculoInnerBlocksParser.createServerContentRenderer) {
+            //     return window.FanculoInnerBlocksParser.createServerContentRenderer(serverContent, blockProps, PARSER_OPTIONS);
+            // }
 
-            // Fallback if parser is not loaded
-            return wp.element.createElement("div", Object.assign({}, blockProps, {
-                dangerouslySetInnerHTML: { __html: serverContent }
-            }));
+            // Parse the HTML and apply blockProps to existing element instead of wrapping
+            const parsedElements = parseServerContent(serverContent);
+            if (parsedElements.length === 1) {
+                // If single root element, clone it and merge blockProps
+                return wp.element.cloneElement(parsedElements[0], blockProps);
+            } else {
+                // If multiple elements, wrap in div with blockProps
+                return wp.element.createElement('div', blockProps, ...parsedElements);
+            }
         }, [serverContent, blockProps, isLoading]);
 
         if (isLoading) {
