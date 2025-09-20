@@ -29,17 +29,28 @@ class Index
         templateLock: false
     };
 
-    // Use the shared FanculoBlockRenderer to create the edit component
-    const Edit = window.FanculoBlockRenderer.createServerRenderComponent(
-        "fanculo/BLOCK_SLUG_PLACEHOLDER",
-        PARSER_OPTIONS
-    );
-
-    registerBlockType("fanculo/BLOCK_SLUG_PLACEHOLDER", {
-        edit: Edit,
-        save: function() {
-            return wp.element.createElement(InnerBlocks.Content);
+    // Wait for FanculoBlockRenderer to be available
+    function waitForRenderer(callback) {
+        if (window.FanculoBlockRenderer?.createServerRenderComponent) {
+            callback();
+        } else {
+            setTimeout(() => waitForRenderer(callback), 50);
         }
+    }
+
+    waitForRenderer(() => {
+        // Use the shared FanculoBlockRenderer to create the edit component
+        const Edit = window.FanculoBlockRenderer.createServerRenderComponent(
+            "fanculo/BLOCK_SLUG_PLACEHOLDER",
+            PARSER_OPTIONS
+        );
+
+        registerBlockType("fanculo/BLOCK_SLUG_PLACEHOLDER", {
+            edit: Edit,
+            save: function() {
+                return wp.element.createElement(InnerBlocks.Content);
+            }
+        });
     });
 })()';
 

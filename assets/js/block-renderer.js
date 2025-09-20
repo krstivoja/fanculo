@@ -15,9 +15,10 @@
         /**
          * Parse HTML string and convert to React elements
          * @param {string} htmlString - HTML content to parse
+         * @param {Object} options - Options for InnerBlocks parsing
          * @returns {Array} Array of React elements
          */
-        parseServerContent: function(htmlString) {
+        parseServerContent: function(htmlString, options = {}) {
             if (!htmlString) return [];
 
             const container = document.createElement('div');
@@ -31,8 +32,19 @@
                     if (tagName === 'innerblocks') {
                         return createElement(InnerBlocks, {
                             key: 'innerblocks',
-                            allowedBlocks: null,
-                            template: [['core/paragraph', { placeholder: 'Add your content here...' }]]
+                            allowedBlocks: options.allowedBlocks || null,
+                            template: options.template || [],
+                            templateLock: options.templateLock || false
+                        });
+                    }
+
+                    // Handle <div class="fanculo-block-inserter"> elements
+                    if (tagName === 'div' && domNode.classList && domNode.classList.contains('fanculo-block-inserter')) {
+                        return createElement(InnerBlocks, {
+                            key: 'innerblocks',
+                            allowedBlocks: options.allowedBlocks || null,
+                            template: options.template || [],
+                            templateLock: options.templateLock || false
                         });
                     }
 
@@ -95,7 +107,7 @@
             }
 
             // Parse the HTML and apply blockProps to existing element instead of wrapping
-            const parsedElements = this.parseServerContent(serverContent);
+            const parsedElements = this.parseServerContent(serverContent, options);
 
             if (parsedElements.length === 1) {
                 // If single root element, clone it and merge blockProps

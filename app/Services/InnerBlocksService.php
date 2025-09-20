@@ -16,7 +16,7 @@ class InnerBlocksService
 
     private function initHooks(): void
     {
-        add_action('enqueue_block_editor_assets', [$this, 'enqueueParserScript']);
+        add_action('enqueue_block_editor_assets', [$this, 'enqueueParserScript'], 5); // Load early
     }
 
     /**
