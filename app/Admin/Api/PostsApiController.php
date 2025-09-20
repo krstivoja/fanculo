@@ -342,6 +342,21 @@ class PostsApiController
                 'icon' => 'search'
             ];
             update_post_meta($postId, MetaKeysConstants::BLOCK_SETTINGS, json_encode($defaultSettings));
+
+            // Set default PHP content for blocks
+            $defaultPhpContent = '<div <?php echo get_block_wrapper_attributes(); ?>>
+
+    <!-- Your code goes here -->
+
+</div>';
+            update_post_meta($postId, MetaKeysConstants::BLOCK_PHP, $defaultPhpContent);
+
+            // Set default SCSS content for blocks
+            $blockSlug = sanitize_title($title);
+            $defaultScssContent = '.wp-block-fanculo-' . $blockSlug . ' {
+
+}';
+            update_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, $defaultScssContent);
         }
 
         // Get the created post data and trigger file generation

@@ -7,19 +7,10 @@ class IndexAssets
     public static function generate(string $blockDir): bool
     {
         $indexAssetPath = $blockDir . '/index.asset.php';
+        
         $version = time() . wp_rand(100000, 999999);
 
-        $content = '<?php' . "\n" .
-            'return array(' . "\n" .
-            '    \'dependencies\' => array(' . "\n" .
-            '        \'wp-block-editor\',' . "\n" .
-            '        \'wp-blocks\',' . "\n" .
-            '        \'wp-element\',' . "\n" .
-            '        \'wp-i18n\',' . "\n" .
-            '        \'wp-server-side-render\'' . "\n" .
-            '    ),' . "\n" .
-            '    \'version\' => \'' . $version . '\'' . "\n" .
-            ');';
+        $content = '<?php return array( "dependencies" => array( "wp-block-editor", "wp-blocks", "wp-element", "wp-i18n", "wp-server-side-render" ), "version" => "' . $version . '" );';
 
         $result = file_put_contents($indexAssetPath, $content);
 

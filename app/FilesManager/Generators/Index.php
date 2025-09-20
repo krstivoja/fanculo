@@ -8,87 +8,87 @@ class Index
     {
         $indexJsPath = $blockDir . '/index.js';
 
-        $content = '(function () {' . "\n" .
-            '    const { registerBlockType } = wp.blocks;' . "\n" .
-            '    const { useBlockProps, InnerBlocks } = wp.blockEditor;' . "\n" .
-            '    const { useState, useEffect, useMemo } = wp.element;' . "\n" .
-            '    const { Spinner } = wp.components;' . "\n" .
-            "\n" .
-            '    // InnerBlocks options for NativeBlocksParser' . "\n" .
-            '    const PARSER_OPTIONS = {' . "\n" .
-            '        allowedBlocks: [' . "\n" .
-            '            \'core/paragraph\',' . "\n" .
-            '            \'core/heading\',' . "\n" .
-            '            \'core/image\',' . "\n" .
-            '            \'core/button\',' . "\n" .
-            '            \'core/group\',' . "\n" .
-            '            \'core/columns\',' . "\n" .
-            '            \'core/column\'' . "\n" .
-            '        ],' . "\n" .
-            '        template: [' . "\n" .
-            '            [\'core/paragraph\', { placeholder: \'Add some content here...\' }]' . "\n" .
-            '        ],' . "\n" .
-            '        templateLock: false' . "\n" .
-            '    };' . "\n" .
-            "\n" .
-            '    const Edit = function(props) {' . "\n" .
-            '        const { attributes } = props;' . "\n" .
-            '        const [serverContent, setServerContent] = useState(\'\');' . "\n" .
-            '        const [isLoading, setIsLoading] = useState(true);' . "\n" .
-            "\n" .
-            '        useEffect(() => {' . "\n" .
-            '            const postId = wp.data.select(\'core/editor\').getCurrentPostId() || 0;' . "\n" .
-            "\n" .
-            '            wp.apiFetch({' . "\n" .
-            '                path: \'/wp/v2/block-renderer/fanculo/BLOCK_SLUG_PLACEHOLDER?context=edit\',' . "\n" .
-            '                method: \'POST\',' . "\n" .
-            '                data: {' . "\n" .
-            '                    attributes: attributes,' . "\n" .
-            '                    post_id: postId' . "\n" .
-            '                }' . "\n" .
-            '            }).then(response => {' . "\n" .
-            '                setServerContent(response.rendered);' . "\n" .
-            '                setIsLoading(false);' . "\n" .
-            '            }).catch(error => {' . "\n" .
-            '                console.error(\'Block render error:\', error);' . "\n" .
-            '                setServerContent(\'<div><!-- Block render error --></div>\');' . "\n" .
-            '                setIsLoading(false);' . "\n" .
-            '            });' . "\n" .
-            '        }, []);' . "\n" .
-            "\n" .
-            '        const blockProps = useBlockProps();' . "\n" .
-            "\n" .
-            '        // Memoize the parser call to prevent unnecessary re-renders' . "\n" .
-            '        const renderedContent = useMemo(() => {' . "\n" .
-            '            if (isLoading) return null;' . "\n" .
-            "\n" .
-            '            // Use FanculoInnerBlocksParser if available to handle InnerBlocks inserters' . "\n" .
-            '            if (window.FanculoInnerBlocksParser && window.FanculoInnerBlocksParser.createServerContentRenderer) {' . "\n" .
-            '                return window.FanculoInnerBlocksParser.createServerContentRenderer(serverContent, blockProps, PARSER_OPTIONS);' . "\n" .
-            '            }' . "\n" .
-            "\n" .
-            '            // Fallback if parser is not loaded' . "\n" .
-            '            return wp.element.createElement(\'div\', Object.assign({}, blockProps, {' . "\n" .
-            '                dangerouslySetInnerHTML: { __html: serverContent }' . "\n" .
-            '            }));' . "\n" .
-            '        }, [serverContent, blockProps, isLoading]);' . "\n" .
-            "\n" .
-            '        if (isLoading) {' . "\n" .
-            '            return wp.element.createElement(\'div\', blockProps, ' . "\n" .
-            '                wp.element.createElement(Spinner)' . "\n" .
-            '            );' . "\n" .
-            '        }' . "\n" .
-            "\n" .
-            '        return renderedContent;' . "\n" .
-            '    };' . "\n" .
-            "\n" .
-            '    registerBlockType(\'fanculo/BLOCK_SLUG_PLACEHOLDER\', {' . "\n" .
-            '        edit: Edit,' . "\n" .
-            '        save: function() {' . "\n" .
-            '            return wp.element.createElement(InnerBlocks.Content);' . "\n" .
-            '        }' . "\n" .
-            '    });' . "\n" .
-            '})();';
+        $content = '(function () {
+    const { registerBlockType } = wp.blocks;
+    const { useBlockProps, InnerBlocks } = wp.blockEditor;
+    const { useState, useEffect, useMemo } = wp.element;
+    const { Spinner } = wp.components;
+
+    // InnerBlocks options for NativeBlocksParser
+    const PARSER_OPTIONS = {
+        allowedBlocks: [
+            "core/paragraph",
+            "core/heading",
+            "core/image",
+            "core/button",
+            "core/group",
+            "core/columns",
+            "core/column"
+        ],
+        template: [
+            ["core/paragraph", { placeholder: "Add some content here..." }]
+        ],
+        templateLock: false
+    };
+
+    const Edit = function(props) {
+        const { attributes } = props;
+        const [serverContent, setServerContent] = useState("");
+        const [isLoading, setIsLoading] = useState(true);
+
+        useEffect(() => {
+            const postId = wp.data.select("core/editor").getCurrentPostId() || 0;
+
+            wp.apiFetch({
+                path: "/wp/v2/block-renderer/fanculo/BLOCK_SLUG_PLACEHOLDER?context=edit",
+                method: "POST",
+                data: {
+                    attributes: attributes,
+                    post_id: postId
+                }
+            }).then(response => {
+                setServerContent(response.rendered);
+                setIsLoading(false);
+            }).catch(error => {
+                console.error("Block render error:", error);
+                setServerContent("<div><!-- Block render error --></div>");
+                setIsLoading(false);
+            });
+        }, []);
+
+        const blockProps = useBlockProps();
+
+        // Memoize the parser call to prevent unnecessary re-renders
+        const renderedContent = useMemo(() => {
+            if (isLoading) return null;
+
+            // Use FanculoInnerBlocksParser if available to handle InnerBlocks inserters
+            if (window.FanculoInnerBlocksParser && window.FanculoInnerBlocksParser.createServerContentRenderer) {
+                return window.FanculoInnerBlocksParser.createServerContentRenderer(serverContent, blockProps, PARSER_OPTIONS);
+            }
+
+            // Fallback if parser is not loaded
+            return wp.element.createElement("div", Object.assign({}, blockProps, {
+                dangerouslySetInnerHTML: { __html: serverContent }
+            }));
+        }, [serverContent, blockProps, isLoading]);
+
+        if (isLoading) {
+            return wp.element.createElement("div", blockProps,
+                wp.element.createElement(Spinner)
+            );
+        }
+
+        return renderedContent;
+    };
+
+    registerBlockType("fanculo/BLOCK_SLUG_PLACEHOLDER", {
+        edit: Edit,
+        save: function() {
+            return wp.element.createElement(InnerBlocks.Content);
+        }
+    });
+})()';
 
         // Replace the placeholder with actual block slug
         $content = str_replace('BLOCK_SLUG_PLACEHOLDER', $blockSlug, $content);
