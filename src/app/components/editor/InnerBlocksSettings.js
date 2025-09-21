@@ -15,7 +15,6 @@ const DefaultTemplateManager = ({
   defaultTemplate,
   setDefaultTemplate,
   templateLock,
-  setTemplateLock,
   updateTemplateSettings,
   availableBlocks,
   allowedBlocks
@@ -90,22 +89,8 @@ const DefaultTemplateManager = ({
     updateTemplateSettings(newTemplate, templateLock);
   };
 
-  const handleTemplateLockChange = (event) => {
-    const locked = event.target.checked;
-    setTemplateLock(locked);
-    updateTemplateSettings(defaultTemplate, locked);
-  };
-
   return (
     <div className="space-y-4">
-      {/* Template Lock */}
-      <Toggle
-        checked={templateLock}
-        onChange={handleTemplateLockChange}
-        label="Lock Template"
-        description="Prevent users from adding, removing, or moving blocks"
-      />
-
       {/* Template Blocks Selection */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-highlight">
@@ -316,6 +301,12 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
     console.log('The tag at index ' + index + ' was clicked');
   };
 
+  const handleTemplateLockChange = (event) => {
+    const locked = event.target.checked;
+    setTemplateLock(locked);
+    updateTemplateSettings(defaultTemplate, locked);
+  };
+
   // Only show for block type posts
   const isBlockType = selectedPost?.terms?.some(term => term.slug === 'blocks');
 
@@ -343,7 +334,7 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
 
       {/* Block Selection Interface */}
       {isEnabled && (
-        <div className="space-y-3 p-4 border border-outline rounded-md bg-base-2">
+        <div className="space-y-5 p-4 border border-outline rounded-md bg-base-2">
           <div>
             <label className="block text-sm font-medium text-highlight mb-2">
               Allowed Block Types
@@ -385,22 +376,21 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
             </div>
           )}
 
-
-          <p className="text-xs text-contrast mb-3">
-          Specify blocks for the inserter. Leave blank to allow all.
+          <p className="text-xs text-contrast">
+            Specify blocks for the inserter. Leave blank to allow all.
           </p>
-        </div>
-      )}
 
-      {/* Template Configuration */}
-      {isEnabled && (
-        <div className="space-y-3 p-4 border border-outline rounded-md bg-base-2">
-          <div>
-            <label className="block text-sm font-medium text-highlight mb-2">
-              Default Template
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-highlight">
+              Lock Template
             </label>
-            <p className="text-xs text-contrast mb-3">
-              Configure default blocks that will be automatically inserted when this block is added.
+            <Toggle
+              checked={templateLock}
+              onChange={handleTemplateLockChange}
+              label={templateLock ? 'True' : 'False'}
+            />
+            <p className="text-xs text-contrast">
+              Prevent users from adding, removing, or moving blocks.
             </p>
           </div>
 
@@ -408,13 +398,13 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
             defaultTemplate={defaultTemplate}
             setDefaultTemplate={setDefaultTemplate}
             templateLock={templateLock}
-            setTemplateLock={setTemplateLock}
             updateTemplateSettings={updateTemplateSettings}
             availableBlocks={availableBlocks}
             allowedBlocks={selectedBlocks.map(tag => tag.text)}
           />
         </div>
       )}
+
     </div>
   );
 };
