@@ -13,18 +13,14 @@ class Index
         // Get inner blocks settings if post ID is provided
         $innerBlocksEnabled = false;
         $allowedBlocks = [];
-        $template = [];
-        $templateLock = false;
 
         if ($postId) {
             $innerBlocksSettings = get_post_meta($postId, MetaKeysConstants::BLOCK_INNER_BLOCKS_SETTINGS, true);
             if ($innerBlocksSettings) {
                 try {
                     $settings = json_decode($innerBlocksSettings, true);
-                    $innerBlocksEnabled = !empty($settings['enabled']);
-                    $allowedBlocks = $settings['allowed_blocks'] ?? [];
-                    $template = $settings['template'] ?? [];
-                    $templateLock = $settings['template_lock'] ?? false;
+                    $innerBlocksEnabled = isset($settings['enabled']) && $settings['enabled'];
+                    $allowedBlocks = isset($settings['allowed_blocks']) ? $settings['allowed_blocks'] : [];
                 } catch (\Exception $e) {
                     // If JSON parsing fails, keep defaults
                 }
@@ -34,18 +30,17 @@ class Index
         // Build the PARSER_OPTIONS based on inner blocks settings
         $parserOptionsJs = '';
         if ($innerBlocksEnabled) {
-            $allowedBlocksJson = !empty($allowedBlocks) ? json_encode($allowedBlocks, JSON_UNESCAPED_SLASHES) : 'null';
-            $templateJson = json_encode($template, JSON_UNESCAPED_SLASHES);
-            $templateLockValue = $templateLock ? 'true' : 'false';
-
+            $allowedBlocksJson = json_encode($allowedBlocks, JSON_UNESCAPED_SLASHES);
             $parserOptionsJs = "
     // InnerBlocks options
     const PARSER_OPTIONS = {" . (
                 !empty($allowedBlocks) ? "
         allowedBlocks: {$allowedBlocksJson}," : ""
             ) . "
-        template: {$templateJson},
-        templateLock: {$templateLockValue}
+        template: [
+            [\"core/paragraph\", { placeholder: \"Add some content here...\" }]
+        ],
+        templateLock: false
     };";
         } else {
             $parserOptionsJs = "
@@ -63,34 +58,66 @@ class Index
     const { InnerBlocks } = wp.blockEditor;
 ' . $parserOptionsJs . '
 
-    try {
-        // Use the shared FanculoBlockRenderer to create the edit component
-        const Edit = window.FanculoBlockRenderer.createServerRenderComponent(
-            "fanculo/BLOCK_SLUG_PLACEHOLDER",
-            PARSER_OPTIONS
-        );
+    // Wait for FanculoBlockRenderer to be available with timeout
+    function waitForRenderer(callback, maxAttempts = 100) {
+        let attempts = 0;
 
-        registerBlockType("fanculo/BLOCK_SLUG_PLACEHOLDER", {
-            edit: Edit,
-            save: function() {
-                ' . $saveFunction . '
+        function check() {
+            attempts++;
+            if (window.FanculoBlockRenderer?.createServerRenderComponent) {
+                callback();
+            } else if (attempts < maxAttempts) {
+                setTimeout(check, 50);
+            } else {
+                console.error("FanculoBlockRenderer failed to load after", maxAttempts * 50, "ms");
+                // Register with fallback edit component
+                registerBlockType("fanculo/BLOCK_SLUG_PLACEHOLDER", {
+                    edit: function() {
+                        return wp.element.createElement("div",
+                            { className: "fanculo-block-error" },
+                            "Block renderer unavailable"
+                        );
+                    },
+                    save: function() {
+                        ' . $saveFunction . '
+                    }
+                });
             }
-        });
-    } catch (error) {
-        console.error("Error registering block fanculo/BLOCK_SLUG_PLACEHOLDER:", error);
-        // Register with error fallback
-        registerBlockType("fanculo/BLOCK_SLUG_PLACEHOLDER", {
-            edit: function() {
-                return wp.element.createElement("div",
-                    { className: "fanculo-block-error" },
-                    "Block registration error: " + error.message
-                );
-            },
-            save: function() {
-                return null;
-            }
-        });
+        }
+
+        check();
     }
+
+    waitForRenderer(() => {
+        try {
+            // Use the shared FanculoBlockRenderer to create the edit component
+            const Edit = window.FanculoBlockRenderer.createServerRenderComponent(
+                "fanculo/BLOCK_SLUG_PLACEHOLDER",
+                PARSER_OPTIONS
+            );
+
+            registerBlockType("fanculo/BLOCK_SLUG_PLACEHOLDER", {
+                edit: Edit,
+                save: function() {
+                    ' . $saveFunction . '
+                }
+            });
+        } catch (error) {
+            console.error("Error registering block fanculo/BLOCK_SLUG_PLACEHOLDER:", error);
+            // Register with error fallback
+            registerBlockType("fanculo/BLOCK_SLUG_PLACEHOLDER", {
+                edit: function() {
+                    return wp.element.createElement("div",
+                        { className: "fanculo-block-error" },
+                        "Block registration error: " + error.message
+                    );
+                },
+                save: function() {
+                    ' . $saveFunction . '
+                }
+            });
+        }
+    });
 })()';
 
         // Replace the placeholder with actual block slug

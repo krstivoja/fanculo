@@ -29,10 +29,7 @@
 
     function normalizeAttributeValue(name, value) {
         // Handle boolean attributes
-        const booleanAttributes = [
-            'checked', 'selected', 'disabled', 'readonly', 'multiple', 'draggable',
-            'autofocus', 'required', 'hidden', 'open', 'contenteditable'
-        ];
+        const booleanAttributes = ['checked', 'selected', 'disabled', 'readonly', 'multiple', 'draggable'];
         if (booleanAttributes.includes(name)) {
             return value === name || value === 'true' || value === '';
         }
@@ -81,19 +78,14 @@
             const container = document.createElement('div');
             container.innerHTML = htmlString.trim();
 
-            const convertDomToReact = (domNode, path = '0') => {
+            const convertDomToReact = (domNode, index = 0) => {
                 if (domNode.nodeType === Node.ELEMENT_NODE) {
                     const tagName = domNode.tagName.toLowerCase();
-
-                    // Skip unsafe elements
-                    if (tagName === 'script' || tagName === 'noscript') {
-                        return null;
-                    }
 
                     // Handle <innerblocks /> tags
                     if (tagName === 'innerblocks') {
                         return createElement(InnerBlocks, {
-                            key: `innerblocks-${path}`,
+                            key: `innerblocks-${index}`,
                             allowedBlocks: options.allowedBlocks || null,
                             template: options.template || [],
                             templateLock: options.templateLock || false
@@ -103,7 +95,7 @@
                     // Handle <div class="fanculo-block-inserter"> elements
                     if (tagName === 'div' && domNode.classList && domNode.classList.contains('fanculo-block-inserter')) {
                         return createElement(InnerBlocks, {
-                            key: `innerblocks-inserter-${path}`,
+                            key: `innerblocks-inserter-${index}`,
                             allowedBlocks: options.allowedBlocks || null,
                             template: options.template || [],
                             templateLock: options.templateLock || false
@@ -112,37 +104,25 @@
 
                     const children = [];
                     domNode.childNodes.forEach((child, childIndex) => {
-                        const childElement = convertDomToReact(child, `${path}.${childIndex}`);
-                        if (childElement !== null) {
-                            children.push(childElement);
+                        const element = convertDomToReact(child, index * 100 + childIndex);
+                        if (element !== null) {
+                            children.push(element);
                         }
                     });
 
-                    const props = { key: path };
+                    const props = {};
                     for (const attr of domNode.attributes) {
-                        // Drop inline event handlers (security)
-                        if (/^on/i.test(attr.name)) {
-                            continue;
-                        }
-
                         if (attr.name === 'class') {
                             props.className = attr.value;
                         } else if (attr.name === 'style') {
-                            // Convert inline style string to object, preserving CSS variables
+                            // Convert inline style string to object
                             const styleObject = {};
                             if (attr.value) {
                                 attr.value.split(';').forEach(stylePair => {
                                     const parts = stylePair.split(':');
                                     if (parts.length === 2) {
-                                        const rawKey = parts[0].trim();
-                                        const value = parts[1].trim();
-                                        if (rawKey.startsWith('--')) {
-                                            // CSS variables keep their original name
-                                            styleObject[rawKey] = value;
-                                        } else {
-                                            const key = rawKey.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
-                                            styleObject[key] = value;
-                                        }
+                                        const key = parts[0].trim().replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+                                        styleObject[key] = parts[1].trim();
                                     }
                                 });
                             }
@@ -163,7 +143,7 @@
 
             const elements = [];
             container.childNodes.forEach((node, nodeIndex) => {
-                const element = convertDomToReact(node, `${nodeIndex}`);
+                const element = convertDomToReact(node, nodeIndex);
                 if (element !== null) {
                     elements.push(element);
                 }
@@ -222,31 +202,23 @@
                 const attributesHash = useMemo(() => createAttributesHash(attributes), [attributes]);
 
                 useEffect(() => {
-                    const controller = new AbortController();
                     const postId = wp.data.select("core/editor").getCurrentPostId() || 0;
 
-                    setIsLoading(true);
                     wp.apiFetch({
                         path: `/wp/v2/block-renderer/${blockName}?context=edit`,
                         method: "POST",
                         data: {
                             attributes: attributes,
                             post_id: postId
-                        },
-                        signal: controller.signal
+                        }
                     }).then(response => {
                         setServerContent(response.rendered);
                         setIsLoading(false);
                     }).catch(error => {
-                        if (error && error.name === 'AbortError') {
-                            return;
-                        }
                         console.error(`Block render error for ${blockName}:`, error);
                         setServerContent("<div><!-- Block render error --></div>");
                         setIsLoading(false);
                     });
-
-                    return () => controller.abort();
                 }, [attributesHash]);
 
                 const blockProps = useBlockProps();
