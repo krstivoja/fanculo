@@ -140,8 +140,11 @@
         parseServerContent: function(htmlString, options = {}) {
             if (!htmlString) return [];
 
+            // Replace blockProps placeholder with a temporary marker
+            const processedHtml = htmlString.replace(/blockProps/g, 'data-fanculo-block-props="true"');
+
             const container = document.createElement('div');
-            container.innerHTML = htmlString.trim();
+            container.innerHTML = processedHtml.trim();
 
             const convertDomToReact = (domNode) => {
                 if (domNode.nodeType === Node.ELEMENT_NODE) {
@@ -212,6 +215,15 @@
                     // Use secure attribute parsing
                     const props = parseAttributes(domNode);
 
+                    // Check if this element should receive blockProps
+                    const shouldApplyBlockProps = domNode.hasAttribute('data-fanculo-block-props');
+                    if (shouldApplyBlockProps) {
+                        // Remove the marker attribute
+                        delete props['data-fanculo-block-props'];
+                        // Mark this element to receive blockProps during rendering
+                        props['data-fanculo-needs-block-props'] = true;
+                    }
+
                     // Add stable key for this element
                     props.key = generateStableKey(tagName, keyCounter);
 
@@ -235,52 +247,123 @@
 
         /**
          * Render server content with proper blockProps application
-         * @param {string} serverContent - HTML content from server
+         * @param {string|null} serverContent - HTML content from server (null if parsedElements provided)
          * @param {Object} blockProps - WordPress block props
          * @param {Object} options - Additional options (for InnerBlocks, etc.)
+         * @param {Array} parsedElements - Pre-parsed elements (optional)
          * @returns {React.Element} Rendered React element
          */
-        renderServerContent: function(serverContent, blockProps, options = {}) {
-            if (!serverContent) {
+        renderServerContent: function(serverContent, blockProps, options = {}, parsedElements = null) {
+            // Use provided parsed elements or parse server content
+            const elements = parsedElements || (serverContent ? this.parseServerContent(serverContent, options) : []);
+
+            if (elements.length === 0) {
                 return createElement('div', blockProps);
             }
 
-            // Parse the HTML and apply blockProps to existing element instead of wrapping
-            const parsedElements = this.parseServerContent(serverContent, options);
-
-            if (parsedElements.length === 1) {
-                const element = parsedElements[0];
+            if (elements.length === 1) {
+                const element = elements[0];
 
                 // Guard against text roots - only clone React elements
                 if (typeof element === 'object' && element && element.type) {
-                    // Merge className and style properly instead of overwriting
-                    const mergedProps = { ...blockProps };
+                    // Check if this element needs blockProps applied
+                    const needsBlockProps = element.props && element.props['data-fanculo-needs-block-props'];
 
-                    if (element.props) {
-                        // Merge classNames
+                    if (needsBlockProps) {
+                        // Apply blockProps to this specific element
+                        const mergedProps = { ...element.props, ...blockProps };
+
+                        // Remove the marker
+                        delete mergedProps['data-fanculo-needs-block-props'];
+
+                        // Merge classNames properly
                         if (element.props.className && blockProps.className) {
                             mergedProps.className = `${element.props.className} ${blockProps.className}`;
-                        } else if (element.props.className) {
-                            mergedProps.className = element.props.className;
                         }
 
-                        // Merge styles
+                        // Merge styles properly
                         if (element.props.style && blockProps.style) {
                             mergedProps.style = { ...element.props.style, ...blockProps.style };
-                        } else if (element.props.style) {
-                            mergedProps.style = element.props.style;
                         }
-                    }
 
-                    return cloneElement(element, mergedProps);
+                        return cloneElement(element, mergedProps);
+                    } else {
+                        // Legacy behavior: apply blockProps to root element
+                        const mergedProps = { ...blockProps };
+
+                        if (element.props) {
+                            // Merge classNames
+                            if (element.props.className && blockProps.className) {
+                                mergedProps.className = `${element.props.className} ${blockProps.className}`;
+                            } else if (element.props.className) {
+                                mergedProps.className = element.props.className;
+                            }
+
+                            // Merge styles
+                            if (element.props.style && blockProps.style) {
+                                mergedProps.style = { ...element.props.style, ...blockProps.style };
+                            } else if (element.props.style) {
+                                mergedProps.style = element.props.style;
+                            }
+                        }
+
+                        return cloneElement(element, mergedProps);
+                    }
                 } else {
                     // For text nodes or invalid elements, wrap in div
                     return createElement('div', blockProps, element);
                 }
             } else {
-                // If multiple elements, wrap in div with blockProps
-                return createElement('div', blockProps, ...parsedElements);
+                // Check if any element needs blockProps, otherwise apply to wrapper
+                const elementsWithBlockProps = this.applyBlockPropsToMarkedElements(elements, blockProps);
+                const hasBlockPropsElements = elementsWithBlockProps.some(el =>
+                    el && typeof el === 'object' && el.props && el.props['data-had-block-props']
+                );
+
+                if (hasBlockPropsElements) {
+                    // Don't wrap in div if elements handle their own blockProps
+                    return createElement('div', {}, ...elementsWithBlockProps);
+                } else {
+                    // Legacy behavior: wrap in div with blockProps
+                    return createElement('div', blockProps, ...elementsWithBlockProps);
+                }
             }
+        },
+
+        /**
+         * Apply blockProps to elements that are marked with data-fanculo-needs-block-props
+         * @param {Array} elements - Array of React elements
+         * @param {Object} blockProps - WordPress block props
+         * @returns {Array} Elements with blockProps applied
+         */
+        applyBlockPropsToMarkedElements: function(elements, blockProps) {
+            return elements.map(element => {
+                if (typeof element === 'object' && element && element.type && element.props) {
+                    const needsBlockProps = element.props['data-fanculo-needs-block-props'];
+
+                    if (needsBlockProps) {
+                        // Apply blockProps to this specific element
+                        const mergedProps = { ...element.props, ...blockProps };
+
+                        // Remove the marker and add completion marker
+                        delete mergedProps['data-fanculo-needs-block-props'];
+                        mergedProps['data-had-block-props'] = true;
+
+                        // Merge classNames properly
+                        if (element.props.className && blockProps.className) {
+                            mergedProps.className = `${element.props.className} ${blockProps.className}`;
+                        }
+
+                        // Merge styles properly
+                        if (element.props.style && blockProps.style) {
+                            mergedProps.style = { ...element.props.style, ...blockProps.style };
+                        }
+
+                        return cloneElement(element, mergedProps);
+                    }
+                }
+                return element;
+            });
         },
 
         /**
@@ -373,39 +456,12 @@
                 const renderedContent = useMemo(() => {
                     if (!parsedContent) return null;
 
-                    if (parsedContent.length === 1) {
-                        const element = parsedContent[0];
-
-                        // Guard against text roots - only clone React elements
-                        if (typeof element === 'object' && element && element.type) {
-                            // Merge className and style properly instead of overwriting
-                            const mergedProps = { ...blockProps };
-
-                            if (element.props) {
-                                // Merge classNames
-                                if (element.props.className && blockProps.className) {
-                                    mergedProps.className = `${element.props.className} ${blockProps.className}`;
-                                } else if (element.props.className) {
-                                    mergedProps.className = element.props.className;
-                                }
-
-                                // Merge styles
-                                if (element.props.style && blockProps.style) {
-                                    mergedProps.style = { ...element.props.style, ...blockProps.style };
-                                } else if (element.props.style) {
-                                    mergedProps.style = element.props.style;
-                                }
-                            }
-
-                            return cloneElement(element, mergedProps);
-                        } else {
-                            // For text nodes or invalid elements, wrap in div
-                            return createElement('div', blockProps, element);
-                        }
-                    } else {
-                        // If multiple elements, wrap in div with blockProps
-                        return createElement('div', blockProps, ...parsedContent);
-                    }
+                    return window.FanculoBlockRenderer.renderServerContent(
+                        null, // We already have parsed content
+                        blockProps,
+                        {},
+                        parsedContent // Pass parsed content directly
+                    );
                 }, [parsedContent, blockProps]);
 
                 if (isLoading) {
