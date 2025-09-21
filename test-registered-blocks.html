@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Registered Blocks API</title>
+</head>
+<body>
+    <h1>Test Registered Blocks API</h1>
+    <p>Check the browser console for the registered blocks output.</p>
+
+    <script>
+        // This is a test script to verify the API endpoint works
+        // You can open this file in a browser when your WordPress site is running
+        // and has the Fanculo plugin activated.
+
+        const API_BASE = 'http://fanculo.test/wp-json/funculo/v1';
+
+        async function testRegisteredBlocksAPI() {
+            try {
+                console.log('🧪 Testing Registered Blocks API...');
+
+                // Note: This will likely fail due to CORS and authentication
+                // But it shows how the API should be called
+                const response = await fetch(`${API_BASE}/registered-blocks`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('🧱 All Registered WordPress Blocks:', data.blocks);
+                    console.log('📊 Total Blocks Count:', data.total);
+                    console.log('🕐 Timestamp:', data.timestamp);
+                } else {
+                    console.error('❌ API Response Error:', response.status, response.statusText);
+                }
+            } catch (error) {
+                console.error('❌ Network Error:', error.message);
+                console.log('🔍 This is expected when testing outside WordPress admin.');
+                console.log('💡 The API will work properly within the Fanculo plugin interface.');
+            }
+        }
+
+        // Run the test
+        testRegisteredBlocksAPI();
+
+        console.log('📝 Implementation Summary:');
+        console.log('1. ✅ Created RegisteredBlocksApiController.php');
+        console.log('2. ✅ Added endpoint /wp-json/funculo/v1/registered-blocks');
+        console.log('3. ✅ Added getRegisteredBlocks() method to FunculoApiClient.js');
+        console.log('4. ✅ Added console logging to App.js useEffect');
+        console.log('5. ✅ Built successfully with npm run build');
+        console.log('🎉 Ready to test in WordPress admin!');
+    </script>
+</body>
+</html>

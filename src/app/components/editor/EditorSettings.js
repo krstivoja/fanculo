@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Textarea, Select, DashiconButton, Button } from '../ui';
 import { TrashIcon } from '../icons';
 import ScssPartialsManager from './ScssPartialsManager';
+import InnerBlocksSettings from './InnerBlocksSettings';
 import { apiClient } from '../../../utils';
 
 const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) => {
@@ -190,6 +191,15 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
                     onIconSelect={handleIconChange}
                     label="Block Dashicon"
                   />
+
+                  {/* Inner Blocks Settings */}
+                  <div className="pt-4 border-t border-outline">
+                    <InnerBlocksSettings
+                      selectedPost={selectedPost}
+                      metaData={metaData}
+                      onMetaChange={onMetaChange}
+                    />
+                  </div>
                 </div>
               )}
 

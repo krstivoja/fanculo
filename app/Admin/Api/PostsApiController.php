@@ -449,6 +449,7 @@ class PostsApiController
                         'attributes' => get_post_meta($postId, MetaKeysConstants::BLOCK_ATTRIBUTES, true),
                         'settings' => get_post_meta($postId, MetaKeysConstants::BLOCK_SETTINGS, true),
                         'selected_partials' => get_post_meta($postId, MetaKeysConstants::BLOCK_SELECTED_PARTIALS, true),
+                        'inner_blocks_settings' => get_post_meta($postId, MetaKeysConstants::BLOCK_INNER_BLOCKS_SETTINGS, true),
                     ];
                     break;
 
@@ -491,6 +492,9 @@ class PostsApiController
             }
             if (isset($blocks['selected_partials'])) {
                 update_post_meta($postId, MetaKeysConstants::BLOCK_SELECTED_PARTIALS, sanitize_textarea_field($blocks['selected_partials']));
+            }
+            if (isset($blocks['inner_blocks_settings'])) {
+                update_post_meta($postId, MetaKeysConstants::BLOCK_INNER_BLOCKS_SETTINGS, sanitize_textarea_field($blocks['inner_blocks_settings']));
             }
         }
 

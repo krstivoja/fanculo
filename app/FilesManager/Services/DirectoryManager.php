@@ -36,7 +36,7 @@ class DirectoryManager
         return $path;
     }
 
-    public function createBlockDirectory(string $blockSlug): string
+    public function createBlockDirectory(string $blockSlug, int $postId = null): string
     {
         $blockDir = $this->baseDir . '/' . $blockSlug;
 
@@ -45,7 +45,7 @@ class DirectoryManager
 
             if ($result) {
                 IndexAssets::generate($blockDir);
-                Index::generate($blockDir, $blockSlug);
+                Index::generate($blockDir, $blockSlug, $postId);
             }
         }
 

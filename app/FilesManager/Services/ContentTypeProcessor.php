@@ -32,7 +32,7 @@ class ContentTypeProcessor
             return;
         }
 
-        $outputPath = $this->getOutputPathForContentType($contentType, $post);
+        $outputPath = $this->getOutputPathForContentType($contentType, $post, $postId);
 
 
         foreach ($generators as $generatorName => $generator) {
@@ -47,11 +47,11 @@ class ContentTypeProcessor
     /**
      * Determine output path for a content type
      */
-    public function getOutputPathForContentType(string $contentType, WP_Post $post): string
+    public function getOutputPathForContentType(string $contentType, WP_Post $post, int $postId = null): string
     {
         switch ($contentType) {
             case FunculoTypeTaxonomy::getTermBlocks():
-                return $this->directoryManager->createBlockDirectory($post->post_name);
+                return $this->directoryManager->createBlockDirectory($post->post_name, $postId);
 
             case FunculoTypeTaxonomy::getTermSymbols():
                 return $this->directoryManager->ensureSubdirectoryExists('symbols');

@@ -154,6 +154,7 @@ class BulkQueryService
                         'attributes' => $postMeta[MetaKeysConstants::BLOCK_ATTRIBUTES] ?? '',
                         'settings' => $postMeta[MetaKeysConstants::BLOCK_SETTINGS] ?? '',
                         'selected_partials' => $postMeta[MetaKeysConstants::BLOCK_SELECTED_PARTIALS] ?? '',
+                        'inner_blocks_settings' => $postMeta[MetaKeysConstants::BLOCK_INNER_BLOCKS_SETTINGS] ?? '',
                     ];
                     break;
 
@@ -190,6 +191,7 @@ class BulkQueryService
             MetaKeysConstants::BLOCK_ATTRIBUTES,
             MetaKeysConstants::BLOCK_SETTINGS,
             MetaKeysConstants::BLOCK_SELECTED_PARTIALS,
+            MetaKeysConstants::BLOCK_INNER_BLOCKS_SETTINGS,
 
             // Symbol meta keys
             MetaKeysConstants::SYMBOL_PHP,
@@ -246,6 +248,7 @@ class BulkQueryService
                 MetaKeysConstants::BLOCK_ATTRIBUTES,
                 MetaKeysConstants::BLOCK_SETTINGS,
                 MetaKeysConstants::BLOCK_SELECTED_PARTIALS,
+                MetaKeysConstants::BLOCK_INNER_BLOCKS_SETTINGS,
             ]);
         }
 

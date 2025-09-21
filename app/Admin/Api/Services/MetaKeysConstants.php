@@ -32,6 +32,9 @@ class MetaKeysConstants
     /** @var string Selected SCSS partials for the block */
     const BLOCK_SELECTED_PARTIALS = '_funculo_block_selected_partials';
 
+    /** @var string Inner blocks settings (enabled/disabled and allowed blocks) */
+    const BLOCK_INNER_BLOCKS_SETTINGS = '_funculo_block_inner_blocks_settings';
+
     // ============================================
     // SCSS COMPILATION META KEYS
     // ============================================
@@ -85,6 +88,7 @@ class MetaKeysConstants
             self::BLOCK_ATTRIBUTES,
             self::BLOCK_SETTINGS,
             self::BLOCK_SELECTED_PARTIALS,
+            self::BLOCK_INNER_BLOCKS_SETTINGS,
 
             // SCSS compilation keys
             self::SCSS_CONTENT,
@@ -116,6 +120,7 @@ class MetaKeysConstants
             self::BLOCK_ATTRIBUTES,
             self::BLOCK_SETTINGS,
             self::BLOCK_SELECTED_PARTIALS,
+            self::BLOCK_INNER_BLOCKS_SETTINGS,
         ];
     }
 
