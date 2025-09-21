@@ -20,19 +20,162 @@ These rules ensure maintainability, safety, and developer velocity.
 
 ### 2 — While Coding
 
-- **C-1 SHOULD** Use tailwindcss class names instead of creatingnew css files. 
-- **C-2 MUST**  check tailwind theme config src/app/style.css so we do not use always defaults
-- **C-3 MUST**  check in ./EXAMPLES/gutenberg-trunk/ for latest gutenberg code, best practices, compatibility and how gutenberg is doing things and compare with out sulutions 
-- **C-4 SHOULD**  check for latest Official documntation https://developer.wordpress.org/block-editor/
-- **C-5 (SHOULD)** Prefer simple, composable, testable functions.
-- **C-6 (SHOULD NOT)** Extract a new function unless it will be reused elsewhere, is the only way to unit-test otherwise untestable logic, or drastically improves readability of an opaque block.
+
+#### C-1 (MUST) Tailwind-first styling
+- Use Tailwind utility classes; consult theme tokens in `src/app/style.css` before adding styles.
+
+#### C-2 (MUST) Minimal custom CSS
+- Only keep exceptions in `src/app/styles/` (e.g., `reset-wp.css`, `form.css`) with a clear rationale.
+
+#### C-3 (MUST) Align with Gutenberg core
+- Compare approaches with `EXAMPLES/gutenberg-trunk/` and the [Block Editor Handbook](https://developer.wordpress.org/block-editor/). Avoid private/unstable APIs.
+
+#### C-4 (SHOULD) Simple, composable functions
+- Prefer small testable functions and components. Extract only when reused, needed for testing, or to clarify opaque logic.
+
+#### C-5 (SHOULD) Component API and exports
+- One component per file, PascalCase file names, prefer named exports, re-export via local `index.js` barrels (no side effects).
+
+#### C-6 (MUST) Module boundaries
+- Enforce the boundaries defined in “3 — Code Organization” (e.g., `assets/js` → no imports from `src/*`; `utils` → no imports from `app`). Add ESLint `import/no-restricted-paths`.
+
+#### C-7 (SHOULD) Data fetching and effects
+- Centralize HTTP in `src/utils/api/`. Keep presentational components side-effect free. Cancel async work on unmount.
+
+#### C-8 (SHOULD) Performance
+- Memoize heavy components, use `useCallback`/`useMemo` where beneficial, and virtualize long lists.
+
+#### C-9 (MUST) Internationalization
+- Use `@wordpress/i18n` (`__`, `_x`, `_n`) for all user-facing strings. No hardcoded UI text.
+
+#### C-10 (MUST) Security (PHP + JS)
+- Validate/sanitize input; escape output (`esc_html`, `esc_attr`, etc.). Use nonces for actions and prepared statements for DB. Never inject unsanitized HTML in JS.
+
+#### C-11 (MUST) PHP standards and namespaces
+- Follow WordPress standards; PSR-4 under `Fanculo\…`; class names match files and directories.
+
+#### C-12 (SHOULD) Errors and user feedback
+- Route errors through `src/utils/errors/` (`ApiErrorHandler`, `SimpleErrorHandler`) and surface user-friendly toasts via `src/app/components/ui/Toast`.
+
+#### C-13 (SHOULD) Accessibility
+- Provide labels, ARIA attributes, keyboard navigation, and maintain focus order/visibility. Meet color-contrast requirements.
+
+#### C-14 (SHOULD) Testing
+- Add targeted unit tests for utilities and critical component logic. Mirror file structure for tests.
+
+#### C-15 (MUST) `assets/js` constraints
+- Plain browser-safe JS only (no JSX/bundler-only features). Do not import from `src/*`. Expose stable APIs/globals as needed.
+
+#### C-16 (MUST) Linting and formatting
+- Keep ESLint + Prettier clean. Run lint before commits. Do not suppress rules without justification.
+
+#### C-17 (SHOULD) Documentation hygiene
+- Update `README.md` and this guide when changing structure, scripts, or build behavior. Reference exact paths and rationale.
+
 
 ### 3 — Code Organization
 
-- **O-1 (Should)** When createing new code extract small components if they can be reused in `src/app/components/ui` same as for best practices in react
-- **O-2 (Should)** Icons components should be in  `src/app/components/icons`
-- **O-3 (Should)** App parts  should be in  `src/app/components/editor`
-- **O-4 (Should)** parserse and extra reusable functions that are loaded in gutenberg are in  `assets/js` those should be shiped with plugin production. They do not need to be compiled as they are written in plain js. And will not be aloded in fanculo app, it will be loaded in gutenberg editor
+#### O-1 (SHOULD) Components layering
+- Reusable UI in `src/app/components/ui`, icons in `src/app/components/icons`, editor-only in `src/app/components/editor`.
+- Use PascalCase filenames; one component per file; prefer named exports.
+- Re-export via local `index.js` barrels; no side effects in barrels.
+
+#### O-2 (SHOULD) Hooks and state separation
+- Put shared React hooks in `src/app/hooks/` (named `useX`).
+- Centralize app-wide context/store in `src/app/state/`. Editor-only state can live under `src/app/components/editor/` if tightly coupled.
+
+#### O-3 (SHOULD) Utilities consolidation
+- Consolidate under `src/utils/` with subfolders:
+  - `api/` (HTTP client, interceptors)
+  - `errors/` (error types/handlers)
+  - `format/` (formatters)
+  - `scss/` (SCSS helpers)
+  - `wp/` (WordPress/Gutenberg helpers)
+  - `examples/` (sample payloads)
+- Move `src/app/utils/phpExamples.js` → `src/utils/examples/php.js` (or `src/shared/` if used beyond app).
+
+#### O-4 (SHOULD) API and error layers
+- Move/rename `src/utils/FunculoApiClient.js` → `src/utils/api/FanculoApiClient.js`.
+- Keep `ApiErrorHandler.js` and `SimpleErrorHandler.js` in `src/utils/errors/` behind a consistent interface.
+
+#### O-5 (SHOULD) Constants placement
+- UI-only constants remain in `src/app/constants/`.
+- Shared/runtime constants live in `src/shared/constants/`. Name with UPPER_SNAKE_CASE and group by domain.
+
+#### O-6 (MUST) Module boundaries and import rules
+- `assets/js/*` must not import from `src/*` (plain JS, shipped directly).
+- `src/utils/*` must not import from `src/app/*`.
+- `src/app/components/ui` must not depend on `src/app/components/editor` (but `editor` may depend on `ui` and `icons`).
+
+#### O-7 (SHOULD) Assets for Gutenberg
+- Keep `assets/js/` framework-free, browser-safe ES (no JSX/bundler-only features).
+- Expose only stable globals/APIs (e.g., `window.Fanculo.*` or WP hooks). Document versioned changes in `README.md`.
+
+#### O-8 (MUST) Styling policy alignment
+- Use Tailwind first; keep exceptions minimal in `src/app/styles/` (e.g., `reset-wp.css`, `form.css`) with rationale.
+- Avoid new ad-hoc CSS files; component styles via utility classes unless integrating third-party libraries.
+
+#### O-9 (SHOULD) Naming conventions and barrels
+- Components: PascalCase files; utilities: camelCase; directories: kebab-case.
+- Keep `index.js` barrels per folder to define the public module API; avoid cross-reexports that create cycles.
+
+#### O-10 (SHOULD) PHP domain boundaries
+- Controllers: `app/Admin/Api/*Controller.php` (thin, single responsibility).
+- Services: shared cross-domain services in `app/Services/`; generation-specific services in `app/FilesManager/Services/`.
+- Contracts/Interfaces colocated in `app/FilesManager/Contracts/` (or promote to `app/Contracts/` if reused beyond FilesManager).
+- Generators in `app/FilesManager/Generators/` mapped 1:1 to output artifacts.
+- Mappers in `app/FilesManager/Mappers/` with documented input/output shapes.
+- Domain models and registration in `app/Content/` (optionally rename to `app/Domain/` for clarity).
+- Meta boxes in `app/MetaBoxes/` with `*MetaBox.php` suffix; `AbstractMetaBox.php` is the base.
+- Helpers in `app/Helpers/` remain stateless; stateful logic belongs in Services.
+- Standardize namespaces under `Fanculo\{Area}\...` aligned with folders (PSR-4 `Fanculo\` → `app/`).
+
+#### O-11 (SHOULD) Example target layout (JS)
+```text
+src/
+  app/
+    components/
+      editor/
+      ui/
+      icons/
+    hooks/
+    state/
+    constants/
+  utils/
+    api/
+    errors/
+    format/
+    scss/
+    wp/
+    examples/
+  shared/
+    constants/
+```
+
+#### O-12 (SHOULD) Example target layout (PHP)
+```text
+app/
+  Admin/
+    Api/
+  Content/          (or Domain/)
+  FilesManager/
+    Contracts/
+    Generators/
+    Mappers/
+    Services/
+  Services/
+  MetaBoxes/
+  Helpers/
+```
+
+#### O-13 (SHOULD) Testing locations (future-safe)
+- JS: colocate `__tests__` next to modules or use `src/tests/` mirroring structure.
+- PHP: `tests/phpunit/` mirroring `app/` namespaces.
+
+#### O-14 (SHOULD) Linting/enforcement
+- Add ESLint rules (e.g., `import/no-restricted-paths`) to enforce boundaries in O-6.
+- For PHP, enforce PSR-4 and layer rules via PHPStan/PHPCS annotations where helpful.
+
 
 
 ## Documentation Rules
