@@ -7,8 +7,62 @@
     'use strict';
 
     // Use WordPress globals
-    const { createElement, cloneElement } = wp.element;
+    const { createElement, cloneElement, isValidElement } = wp.element;
     const { InnerBlocks } = wp.blockEditor;
+
+    // Utility functions
+    function normalizeAttributeName(name) {
+        const attributeMap = {
+            'class': 'className',
+            'for': 'htmlFor',
+            'readonly': 'readOnly',
+            'maxlength': 'maxLength',
+            'cellpadding': 'cellPadding',
+            'cellspacing': 'cellSpacing',
+            'rowspan': 'rowSpan',
+            'colspan': 'colSpan',
+            'usemap': 'useMap',
+            'frameborder': 'frameBorder'
+        };
+        return attributeMap[name] || name;
+    }
+
+    function normalizeAttributeValue(name, value) {
+        // Handle boolean attributes
+        const booleanAttributes = ['checked', 'selected', 'disabled', 'readonly', 'multiple', 'draggable'];
+        if (booleanAttributes.includes(name)) {
+            return value === name || value === 'true' || value === '';
+        }
+        return value;
+    }
+
+    function mergeProps(elementProps, blockProps) {
+        const merged = { ...elementProps, ...blockProps };
+
+        // Merge className
+        const elementClass = elementProps.className || '';
+        const blockClass = blockProps.className || '';
+        if (elementClass && blockClass) {
+            merged.className = [elementClass, blockClass].filter(Boolean).join(' ');
+        } else {
+            merged.className = elementClass || blockClass;
+        }
+
+        // Merge style objects
+        if (elementProps.style || blockProps.style) {
+            merged.style = { ...(elementProps.style || {}), ...(blockProps.style || {}) };
+        }
+
+        return merged;
+    }
+
+    function createAttributesHash(attributes) {
+        if (!attributes || typeof attributes !== 'object') return '';
+        return Object.keys(attributes)
+            .sort()
+            .map(key => `${key}:${JSON.stringify(attributes[key])}`)
+            .join('|');
+    }
 
     // Expose improved renderer globally for Fanculo blocks
     window.FanculoBlockRenderer = {
@@ -24,14 +78,14 @@
             const container = document.createElement('div');
             container.innerHTML = htmlString.trim();
 
-            const convertDomToReact = (domNode) => {
+            const convertDomToReact = (domNode, index = 0) => {
                 if (domNode.nodeType === Node.ELEMENT_NODE) {
                     const tagName = domNode.tagName.toLowerCase();
 
                     // Handle <innerblocks /> tags
                     if (tagName === 'innerblocks') {
                         return createElement(InnerBlocks, {
-                            key: 'innerblocks',
+                            key: `innerblocks-${index}`,
                             allowedBlocks: options.allowedBlocks || null,
                             template: options.template || [],
                             templateLock: options.templateLock || false
@@ -41,7 +95,7 @@
                     // Handle <div class="fanculo-block-inserter"> elements
                     if (tagName === 'div' && domNode.classList && domNode.classList.contains('fanculo-block-inserter')) {
                         return createElement(InnerBlocks, {
-                            key: 'innerblocks',
+                            key: `innerblocks-inserter-${index}`,
                             allowedBlocks: options.allowedBlocks || null,
                             template: options.template || [],
                             templateLock: options.templateLock || false
@@ -49,8 +103,8 @@
                     }
 
                     const children = [];
-                    domNode.childNodes.forEach((child) => {
-                        const element = convertDomToReact(child);
+                    domNode.childNodes.forEach((child, childIndex) => {
+                        const element = convertDomToReact(child, index * 100 + childIndex);
                         if (element !== null) {
                             children.push(element);
                         }
@@ -63,16 +117,20 @@
                         } else if (attr.name === 'style') {
                             // Convert inline style string to object
                             const styleObject = {};
-                            attr.value.split(';').forEach(stylePair => {
-                                const parts = stylePair.split(':');
-                                if (parts.length === 2) {
-                                    const key = parts[0].trim().replace(/-([a-z])/g, (g) => g[1].toUpperCase());
-                                    styleObject[key] = parts[1].trim();
-                                }
-                            });
+                            if (attr.value) {
+                                attr.value.split(';').forEach(stylePair => {
+                                    const parts = stylePair.split(':');
+                                    if (parts.length === 2) {
+                                        const key = parts[0].trim().replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+                                        styleObject[key] = parts[1].trim();
+                                    }
+                                });
+                            }
                             props.style = styleObject;
                         } else {
-                            props[attr.name] = attr.value;
+                            const normalizedName = normalizeAttributeName(attr.name);
+                            const normalizedValue = normalizeAttributeValue(attr.name, attr.value);
+                            props[normalizedName] = normalizedValue;
                         }
                     }
 
@@ -84,8 +142,8 @@
             };
 
             const elements = [];
-            container.childNodes.forEach((node) => {
-                const element = convertDomToReact(node);
+            container.childNodes.forEach((node, nodeIndex) => {
+                const element = convertDomToReact(node, nodeIndex);
                 if (element !== null) {
                     elements.push(element);
                 }
@@ -111,7 +169,14 @@
 
             if (parsedElements.length === 1) {
                 // If single root element, clone it and merge blockProps
-                return cloneElement(parsedElements[0], blockProps);
+                const element = parsedElements[0];
+                if (isValidElement(element)) {
+                    const mergedProps = mergeProps(element.props || {}, blockProps);
+                    return cloneElement(element, mergedProps);
+                } else {
+                    // Text node or other non-element, wrap in div
+                    return createElement('div', blockProps, element);
+                }
             } else {
                 // If multiple elements, wrap in div with blockProps
                 return createElement('div', blockProps, ...parsedElements);
@@ -134,6 +199,8 @@
                 const [serverContent, setServerContent] = useState("");
                 const [isLoading, setIsLoading] = useState(true);
 
+                const attributesHash = useMemo(() => createAttributesHash(attributes), [attributes]);
+
                 useEffect(() => {
                     const postId = wp.data.select("core/editor").getCurrentPostId() || 0;
 
@@ -152,19 +219,19 @@
                         setServerContent("<div><!-- Block render error --></div>");
                         setIsLoading(false);
                     });
-                }, [JSON.stringify(attributes)]);
+                }, [attributesHash]);
 
                 const blockProps = useBlockProps();
 
-                const renderedContent = useMemo(() => {
-                    if (isLoading) return null;
-
-                    return window.FanculoBlockRenderer.renderServerContent(
+                // Render content directly without broken memo
+                let renderedContent = null;
+                if (!isLoading) {
+                    renderedContent = window.FanculoBlockRenderer.renderServerContent(
                         serverContent,
                         blockProps,
                         parserOptions
                     );
-                }, [serverContent, blockProps, isLoading]);
+                }
 
                 if (isLoading) {
                     return createElement("div", blockProps,
