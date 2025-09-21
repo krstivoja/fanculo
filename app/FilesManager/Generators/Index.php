@@ -17,12 +17,22 @@ class Index
         if ($postId) {
             $innerBlocksSettings = get_post_meta($postId, MetaKeysConstants::BLOCK_INNER_BLOCKS_SETTINGS, true);
             if ($innerBlocksSettings) {
-                try {
-                    $settings = json_decode($innerBlocksSettings, true);
-                    $innerBlocksEnabled = isset($settings['enabled']) && $settings['enabled'];
-                    $allowedBlocks = isset($settings['allowed_blocks']) ? $settings['allowed_blocks'] : [];
-                } catch (\Exception $e) {
-                    // If JSON parsing fails, keep defaults
+                $settings = json_decode($innerBlocksSettings, true);
+
+                // Validate JSON decode and array structure
+                if (json_last_error() === JSON_ERROR_NONE && is_array($settings)) {
+                    $innerBlocksEnabled = isset($settings['enabled']) && is_bool($settings['enabled']) ? $settings['enabled'] : false;
+                    $allowedBlocks = isset($settings['allowed_blocks']) && is_array($settings['allowed_blocks'])
+                        ? $settings['allowed_blocks']
+                        : [];
+
+                    // Additional validation for allowed blocks array
+                    $allowedBlocks = array_filter($allowedBlocks, function($block) {
+                        return is_string($block) && !empty($block);
+                    });
+                } else {
+                    // Log JSON decode error for debugging
+                    error_log('Fanculo Index Generator: Invalid JSON in inner blocks settings for post ' . $postId . ': ' . json_last_error_msg());
                 }
             }
         }
@@ -30,17 +40,35 @@ class Index
         // Build the PARSER_OPTIONS based on inner blocks settings
         $parserOptionsJs = '';
         if ($innerBlocksEnabled) {
-            $allowedBlocksJson = json_encode($allowedBlocks, JSON_UNESCAPED_SLASHES);
+            $allowedBlocksJson = wp_json_encode($allowedBlocks, JSON_UNESCAPED_SLASHES);
+
+            // Get template and templateLock from settings if available
+            $template = '[["core/paragraph", { placeholder: "Add some content here..." }]]';
+            $templateLock = 'false';
+
+            if ($postId) {
+                $blockSettings = get_post_meta($postId, MetaKeysConstants::BLOCK_SETTINGS, true);
+                if ($blockSettings) {
+                    $settingsData = json_decode($blockSettings, true);
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($settingsData)) {
+                        if (isset($settingsData['innerBlocks']['template']) && is_array($settingsData['innerBlocks']['template'])) {
+                            $template = wp_json_encode($settingsData['innerBlocks']['template']);
+                        }
+                        if (isset($settingsData['innerBlocks']['templateLock'])) {
+                            $templateLock = $settingsData['innerBlocks']['templateLock'] ? 'true' : 'false';
+                        }
+                    }
+                }
+            }
+
             $parserOptionsJs = "
     // InnerBlocks options
     const PARSER_OPTIONS = {" . (
                 !empty($allowedBlocks) ? "
         allowedBlocks: {$allowedBlocksJson}," : ""
             ) . "
-        template: [
-            [\"core/paragraph\", { placeholder: \"Add some content here...\" }]
-        ],
-        templateLock: false
+        template: {$template},
+        templateLock: {$templateLock}
     };";
         } else {
             $parserOptionsJs = "
@@ -53,27 +81,40 @@ class Index
             ? 'return wp.element.createElement(InnerBlocks.Content);'
             : 'return null; // Server-side rendering';
 
+        // Get block metadata for registration
+        $blockTitle = get_the_title($postId) ?: 'Untitled Block';
+        $blockDescription = '';
+
+        if ($postId) {
+            $blockSettings = get_post_meta($postId, MetaKeysConstants::BLOCK_SETTINGS, true);
+            if ($blockSettings) {
+                $settingsData = json_decode($blockSettings, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($settingsData)) {
+                    $blockDescription = isset($settingsData['description']) ? sanitize_text_field($settingsData['description']) : '';
+                }
+            }
+        }
+
         $content = '(function () {
     const { registerBlockType } = wp.blocks;
     const { InnerBlocks } = wp.blockEditor;
 ' . $parserOptionsJs . '
 
-    // Wait for FanculoBlockRenderer to be available
-    function waitForRenderer(callback) {
-        if (window.FanculoBlockRenderer?.createServerRenderComponent) {
-            callback();
-        } else {
-            setTimeout(() => waitForRenderer(callback), 50);
+    // Use wp.domReady for proper dependency loading
+    wp.domReady(function() {
+        // Ensure FanculoBlockRenderer is available
+        if (!window.FanculoBlockRenderer?.createServerRenderComponent) {
+            console.error("FanculoBlockRenderer not available for block: fanculo/BLOCK_SLUG_PLACEHOLDER");
+            return;
         }
-    }
 
-    waitForRenderer(() => {
         // Use the shared FanculoBlockRenderer to create the edit component
         const Edit = window.FanculoBlockRenderer.createServerRenderComponent(
             "fanculo/BLOCK_SLUG_PLACEHOLDER",
             PARSER_OPTIONS
         );
 
+        // Register block with metadata from generated block.json
         registerBlockType("fanculo/BLOCK_SLUG_PLACEHOLDER", {
             edit: Edit,
             save: function() {
@@ -81,13 +122,28 @@ class Index
             }
         });
     });
-})()';
+})()';;
 
         // Replace the placeholder with actual block slug
         $content = str_replace('BLOCK_SLUG_PLACEHOLDER', $blockSlug, $content);
 
+        // Ensure the target directory exists
+        $blockDirPath = dirname($indexJsPath);
+        if (!is_dir($blockDirPath)) {
+            if (!wp_mkdir_p($blockDirPath)) {
+                error_log('Fanculo Index Generator: Failed to create directory: ' . $blockDirPath);
+                return false;
+            }
+        }
+
+        // Write the file with error handling
         $result = file_put_contents($indexJsPath, $content);
 
-        return $result !== false;
+        if ($result === false) {
+            error_log('Fanculo Index Generator: Failed to write index.js file: ' . $indexJsPath);
+            return false;
+        }
+
+        return true;
     }
 }
