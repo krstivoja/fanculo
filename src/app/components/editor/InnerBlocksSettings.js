@@ -347,10 +347,7 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
           <div>
             <label className="block text-sm font-medium text-highlight mb-2">
               Allowed Block Types
-            </label>
-            <p className="text-xs text-contrast mb-3">
-              Type block names to add them. Leave empty to allow all blocks.
-            </p>
+            </label>           
           </div>
 
           {loading ? (
@@ -388,19 +385,10 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
             </div>
           )}
 
-          {/* Selected Blocks Info */}
-          {selectedBlocks.length > 0 && (
-            <div className="text-xs text-contrast">
-              {selectedBlocks.length} block type{selectedBlocks.length !== 1 ? 's' : ''} selected
-            </div>
-          )}
 
-          {/* Help Text */}
-          <div className="text-xs text-contrast space-y-1">
-            <div>• Use core WordPress blocks like: <code className="bg-gray-100 px-1 rounded">core/paragraph</code>, <code className="bg-gray-100 px-1 rounded">core/heading</code></div>
-            <div>• Custom blocks from themes/plugins will also appear in suggestions</div>
-            <div>• Drag and drop to reorder block priorities</div>
-          </div>
+          <p className="text-xs text-contrast mb-3">
+          Specify blocks for the inserter. Leave blank to allow all.
+          </p>
         </div>
       )}
 
