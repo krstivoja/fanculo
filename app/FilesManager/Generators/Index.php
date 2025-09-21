@@ -58,65 +58,28 @@ class Index
     const { InnerBlocks } = wp.blockEditor;
 ' . $parserOptionsJs . '
 
-    // Wait for FanculoBlockRenderer to be available with timeout
-    function waitForRenderer(callback, maxAttempts = 100) {
-        let attempts = 0;
-
-        function check() {
-            attempts++;
-            if (window.FanculoBlockRenderer?.createServerRenderComponent) {
-                callback();
-            } else if (attempts < maxAttempts) {
-                setTimeout(check, 50);
-            } else {
-                console.error("FanculoBlockRenderer failed to load after", maxAttempts * 50, "ms");
-                // Register with fallback edit component
-                registerBlockType("fanculo/BLOCK_SLUG_PLACEHOLDER", {
-                    edit: function() {
-                        return wp.element.createElement("div",
-                            { className: "fanculo-block-error" },
-                            "Block renderer unavailable"
-                        );
-                    },
-                    save: function() {
-                        ' . $saveFunction . '
-                    }
-                });
-            }
+    // Wait for FanculoBlockRenderer to be available
+    function waitForRenderer(callback) {
+        if (window.FanculoBlockRenderer?.createServerRenderComponent) {
+            callback();
+        } else {
+            setTimeout(() => waitForRenderer(callback), 50);
         }
-
-        check();
     }
 
     waitForRenderer(() => {
-        try {
-            // Use the shared FanculoBlockRenderer to create the edit component
-            const Edit = window.FanculoBlockRenderer.createServerRenderComponent(
-                "fanculo/BLOCK_SLUG_PLACEHOLDER",
-                PARSER_OPTIONS
-            );
+        // Use the shared FanculoBlockRenderer to create the edit component
+        const Edit = window.FanculoBlockRenderer.createServerRenderComponent(
+            "fanculo/BLOCK_SLUG_PLACEHOLDER",
+            PARSER_OPTIONS
+        );
 
-            registerBlockType("fanculo/BLOCK_SLUG_PLACEHOLDER", {
-                edit: Edit,
-                save: function() {
-                    ' . $saveFunction . '
-                }
-            });
-        } catch (error) {
-            console.error("Error registering block fanculo/BLOCK_SLUG_PLACEHOLDER:", error);
-            // Register with error fallback
-            registerBlockType("fanculo/BLOCK_SLUG_PLACEHOLDER", {
-                edit: function() {
-                    return wp.element.createElement("div",
-                        { className: "fanculo-block-error" },
-                        "Block registration error: " + error.message
-                    );
-                },
-                save: function() {
-                    ' . $saveFunction . '
-                }
-            });
-        }
+        registerBlockType("fanculo/BLOCK_SLUG_PLACEHOLDER", {
+            edit: Edit,
+            save: function() {
+                ' . $saveFunction . '
+            }
+        });
     });
 })()';
 
