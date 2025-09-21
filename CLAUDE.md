@@ -177,6 +177,99 @@ app/
 - For PHP, enforce PSR-4 and layer rules via PHPStan/PHPCS annotations where helpful.
 
 
+## 4 — Domain & App Logic
+
+#### D-1 (MUST) Glossary & taxonomy
+- **Block**: A content unit that renders in Gutenberg; has schema, view/render, and styles.
+- **Symbol**: A reusable asset (e.g., SVG/icon) referenced by blocks or templates.
+- **SCSS Partial**: A named SCSS fragment included in compiled styles; not emitted standalone.
+- **Metabox**: Editor-side UI to manage block/symbol/SCSS metadata saved as post meta.
+- **Type taxonomy**: Classifies items as `block`, `symbol`, `scss-partial` (exact slugs documented in code).
+
+#### D-2 (MUST) Content model (CPTs & taxonomies)
+- CPT defined in `app/Content/FunculoPostType.php`.
+- Taxonomy defined in `app/Content/FunculoTypeTaxonomy.php` (maps items to Block/Symbol/SCSS Partial).
+- Document:
+  - Post meta keys (see `app/Admin/Api/Services/MetaKeysConstants.php`)
+  - Required fields and validation rules
+  - Slug and naming constraints (allowed chars, uniqueness)
+
+#### D-3 (MUST) Generated files and destinations
+- Generation orchestrated by `app/FilesManager/FilesManagerService.php` and `app/Services/FileGenerationService.php`.
+- Generators:
+  - `BlockJsonGenerator.php`: emits `block.json`.
+  - `RenderFileGenerator.php` / `ViewFileGenerator.php`: PHP render/view templates.
+  - `StyleFileGenerator.php` / `CssFileGenerator.php`: compiled block styles.
+  - `ScssPartialGenerator.php`: SCSS partials (consumed by build).
+  - `Index.php` / `IndexAssets.php`: index/manifest for discovery and loading.
+  - `SymbolFileGenerator.php`: symbol assets.
+- Document exact output paths (plugin `dist/…` or theme paths), file naming, and how imports are wired into builds.
+
+#### D-4 (SHOULD) Generation lifecycle
+- Triggers:
+  - Manual actions from the editor UI (single or bulk)
+  - On save/update of a Funculo item
+  - Bulk regeneration via `GlobalRegenerator` and `GenerationCoordinator`
+- Guarantees:
+  - Idempotent outputs
+  - Safe overwrites (no orphan files)
+  - Clear logs/errors surfaced in UI
+
+#### D-5 (MUST) Editor UI & sidebar settings
+- Main editor shells: `src/app/components/editor/*` (e.g., `EditorMain`, `EditorSettings`, `InnerBlocksSettings`, `ScssPartialsManager`).
+- Document each settings panel:
+  - Fields, validation, and mapping to post meta keys
+  - Which generator(s) consume each setting
+  - Any build-time vs runtime effects
+
+#### D-6 (MUST) Admin API surface (overview)
+- Controllers in `app/Admin/Api/`:
+  - `PostsApiController.php`: CRUD/queries for items
+  - `RegisteredBlocksApiController.php`: discoverable blocks
+  - `BlockCategoriesApiController.php`: categories for editor
+  - `TaxonomyApiController.php`: types/terms
+  - `FileGenerationApiController.php`: single/bulk generation endpoints
+  - `ScssCompilerApiController.php`: SCSS compile endpoints
+- Add a separate API reference (paths, methods, payloads, errors) and link it here.
+
+#### D-7 (SHOULD) Metaboxes
+- Definitions in `app/MetaBoxes/`:
+  - `BlocksMetaBox.php`: block metadata
+  - `SymbolsMetaBox.php`: symbol metadata
+  - `SCSSPartialsMetaBox.php`: SCSS partial metadata
+- Document: fields, save flow, and relation to generators.
+
+#### D-8 (SHOULD) File/folder organization rationale
+- JS boundaries: see "3 — Code Organization" (components/ui/icons/hooks/state/utils/shared).
+- PHP boundaries: Admin API (thin controllers), Services (domain logic), FilesManager (I/O & generation), Content (CPT/Taxonomy), MetaBoxes (editor integration), Helpers (stateless utilities).
+- Explain why each boundary exists and forbidden cross-dependencies.
+
+#### D-9 (MUST) Invariants & constraints
+- Naming: slugs stable and kebab-case; symbols/partials map 1:1 to filenames.
+- Versioning: changes to generation format bump a manifest version and trigger full regen.
+- Security: sanitize meta, escape outputs, nonces for write actions.
+
+#### D-10 (SHOULD) Data flows & lifecycles
+- Provide a high-level diagram/text:
+  - Editor change → API save → Services update → Generators write → Build/compile (if needed) → Editor preview.
+- Note debounce, background jobs, and error propagation strategy.
+
+#### D-11 (SHOULD) Where to find things (quick map)
+- APIs: `app/Admin/Api/*`
+- Services: `app/Services/*`, `app/FilesManager/Services/*`
+- Generators: `app/FilesManager/Generators/*`
+- Mappers: `app/FilesManager/Mappers/*`
+- Contracts: `app/FilesManager/Contracts/*`
+- Editor UI: `src/app/components/editor/*`
+- Reusable UI: `src/app/components/ui/*`
+- Icons: `src/app/components/icons/*`
+- Utilities: `src/utils/*` (API, errors, formatting, SCSS, WP)
+- Gutenberg helpers shipped: `assets/js/*`
+
+#### D-12 (SHOULD) How to extend
+- Add a new type/term: register in taxonomy, define meta keys, add UI, implement generators, wire routes.
+- Add a new generator: implement contract, register in coordinator, document outputs and destinations.
+
 
 ## Documentation Rules
 
