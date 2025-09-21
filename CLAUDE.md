@@ -514,5 +514,6 @@ Update README.md immediately after:
 - **Purpose**: List all available file generators
 - **Shows**: All generators in `app/FilesManager/Generators/` with purposes
 
-
-
+#### FPULL - Write pull requests desctipion
+- **Usage**: `FPULL`
+- **Purpose**: Write me pull request description for all what is changed. Keep it simple and not overcomplicated. Describe core changes.

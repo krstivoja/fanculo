@@ -20,8 +20,20 @@ class BlockJsonGenerator implements FileGeneratorInterface
         $settings = get_post_meta($postId, MetaKeysConstants::BLOCK_SETTINGS, true);
 
         $blockJson = $this->buildBlockJson($post, $attributes, $settings);
-        $filepath = $outputPath . '/' . $this->getGeneratedFileName($post);
 
+        // Remove asset keys if files don't exist to avoid 404s
+        if (!file_exists($outputPath . '/style.css')) {
+            unset($blockJson['style']);
+        }
+        if (!file_exists($outputPath . '/view.js')) {
+            unset($blockJson['viewScript']);
+        }
+        // If you decide to include editorStyle in the future:
+        // if (!file_exists($outputPath . '/index.css')) {
+        //     unset($blockJson['editorStyle']);
+        // }
+
+        $filepath = $outputPath . '/' . $this->getGeneratedFileName($post);
 
         return file_put_contents($filepath, json_encode($blockJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) !== false;
     }
@@ -85,10 +97,10 @@ class BlockJsonGenerator implements FileGeneratorInterface
             if (is_string($settings)) {
                 $decodedSettings = json_decode($settings, true);
                 if (json_last_error() === JSON_ERROR_NONE) {
-                    $blockJson = array_merge($blockJson, $decodedSettings);
+                    $blockJson = array_replace_recursive($blockJson, $decodedSettings);
                 }
             } elseif (is_array($settings)) {
-                $blockJson = array_merge($blockJson, $settings);
+                $blockJson = array_replace_recursive($blockJson, $settings);
             }
         }
 
