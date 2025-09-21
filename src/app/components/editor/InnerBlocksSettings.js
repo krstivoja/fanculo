@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { WithContext as ReactTags } from 'react-tag-input';
-import { Toggle } from '../ui';
+import { Toggle, Hr } from '../ui';
 import { apiClient } from '../../../utils';
 
 const KeyCodes = {
@@ -93,6 +93,7 @@ const DefaultTemplateManager = ({
     <div className="space-y-4">
       {/* Template Blocks Selection */}
       <div className="space-y-2">
+        <Hr />
         <label className="block text-sm font-medium text-highlight">
           Default Template Blocks
         </label>
@@ -381,6 +382,7 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
           </p>
 
           <div className="space-y-2">
+            <Hr />
             <label className="block text-sm font-medium text-highlight">
               Lock Template
             </label>

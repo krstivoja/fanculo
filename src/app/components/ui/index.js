@@ -10,3 +10,4 @@ export { default as DashiconButton } from './DashiconButton';
 export { default as DashiconSelector } from './DashiconSelector';
 export { default as Toast } from './Toast';
 export { default as Toggle } from './Toggle';
+export { default as Hr } from './Hr';
