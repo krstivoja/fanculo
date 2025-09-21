@@ -30,8 +30,12 @@ These rules ensure maintainability, safety, and developer velocity.
 #### C-3 (MUST) Align with Gutenberg core
 - Compare approaches with `EXAMPLES/gutenberg-trunk/` and the [Block Editor Handbook](https://developer.wordpress.org/block-editor/). Avoid private/unstable APIs.
 
-#### C-4 (SHOULD) Simple, composable functions
-- Prefer small testable functions and components. Extract only when reused, needed for testing, or to clarify opaque logic.
+#### C-4 (SHOULD) Function design principles      
+- Prefer small, composable, testable functions with single responsibility
+- Use meaningful, domain-specific function names that clearly state intent
+- Minimize cyclomatic complexity (prefer early returns over nested conditions)
+- Extract functions only when: reused elsewhere, needed for testing, or clarifying opaque logic
+- Avoid unnecessary class introductions - prefer functions when appropriate
 
 #### C-5 (SHOULD) Component API and exports
 - One component per file, PascalCase file names, prefer named exports, re-export via local `index.js` barrels (no side effects).
@@ -61,7 +65,11 @@ These rules ensure maintainability, safety, and developer velocity.
 - Provide labels, ARIA attributes, keyboard navigation, and maintain focus order/visibility. Meet color-contrast requirements.
 
 #### C-14 (SHOULD) Testing
-- Add targeted unit tests for utilities and critical component logic. Mirror file structure for tests.
+- Write tests before implementing functionality (TDD approach)
+- Add targeted unit tests for utilities and critical component logic
+- Mirror file structure for tests (see O-13)
+- Separate unit tests (pure logic) from integration tests (DB/WordPress interactions)
+- Test edge cases, boundary conditions, and error scenarios
 
 #### C-15 (MUST) `assets/js` constraints
 - Plain browser-safe JS only (no JSX/bundler-only features). Do not import from `src/*`. Expose stable APIs/globals as needed.
@@ -71,6 +79,9 @@ These rules ensure maintainability, safety, and developer velocity.
 
 #### C-17 (SHOULD) Documentation hygiene
 - Update `README.md` and this guide when changing structure, scripts, or build behavior. Reference exact paths and rationale.
+
+
+---
 
 
 ### 3 — Code Organization
@@ -177,6 +188,9 @@ app/
 - For PHP, enforce PSR-4 and layer rules via PHPStan/PHPCS annotations where helpful.
 
 
+---
+
+
 ## 4 — Domain & App Logic
 
 #### D-1 (MUST) Glossary & taxonomy
@@ -271,7 +285,62 @@ app/
 - Add a new generator: implement contract, register in coordinator, document outputs and destinations.
 
 
-## Documentation Rules
+---
+
+
+## 5 — Testing & Quality Assurance
+#### T-1 (MUST) Testing strategy and separation
+- Follow TDD: scaffold stub → write failing test → implement functionality
+- ALWAYS separate pure-logic unit tests from DB-touching integration tests
+- Prefer integration tests over heavy mocking for realistic scenarios
+- Unit-test complex algorithms thoroughly with edge cases and boundary conditions
+
+#### T-2 (SHOULD) Test quality guidelines        
+- Parameterize test inputs to cover multiple scenarios
+- Avoid trivial assertions that don't verify meaningful behavior
+- Ensure test descriptions clearly state what is being verified
+- Test edge cases, realistic inputs, and boundary conditions
+- Mirror file structure for tests (see O-13)
+
+#### T-3 (MUST) WordPress-specific testing
+- Use WordPress test framework for integration tests
+- Mock WordPress functions appropriately in unit tests
+- Test custom post types, taxonomies, and meta field interactions
+- Verify proper sanitization and escaping in output tests  
+
+
+---
+
+## 6 — Development Workflow
+#### W-1 (MUST) Conventional commits
+- Use standardized commit format: `type(scope): description`
+- Types: feat, fix, docs, style, refactor, test, chore
+- Include breaking change indicators when applicable
+- Reference issue numbers in commit body
+
+#### W-2 (SHOULD) Code review standards
+- Review for security, performance, and accessibility issues
+- Verify adherence to coding standards and conventions
+- Check test coverage for new functionality
+- Ensure documentation updates accompany code changes
+
+#### W-3 (MUST) Automated quality gates
+- All commits must pass ESLint + Prettier checks
+- Unit tests must pass before merge
+- PHP CodeSniffer must pass for WordPress standards
+- No suppressions without documented justification
+
+#### W-4 (SHOULD) Development workflow practices
+- Always test builds after structural changes
+- Use `FANCULO_DEV_MODE=true` in .env for development
+- Run `npm run dev` for development with live reload
+- Run `npm run build` for production builds
+
+
+---
+
+
+## 7 — Documentation Rules
 
 ### README.md Maintenance
 - **ALWAYS** update README.md when making structural changes to the project
@@ -293,26 +362,16 @@ app/
 - Document new environment variables in the setup section
 - Keep build configuration details current
 
-## Code Standards
-
-### Namespace Convention
+### Code Standards
 - Use `Fanculo\` as the root namespace (not `Marko\Fanculo\`)
 - Follow WordPress coding standards
 - Use descriptive class and method names
-
-### File Organization
 - PHP classes go in `/app/` directory with appropriate subdirectories
 - React components go in `/src/` directory
 - Built assets go in `/dist/` (auto-generated)
 - Configuration files stay in project root
 
-## Development Workflow
-- Always test builds after structural changes
-- Use `FANCULO_DEV_MODE=true` in .env for development
-- Run `npm run dev` for development with live reload
-- Run `npm run build` for production builds
-
-## When to Update README
+### When to Update README
 Update README.md immediately after:
 1. File/directory moves
 2. Namespace changes
