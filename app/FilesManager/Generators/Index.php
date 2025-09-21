@@ -43,7 +43,7 @@ class Index
             $allowedBlocksJson = wp_json_encode($allowedBlocks, JSON_UNESCAPED_SLASHES);
 
             // Get template and templateLock from settings if available
-            $template = '[["core/paragraph", { placeholder: "Add some content here..." }]]';
+            // $template = '[["core/paragraph", { placeholder: "Add some content here..." }]]';
             $templateLock = 'false';
 
             if ($postId) {
@@ -63,10 +63,8 @@ class Index
 
             $parserOptionsJs = "
     // InnerBlocks options
-    const PARSER_OPTIONS = {" . (
-                !empty($allowedBlocks) ? "
-        allowedBlocks: {$allowedBlocksJson}," : ""
-            ) . "
+    const PARSER_OPTIONS = {
+        allowedBlocks: {$allowedBlocksJson},
         template: {$template},
         templateLock: {$templateLock}
     };";

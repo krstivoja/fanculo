@@ -126,7 +126,7 @@ class BlockJsonGenerator implements FileGeneratorInterface
         }
 
         // Deep merge additional settings (excluding already processed ones)
-        $excludedKeys = ['category', 'icon', 'description', 'supports'];
+        $excludedKeys = ['category', 'icon', 'description', 'supports', 'allowedBlocks', 'innerBlocks'];
         foreach ($settingsData as $key => $value) {
             if (!in_array($key, $excludedKeys, true) && !isset($blockJson[$key])) {
                 $blockJson[$key] = $value;
