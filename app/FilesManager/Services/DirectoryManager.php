@@ -42,12 +42,14 @@ class DirectoryManager
 
         if (!file_exists($blockDir)) {
             $result = wp_mkdir_p($blockDir);
-
-            if ($result) {
-                IndexAssets::generate($blockDir);
-                Index::generate($blockDir, $blockSlug, $postId);
+            if (!$result) {
+                return $blockDir; // Return early if directory creation failed
             }
         }
+
+        // Always generate assets (for cache-busting) and index files when processing a block
+        IndexAssets::generate($blockDir);
+        Index::generate($blockDir, $blockSlug, $postId);
 
         return $blockDir;
     }
@@ -88,6 +90,19 @@ class DirectoryManager
         $result = wp_delete_file($filepath);
 
         return $result;
+    }
+
+    /**
+     * Delete a specific directory and all its contents
+     */
+    public function deleteSpecificDirectory(string $dirPath): bool
+    {
+        if (!is_dir($dirPath)) {
+            return true; // Already doesn't exist
+        }
+
+        $this->deleteDirectory($dirPath);
+        return !is_dir($dirPath); // Return true if successfully deleted
     }
 
     private function deleteDirectory(string $dir): void

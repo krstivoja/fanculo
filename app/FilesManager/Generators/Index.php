@@ -139,7 +139,8 @@ class Index
             }
         }
 
-        // Write the file with error handling
+        // Write the file with error handling and logging
+        error_log("Fanculo Index Generator: Writing to {$indexJsPath}");
         $result = file_put_contents($indexJsPath, $content);
 
         if ($result === false) {
@@ -147,6 +148,7 @@ class Index
             return false;
         }
 
+        error_log("Fanculo Index Generator: Successfully wrote {$result} bytes to {$indexJsPath}");
         return true;
     }
 }

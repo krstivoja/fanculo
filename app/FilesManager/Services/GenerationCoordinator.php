@@ -34,8 +34,10 @@ class GenerationCoordinator
             return;
         }
 
-        // Smart save: only regenerate what's needed
+        // Smart save: just regenerate (with logging to debug any issues)
+        error_log("Fanculo: Starting file generation for post {$postId} ({$post->post_title})");
         $this->generateFilesForSinglePost($postId, $post);
+        error_log("Fanculo: Completed file generation for post {$postId}");
 
         // Check if this post affects global files
         if ($this->globalRegenerator->detectGlobalImpact($postId, $post)) {
@@ -97,6 +99,24 @@ class GenerationCoordinator
             $this->generateFilesForSinglePost($post->ID, $post);
         }
 
+    }
+
+    /**
+     * Clean up files for a single post before regenerating
+     */
+    public function cleanupFilesForSinglePost(int $postId, WP_Post $post): void
+    {
+        $terms = wp_get_post_terms($postId, FunculoTypeTaxonomy::getTaxonomy());
+        if (empty($terms) || is_wp_error($terms)) {
+            return;
+        }
+
+        foreach ($terms as $term) {
+            $outputPath = $this->contentTypeProcessor->getOutputPathForContentType($term->slug, $post);
+            if ($outputPath && is_dir($outputPath)) {
+                $this->directoryManager->deleteSpecificDirectory($outputPath);
+            }
+        }
     }
 
     /**
