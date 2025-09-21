@@ -2,6 +2,7 @@
 scss-compiler/node_modules/
 /vendor/
 /dist/
+/EXAMPLES/
 
 # Hidden files
 .DS_Store
