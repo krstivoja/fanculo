@@ -516,4 +516,4 @@ Update README.md immediately after:
 
 #### FPULL - Write pull requests desctipion
 - **Usage**: `FPULL`
-- **Purpose**: Generate a simple 1-2 paragraph pull request description explaining what was changed, without technical details, file lists, or impact sections
+- **Purpose**: Write me pull request description for all what is changed. Keep it simple and not overcomplicated. Describe core changes.
