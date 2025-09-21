@@ -52,7 +52,7 @@ class Index
                     $settingsData = json_decode($blockSettings, true);
                     if (json_last_error() === JSON_ERROR_NONE && is_array($settingsData)) {
                         if (isset($settingsData['innerBlocks']['template']) && is_array($settingsData['innerBlocks']['template'])) {
-                            $template = wp_json_encode($settingsData['innerBlocks']['template']);
+                            $template = wp_json_encode($settingsData['innerBlocks']['template'], JSON_UNESCAPED_SLASHES);
                         }
                         if (isset($settingsData['innerBlocks']['templateLock'])) {
                             $templateLock = $settingsData['innerBlocks']['templateLock'] ? 'true' : 'false';
@@ -61,11 +61,16 @@ class Index
                 }
             }
 
+            // Build template property conditionally
+            $templateProperty = '';
+            if ($template && $template !== '[]' && !empty(json_decode($template, true))) {
+                $templateProperty = "\n        template: {$template},";
+            }
+
             $parserOptionsJs = "
     // InnerBlocks options
     const PARSER_OPTIONS = {
-        allowedBlocks: {$allowedBlocksJson},
-        // template: {$template},
+        allowedBlocks: {$allowedBlocksJson},{$templateProperty}
         templateLock: {$templateLock}
     };";
         } else {

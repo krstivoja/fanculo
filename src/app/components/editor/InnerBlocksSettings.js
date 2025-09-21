@@ -10,17 +10,181 @@ const KeyCodes = {
 
 const delimiters = [KeyCodes.comma, KeyCodes.enter];
 
+// Default Template Manager Component
+const DefaultTemplateManager = ({
+  defaultTemplate,
+  setDefaultTemplate,
+  templateLock,
+  setTemplateLock,
+  updateTemplateSettings,
+  availableBlocks,
+  allowedBlocks
+}) => {
+  const [templateTags, setTemplateTags] = useState([]);
+  const [templateSuggestions, setTemplateSuggestions] = useState([]);
+
+  // Initialize template tags and suggestions
+  useEffect(() => {
+    // Convert template array to tags format
+    const tags = defaultTemplate.map((block, index) => ({
+      id: `template-${index}`,
+      text: block[0] // First element is the block name
+    }));
+    setTemplateTags(tags);
+
+    // Create suggestions from allowed blocks only
+    if (allowedBlocks && allowedBlocks.length > 0) {
+      const suggestions = allowedBlocks.map((blockName, index) => ({
+        id: `template-suggestion-${index}`,
+        text: blockName
+      }));
+      setTemplateSuggestions(suggestions);
+    } else {
+      // If no allowed blocks specified, show all available blocks
+      if (availableBlocks.length > 0) {
+        const suggestions = availableBlocks.map((block, index) => ({
+          id: `template-suggestion-${index}`,
+          text: block.name
+        }));
+        setTemplateSuggestions(suggestions);
+      }
+    }
+  }, [defaultTemplate, availableBlocks, allowedBlocks]);
+
+  const handleTemplateDelete = (tagIndex) => {
+    const newTemplateTags = templateTags.filter((_, index) => index !== tagIndex);
+    setTemplateTags(newTemplateTags);
+
+    // Convert back to template format
+    const newTemplate = newTemplateTags.map(tag => [tag.text]);
+    setDefaultTemplate(newTemplate);
+    updateTemplateSettings(newTemplate, templateLock);
+  };
+
+  const handleTemplateAddition = (tag) => {
+    // Prevent duplicates
+    const exists = templateTags.some(existing => existing.text === tag.text);
+    if (exists) {
+      return;
+    }
+
+    const newTemplateTags = [...templateTags, tag];
+    setTemplateTags(newTemplateTags);
+
+    // Convert back to template format
+    const newTemplate = newTemplateTags.map(tag => [tag.text]);
+    setDefaultTemplate(newTemplate);
+    updateTemplateSettings(newTemplate, templateLock);
+  };
+
+  const handleTemplateDrag = (tag, currPos, newPos) => {
+    const newTemplateTags = [...templateTags];
+    newTemplateTags.splice(currPos, 1);
+    newTemplateTags.splice(newPos, 0, tag);
+
+    setTemplateTags(newTemplateTags);
+
+    // Convert back to template format
+    const newTemplate = newTemplateTags.map(tag => [tag.text]);
+    setDefaultTemplate(newTemplate);
+    updateTemplateSettings(newTemplate, templateLock);
+  };
+
+  const handleTemplateLockChange = (event) => {
+    const locked = event.target.checked;
+    setTemplateLock(locked);
+    updateTemplateSettings(defaultTemplate, locked);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Template Lock */}
+      <Toggle
+        checked={templateLock}
+        onChange={handleTemplateLockChange}
+        label="Lock Template"
+        description="Prevent users from adding, removing, or moving blocks"
+      />
+
+      {/* Template Blocks Selection */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-highlight">
+          Default Template Blocks
+        </label>
+        <p className="text-xs text-contrast mb-3">
+          Add blocks that will be automatically inserted when this block is created. Drag to reorder.
+        </p>
+
+        <ReactTags
+          tags={templateTags}
+          suggestions={templateSuggestions}
+          delimiters={delimiters}
+          handleDelete={handleTemplateDelete}
+          handleAddition={handleTemplateAddition}
+          handleDrag={handleTemplateDrag}
+          inputFieldPosition="bottom"
+          autocomplete
+          editable
+          clearInputOnDelete
+          minQueryLength={1}
+          placeholder="Type a block name for template and press Enter..."
+          classNames={{
+            tags: 'border border-outline rounded-md bg-base p-2 focus-within:ring-2 focus-within:ring-action/20 focus-within:border-action transition-colors',
+            tagInput: 'relative',
+            tagInputField: 'w-full px-3 py-2 text-sm border border-outline rounded-md bg-base text-highlight placeholder-contrast focus:outline-none focus:ring-2 focus:ring-action/20 focus:border-action transition-colors',
+            selected: 'flex flex-wrap gap-2 mb-2 min-h-[20px]',
+            tag: 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200 hover:bg-blue-200 transition-colors',
+            remove: 'ml-1 inline-flex items-center justify-center w-3 h-3 text-blue-600 hover:text-blue-800 cursor-pointer transition-colors before:content-["×"] before:text-xs before:leading-none',
+            suggestions: 'absolute top-full left-0 right-0 z-50 bg-base border border-outline border-t-0 rounded-b-md max-h-48 overflow-y-auto shadow-lg',
+            suggestionsList: 'list-none m-0 p-0',
+            suggestion: 'px-3 py-2 text-sm text-highlight cursor-pointer border-b border-outline last:border-b-0 hover:bg-base-2 transition-colors',
+            suggestionActive: 'bg-base-2',
+            suggestionHighlighted: 'bg-action/10'
+          }}
+        />
+
+        {/* Template Info */}
+        {templateTags.length > 0 && (
+          <div className="text-xs text-contrast">
+            {templateTags.length} template block{templateTags.length !== 1 ? 's' : ''} configured
+          </div>
+        )}
+
+        {/* Help Text */}
+        <div className="text-xs text-contrast space-y-1">
+          <div>• Only blocks from "Allowed Block Types" can be added to template</div>
+          <div>• Template blocks are inserted in order when the block is created</div>
+          <div>• Use drag and drop to reorder template blocks</div>
+          <div>• Template lock prevents users from modifying the structure</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [selectedBlocks, setSelectedBlocks] = useState([]);
   const [availableBlocks, setAvailableBlocks] = useState([]);
   const [blockSuggestions, setBlockSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [defaultTemplate, setDefaultTemplate] = useState([]);
+  const [templateLock, setTemplateLock] = useState(false);
 
   // Parse inner blocks settings from metaData
   const getInnerBlocksSettings = () => {
     try {
       const settingsString = metaData?.blocks?.inner_blocks_settings || '{}';
+      return JSON.parse(settingsString);
+    } catch (e) {
+      return {};
+    }
+  };
+
+  // Get template settings from main block settings
+  const getBlockSettings = () => {
+    try {
+      const settingsString = metaData?.blocks?.settings || '{}';
       return JSON.parse(settingsString);
     } catch (e) {
       return {};
@@ -39,6 +203,12 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
       text: blockName
     }));
     setSelectedBlocks(tags);
+
+    // Load template settings from main block settings
+    const blockSettings = getBlockSettings();
+    const innerBlocksConfig = blockSettings.innerBlocks || {};
+    setDefaultTemplate(innerBlocksConfig.template || []);
+    setTemplateLock(innerBlocksConfig.templateLock || false);
   }, [selectedPost, metaData]);
 
   // Fetch available blocks when component mounts or when enabled
@@ -80,6 +250,23 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
 
     if (onMetaChange) {
       onMetaChange('blocks', 'inner_blocks_settings', JSON.stringify(settings));
+    }
+  };
+
+  // Update template settings in block settings
+  const updateTemplateSettings = (template, templateLock) => {
+    const currentBlockSettings = getBlockSettings();
+    const updatedSettings = {
+      ...currentBlockSettings,
+      innerBlocks: {
+        ...currentBlockSettings.innerBlocks,
+        template,
+        templateLock
+      }
+    };
+
+    if (onMetaChange) {
+      onMetaChange('blocks', 'settings', JSON.stringify(updatedSettings));
     }
   };
 
@@ -182,6 +369,7 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
                 autocomplete
                 editable
                 clearInputOnDelete
+                minQueryLength={1}
                 placeholder="Type a block name and press Enter..."
                 classNames={{
                   tags: 'border border-outline rounded-md bg-base p-2 focus-within:ring-2 focus-within:ring-action/20 focus-within:border-action transition-colors',
@@ -213,6 +401,30 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
             <div>• Custom blocks from themes/plugins will also appear in suggestions</div>
             <div>• Drag and drop to reorder block priorities</div>
           </div>
+        </div>
+      )}
+
+      {/* Template Configuration */}
+      {isEnabled && (
+        <div className="space-y-3 p-4 border border-outline rounded-md bg-base-2">
+          <div>
+            <label className="block text-sm font-medium text-highlight mb-2">
+              Default Template
+            </label>
+            <p className="text-xs text-contrast mb-3">
+              Configure default blocks that will be automatically inserted when this block is added.
+            </p>
+          </div>
+
+          <DefaultTemplateManager
+            defaultTemplate={defaultTemplate}
+            setDefaultTemplate={setDefaultTemplate}
+            templateLock={templateLock}
+            setTemplateLock={setTemplateLock}
+            updateTemplateSettings={updateTemplateSettings}
+            availableBlocks={availableBlocks}
+            allowedBlocks={selectedBlocks.map(tag => tag.text)}
+          />
         </div>
       )}
     </div>
