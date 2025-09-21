@@ -135,15 +135,6 @@ class InnerBlocksProcessor
      */
     public static function enqueueParserScript(): void
     {
-        // Only load the parser if we actually have <InnerBlocks /> in templates
-        if (self::hasInnerBlocksInTemplates()) {
-            wp_enqueue_script(
-                'fanculo-innerblocks-parser',
-                FANCULO_URL . 'assets/js/innerblocks-parser.js',
-                ['wp-element', 'wp-block-editor'],
-                FANCULO_VERSION,
-                true
-            );
-        }
+        // No-op: handled by block-renderer.js
     }
 }
