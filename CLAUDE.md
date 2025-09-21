@@ -381,5 +381,138 @@ Update README.md immediately after:
 6. Major structural changes
 
 
+---
+
+
+## 8 — Development Shortcuts & Commands
+
+### Quick Compare Commands
+
+#### FCOMP - Framework Comparison
+- **Usage**: `FCOMP [feature/pattern]`
+- **Purpose**: Compare your implementation with Gutenberg core examples
+- **Steps**:
+  1. Check `EXAMPLES/gutenberg-trunk/` for similar patterns
+  2. Review [Block Editor Handbook](https://developer.wordpress.org/block-editor/) documentation
+  3. Identify differences and best practices
+  4. Document findings and recommendations
+- **Example**: `FCOMP block-controls` → Compare how you implement block controls vs core
+
+#### BCOMP - Block Comparison
+- **Usage**: `BCOMP [block-name]`
+- **Purpose**: Compare block implementation with core blocks (both generated output and generator templates)
+- **Steps**:
+  1. **Compare Generated Output** (`fanculo-blocks/[block-name]/`):
+     - Find similar core blocks in `EXAMPLES/gutenberg-trunk/packages/block-library/src/`
+     - Compare `block.json` structure and attributes
+     - Review `render.php` patterns and data handling
+     - Check `view.js` and styling approaches
+  2. **Compare Generator Templates** (`app/FilesManager/Generators/`):
+     - Review `BlockJsonGenerator.php` → Compare with core block.json patterns
+     - Check `RenderFileGenerator.php` → Compare with core render.php patterns
+     - Analyze `ViewFileGenerator.php` → Compare with core view.js patterns
+     - Examine `StyleFileGenerator.php` → Compare with core styling approaches
+  3. **Identify Gaps**:
+     - Note differences between your generators and core patterns
+     - Update generator templates to match best practices
+     - Regenerate blocks to apply improvements
+- **Example**: `BCOMP heading` → Compare both `fanculo-blocks/heading/` output AND `app/FilesManager/Generators/` templates with core/heading
+
+#### APICOMP - API Comparison
+- **Usage**: `APICOMP [endpoint-type]`
+- **Purpose**: Compare REST API patterns with WordPress core
+- **Steps**:
+  1. Check core REST API implementations
+  2. Review `EXAMPLES/gutenberg-trunk/` for API usage patterns
+  3. Verify security practices (nonces, permissions)
+  4. Compare error handling approaches
+
+### Code Generation Shortcuts
+
+#### BGEN - Block Generator
+- **Usage**: `BGEN [block-name] [category]`
+- **Purpose**: Generate new block with all required files
+- **Generates**:
+  - `block.json` with proper structure
+  - `render.php` with security best practices
+  - `style.scss` with organized structure
+  - `edit.js` with TypeScript support
+- **Example**: `BGEN testimonial content` → Creates testimonial block in content category
+
+#### SGEN - Symbol Generator
+- **Usage**: `SGEN [symbol-name]`
+- **Purpose**: Create reusable PHP symbol component
+- **Generates**:
+  - PHP class with proper namespace
+  - Meta field definitions
+  - Sanitization/validation logic
+- **Example**: `SGEN social-icons` → Creates social icons symbol
+
+#### PGEN - Partial Generator
+- **Usage**: `PGEN [partial-name]`
+- **Purpose**: Create SCSS partial with proper structure
+- **Generates**:
+  - SCSS partial file with imports
+  - Variable definitions
+  - Mixin structure
+- **Example**: `PGEN button-styles` → Creates button styling partial
+
+### Development Workflow Shortcuts
+
+#### DEVUP - Development Setup
+- **Usage**: `DEVUP`
+- **Purpose**: Quick development environment start
+- **Actions**:
+  - Run `npm run dev` for live reload
+  - Enable `FANCULO_DEV_MODE=true` in .env
+  - Start file watchers
+  - Open browser to admin panel
+
+#### BUILDCHECK - Build Verification
+- **Usage**: `BUILDCHECK`
+- **Purpose**: Comprehensive build and quality check
+- **Actions**:
+  - Run `npm run build` and verify success
+  - Check for TypeScript errors
+  - Verify ESLint compliance
+  - Test generated blocks in editor
+  - Validate CSS compilation
+
+#### APITEST - API Testing
+- **Usage**: `APITEST [controller]`
+- **Purpose**: Test API endpoints and security
+- **Actions**:
+  - Test all endpoints in `app/Admin/Api/`
+  - Verify nonce security implementation
+  - Check input sanitization/output escaping
+  - Validate error handling and responses
+- **Example**: `APITEST FileGeneration` → Test file generation endpoints
+
+#### GUTCHECK - Gutenberg Compatibility Check
+- **Usage**: `GUTCHECK`
+- **Purpose**: Verify compatibility with latest Gutenberg
+- **Actions**:
+  - Compare with `EXAMPLES/gutenberg-trunk/` patterns
+  - Test block registration and rendering
+  - Verify editor UI consistency
+  - Check for deprecated API usage
+
+### Quick Reference Commands
+
+#### METAKEYS - List All Meta Keys
+- **Usage**: `METAKEYS`
+- **Purpose**: Quick reference to all meta field constants
+- **Shows**: Contents of `app/Admin/Api/Services/MetaKeysConstants.php`
+
+#### APIMAP - API Endpoint Map
+- **Usage**: `APIMAP`
+- **Purpose**: List all available API endpoints
+- **Shows**: All controllers in `app/Admin/Api/` with routes and methods
+
+#### GENMAP - Generator Map
+- **Usage**: `GENMAP`
+- **Purpose**: List all available file generators
+- **Shows**: All generators in `app/FilesManager/Generators/` with purposes
+
 
 
