@@ -2,9 +2,9 @@
 
 namespace Fanculo\Helpers;
 
-use Fanculo\MetaBoxes\BlocksMetaBox;
-use Fanculo\MetaBoxes\SymbolsMetaBox;
-use Fanculo\MetaBoxes\SCSSPartialsMetaBox;
+use Fanculo\Content\MetaBoxes\BlocksMetaBox;
+use Fanculo\Content\MetaBoxes\SymbolsMetaBox;
+use Fanculo\Content\MetaBoxes\SCSSPartialsMetaBox;
 
 class MetaBoxHelper
 {

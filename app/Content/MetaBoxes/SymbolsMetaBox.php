@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\MetaBoxes;
+namespace Fanculo\Content\MetaBoxes;
 
 class SymbolsMetaBox extends AbstractMetaBox
 {
