@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\FilesManager\Generators;
+namespace Fanculo\FilesManager\Files;
 
 class IndexAssets
 {

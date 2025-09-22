@@ -2,14 +2,14 @@
 
 namespace Fanculo\FilesManager\Mappers;
 
-use Fanculo\FilesManager\Contracts\FileGeneratorInterface;
-use Fanculo\FilesManager\Generators\RenderFileGenerator;
-use Fanculo\FilesManager\Generators\ViewFileGenerator;
-use Fanculo\FilesManager\Generators\StyleFileGenerator;
-use Fanculo\FilesManager\Generators\CssFileGenerator;
-use Fanculo\FilesManager\Generators\BlockJsonGenerator;
-use Fanculo\FilesManager\Generators\SymbolFileGenerator;
-use Fanculo\FilesManager\Generators\ScssPartialGenerator;
+use Fanculo\FilesManager\Interfaces\FileGeneratorInterface;
+use Fanculo\FilesManager\Files\Render;
+use Fanculo\FilesManager\Files\ViewJS;
+use Fanculo\FilesManager\Files\Style;
+use Fanculo\FilesManager\Files\CssFile;
+use Fanculo\FilesManager\Files\BlockJson;
+use Fanculo\FilesManager\Files\Symbol;
+use Fanculo\FilesManager\Files\ScssPartial;
 use Fanculo\Content\FunculoTypeTaxonomy;
 
 class GenerationMapper
@@ -61,13 +61,13 @@ class GenerationMapper
     private function initializeGenerators(): void
     {
         $this->generators = [
-            'render' => new RenderFileGenerator(),
-            'view' => new ViewFileGenerator(),
-            'style' => new StyleFileGenerator(),
-            'css' => new CssFileGenerator(),
-            'block_json' => new BlockJsonGenerator(),
-            'symbol' => new SymbolFileGenerator(),
-            'scss_partial' => new ScssPartialGenerator()
+            'render' => new Render(),
+            'view' => new ViewJS(),
+            'style' => new Style(),
+            'css' => new CssFile(),
+            'block_json' => new BlockJson(),
+            'symbol' => new Symbol(),
+            'scss_partial' => new ScssPartial()
         ];
     }
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\FilesManager\Contracts;
+namespace Fanculo\FilesManager\Interfaces;
 
 interface FileWriterInterface
 {

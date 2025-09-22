@@ -1,13 +1,13 @@
 <?php
 
-namespace Fanculo\FilesManager\Generators;
+namespace Fanculo\FilesManager\Files;
 
-use Fanculo\FilesManager\Contracts\FileGeneratorInterface;
+use Fanculo\FilesManager\Interfaces\FileGeneratorInterface;
 use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use WP_Post;
 
-class BlockJsonGenerator implements FileGeneratorInterface
+class BlockJson implements FileGeneratorInterface
 {
     public function canGenerate(string $contentType): bool
     {
@@ -19,7 +19,7 @@ class BlockJsonGenerator implements FileGeneratorInterface
         // Verify and create output path if needed
         if (!is_dir($outputPath)) {
             if (!wp_mkdir_p($outputPath)) {
-                error_log('BlockJsonGenerator: Failed to create output directory: ' . $outputPath);
+                error_log('BlockJson: Failed to create output directory: ' . $outputPath);
                 return false;
             }
         }
@@ -33,7 +33,7 @@ class BlockJsonGenerator implements FileGeneratorInterface
         $result = file_put_contents($filepath, wp_json_encode($blockJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         if ($result === false) {
-            error_log('BlockJsonGenerator: Failed to write block.json file: ' . $filepath);
+            error_log('BlockJson: Failed to write block.json file: ' . $filepath);
             return false;
         }
 

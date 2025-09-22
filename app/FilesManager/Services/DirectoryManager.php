@@ -2,8 +2,8 @@
 
 namespace Fanculo\FilesManager\Services;
 
-use Fanculo\FilesManager\Generators\IndexAssets;
-use Fanculo\FilesManager\Generators\Index;
+use Fanculo\FilesManager\Files\IndexAssets;
+use Fanculo\FilesManager\Files\Index;
 
 class DirectoryManager
 {

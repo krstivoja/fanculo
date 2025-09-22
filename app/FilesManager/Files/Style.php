@@ -1,22 +1,22 @@
 <?php
 
-namespace Fanculo\FilesManager\Generators;
+namespace Fanculo\FilesManager\Files;
 
-use Fanculo\FilesManager\Contracts\FileGeneratorInterface;
+use Fanculo\FilesManager\Interfaces\FileGeneratorInterface;
 use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use WP_Post;
 
-class ScssPartialGenerator implements FileGeneratorInterface
+class Style implements FileGeneratorInterface
 {
     public function canGenerate(string $contentType): bool
     {
-        return $contentType === FunculoTypeTaxonomy::getTermScssPartials();
+        return $contentType === FunculoTypeTaxonomy::getTermBlocks();
     }
 
     public function generate(int $postId, WP_Post $post, string $outputPath): bool
     {
-        $scssContent = get_post_meta($postId, MetaKeysConstants::SCSS_PARTIAL_SCSS, true);
+        $scssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, true);
 
         if (empty($scssContent)) {
             return false;
@@ -30,12 +30,12 @@ class ScssPartialGenerator implements FileGeneratorInterface
 
     public function getRequiredMetaKeys(): array
     {
-        return [MetaKeysConstants::SCSS_PARTIAL_SCSS];
+        return [MetaKeysConstants::BLOCK_SCSS];
     }
 
     public function getGeneratedFileName(WP_Post $post): string
     {
-        return $post->post_name . '.scss';
+        return 'style.scss';
     }
 
     public function getFileExtension(): string
@@ -45,7 +45,7 @@ class ScssPartialGenerator implements FileGeneratorInterface
 
     public function validate(int $postId): bool
     {
-        $scssContent = get_post_meta($postId, MetaKeysConstants::SCSS_PARTIAL_SCSS, true);
+        $scssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, true);
         return !empty($scssContent);
     }
 }

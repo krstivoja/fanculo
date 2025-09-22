@@ -2,7 +2,7 @@
 
 namespace Fanculo\FilesManager\Services;
 
-use Fanculo\FilesManager\Contracts\FileWriterInterface;
+use Fanculo\FilesManager\Interfaces\FileWriterInterface;
 
 class FileWriter implements FileWriterInterface
 {

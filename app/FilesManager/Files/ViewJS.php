@@ -1,13 +1,13 @@
 <?php
 
-namespace Fanculo\FilesManager\Generators;
+namespace Fanculo\FilesManager\Files;
 
-use Fanculo\FilesManager\Contracts\FileGeneratorInterface;
+use Fanculo\FilesManager\Interfaces\FileGeneratorInterface;
 use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use WP_Post;
 
-class ViewFileGenerator implements FileGeneratorInterface
+class ViewJS implements FileGeneratorInterface
 {
     public function canGenerate(string $contentType): bool
     {
