@@ -14,6 +14,7 @@ const BlocksMetaboxes = ({ metaData, onChange, titleComponent }) => {
   const tabs = [
     { id: 'php', label: 'Content', language: 'php', required: true, placeholder: 'Enter PHP code for the block...' },
     { id: 'scss', label: 'Style', language: 'scss', placeholder: 'Enter SCSS styles for the block...' },
+    { id: 'editorScss', label: 'Editor Style', language: 'scss', placeholder: 'Enter SCSS styles for the block editor...' },
     { id: 'js', label: 'View', language: 'javascript', placeholder: 'Enter JavaScript code for the block...' },
     { id: 'attributes', label: 'Attributes', isAttributesTab: true }
   ];

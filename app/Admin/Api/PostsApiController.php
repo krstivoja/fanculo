@@ -445,6 +445,7 @@ class PostsApiController
                     $meta['blocks'] = [
                         'php' => get_post_meta($postId, MetaKeysConstants::BLOCK_PHP, true),
                         'scss' => get_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, true),
+                        'editorScss' => get_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_SCSS, true),
                         'js' => get_post_meta($postId, MetaKeysConstants::BLOCK_JS, true),
                         'attributes' => get_post_meta($postId, MetaKeysConstants::BLOCK_ATTRIBUTES, true),
                         'settings' => get_post_meta($postId, MetaKeysConstants::BLOCK_SETTINGS, true),
@@ -480,6 +481,9 @@ class PostsApiController
             }
             if (isset($blocks['scss'])) {
                 update_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, sanitize_textarea_field($blocks['scss']));
+            }
+            if (isset($blocks['editorScss'])) {
+                update_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_SCSS, sanitize_textarea_field($blocks['editorScss']));
             }
             if (isset($blocks['js'])) {
                 update_post_meta($postId, MetaKeysConstants::BLOCK_JS, sanitize_textarea_field($blocks['js']));

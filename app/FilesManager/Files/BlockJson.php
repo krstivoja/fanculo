@@ -142,9 +142,9 @@ class BlockJson implements FileGeneratorInterface
         $assetFiles = [
             'editorScript' => 'index.js',
             'style' => 'style.css',
+            'editorStyle' => 'editor.css',
             'render' => 'render.php',
-            'viewScript' => 'view.js',
-            'editorStyle' => 'index.css'
+            'viewScript' => 'view.js'
         ];
 
         foreach ($assetFiles as $property => $filename) {

@@ -20,6 +20,9 @@ class MetaKeysConstants
     /** @var string Block SCSS styles */
     const BLOCK_SCSS = '_funculo_block_scss';
 
+    /** @var string Block editor SCSS styles */
+    const BLOCK_EDITOR_SCSS = '_funculo_block_editor_scss';
+
     /** @var string Block JavaScript code */
     const BLOCK_JS = '_funculo_block_js';
 
@@ -84,6 +87,7 @@ class MetaKeysConstants
             // Block keys
             self::BLOCK_PHP,
             self::BLOCK_SCSS,
+            self::BLOCK_EDITOR_SCSS,
             self::BLOCK_JS,
             self::BLOCK_ATTRIBUTES,
             self::BLOCK_SETTINGS,
@@ -116,6 +120,7 @@ class MetaKeysConstants
         return [
             self::BLOCK_PHP,
             self::BLOCK_SCSS,
+            self::BLOCK_EDITOR_SCSS,
             self::BLOCK_JS,
             self::BLOCK_ATTRIBUTES,
             self::BLOCK_SETTINGS,

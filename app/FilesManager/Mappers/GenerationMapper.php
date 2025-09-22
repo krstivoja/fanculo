@@ -6,7 +6,9 @@ use Fanculo\FilesManager\Interfaces\FileGeneratorInterface;
 use Fanculo\FilesManager\Files\Render;
 use Fanculo\FilesManager\Files\ViewJS;
 use Fanculo\FilesManager\Files\Style;
+use Fanculo\FilesManager\Files\EditorStyle;
 use Fanculo\FilesManager\Files\CssFile;
+use Fanculo\FilesManager\Files\EditorCssFile;
 use Fanculo\FilesManager\Files\BlockJson;
 use Fanculo\FilesManager\Files\Symbol;
 use Fanculo\FilesManager\Files\ScssPartial;
@@ -64,7 +66,9 @@ class GenerationMapper
             'render' => new Render(),
             'view' => new ViewJS(),
             'style' => new Style(),
+            'editor_style' => new EditorStyle(),
             'css' => new CssFile(),
+            'editor_css' => new EditorCssFile(),
             'block_json' => new BlockJson(),
             'symbol' => new Symbol(),
             'scss_partial' => new ScssPartial()
