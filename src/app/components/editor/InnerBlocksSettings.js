@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { WithContext as ReactTags } from 'react-tag-input';
-import { Toggle, Hr } from '../ui';
+import { Toggle, Hr, ReactTags } from '../ui';
 import { apiClient } from '../../../utils';
-
-const KeyCodes = {
-  comma: 188,
-  enter: 13
-};
-
-const delimiters = [KeyCodes.comma, KeyCodes.enter];
 
 // Default Template Manager Component
 const DefaultTemplateManager = ({
@@ -104,37 +96,13 @@ const DefaultTemplateManager = ({
         <ReactTags
           tags={templateTags}
           suggestions={templateSuggestions}
-          delimiters={delimiters}
           handleDelete={handleTemplateDelete}
           handleAddition={handleTemplateAddition}
           handleDrag={handleTemplateDrag}
-          inputFieldPosition="bottom"
-          autocomplete
-          editable
-          clearInputOnDelete
-          minQueryLength={1}
           placeholder="Type a block name for template and press Enter..."
-          classNames={{
-            tags: 'border border-outline rounded-md bg-base p-2 focus-within:ring-2 focus-within:ring-action/20 focus-within:border-action transition-colors',
-            tagInput: 'relative',
-            tagInputField: 'w-full px-3 py-2 text-sm border border-outline rounded-md bg-base text-highlight placeholder-contrast focus:outline-none focus:ring-2 focus:ring-action/20 focus:border-action transition-colors',
-            selected: 'flex flex-wrap gap-2 mb-2 min-h-[20px]',
-            tag: 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200 hover:bg-blue-200 transition-colors',
-            remove: 'ml-1 inline-flex items-center justify-center w-3 h-3 text-blue-600 hover:text-blue-800 cursor-pointer transition-colors before:content-["×"] before:text-xs before:leading-none',
-            suggestions: 'absolute top-full left-0 right-0 z-50 bg-base border border-outline border-t-0 rounded-b-md max-h-48 overflow-y-auto shadow-lg',
-            suggestionsList: 'list-none m-0 p-0',
-            suggestion: 'px-3 py-2 text-sm text-highlight cursor-pointer border-b border-outline last:border-b-0 hover:bg-base-2 transition-colors',
-            suggestionActive: 'bg-base-2',
-            suggestionHighlighted: 'bg-action/10'
-          }}
+          maxTags={1}
         />
 
-        {/* Template Info */}
-        {templateTags.length > 0 && (
-          <div className="text-xs text-contrast">
-            {templateTags.length} template block{templateTags.length !== 1 ? 's' : ''} configured
-          </div>
-        )}
 
         {/* Help Text */}
         <div className="text-xs text-contrast space-y-1">
@@ -349,30 +317,11 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
               <ReactTags
                 tags={selectedBlocks}
                 suggestions={blockSuggestions}
-                delimiters={delimiters}
                 handleDelete={handleDelete}
                 handleAddition={handleAddition}
                 handleDrag={handleDrag}
                 handleTagClick={handleTagClick}
-                inputFieldPosition="bottom"
-                autocomplete
-                editable
-                clearInputOnDelete
-                minQueryLength={1}
                 placeholder="Type a block name and press Enter..."
-                classNames={{
-                  tags: 'border border-outline rounded-md bg-base p-2 focus-within:ring-2 focus-within:ring-action/20 focus-within:border-action transition-colors',
-                  tagInput: 'relative',
-                  tagInputField: 'w-full px-3 py-2 text-sm border border-outline rounded-md bg-base text-highlight placeholder-contrast focus:outline-none focus:ring-2 focus:ring-action/20 focus:border-action transition-colors',
-                  selected: 'flex flex-wrap gap-2 mb-2 min-h-[20px]',
-                  tag: 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-action/10 text-action border border-action/20 hover:bg-action/20 transition-colors',
-                  remove: 'ml-1 inline-flex items-center justify-center w-3 h-3 text-action/60 hover:text-action cursor-pointer transition-colors before:content-["×"] before:text-xs before:leading-none',
-                  suggestions: 'absolute top-full left-0 right-0 z-50 bg-base border border-outline border-t-0 rounded-b-md max-h-48 overflow-y-auto shadow-lg',
-                  suggestionsList: 'list-none m-0 p-0',
-                  suggestion: 'px-3 py-2 text-sm text-highlight cursor-pointer border-b border-outline last:border-b-0 hover:bg-base-2 transition-colors',
-                  suggestionActive: 'bg-base-2',
-                  suggestionHighlighted: 'bg-action/10'
-                }}
               />
             </div>
           )}
