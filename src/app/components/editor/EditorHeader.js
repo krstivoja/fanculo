@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Button, Toast } from '../ui';
-import { LogoIcon } from '../icons';
+import { LogoIcon, WordPressIcon } from '../icons';
 import { apiClient } from '../../../utils';
 
 // Lazy load AddPostModal - only loads when needed
@@ -85,8 +85,17 @@ const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh })
   return (
     <header id="editor-header" className='h-fit border-b border-solid border-outline flex items-center justify-between'>
       <div className='flex gap-4 items-center'>
-        <div className=' bg-contrast text-base-1 p-3 w-fit'>
-          <LogoIcon />
+        <div
+          className='bg-contrast hover:bg-action text-base-1 hover:text-highlight p-3 w-fit cursor-pointer transition-all duration-200 hover:bg-opacity-80 group relative'
+          onClick={() => window.location.href = '/wp-admin/'}
+          title="Go to WordPress Admin"
+        >
+          <div className="group-hover:opacity-0 ">
+            <LogoIcon />
+          </div>
+          <div className="absolute inset-0 p-3 opacity-0 group-hover:opacity-100 ">
+            <WordPressIcon size={32} />
+          </div>
         </div>
 
         <Button

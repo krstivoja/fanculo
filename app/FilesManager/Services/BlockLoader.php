@@ -15,6 +15,7 @@ use function ob_get_clean;
 use function preg_replace;
 
 use Fanculo\FilesManager\Services\InnerBlocksProcessor;
+use Fanculo\FilesManager\Services\SymbolProcessor;
 
 class BlockLoader
 {
@@ -89,8 +90,8 @@ class BlockLoader
         $GLOBALS['content'] = $content;
         $GLOBALS['block'] = $block;
 
-        // Use the InnerBlocks processor service
-        $rendered_output = InnerBlocksProcessor::processTemplate($render_file, $attributes, $content, $block);
+        // Use the Symbol processor service which handles both InnerBlocks and Symbols
+        $rendered_output = SymbolProcessor::createRenderCallback($render_file)($attributes, $content, $block);
 
         // If output is empty, return a message
         if (empty($rendered_output)) {
