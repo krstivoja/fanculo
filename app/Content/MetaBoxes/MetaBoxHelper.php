@@ -1,10 +1,7 @@
 <?php
 
-namespace Fanculo\Helpers;
+namespace Fanculo\Content\MetaBoxes;
 
-use Fanculo\Content\MetaBoxes\BlocksMetaBox;
-use Fanculo\Content\MetaBoxes\SymbolsMetaBox;
-use Fanculo\Content\MetaBoxes\SCSSPartialsMetaBox;
 
 class MetaBoxHelper
 {

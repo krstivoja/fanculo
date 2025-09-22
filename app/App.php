@@ -6,7 +6,7 @@ use Fanculo\Admin\SettingsPage;
 use Fanculo\Admin\Api\Api;
 use Fanculo\Content\FunculoPostType;
 use Fanculo\Content\FunculoTypeTaxonomy;
-use Fanculo\Helpers\MetaBoxHelper;
+use Fanculo\Content\MetaBoxes\MetaBoxHelper;
 use Fanculo\Services\FileGenerationService;
 use Fanculo\Services\BlockRegistrationService;
 use Fanculo\Services\InnerBlocksService;
