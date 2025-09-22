@@ -80,6 +80,15 @@ These rules ensure maintainability, safety, and developer velocity.
 #### C-17 (SHOULD) Documentation hygiene
 - Update `README.md` and this guide when changing structure, scripts, or build behavior. Reference exact paths and rationale.
 
+#### C-18 (MUST) Test file organization
+- **NEVER** place test files (`.test.js`, `.spec.js`, `.html` test files) in project root
+- **ALWAYS** organize test files in `/test/` folder with appropriate subdirectories:
+  - Unit tests → `/test/unit/`
+  - Integration tests → `/test/integration/`
+  - Test fixtures/HTML → `/test/fixtures/`
+  - E2E tests → `/test/e2e/`
+- When creating new test files, immediately place them in the correct test subdirectory
+
 
 ---
 
@@ -182,6 +191,12 @@ app/
 #### O-13 (SHOULD) Testing locations (future-safe)
 - JS: colocate `__tests__` next to modules or use `src/tests/` mirroring structure.
 - PHP: `tests/phpunit/` mirroring `app/` namespaces.
+- **Test files organization**: All standalone test files (`.js`, `.html`, `.spec.js`, `.test.js`) should be organized in the `/test/` folder:
+  - `/test/unit/` - Pure unit tests with no external dependencies
+  - `/test/integration/` - Integration tests that interact with APIs, databases, or WordPress
+  - `/test/fixtures/` - Test HTML files, mock data, and test assets
+  - `/test/e2e/` - End-to-end browser tests (if implemented)
+  - Never place test files in project root - always organize them in appropriate test subdirectories
 
 #### O-14 (SHOULD) Linting/enforcement
 - Add ESLint rules (e.g., `import/no-restricted-paths`) to enforce boundaries in O-6.
