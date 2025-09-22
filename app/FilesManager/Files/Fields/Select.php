@@ -1,24 +1,24 @@
 <?php
-namespace GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components;
+namespace Fanculo\FilesManager\Files\Fields;
 
 class Select {
-    public static $exampleOptions = [
-        ['label' => 'Option 1', 'value' => 'option1'],
-        ['label' => 'Option 2', 'value' => 'option2'],
-        ['label' => 'Option 3', 'value' => 'option3']
-    ];
     public static function generate($attr) {
-        // Ensure options is an array, default to empty if not set
-        $options = isset($attr['options']) && is_array($attr['options']) ? json_encode($attr['options']) : '[]';
-        $script = <<<EOT
+        $name = esc_js($attr['name'] ?? '');
+        $label = esc_js($attr['label'] ?? '');
+        $id = esc_js($attr['id'] ?? $name);
 
-    wp.element.createElement(wp.components.SelectControl, {
-        key: '{$attr['id']}',
-        value: attributes['{$attr['name']}'] || '',
-        onChange: (value) => setAttributes({ ['{$attr['name']}']: value }),
-        options: {$options},
-        label: '{$attr['label']}',
-    })
+        // Ensure options is an array, default to empty if not set
+        $options = isset($attr['options']) && is_array($attr['options']) ? json_encode($attr['options'], JSON_UNESCAPED_SLASHES) : '[]';
+
+        $script = <<<EOT
+wp.element.createElement(SelectControl, {
+    key: '{$id}',
+    value: attributes['{$name}'] || '',
+    onChange: (value) => setAttributes({ ['{$name}']: value }),
+    options: {$options},
+    label: '{$label}',
+    __nextHasNoMarginBottom: true
+})
 EOT;
 
         return $script;

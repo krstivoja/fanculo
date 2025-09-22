@@ -23,11 +23,6 @@ export const getPhpExample = (attribute) => {
     <p><?php echo esc_html($attributes['${camelCaseName}']); ?></p>
 <?php endif; ?>`;
       break;
-    case "richText":
-      example = `<?php if (!empty($attributes['${camelCaseName}'])): ?>
-    <div><?php echo wp_kses_post($attributes['${camelCaseName}']); ?></div>
-<?php endif; ?>`;
-      break;
     case "number":
     case "range":
       example = `<?php if (isset($attributes['${camelCaseName}']) && $attributes['${camelCaseName}'] !== ''): ?>
@@ -48,7 +43,8 @@ export const getPhpExample = (attribute) => {
       example = `<?php if (!empty($attributes['${camelCaseName}']) && !empty($attributes['${camelCaseName}']['url'])) {
     $url = esc_url($attributes['${camelCaseName}']['url']);
     $text = !empty($attributes['${camelCaseName}']['text']) ? esc_html($attributes['${camelCaseName}']['text']) : $url;
-    echo '<a href="' . $url . '">' . $text . '</a>';
+    $target = !empty($attributes['${camelCaseName}']['target']) ? esc_attr($attributes['${camelCaseName}']['target']) : '_self';
+    echo '<a href="' . $url . '" target="' . $target . '">' . $text . '</a>';
 } ?>`;
       break;
     case "color":

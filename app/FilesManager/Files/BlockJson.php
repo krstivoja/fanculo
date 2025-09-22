@@ -5,6 +5,7 @@ namespace Fanculo\FilesManager\Files;
 use Fanculo\FilesManager\Interfaces\FileGeneratorInterface;
 use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
+use Fanculo\FilesManager\Services\AttributeMapper;
 use WP_Post;
 
 class BlockJson implements FileGeneratorInterface
@@ -113,16 +114,10 @@ class BlockJson implements FileGeneratorInterface
         // Conditionally add asset files only if they exist
         $this->addConditionalAssets($blockJson, $outputPath);
 
-        // Add attributes if available with validation
-        if (!empty($attributes)) {
-            if (is_string($attributes)) {
-                $decodedAttributes = json_decode($attributes, true);
-                if (json_last_error() === JSON_ERROR_NONE && is_array($decodedAttributes)) {
-                    $blockJson['attributes'] = $decodedAttributes;
-                }
-            } elseif (is_array($attributes)) {
-                $blockJson['attributes'] = $attributes;
-            }
+        // Add attributes using AttributeMapper for consistent schema generation
+        $attributeSchema = AttributeMapper::generateAttributeSchema($post->ID);
+        if (!empty($attributeSchema)) {
+            $blockJson['attributes'] = $attributeSchema;
         }
 
         // Deep merge additional settings (excluding already processed ones)

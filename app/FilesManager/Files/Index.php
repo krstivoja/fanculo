@@ -3,6 +3,7 @@
 namespace Fanculo\FilesManager\Files;
 
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
+use Fanculo\FilesManager\Services\AttributeMapper;
 
 class Index
 {
@@ -98,9 +99,21 @@ class Index
             }
         }
 
+        // Generate sidebar controls based on attributes
+        $sidebarControls = '';
+        $hasAttributes = false;
+        if ($postId && AttributeMapper::hasAttributes($postId)) {
+            $hasAttributes = true;
+            $sidebarControls = AttributeMapper::generateSidebarControls($postId);
+        }
+
+        // Component imports for attributes
+        $componentImports = $hasAttributes ? AttributeMapper::generateComponentImports() : '';
+
         $content = '(function () {
     const { registerBlockType } = wp.blocks;
-    const { InnerBlocks } = wp.blockEditor;
+    const { InnerBlocks, InspectorControls } = wp.blockEditor;
+' . $componentImports . '
 ' . $parserOptionsJs . '
 
     // Use wp.domReady for proper dependency loading
@@ -111,11 +124,28 @@ class Index
             return;
         }
 
-        // Use the shared FanculoBlockRenderer to create the edit component
-        const Edit = window.FanculoBlockRenderer.createServerRenderComponent(
+        // Create enhanced edit component with sidebar controls
+        const BaseEdit = window.FanculoBlockRenderer.createServerRenderComponent(
             "fanculo/BLOCK_SLUG_PLACEHOLDER",
             PARSER_OPTIONS
         );
+
+        const Edit = function(props) {
+            const { attributes, setAttributes } = props;
+            const hasAttributePanel = ' . ($hasAttributes ? 'true' : 'false') . ';
+
+            return wp.element.createElement(wp.element.Fragment, null,
+                // Add InspectorControls with attribute panels
+                hasAttributePanel && wp.element.createElement(InspectorControls, { key: "inspector" },
+                    wp.element.createElement(PanelBody, {
+                        title: "Block Settings",
+                        initialOpen: true
+                    }, [' . $sidebarControls . '])
+                ),
+                // Render the actual block content
+                wp.element.createElement(BaseEdit, props)
+            );
+        };
 
         // Register block with metadata from generated block.json
         registerBlockType("fanculo/BLOCK_SLUG_PLACEHOLDER", {

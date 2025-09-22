@@ -1,51 +1,24 @@
 <?php
-namespace GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components;
+namespace Fanculo\FilesManager\Files\Fields;
 
 class Radio {
     public static function generate($attr) {
-        // Validate attribute keys
-        if (!isset($attr['id']) || !isset($attr['name'])) {
-            // Radio component error: Missing id or name for attribute
-            return 'null';
-        }
+        $name = esc_js($attr['name'] ?? '');
+        $label = esc_js($attr['label'] ?? '');
+        $id = esc_js($attr['id'] ?? $name);
 
-        // Validate and prepare options
-        $options = isset($attr['options']) && is_array($attr['options']) ? $attr['options'] : [];
-        $valid_options = array_filter($options, function ($option) {
-            return isset($option['label'], $option['value']) && is_string($option['label']) && $option['label'] !== '';
-        });
-
-        if (empty($valid_options)) {
-                            // Radio component warning: No valid options for attribute
-            $valid_options = [['label' => 'No options available', 'value' => '']];
-        }
-
-        $options_js = json_encode($valid_options);
-        error_log('Radio Component Options for ' . $attr['name'] . ': ' . $options_js);
+        // Ensure options is an array, default to empty if not set
+        $options = isset($attr['options']) && is_array($attr['options']) ? json_encode($attr['options'], JSON_UNESCAPED_SLASHES) : '[]';
 
         $script = <<<EOT
-wp.element.createElement(
-    'div',
-    { 
-        key: '{$attr['id']}',
-        style: { marginBottom: '16px' }
-    },
-    wp.element.createElement(
-        'div',
-        { 
-            style: { 
-                marginBottom: '8px',
-                fontWeight: 'bold'
-            }
-        },
-        '{$attr['name']}'
-    ),
-    wp.element.createElement(wp.components.RadioControl, {
-        selected: attributes['{$attr['name']}'] || '',
-        onChange: (value) => setAttributes({ ['{$attr['name']}']: value }),
-        options: {$options_js}
-    })
-)
+wp.element.createElement(RadioControl, {
+    key: '{$id}',
+    label: '{$label}',
+    selected: attributes['{$name}'] || '',
+    onChange: (value) => setAttributes({ ['{$name}']: value }),
+    options: {$options},
+    __nextHasNoMarginBottom: true
+})
 EOT;
 
         return $script;

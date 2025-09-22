@@ -14,7 +14,6 @@ export const ATTRIBUTE_TYPES = [
   { label: "Image", value: "image" },
   { label: "Link", value: "link" },
   { label: "Color", value: "color" },
-  { label: "Rich Text", value: "richText" },
   { label: "Select", value: "select" },
   { label: "Toggle", value: "toggle" },
   { label: "Checkbox", value: "checkbox" },
@@ -39,7 +38,6 @@ export const ATTRIBUTE_TYPES_WITHOUT_OPTIONS = [
   "checkbox",
   "image",
   "link",
-  "richText",
 ];
 
 // Default new attribute structure

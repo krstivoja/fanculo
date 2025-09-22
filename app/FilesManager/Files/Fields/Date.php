@@ -1,5 +1,5 @@
 <?php
-namespace GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components;
+namespace Fanculo\FilesManager\Files\Fields;
 
 class Date {
     public static function generate($attr) {

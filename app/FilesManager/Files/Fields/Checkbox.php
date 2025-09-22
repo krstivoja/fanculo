@@ -1,15 +1,20 @@
 <?php
-namespace GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components;
+namespace Fanculo\FilesManager\Files\Fields;
 
 class Checkbox {
     public static function generate($attr) {
-        $script = <<<EOT
+        $name = esc_js($attr['name'] ?? '');
+        $label = esc_js($attr['label'] ?? '');
+        $id = esc_js($attr['id'] ?? $name);
 
-    wp.element.createElement(wp.components.CheckboxControl, {
-        checked: attributes['{$attr['name']}'] || false,
-        onChange: (value) => setAttributes({ ['{$attr['name']}']: value }),
-        label: '{$attr['label']}'
-    })
+        $script = <<<EOT
+wp.element.createElement(CheckboxControl, {
+    key: '{$id}',
+    checked: attributes['{$name}'] || false,
+    onChange: (value) => setAttributes({ ['{$name}']: value }),
+    label: '{$label}',
+    __nextHasNoMarginBottom: true
+})
 EOT;
 
         return $script;

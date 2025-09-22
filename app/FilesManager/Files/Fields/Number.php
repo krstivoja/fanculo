@@ -1,16 +1,25 @@
 <?php
-namespace GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components;
+namespace Fanculo\FilesManager\Files\Fields;
 
 class Number {
     public static function generate($attr) {
+        $name = esc_js($attr['name'] ?? '');
+        $label = esc_js($attr['label'] ?? '');
+        $id = esc_js($attr['id'] ?? $name);
+        $min = isset($attr['min']) ? floatval($attr['min']) : 'undefined';
+        $max = isset($attr['max']) ? floatval($attr['max']) : 'undefined';
+        $step = isset($attr['step']) ? floatval($attr['step']) : 'undefined';
+
         $script = <<<EOT
-wp.element.createElement(wp.components.__experimentalInputControl, {
-    key: '{$attr['id']}',
-    value: typeof attributes['{$attr['name']}'] === 'number' ? attributes['{$attr['name']}'] : 0,
-    onChange: (value) => setAttributes({ ['{$attr['name']}']: value }),
-    label: '{$attr['label']}',
-    type: 'number',
-    __next40pxDefaultSize: true
+wp.element.createElement(NumberControl, {
+    key: '{$id}',
+    value: attributes['{$name}'] ?? 0,
+    onChange: (value) => setAttributes({ ['{$name}']: parseFloat(value) || 0 }),
+    label: '{$label}',
+    min: {$min},
+    max: {$max},
+    step: {$step},
+    __nextHasNoMarginBottom: true
 })
 EOT;
 

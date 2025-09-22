@@ -1,19 +1,6 @@
 <?php
-namespace GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components;
+namespace Fanculo\FilesManager\Files\Fields;
 
-use GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components\Text;
-use GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components\Number;
-use GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components\Date;
-use GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components\Link;
-use GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components\Color;
-use GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components\RichText;
-use GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components\Select;
-use GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components\Range;
-use GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components\Textarea;
-use GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components\Toggle;
-use GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components\Checkbox;
-use GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components\Radio;
-use GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components\Image;
 
 class Components {
     public static function generateInput($attr, $attributes, $setAttributes) {

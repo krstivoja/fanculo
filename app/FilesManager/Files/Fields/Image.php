@@ -1,5 +1,5 @@
 <?php
-namespace GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components;
+namespace Fanculo\FilesManager\Files\Fields;
 
 class Image {
     public static function generate($attr) {
@@ -38,7 +38,7 @@ class Image {
             (() => {
                 const image = attributes['$name'];
                 const setImage = (media) => setAttributes({ ['$name']: { id: media.id, url: media.url, alt: media.alt } });
-                const removeImage = () => setAttributes({ ['$name']: null });
+                const removeImage = () => setAttributes({ ['$name']: { id: 0, url: '', alt: '' } });
                 return wp.element.createElement(
                     'div',
                     { className: 'editor-post-featured-image gutenberg-block-studio-image-component', key: 'image-component-$id' },
@@ -55,7 +55,7 @@ class Image {
                     wp.element.createElement(
                         'div',
                         { key: 'image-container-$id', className: 'editor-post-featured-image__container' },
-                        !image
+                        !image || !image.id || !image.url
                             ? wp.element.createElement(
                                 wp.blockEditor.MediaUpload,
                                 {

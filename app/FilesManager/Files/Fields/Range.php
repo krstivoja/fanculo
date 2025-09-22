@@ -1,23 +1,26 @@
 <?php
-namespace GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components;
+namespace Fanculo\FilesManager\Files\Fields;
 
 class Range {
     public static function generate($attr) {
-        // Get range settings from the range object or use defaults
-        $range = isset($attr['range']) ? $attr['range'] : [];
-        $min = 0; // Always start from 0
-        $max = isset($range['max']) ? $range['max'] : (isset($attr['max']) ? $attr['max'] : 100);
-        $step = 1; // Default step value
-        $script = <<<EOT
+        $name = esc_js($attr['name'] ?? '');
+        $label = esc_js($attr['label'] ?? '');
+        $id = esc_js($attr['id'] ?? $name);
+        $min = isset($attr['min']) ? floatval($attr['min']) : 0;
+        $max = isset($attr['max']) ? floatval($attr['max']) : 100;
+        $step = isset($attr['step']) ? floatval($attr['step']) : 1;
 
-    wp.element.createElement(wp.components.RangeControl, {
-       key: 'range-control-{$attr['name']}',
-       value: typeof attributes['{$attr['name']}'] === 'number' ? attributes['{$attr['name']}'] : Number({$min}),
-        onChange: (value) => setAttributes({ ['{$attr['name']}']: value }),
-        min: {$min},
-        max: {$max},
-        step: {$step}
-    })
+        $script = <<<EOT
+wp.element.createElement(RangeControl, {
+    key: '{$id}',
+    label: '{$label}',
+    value: attributes['{$name}'] ?? {$min},
+    onChange: (value) => setAttributes({ ['{$name}']: parseFloat(value) || {$min} }),
+    min: {$min},
+    max: {$max},
+    step: {$step},
+    __nextHasNoMarginBottom: true
+})
 EOT;
 
         return $script;

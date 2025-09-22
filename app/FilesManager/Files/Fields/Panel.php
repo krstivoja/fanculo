@@ -1,7 +1,6 @@
 <?php
-namespace GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components;
+namespace Fanculo\FilesManager\Files\Fields;
 
-use GutenbergBlockStudio\App\Blocks\SaveBlocks\Templates\Components\Input;
 
 class Panel {
     public static function generate($blockAttributes, $attributes, $setAttributes) {
