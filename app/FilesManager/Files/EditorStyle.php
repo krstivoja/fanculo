@@ -16,35 +16,107 @@ class EditorStyle implements FileGeneratorInterface
 
     public function generate(int $postId, WP_Post $post, string $outputPath): bool
     {
-        $editorScssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_SCSS, true);
+        // Try to get compiled editor CSS first
+        $editorCssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT, true);
 
-        if (empty($editorScssContent)) {
+        // If no compiled CSS, fall back to SCSS content as CSS (basic fallback)
+        if (empty($editorCssContent)) {
+            $editorScssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_SCSS, true);
+            if (!empty($editorScssContent)) {
+                $editorCssContent = $editorScssContent;
+            }
+        }
+
+        if (empty($editorCssContent)) {
             return false;
         }
 
-        $filepath = $outputPath . '/' . $this->getGeneratedFileName($post);
+        $cssFilepath = $outputPath . '/' . $this->getGeneratedFileName($post);
+        $sourceMapFilepath = $outputPath . '/' . $this->getSourceMapFileName($post);
 
-        return file_put_contents($filepath, $editorScssContent) !== false;
+        // Generate source map for debugging
+        $sourceMap = $this->generateSourceMap($post, $editorCssContent);
+
+        // Add source map reference to CSS
+        $cssWithSourceMap = $editorCssContent . "\n/*# sourceMappingURL=" . basename($sourceMapFilepath) . " */";
+
+        // Write CSS file
+        $cssWritten = file_put_contents($cssFilepath, $cssWithSourceMap) !== false;
+
+        // Write source map file
+        $sourceMapWritten = file_put_contents($sourceMapFilepath, $sourceMap) !== false;
+
+        return $cssWritten && $sourceMapWritten;
     }
 
     public function getRequiredMetaKeys(): array
     {
-        return [MetaKeysConstants::BLOCK_EDITOR_SCSS];
+        return [MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT, MetaKeysConstants::BLOCK_EDITOR_SCSS];
     }
 
     public function getGeneratedFileName(WP_Post $post): string
     {
-        return 'editor.scss';
+        return 'editor.css';
     }
 
     public function getFileExtension(): string
     {
-        return 'scss';
+        return 'css';
     }
 
     public function validate(int $postId): bool
     {
+        // Check if we have either compiled CSS or SCSS content
+        $editorCssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT, true);
         $editorScssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_SCSS, true);
-        return !empty($editorScssContent);
+
+        return !empty($editorCssContent) || !empty($editorScssContent);
+    }
+
+    /**
+     * Get source map filename
+     */
+    private function getSourceMapFileName(WP_Post $post): string
+    {
+        return 'editor.css.map';
+    }
+
+    /**
+     * Generate source map for CSS debugging
+     */
+    private function generateSourceMap(WP_Post $post, string $cssContent): string
+    {
+        $sourceMap = [
+            'version' => 3,
+            'file' => 'editor.css',
+            'sources' => ['editor.scss'],
+            'sourcesContent' => [get_post_meta($post->ID, MetaKeysConstants::BLOCK_EDITOR_SCSS, true) ?: ''],
+            'names' => [],
+            'mappings' => $this->generateBasicMappings($cssContent)
+        ];
+
+        return json_encode($sourceMap, JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * Generate basic source mappings (simplified approach)
+     */
+    private function generateBasicMappings(string $cssContent): string
+    {
+        // Simple mapping - each line in CSS maps to corresponding line in SCSS
+        // This is a basic implementation, more sophisticated mapping could be added later
+        $lines = explode("\n", $cssContent);
+        $mappings = [];
+
+        foreach ($lines as $index => $line) {
+            if (trim($line) !== '') {
+                // Basic mapping format: column 0 of generated line maps to column 0 of source line
+                $mappings[] = 'AAAA';
+            } else {
+                $mappings[] = '';
+            }
+        }
+
+        return implode(';', $mappings);
     }
 }

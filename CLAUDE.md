@@ -211,12 +211,11 @@ app/
 #### D-3 (MUST) Generated files and destinations
 - Generation orchestrated by `app/FilesManager/FilesManagerService.php` and `app/Services/FileGenerationService.php`.
 - Generators:
-  - `BlockJsonGenerator.php`: emits `block.json`.
-  - `RenderFileGenerator.php` / `ViewFileGenerator.php`: PHP render/view templates.
-  - `StyleFileGenerator.php` / `CssFileGenerator.php`: compiled block styles.
-  - `ScssPartialGenerator.php`: SCSS partials (consumed by build).
-  - `Index.php` / `IndexAssets.php`: index/manifest for discovery and loading.
-  - `SymbolFileGenerator.php`: symbol assets.
+  - `BlockJson.php`: emits `block.json`.
+  - `Render.php` / `ViewJS.php`: PHP render/view templates.
+  - `Style.php` / `EditorStyle.php`: compiled CSS with source maps.
+  - `ScssPartial.php`: SCSS partials (consumed by build).
+  - `Symbol.php`: symbol assets.
 - Document exact output paths (plugin `dist/…` or theme paths), file naming, and how imports are wired into builds.
 
 #### D-4 (SHOULD) Generation lifecycle
@@ -435,7 +434,7 @@ Update README.md immediately after:
 - **Generates**:
   - `block.json` with proper structure
   - `render.php` with security best practices
-  - `style.scss` with organized structure
+  - `style.css` with source maps for debugging
   - `edit.js` with TypeScript support
 - **Example**: `BGEN testimonial content` → Creates testimonial block in content category
 

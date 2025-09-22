@@ -46,6 +46,30 @@ class ScssCompilerApiController
             ]
         ]);
 
+        // Editor SCSS compilation routes
+        register_rest_route('funculo/v1', '/post/(?P<id>\d+)/editor-scss', [
+            [
+                'methods' => 'GET',
+                'callback' => [$this, 'getEditorScssContent'],
+                'permission_callback' => [$this, 'checkPermissions'],
+            ],
+            [
+                'methods' => 'POST',
+                'callback' => [$this, 'compileAndSaveEditorScss'],
+                'permission_callback' => [$this, 'checkCreatePermissions'],
+                'args' => [
+                    'editor_scss_content' => [
+                        'required' => false,
+                        'type' => 'string',
+                    ],
+                    'editor_css_content' => [
+                        'required' => false,
+                        'type' => 'string',
+                    ],
+                ],
+            ]
+        ]);
+
         // SCSS partials routes
         register_rest_route('funculo/v1', '/scss-partials', [
             'methods' => 'GET',
@@ -174,6 +198,86 @@ class ScssCompilerApiController
             'css_content' => $css_content ?: '',
             'compiled_at' => $compiled_at ? gmdate('c', $compiled_at) : null
         ], 200);
+    }
+
+    /**
+     * Get editor SCSS and CSS content for a post
+     *
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response|WP_Error
+     */
+    public function getEditorScssContent(WP_REST_Request $request)
+    {
+        $post_id = $request->get_param('id');
+
+        if (!$post_id) {
+            return new WP_Error('missing_post_id', 'Post ID is required', ['status' => 400]);
+        }
+
+        // Verify the post exists
+        $post = get_post($post_id);
+        if (!$post) {
+            return new WP_Error('post_not_found', 'Post not found', ['status' => 404]);
+        }
+
+        $editor_scss_content = get_post_meta($post_id, MetaKeysConstants::BLOCK_EDITOR_SCSS, true);
+        $editor_css_content = get_post_meta($post_id, MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT, true);
+        $compiled_at = get_post_meta($post_id, MetaKeysConstants::CSS_COMPILED_AT, true);
+
+        return new WP_REST_Response([
+            'post_id' => $post_id,
+            'editor_scss_content' => $editor_scss_content ?: '',
+            'editor_css_content' => $editor_css_content ?: '',
+            'compiled_at' => $compiled_at ? gmdate('c', $compiled_at) : null
+        ], 200);
+    }
+
+    /**
+     * Compile editor SCSS content to CSS and save it as meta
+     *
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response|WP_Error
+     */
+    public function compileAndSaveEditorScss(WP_REST_Request $request)
+    {
+        $post_id = $request->get_param('id');
+        $editor_scss_content = $request->get_param('editor_scss_content');
+        $editor_css_content = $request->get_param('editor_css_content');
+
+        if (!$post_id) {
+            return new WP_Error('missing_post_id', 'Post ID is required', ['status' => 400]);
+        }
+
+        // Verify the post exists
+        $post = get_post($post_id);
+        if (!$post) {
+            return new WP_Error('post_not_found', 'Post not found', ['status' => 404]);
+        }
+
+        try {
+            // Save editor SCSS content if provided
+            if ($editor_scss_content !== null) {
+                update_post_meta($post_id, MetaKeysConstants::BLOCK_EDITOR_SCSS, $editor_scss_content);
+            }
+
+            // Save compiled editor CSS content if provided
+            if ($editor_css_content !== null) {
+                update_post_meta($post_id, MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT, $editor_css_content);
+
+                // Also save compilation timestamp
+                update_post_meta($post_id, MetaKeysConstants::CSS_COMPILED_AT, current_time('timestamp'));
+            }
+
+            return new WP_REST_Response([
+                'success' => true,
+                'post_id' => $post_id,
+                'message' => 'Editor SCSS compiled and saved successfully',
+                'compiled_at' => current_time('c')
+            ], 200);
+
+        } catch (\Exception $e) {
+            return new WP_Error('compilation_error', $e->getMessage(), ['status' => 500]);
+        }
     }
 
     /**
@@ -323,18 +427,20 @@ class ScssCompilerApiController
         ];
 
         foreach ($compilations as $index => $compilation) {
-            if (!isset($compilation['post_id']) || !isset($compilation['scss_content'])) {
+            if (!isset($compilation['post_id'])) {
                 $results['failed'][] = [
                     'index' => $index,
                     'post_id' => $compilation['post_id'] ?? 'unknown',
-                    'error' => 'Post ID and SCSS content are required',
+                    'error' => 'Post ID is required',
                 ];
                 continue;
             }
 
             $postId = (int)$compilation['post_id'];
-            $scssContent = $compilation['scss_content'];
+            $scssContent = $compilation['scss_content'] ?? null;
             $cssContent = $compilation['css_content'] ?? null;
+            $editorScssContent = $compilation['editor_scss_content'] ?? null;
+            $editorCssContent = $compilation['editor_css_content'] ?? null;
 
             try {
                 // Verify the post exists
@@ -343,12 +449,28 @@ class ScssCompilerApiController
                     throw new \Exception('Post not found');
                 }
 
-                // Save SCSS content
-                update_post_meta($postId, MetaKeysConstants::SCSS_CONTENT, $scssContent);
+                // Save main SCSS content if provided
+                if ($scssContent !== null) {
+                    update_post_meta($postId, MetaKeysConstants::SCSS_CONTENT, $scssContent);
+                }
 
-                // Save CSS content if provided
+                // Save main CSS content if provided
                 if ($cssContent !== null) {
                     update_post_meta($postId, MetaKeysConstants::CSS_CONTENT, $cssContent);
+                }
+
+                // Save editor SCSS content if provided
+                if ($editorScssContent !== null) {
+                    update_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_SCSS, $editorScssContent);
+                }
+
+                // Save editor CSS content if provided
+                if ($editorCssContent !== null) {
+                    update_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT, $editorCssContent);
+                }
+
+                // Update compilation timestamp if any CSS was compiled
+                if ($cssContent !== null || $editorCssContent !== null) {
                     update_post_meta($postId, MetaKeysConstants::CSS_COMPILED_AT, current_time('mysql'));
                 }
 
@@ -357,6 +479,8 @@ class ScssCompilerApiController
                     'post_id' => $postId,
                     'title' => get_the_title($postId),
                     'compiled_at' => current_time('mysql'),
+                    'main_css' => $cssContent !== null,
+                    'editor_css' => $editorCssContent !== null,
                 ];
 
             } catch (\Exception $e) {

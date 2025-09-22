@@ -7,8 +7,6 @@ use Fanculo\FilesManager\Files\Render;
 use Fanculo\FilesManager\Files\ViewJS;
 use Fanculo\FilesManager\Files\Style;
 use Fanculo\FilesManager\Files\EditorStyle;
-use Fanculo\FilesManager\Files\CssFile;
-use Fanculo\FilesManager\Files\EditorCssFile;
 use Fanculo\FilesManager\Files\BlockJson;
 use Fanculo\FilesManager\Files\Symbol;
 use Fanculo\FilesManager\Files\ScssPartial;
@@ -43,9 +41,9 @@ class GenerationMapper
     {
         return [
             FunculoTypeTaxonomy::getTermBlocks() => [
-                'generators' => ['render', 'view', 'style', 'css', 'block_json'],
+                'generators' => ['render', 'view', 'css', 'editor_css', 'block_json'],
                 'directory' => 'block-specific', // Each block gets its own directory
-                'description' => 'WordPress blocks with render.php, view.js, style.scss, style.css, and block.json'
+                'description' => 'WordPress blocks with render.php, view.js, style.css, editor.css, and block.json'
             ],
             FunculoTypeTaxonomy::getTermSymbols() => [
                 'generators' => ['symbol'],
@@ -65,10 +63,8 @@ class GenerationMapper
         $this->generators = [
             'render' => new Render(),
             'view' => new ViewJS(),
-            'style' => new Style(),
-            'editor_style' => new EditorStyle(),
-            'css' => new CssFile(),
-            'editor_css' => new EditorCssFile(),
+            'css' => new Style(),
+            'editor_css' => new EditorStyle(),
             'block_json' => new BlockJson(),
             'symbol' => new Symbol(),
             'scss_partial' => new ScssPartial()

@@ -48,6 +48,9 @@ class MetaKeysConstants
     /** @var string Compiled CSS content */
     const CSS_CONTENT = '_funculo_css_content';
 
+    /** @var string Compiled editor CSS content */
+    const BLOCK_EDITOR_CSS_CONTENT = '_funculo_block_editor_css_content';
+
     /** @var string Timestamp when CSS was last compiled */
     const CSS_COMPILED_AT = '_funculo_css_compiled_at';
 
@@ -97,6 +100,7 @@ class MetaKeysConstants
             // SCSS compilation keys
             self::SCSS_CONTENT,
             self::CSS_CONTENT,
+            self::BLOCK_EDITOR_CSS_CONTENT,
             self::CSS_COMPILED_AT,
 
             // Symbol keys
@@ -139,6 +143,7 @@ class MetaKeysConstants
         return [
             self::SCSS_CONTENT,
             self::CSS_CONTENT,
+            self::BLOCK_EDITOR_CSS_CONTENT,
             self::CSS_COMPILED_AT,
             self::SCSS_PARTIAL_SCSS,
             self::SCSS_IS_GLOBAL,
