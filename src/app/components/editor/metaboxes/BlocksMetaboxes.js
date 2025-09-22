@@ -12,9 +12,9 @@ const BlocksMetaboxes = ({ metaData, onChange, titleComponent }) => {
   const blocks = metaData?.blocks || {};
 
   const tabs = [
-    { id: 'php', label: 'PHP', language: 'php', required: true, placeholder: 'Enter PHP code for the block...' },
-    { id: 'scss', label: 'SCSS', language: 'scss', placeholder: 'Enter SCSS styles for the block...' },
-    { id: 'js', label: 'JavaScript', language: 'javascript', placeholder: 'Enter JavaScript code for the block...' },
+    { id: 'php', label: 'Content', language: 'php', required: true, placeholder: 'Enter PHP code for the block...' },
+    { id: 'scss', label: 'Style', language: 'scss', placeholder: 'Enter SCSS styles for the block...' },
+    { id: 'js', label: 'View', language: 'javascript', placeholder: 'Enter JavaScript code for the block...' },
     { id: 'attributes', label: 'Attributes', isAttributesTab: true }
   ];
 
