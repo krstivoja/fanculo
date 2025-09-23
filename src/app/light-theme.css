@@ -1,0 +1,11 @@
+[data-theme="dark"] {
+    --color-base-1: #ffffff;   /* main background */
+    --color-base-2: #f5f6f8;   /* secondary background */
+    --color-base-3: #d0d3d9;   /* subtle borders/elements */
+    --color-contrast: #4a4f58; /* text on light background */
+    --color-highlight: #000000;/* headings / high contrast text */
+    --color-action: #0066ff;   /* primary action (blue) */
+    --color-outline: #c5c7ce;  /* outlines / dividers */
+    --color-error: #d32f2f;    /* accessible error red */
+    --color-warning: #f9a825;  /* warning yellow */
+}
