@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import './styles/reset-wp.css';
-@import './styles/form.css';
+@import './styles/form.css'; 
 
 :root {
     --sidebar: 350px;
@@ -43,13 +43,16 @@
     /* border: 5px solid lime; */
 }
 
+
+
+
+
+
 .monaco-editor .view-overlays .current-line-exact {
     border: 2px solid #5a606d5c !important;
 }
 
-.monaco-editor,
-.monaco-diff-editor,
-.monaco-component {
+.monaco-editor, .monaco-diff-editor, .monaco-component {
     --vscode-editor-background: #272c35 !important;
     --vscode-editorGutter-background: #272c35 !important;
 }

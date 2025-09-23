@@ -27,15 +27,12 @@ class EditorStyle implements FileGeneratorInterface
             }
         }
 
+        if (empty($editorCssContent)) {
+            return false;
+        }
+
         $cssFilepath = $outputPath . '/' . $this->getGeneratedFileName($post);
         $sourceMapFilepath = $outputPath . '/' . $this->getSourceMapFileName($post);
-
-        // If content is empty, delete the files if they exist
-        if (empty($editorCssContent)) {
-            $cssDeleted = !file_exists($cssFilepath) || unlink($cssFilepath);
-            $sourceMapDeleted = !file_exists($sourceMapFilepath) || unlink($sourceMapFilepath);
-            return $cssDeleted && $sourceMapDeleted;
-        }
 
         // Generate source map for debugging
         $sourceMap = $this->generateSourceMap($post, $editorCssContent);
@@ -69,8 +66,11 @@ class EditorStyle implements FileGeneratorInterface
 
     public function validate(int $postId): bool
     {
-        // Always valid - either generates CSS content or deletes existing files when empty
-        return true;
+        // Check if we have either compiled CSS or SCSS content
+        $editorCssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT, true);
+        $editorScssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_SCSS, true);
+
+        return !empty($editorCssContent) || !empty($editorScssContent);
     }
 
     /**

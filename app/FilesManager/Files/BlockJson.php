@@ -100,8 +100,7 @@ class BlockJson implements FileGeneratorInterface
 
         // Add supports with defaults that can be overridden
         $defaultSupports = [
-            'html' => false,
-            'interactivity' => true
+            'html' => false
         ];
 
         if (isset($settingsData['supports']) && is_array($settingsData['supports'])) {
@@ -140,13 +139,12 @@ class BlockJson implements FileGeneratorInterface
     private function addConditionalAssets(array &$blockJson, string $outputPath): void
     {
         // Define potential asset files
-        // Always use viewScriptModule for modern Script Module support
         $assetFiles = [
             'editorScript' => 'index.js',
             'style' => 'style.css',
             'editorStyle' => 'editor.css',
             'render' => 'render.php',
-            'viewScriptModule' => 'view.js'
+            'viewScript' => 'view.js'
         ];
 
         foreach ($assetFiles as $property => $filename) {
