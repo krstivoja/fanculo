@@ -87,12 +87,9 @@ const DefaultTemplateManager = ({
       <div className="space-y-2">
         <Hr />
         <label className="block text-sm font-medium text-highlight">
-          Default Template Blocks
+          Block added by default
         </label>
-        <p className="text-xs text-contrast mb-3">
-          Add blocks that will be automatically inserted when this block is created. Drag to reorder.
-        </p>
-
+        
         <ReactTags
           tags={templateTags}
           suggestions={templateSuggestions}
@@ -103,14 +100,6 @@ const DefaultTemplateManager = ({
           maxTags={1}
         />
 
-
-        {/* Help Text */}
-        <div className="text-xs text-contrast space-y-1">
-          <div>• Only blocks from "Allowed Block Types" can be added to template</div>
-          <div>• Template blocks are inserted in order when the block is created</div>
-          <div>• Use drag and drop to reorder template blocks</div>
-          <div>• Template lock prevents users from modifying the structure</div>
-        </div>
       </div>
     </div>
   );
@@ -304,30 +293,26 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
       {/* Block Selection Interface */}
       {isEnabled && (
         <div className="space-y-5 p-4 border border-outline rounded-md bg-base-2">
-          <div>
-            <label className="block text-sm font-medium text-highlight mb-2">
+           <label className="block text-sm font-medium text-highlight mb-2">
               Allowed Block Types
-            </label>           
-          </div>
+            </label>       
 
           {loading ? (
             <div className="text-sm text-contrast">Loading available blocks...</div>
           ) : (
-            <div className="space-y-2">
-              <ReactTags
-                tags={selectedBlocks}
-                suggestions={blockSuggestions}
-                handleDelete={handleDelete}
-                handleAddition={handleAddition}
-                handleDrag={handleDrag}
-                handleTagClick={handleTagClick}
-                placeholder="Type a block name and press Enter..."
-              />
-            </div>
+            <ReactTags
+            tags={selectedBlocks}
+            suggestions={blockSuggestions}
+            handleDelete={handleDelete}
+            handleAddition={handleAddition}
+            handleDrag={handleDrag}
+            handleTagClick={handleTagClick}
+            placeholder="Type a block name and press Enter..."
+            />
           )}
 
-          <p className="text-xs text-contrast">
-            Specify blocks for the inserter. Leave blank to allow all.
+          <p className="text-xs text-contrast !m-0">
+            Leave blank to allow all.
           </p>
 
           <div className="space-y-2">
