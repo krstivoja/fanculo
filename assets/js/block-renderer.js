@@ -17,13 +17,33 @@
         'a', 'img', 'ul', 'ol', 'li', 'strong', 'em', 'b', 'i',
         'section', 'article', 'header', 'footer', 'main', 'aside',
         'nav', 'figure', 'figcaption', 'blockquote', 'pre', 'code',
-        'table', 'thead', 'tbody', 'tr', 'th', 'td', 'button'
+        'table', 'thead', 'tbody', 'tr', 'th', 'td', 'button',
+        // Form elements
+        'form', 'label', 'input', 'textarea', 'select', 'option',
+        'fieldset', 'legend', 'output',
+        // SVG elements for icons
+        'svg', 'path', 'circle', 'rect', 'line', 'polygon', 'polyline',
+        'ellipse', 'g', 'defs', 'use', 'symbol', 'marker', 'clipPath',
+        // Additional semantic elements
+        'time', 'address', 'details', 'summary', 'mark', 'small'
     ];
 
     // Safe attributes allowlist
     const SAFE_ATTRIBUTES = [
         'class', 'id', 'style', 'title', 'alt', 'src', 'href',
-        'target', 'rel', 'data-*', 'aria-*', 'role'
+        'target', 'rel', 'data-*', 'aria-*', 'role',
+        // Form attributes
+        'action', 'method', 'type', 'name', 'value', 'placeholder',
+        'for', 'autocomplete', 'required', 'disabled', 'readonly',
+        'checked', 'selected', 'multiple', 'size', 'maxlength',
+        'minlength', 'min', 'max', 'step', 'pattern', 'accept',
+        // SVG attributes
+        'viewBox', 'xmlns', 'width', 'height', 'fill', 'stroke',
+        'stroke-width', 'stroke-linecap', 'stroke-linejoin',
+        'd', 'cx', 'cy', 'r', 'rx', 'ry', 'x', 'y', 'x1', 'y1',
+        'x2', 'y2', 'points', 'transform', 'opacity',
+        // Additional semantic attributes
+        'datetime', 'open', 'tabindex'
     ];
 
     // Key generation counter for collision prevention
