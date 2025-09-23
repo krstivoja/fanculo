@@ -17,14 +17,17 @@ class ViewJS implements FileGeneratorInterface
     public function generate(int $postId, WP_Post $post, string $outputPath): bool
     {
         $jsContent = get_post_meta($postId, MetaKeysConstants::BLOCK_JS, true);
-
-        if (empty($jsContent)) {
-            return false;
-        }
-
         $filepath = $outputPath . '/' . $this->getGeneratedFileName($post);
 
+        // If content is empty, delete the file if it exists
+        if (empty($jsContent)) {
+            if (file_exists($filepath)) {
+                return unlink($filepath);
+            }
+            return true; // Success - no file needed
+        }
 
+        // Generate file with JS content
         return file_put_contents($filepath, $jsContent) !== false;
     }
 
@@ -45,7 +48,8 @@ class ViewJS implements FileGeneratorInterface
 
     public function validate(int $postId): bool
     {
-        $jsContent = get_post_meta($postId, MetaKeysConstants::BLOCK_JS, true);
-        return !empty($jsContent);
+        // Always valid - either custom JS content or auto-generated template
+        return true;
     }
+
 }
