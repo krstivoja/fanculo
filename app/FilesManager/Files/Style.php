@@ -27,12 +27,20 @@ class Style implements FileGeneratorInterface
             }
         }
 
-        if (empty($cssContent)) {
-            return false;
-        }
-
         $cssFilepath = $outputPath . '/' . $this->getGeneratedFileName($post);
         $sourceMapFilepath = $outputPath . '/' . $this->getSourceMapFileName($post);
+
+        // If content is empty, delete existing files
+        if (empty($cssContent)) {
+            $deleted = true;
+            if (file_exists($cssFilepath)) {
+                $deleted = $deleted && unlink($cssFilepath);
+            }
+            if (file_exists($sourceMapFilepath)) {
+                $deleted = $deleted && unlink($sourceMapFilepath);
+            }
+            return $deleted;
+        }
 
         // Generate source map for debugging
         $sourceMap = $this->generateSourceMap($post, $cssContent);
@@ -66,11 +74,8 @@ class Style implements FileGeneratorInterface
 
     public function validate(int $postId): bool
     {
-        // Check if we have either compiled CSS or SCSS content
-        $cssContent = get_post_meta($postId, MetaKeysConstants::CSS_CONTENT, true);
-        $scssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, true);
-
-        return !empty($cssContent) || !empty($scssContent);
+        // Always return true so generator can run to either create or delete files
+        return true;
     }
 
     /**

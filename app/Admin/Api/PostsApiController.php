@@ -480,10 +480,22 @@ class PostsApiController
                 update_post_meta($postId, MetaKeysConstants::BLOCK_PHP, wp_unslash($blocks['php']));
             }
             if (isset($blocks['scss'])) {
-                update_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, sanitize_textarea_field($blocks['scss']));
+                $scssContent = sanitize_textarea_field($blocks['scss']);
+                update_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, $scssContent);
+
+                // If SCSS content is empty, also clear compiled CSS
+                if (empty($scssContent)) {
+                    update_post_meta($postId, MetaKeysConstants::CSS_CONTENT, '');
+                }
             }
             if (isset($blocks['editorScss'])) {
-                update_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_SCSS, sanitize_textarea_field($blocks['editorScss']));
+                $editorScssContent = sanitize_textarea_field($blocks['editorScss']);
+                update_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_SCSS, $editorScssContent);
+
+                // If editor SCSS content is empty, also clear compiled editor CSS
+                if (empty($editorScssContent)) {
+                    update_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT, '');
+                }
             }
             if (isset($blocks['js'])) {
                 update_post_meta($postId, MetaKeysConstants::BLOCK_JS, sanitize_textarea_field($blocks['js']));

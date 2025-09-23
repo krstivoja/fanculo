@@ -76,6 +76,9 @@ class AdminAssets
 
             // Add the module script manually in footer
             add_action('admin_print_footer_scripts', [$this, 'outputModuleScript']);
+
+            // Add livereload script (always for now) - temporarily disabled
+            // add_action('admin_print_footer_scripts', [$this, 'outputLivereloadScript']);
         }
     }
 
@@ -139,5 +142,24 @@ class AdminAssets
         if (file_exists($jsFile)) {
             echo '<script type="module" src="' . esc_url($this->buildUrl . 'index.js') . '?ver=' . esc_attr(filemtime($jsFile)) . '"></script>' . "\n";
         }
+    }
+
+    public function outputLivereloadScript()
+    {
+        ?>
+        <script>
+        (function() {
+            // Only try to connect if we're on localhost/local development
+            if (location.hostname === 'localhost' || location.hostname.includes('.local') || location.hostname === '127.0.0.1') {
+                var script = document.createElement('script');
+                script.src = 'http://localhost:35729/livereload.js';
+                script.onerror = function() {
+                    console.log('Livereload server not available on port 35729');
+                };
+                document.head.appendChild(script);
+            }
+        })();
+        </script>
+        <?php
     }
 }
