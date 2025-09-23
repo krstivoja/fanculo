@@ -315,6 +315,15 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
             Leave blank to allow all.
           </p>
 
+          <DefaultTemplateManager
+            defaultTemplate={defaultTemplate}
+            setDefaultTemplate={setDefaultTemplate}
+            templateLock={templateLock}
+            updateTemplateSettings={updateTemplateSettings}
+            availableBlocks={availableBlocks}
+            allowedBlocks={selectedBlocks.map(tag => tag.text)}
+          />
+
           <div className="space-y-2">
             <Hr />
             <label className="block text-sm font-medium text-highlight">
@@ -330,14 +339,7 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
             </p>
           </div>
 
-          <DefaultTemplateManager
-            defaultTemplate={defaultTemplate}
-            setDefaultTemplate={setDefaultTemplate}
-            templateLock={templateLock}
-            updateTemplateSettings={updateTemplateSettings}
-            availableBlocks={availableBlocks}
-            allowedBlocks={selectedBlocks.map(tag => tag.text)}
-          />
+
         </div>
       )}
 
