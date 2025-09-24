@@ -9,8 +9,8 @@ Migrate from JSON-based post meta storage to hybrid custom tables with strategic
 - **Database Performance**: JSON strings in meta fields don't scale well
 - **Search Limitations**: Cannot efficiently query inside JSON meta
 - **Data Integrity**: No schema validation for JSON data
-- **Migration Complexity**: Hard to evolve data structure
 - **Bulk Query Issues**: `BulkQueryService.php` requires complex JSON parsing
+- **Code Complexity**: JSON parsing scattered throughout codebase
 
 ## Solution: Hybrid Custom Tables + Strategic JSON
 
@@ -92,6 +92,14 @@ CREATE TABLE funculo_block_partials (
 - Validation rules and constraints
 - Complex inner blocks configuration
 
+#### Symbols and SCSS Partials
+
+**Keep as WordPress Meta** (no custom tables needed):
+- **Symbols**: Only store `_funculo_symbol_php` (simple, no complex relationships)
+- **SCSS Partials**: Store `_funculo_scss_partial_scss`, `_funculo_scss_is_global`, `_funculo_scss_global_order` as structured meta with `register_post_meta()` validation
+
+These content types don't have the performance/complexity issues that blocks have, so WordPress meta with proper registration is sufficient.
+
 ## Implementation Steps
 
 ### Step 1: Database Infrastructure
@@ -99,7 +107,6 @@ CREATE TABLE funculo_block_partials (
 **Files to Create:**
 - `app/Database/DatabaseManager.php` - Handle dbDelta() and versioning
 - `app/Database/Schema/BlocksSchema.php` - Schema definitions
-- `app/Database/Migrations/JsonToTablesMigration.php` - Migration script
 
 **Tasks:**
 - Create database schema with `dbDelta()` in plugin activation hook
@@ -122,20 +129,21 @@ CREATE TABLE funculo_block_partials (
 - Add transient-based caching with invalidation hooks
 - Create service layer for complex operations (bulk operations, validation)
 
-### Step 3: Migration Script
+### Step 3: Development Fixtures (No Migration Needed)
 
 **Files to Create:**
-- `app/Database/Migrations/JsonToTablesMigration.php` - One-time migration
 - `app/Database/Seeds/BlockFixtures.php` - Test data fixtures
 - `app/Commands/DevSeedCommand.php` - Development seeding helper
 
 **Tasks:**
-- Parse existing `_funculo_block_attributes` JSON into normalized structure
-- Migrate `_funculo_block_settings` to `funculo_blocks` table
-- Convert `_funculo_block_selected_partials` to `funculo_block_partials` relationships
-- Create comprehensive test fixtures for QA instead of migrations
+- Create realistic block examples with various attribute types (text, select, number, etc.)
+- Generate sample SCSS partial relationships for testing
+- Provide comprehensive test data for performance testing
+- Build helper command to populate/reset development data
 
-### Step 4: Update Core Components
+**Note**: Since this is a new plugin with no users or legacy data, no migration scripts are needed. We implement the new table structure from scratch.
+
+### Step 4: Implement New Data Layer
 
 **Files to Modify:**
 - `app/Admin/Api/Services/BulkQueryService.php` - Replace JSON parsing with JOINs
@@ -144,10 +152,10 @@ CREATE TABLE funculo_block_partials (
 - `app/Admin/Api/Services/MetaKeysConstants.php` - Remove deprecated constants
 
 **Tasks:**
-- Replace meta key usage with new repository calls
-- Update bulk operations to use proper JOIN queries
-- Modify all generators to work with new data structure
-- Adjust REST routes and capability checks for new endpoints
+- Implement new repository calls (no old meta to replace)
+- Build bulk operations with proper JOIN queries
+- Create generators that work with new data structure from the start
+- Design REST routes and capability checks for new endpoints
 
 ### Step 5: Frontend Integration
 
@@ -178,9 +186,9 @@ CREATE TABLE funculo_block_partials (
 
 ### Step 7: Cleanup & Documentation
 
-**Files to Remove:**
-- Deprecated meta key constants in `MetaKeysConstants.php`
-- Old JSON parsing logic in `AttributeMapper.php`
+**Files to Remove/Refactor:**
+- Block-related meta key constants in `MetaKeysConstants.php` (keep Symbol/SCSS meta keys)
+- JSON parsing logic in `AttributeMapper.php` (replace with repository calls)
 
 **Documentation to Create:**
 - `optimisation-plan/schema-documentation.md` - Database schema docs
@@ -189,8 +197,8 @@ CREATE TABLE funculo_block_partials (
 - `optimisation-plan/testing-checklist.md` - QA procedures
 
 **Tasks:**
-- Remove deprecated meta key constants
-- Delete old JSON meta fields after successful migration
+- Remove block-related meta key constants (keep Symbol/SCSS as structured meta)
+- Replace JSON parsing with repository calls
 - Update all code comments and documentation
 - Create comprehensive testing checklist
 
@@ -202,8 +210,6 @@ app/
 │   ├── DatabaseManager.php
 │   ├── Schema/
 │   │   └── BlocksSchema.php
-│   ├── Migrations/
-│   │   └── JsonToTablesMigration.php
 │   └── Seeds/
 │       └── BlockFixtures.php
 ├── Repositories/
@@ -234,10 +240,11 @@ app/
 ## Risk Mitigation
 
 Since this plugin has no active users:
-- **No Backward Compatibility Needed**: Clean slate implementation
-- **No Gradual Rollout Required**: Direct migration to new architecture
-- **No Feature Flags Needed**: Single code path implementation
-- **Comprehensive Testing**: Use fixtures and E2E tests for validation
+- **No Migration Scripts Needed**: Implement new architecture directly
+- **No Backward Compatibility**: Clean slate implementation
+- **No Gradual Rollout**: Direct implementation of new architecture
+- **No Feature Flags**: Single code path with new table structure
+- **Focus on Testing**: Use comprehensive fixtures and E2E tests
 
 ## Success Metrics
 
@@ -251,7 +258,7 @@ Since this plugin has no active users:
 
 1. **Week 1**: Database schema and infrastructure
 2. **Week 2**: Data access layer and repositories
-3. **Week 3**: Migration scripts and core component updates
+3. **Week 3**: Core component implementation with new data layer
 4. **Week 4**: Frontend integration and testing
 5. **Week 5**: Performance optimization and documentation
 

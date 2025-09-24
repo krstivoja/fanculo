@@ -53,11 +53,6 @@ const DefaultTemplateManager = ({
   };
 
   const handleTemplateAddition = (tag) => {
-    // Prevent duplicates
-    const exists = templateTags.some(existing => existing.text === tag.text);
-    if (exists) {
-      return;
-    }
 
     const newTemplateTags = [...templateTags, tag];
     setTemplateTags(newTemplateTags);
@@ -97,7 +92,6 @@ const DefaultTemplateManager = ({
           handleAddition={handleTemplateAddition}
           handleDrag={handleTemplateDrag}
           placeholder="Type a block name for template and press Enter..."
-          maxTags={1}
         />
 
       </div>
@@ -176,9 +170,8 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
       }));
       setBlockSuggestions(suggestions);
 
-      console.log('📦 Loaded blocks for inner blocks selection:', blocks.length);
     } catch (error) {
-      console.error('❌ Error fetching registered blocks:', error);
+      console.error('Error fetching registered blocks:', error);
     } finally {
       setLoading(false);
     }
@@ -231,11 +224,6 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
   };
 
   const handleAddition = (tag) => {
-    // Prevent duplicates
-    const exists = selectedBlocks.some(existing => existing.text === tag.text);
-    if (exists) {
-      return;
-    }
 
     const newSelectedBlocks = [...selectedBlocks, tag];
     setSelectedBlocks(newSelectedBlocks);
@@ -255,9 +243,6 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
     updateInnerBlocksSettings(isEnabled, blockNames);
   };
 
-  const handleTagClick = (index) => {
-    console.log('The tag at index ' + index + ' was clicked');
-  };
 
   const handleTemplateLockChange = (event) => {
     const locked = event.target.checked;
@@ -306,7 +291,6 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
             handleDelete={handleDelete}
             handleAddition={handleAddition}
             handleDrag={handleDrag}
-            handleTagClick={handleTagClick}
             placeholder="Type a block name and press Enter..."
             />
           )}
