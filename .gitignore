@@ -16,3 +16,9 @@ Thumbs.db
 composer.lock
 
 /examples/
+
+
+# Aris spec-kit cursor ignore
+.cursor
+.sdd
+specs

@@ -4,7 +4,7 @@
   "description": "A WordPress plugin with React frontend built using esbuild.",
   "main": "index.js",
   "scripts": {
-    "build": "node build.js --production",
+    "build": "npm run build:scss && node build.js --production",
     "dev": "node build.js --watch",
     "build:scss": "node build-scss.js",
     "update:sass": "npm update sass && npm run build",
