@@ -44,8 +44,8 @@ class BlocksMetaBox extends AbstractMetaBox
             '_funculo_block_php',
             '_funculo_block_scss',
             '_funculo_block_js',
-            '_funculo_block_attributes',
-            '_funculo_block_settings'
+            '_funculo_block_attributes'
+            // Removed _funculo_block_settings - now stored in database table
         ];
 
         foreach ($fields as $field) {
@@ -66,7 +66,7 @@ class BlocksMetaBox extends AbstractMetaBox
                 }
 
                 // Special handling for JSON fields
-                if (in_array($field, ['_funculo_block_attributes', '_funculo_block_settings'])) {
+                if ($field === '_funculo_block_attributes') {
                     $decoded = json_decode($value, true);
                     if (json_last_error() === JSON_ERROR_NONE) {
                         $value = $decoded;

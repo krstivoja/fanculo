@@ -4,7 +4,7 @@ namespace Fanculo\Database;
 
 class DatabaseInstaller
 {
-    const TABLE_VERSION = '2.0.0';
+    const TABLE_VERSION = '3.1.0';
     const VERSION_OPTION = 'fanculo_db_version';
     const TABLE_NAME = 'fanculo_blocks_settings';
 
@@ -23,10 +23,11 @@ class DatabaseInstaller
             post_id bigint(20) UNSIGNED NOT NULL,
             category varchar(255) DEFAULT NULL,
             description text DEFAULT NULL,
+            icon varchar(255) DEFAULT NULL,
             supports_inner_blocks tinyint(1) DEFAULT 0,
             allowed_block_types text DEFAULT NULL,
-            default_block_type varchar(255) DEFAULT NULL,
-            lock_template tinyint(1) DEFAULT 0,
+            template text DEFAULT NULL,
+            template_lock varchar(50) DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
