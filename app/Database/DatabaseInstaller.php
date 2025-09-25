@@ -4,7 +4,7 @@ namespace Fanculo\Database;
 
 class DatabaseInstaller
 {
-    const TABLE_VERSION = '1.0.0';
+    const TABLE_VERSION = '2.0.0';
     const VERSION_OPTION = 'fanculo_db_version';
     const TABLE_NAME = 'fanculo_blocks_settings';
 
@@ -21,13 +21,17 @@ class DatabaseInstaller
         $sql = "CREATE TABLE $table_name (
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             post_id bigint(20) UNSIGNED NOT NULL,
-            setting_key varchar(255) NOT NULL,
-            setting_value longtext,
+            category varchar(255) DEFAULT NULL,
+            description text DEFAULT NULL,
+            supports_inner_blocks tinyint(1) DEFAULT 0,
+            allowed_block_types text DEFAULT NULL,
+            default_block_type varchar(255) DEFAULT NULL,
+            lock_template tinyint(1) DEFAULT 0,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
-            KEY post_id (post_id),
-            KEY setting_key (setting_key)
+            UNIQUE KEY post_id (post_id),
+            KEY category (category)
         ) $charset_collate;";
 
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
