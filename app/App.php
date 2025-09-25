@@ -64,11 +64,13 @@ class App
         // Register post types and taxonomies early
         add_action('init', [$this, 'registerContentTypes'], 10);
 
-        // Initialize admin components
-        add_action('admin_menu', [$this, 'initializeAdmin'], 10);
+        // Initialize admin components (must be done before admin_menu hook fires)
+        if (is_admin()) {
+            $this->initializeAdmin();
+        }
 
-        // Initialize REST API
-        add_action('rest_api_init', [$this, 'initializeRestApi'], 10);
+        // Initialize REST API (must be done before rest_api_init hook fires)
+        $this->initializeRestApi();
 
         // Initialize services that need to run on all requests
         add_action('init', [$this, 'initializeServices'], 15);
@@ -88,10 +90,6 @@ class App
      */
     public function initializeAdmin(): void
     {
-        if (!is_admin()) {
-            return;
-        }
-
         new SettingsPage();
         new MetaBoxHelper();
     }
