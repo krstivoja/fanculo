@@ -3,6 +3,7 @@ import { Textarea, Select, DashiconButton, Button } from '../ui';
 import { TrashIcon } from '../icons';
 import ScssPartialsManager from './ScssPartialsManager';
 import InnerBlocksSettings from './InnerBlocksSettings';
+import ScssPartialSettings from './ScssPartialSettings';
 import { apiClient } from '../../../utils';
 
 const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) => {
@@ -113,8 +114,9 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
     return null;
   }
 
-  // Only show settings for block-type posts
+  // Check post type
   const isBlockType = selectedPost.terms && selectedPost.terms.some(term => term.slug === 'blocks');
+  const isScssPartial = selectedPost.terms && selectedPost.terms.some(term => term.slug === 'scss-partials');
 
   return (
     <aside id="editor-settings" className='grow max-w-[var(--sidebar)] border-l border-solid border-outline flex flex-col'>
@@ -156,6 +158,15 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
                 <div><strong>Type:</strong> {selectedPost.terms?.[0]?.name || 'N/A'}</div>
                 <div><strong>Slug:</strong> {selectedPost.slug || 'N/A'}</div>
               </div>
+
+              {/* SCSS Partial Settings */}
+              {isScssPartial && (
+                <ScssPartialSettings
+                  selectedPost={selectedPost}
+                  metaData={metaData}
+                  onMetaChange={onMetaChange}
+                />
+              )}
 
               {isBlockType && (
                 <div className="space-y-4 pt-4 border-t border-outline">

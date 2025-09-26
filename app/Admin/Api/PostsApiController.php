@@ -727,6 +727,15 @@ class PostsApiController
             if (isset($scssPartials['scss'])) {
                 update_post_meta($postId, MetaKeysConstants::SCSS_PARTIAL_SCSS, sanitize_textarea_field($scssPartials['scss']));
             }
+            if (isset($scssPartials['is_global'])) {
+                // Save as '0' or '1' for consistency
+                $isGlobal = $scssPartials['is_global'] === '1' || $scssPartials['is_global'] === 1 || $scssPartials['is_global'] === 'true' || $scssPartials['is_global'] === true ? '1' : '0';
+                update_post_meta($postId, MetaKeysConstants::SCSS_IS_GLOBAL, $isGlobal);
+            }
+            if (isset($scssPartials['global_order'])) {
+                $globalOrder = absint($scssPartials['global_order']);
+                update_post_meta($postId, MetaKeysConstants::SCSS_GLOBAL_ORDER, $globalOrder);
+            }
         }
     }
 
