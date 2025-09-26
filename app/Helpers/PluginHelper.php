@@ -20,10 +20,22 @@ class PluginHelper
             // Install database tables
             DatabaseInstaller::install();
 
+            // Double-check tables were created (in case of manual deletion)
+            DatabaseInstaller::ensureTablesExist();
+
             // Verify tables were created
             if (!DatabaseInstaller::tableExists()) {
                 self::$activation_success = false;
-                throw new \Exception('Database tables creation failed');
+
+                // Try one more time to create individual tables
+                error_log('Fanculo Plugin: Tables missing after install, attempting individual creation');
+                DatabaseInstaller::createBlocksTableIfMissing();
+                DatabaseInstaller::createScssTableIfMissing();
+
+                // Final check
+                if (!DatabaseInstaller::tableExists()) {
+                    throw new \Exception('Database tables creation failed after multiple attempts');
+                }
             }
 
             // Migrate existing SCSS partial settings from post meta
