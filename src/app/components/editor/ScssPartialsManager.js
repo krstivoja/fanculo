@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '../ui';
+import { ReactTags } from '../ui';
 import { apiClient } from '../../../utils';
 
 const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
@@ -7,7 +7,6 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
   const [availablePartials, setAvailablePartials] = useState([]);
   const [selectedPartials, setSelectedPartials] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [draggedItem, setDraggedItem] = useState(null);
 
   // Load partials data on component mount
   useEffect(() => {
@@ -96,60 +95,52 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
     onMetaChange('blocks', 'selected_partials', JSON.stringify(partialIds));
   };
 
-  const addPartial = (partial) => {
-    const newPartial = {
+  // Convert selected partials to ReactTags format
+  const selectedTags = selectedPartials.map(partial => ({
+    id: partial.id,
+    text: partial.title || partial.text || `Partial ${partial.id}`
+  }));
+
+  // Convert available partials to ReactTags suggestions format
+  // Exclude already selected partials from suggestions
+  const suggestions = availablePartials
+    .filter(partial => !selectedPartials.some(selected => selected.id === partial.id))
+    .map(partial => ({
       id: partial.id,
-      slug: partial.slug,
-      title: partial.title,
-      order: selectedPartials.length + 1
-    };
+      text: partial.title
+    }));
 
-    updateSelectedPartials([...selectedPartials, newPartial]);
+  // Handle tag deletion
+  const handleDelete = (tagIndex) => {
+    const newSelected = selectedPartials.filter((_, index) => index !== tagIndex);
+    updateSelectedPartials(newSelected.map((p, index) => ({ ...p, order: index + 1 })));
   };
 
-  const removePartial = (partialId) => {
-    const newSelected = selectedPartials
-      .filter(p => p.id !== partialId)
-      .map((p, index) => ({ ...p, order: index + 1 }));
-
-    updateSelectedPartials(newSelected);
+  // Handle tag addition
+  const handleAddition = (tag) => {
+    // Find the full partial data from available partials
+    const fullPartial = availablePartials.find(p => p.id === tag.id);
+    if (fullPartial) {
+      const newPartial = {
+        id: fullPartial.id,
+        slug: fullPartial.slug,
+        title: fullPartial.title,
+        order: selectedPartials.length + 1
+      };
+      updateSelectedPartials([...selectedPartials, newPartial]);
+    }
   };
 
-  const movePartial = (fromIndex, toIndex) => {
+  // Handle tag reordering
+  const handleDrag = (tag, currPos, newPos) => {
     const newSelected = [...selectedPartials];
-    const [movedItem] = newSelected.splice(fromIndex, 1);
-    newSelected.splice(toIndex, 0, movedItem);
+    const [movedItem] = newSelected.splice(currPos, 1);
+    newSelected.splice(newPos, 0, movedItem);
 
     // Update order numbers
     const reordered = newSelected.map((p, index) => ({ ...p, order: index + 1 }));
     updateSelectedPartials(reordered);
   };
-
-  // Drag and drop handlers
-  const handleDragStart = (e, index) => {
-    setDraggedItem(index);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleDrop = (e, dropIndex) => {
-    e.preventDefault();
-    if (draggedItem !== null && draggedItem !== dropIndex) {
-      movePartial(draggedItem, dropIndex);
-    }
-    setDraggedItem(null);
-  };
-
-  const isPartialSelected = (partialId) => {
-    return selectedPartials.some(p => p.id === partialId);
-  };
-
-  // Filter available partials to exclude selected ones
-  const inactivePartials = availablePartials.filter(partial => !isPartialSelected(partial.id));
 
   if (loading) {
     return <div className="p-4 text-center text-contrast">Loading partials...</div>;
@@ -177,67 +168,33 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
         </div>
       )}
 
-      {/* Selected Partials Section */}
-      {selectedPartials.length > 0 && (
-        <div className="mb-6">
-          <h4 className="font-medium text-highlight mb-3">
-            Included ({selectedPartials.length})
-          </h4>
+      {/* Selected Partials Section using ReactTags */}
+      <div className="flex-1">
+        <label className="block text-sm font-medium text-contrast mb-2">
+          Selected Partials
+        </label>
 
-          <div className="space-y-2">
-            {selectedPartials.map((partial, index) => (
-              <div
-                key={partial.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, index)}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, index)}
-                className="flex items-center gap-3 p-3 bg-base-2 border border-outline rounded cursor-move hover:bg-base-3 transition-colors"
-              >
-                <span className="flex-1 text-sm">{partial.title}</span>
-                <Button
-                  onClick={() => removePartial(partial.id)}
-                  variant="secondary"
-                  size="sm"
-                  className="!p-1 !text-xs"
-                >
-                  ✕
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+        <ReactTags
+          tags={selectedTags}
+          suggestions={suggestions}
+          handleDelete={handleDelete}
+          handleAddition={handleAddition}
+          handleDrag={handleDrag}
+          placeholder="Type a partial name and press Enter..."
+        />
 
-      {/* Inactive Partials Section */}
-      {inactivePartials.length > 0 && (
-        <div className="flex-1">
-          <h4 className="font-medium text-highlight mb-3">
-            Inactive ({inactivePartials.length})
-          </h4>
+        <p className="text-xs text-contrast mt-2">
+          {selectedPartials.length > 0
+            ? `${selectedPartials.length} partial${selectedPartials.length !== 1 ? 's' : ''} selected`
+            : 'No partials selected. Type to search and add partials.'}
+        </p>
 
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {inactivePartials.map((partial) => (
-              <div
-                key={partial.id}
-                className="flex items-center gap-3 p-3 bg-base-2 border border-outline rounded hover:bg-base-3 transition-colors"
-              >
-                <span className="flex-1 text-sm">{partial.title}</span>
-                <Button
-                  onClick={() => addPartial(partial)}
-                  variant="primary"
-                  size="sm"
-                  className="!p-1 !text-xs"
-                >
-                  +
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-
+        {availablePartials.length === 0 && !loading && (
+          <p className="text-xs text-warning mt-2">
+            No SCSS partials available. Create SCSS partial posts first.
+          </p>
+        )}
+      </div>
     </div>
   );
 };
