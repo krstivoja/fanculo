@@ -13,25 +13,16 @@ const ScssPartialsMetaboxes = ({ metaData, onChange, titleComponent, selectedPos
 
   const scssPartials = metaData?.scss_partials || {};
 
-  // Load global settings on component mount
+  // Load global settings from metaData
   useEffect(() => {
-    if (selectedPost?.id) {
-      loadGlobalSettings();
+    if (scssPartials.is_global !== undefined) {
+      setIsGlobal(scssPartials.is_global === '1' || scssPartials.is_global === 1);
     }
-  }, [selectedPost?.id]);
-
-  const loadGlobalSettings = async () => {
-    try {
-      const post = await apiClient.getPost(selectedPost.id);
-      const globalSetting = post.meta?.funculo_scss_is_global?.[0];
-      const globalOrderSetting = post.meta?.funculo_scss_global_order?.[0];
-
-      setIsGlobal(globalSetting === '1');
-      setGlobalOrder(globalOrderSetting ? parseInt(globalOrderSetting) : 1);
-    } catch (error) {
-      console.error('Error loading global settings:', error);
+    if (scssPartials.global_order !== undefined) {
+      const order = parseInt(scssPartials.global_order) || 1;
+      setGlobalOrder(order);
     }
-  };
+  }, [scssPartials.is_global, scssPartials.global_order]);
 
   const handleGlobalToggle = async () => {
     const newGlobalValue = !isGlobal;

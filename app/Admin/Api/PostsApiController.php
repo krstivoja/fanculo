@@ -615,6 +615,8 @@ class PostsApiController
                 case FunculoTypeTaxonomy::getTermScssPartials():
                     $meta['scss_partials'] = [
                         'scss' => get_post_meta($postId, MetaKeysConstants::SCSS_PARTIAL_SCSS, true),
+                        'is_global' => get_post_meta($postId, MetaKeysConstants::SCSS_IS_GLOBAL, true),
+                        'global_order' => get_post_meta($postId, MetaKeysConstants::SCSS_GLOBAL_ORDER, true),
                     ];
                     break;
             }

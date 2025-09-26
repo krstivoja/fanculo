@@ -167,6 +167,8 @@ class BulkQueryService
                 case FunculoTypeTaxonomy::getTermScssPartials():
                     $formattedMeta['scss_partials'] = [
                         'scss' => $postMeta[MetaKeysConstants::SCSS_PARTIAL_SCSS] ?? '',
+                        'is_global' => $postMeta[MetaKeysConstants::SCSS_IS_GLOBAL] ?? '',
+                        'global_order' => $postMeta[MetaKeysConstants::SCSS_GLOBAL_ORDER] ?? '',
                     ];
                     break;
             }

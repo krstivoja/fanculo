@@ -425,8 +425,8 @@ class FunculoApiClient {
    */
   async updatePartialGlobalSettings(id, settings) {
     this.invalidateCache('/scss-partials'); // Clear partials cache
-    return this.request(`/post/${id}/global-settings`, {
-      method: 'PUT',
+    return this.request(`/scss-partial/${id}/global-setting`, {
+      method: 'POST',
       body: JSON.stringify(settings)
     });
   }
