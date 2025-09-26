@@ -51,9 +51,6 @@ class MetaKeysConstants
     /** @var string Compiled editor CSS content */
     const BLOCK_EDITOR_CSS_CONTENT = '_funculo_block_editor_css_content';
 
-    /** @var string Timestamp when CSS was last compiled */
-    const CSS_COMPILED_AT = '_funculo_css_compiled_at';
-
     // ============================================
     // SYMBOL META KEYS
     // ============================================
@@ -101,7 +98,6 @@ class MetaKeysConstants
             self::SCSS_CONTENT,
             self::CSS_CONTENT,
             self::BLOCK_EDITOR_CSS_CONTENT,
-            self::CSS_COMPILED_AT,
 
             // Symbol keys
             self::SYMBOL_PHP,
@@ -144,7 +140,6 @@ class MetaKeysConstants
             self::SCSS_CONTENT,
             self::CSS_CONTENT,
             self::BLOCK_EDITOR_CSS_CONTENT,
-            self::CSS_COMPILED_AT,
             self::SCSS_PARTIAL_SCSS,
             self::SCSS_IS_GLOBAL,
             self::SCSS_GLOBAL_ORDER,

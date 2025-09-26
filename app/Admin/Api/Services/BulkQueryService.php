@@ -205,7 +205,6 @@ class BulkQueryService
             // SCSS compilation meta keys (sometimes needed)
             MetaKeysConstants::SCSS_CONTENT,
             MetaKeysConstants::CSS_CONTENT,
-            MetaKeysConstants::CSS_COMPILED_AT,
             // Note: SCSS_IS_GLOBAL and SCSS_GLOBAL_ORDER are now in database table
         ];
     }

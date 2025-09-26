@@ -152,16 +152,12 @@ class ScssCompilerApiController
             // Save compiled CSS content if provided
             if ($css_content !== null) {
                 update_post_meta($post_id, MetaKeysConstants::CSS_CONTENT, $css_content);
-
-                // Also save compilation timestamp
-                update_post_meta($post_id, MetaKeysConstants::CSS_COMPILED_AT, current_time('timestamp'));
             }
 
             return new WP_REST_Response([
                 'success' => true,
                 'post_id' => $post_id,
-                'message' => 'SCSS compiled and saved successfully',
-                'compiled_at' => current_time('c')
+                'message' => 'SCSS compiled and saved successfully'
             ], 200);
 
         } catch (\Exception $e) {
@@ -191,13 +187,11 @@ class ScssCompilerApiController
 
         $scss_content = get_post_meta($post_id, MetaKeysConstants::SCSS_CONTENT, true);
         $css_content = get_post_meta($post_id, MetaKeysConstants::CSS_CONTENT, true);
-        $compiled_at = get_post_meta($post_id, MetaKeysConstants::CSS_COMPILED_AT, true);
 
         return new WP_REST_Response([
             'post_id' => $post_id,
             'scss_content' => $scss_content ?: '',
-            'css_content' => $css_content ?: '',
-            'compiled_at' => $compiled_at ? gmdate('c', $compiled_at) : null
+            'css_content' => $css_content ?: ''
         ], 200);
     }
 
@@ -223,13 +217,11 @@ class ScssCompilerApiController
 
         $editor_scss_content = get_post_meta($post_id, MetaKeysConstants::BLOCK_EDITOR_SCSS, true);
         $editor_css_content = get_post_meta($post_id, MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT, true);
-        $compiled_at = get_post_meta($post_id, MetaKeysConstants::CSS_COMPILED_AT, true);
 
         return new WP_REST_Response([
             'post_id' => $post_id,
             'editor_scss_content' => $editor_scss_content ?: '',
-            'editor_css_content' => $editor_css_content ?: '',
-            'compiled_at' => $compiled_at ? gmdate('c', $compiled_at) : null
+            'editor_css_content' => $editor_css_content ?: ''
         ], 200);
     }
 
@@ -264,16 +256,12 @@ class ScssCompilerApiController
             // Save compiled editor CSS content if provided
             if ($editor_css_content !== null) {
                 update_post_meta($post_id, MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT, $editor_css_content);
-
-                // Also save compilation timestamp
-                update_post_meta($post_id, MetaKeysConstants::CSS_COMPILED_AT, current_time('timestamp'));
             }
 
             return new WP_REST_Response([
                 'success' => true,
                 'post_id' => $post_id,
-                'message' => 'Editor SCSS compiled and saved successfully',
-                'compiled_at' => current_time('c')
+                'message' => 'Editor SCSS compiled and saved successfully'
             ], 200);
 
         } catch (\Exception $e) {
@@ -473,16 +461,10 @@ class ScssCompilerApiController
                     update_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT, $editorCssContent);
                 }
 
-                // Update compilation timestamp if any CSS was compiled
-                if ($cssContent !== null || $editorCssContent !== null) {
-                    update_post_meta($postId, MetaKeysConstants::CSS_COMPILED_AT, current_time('mysql'));
-                }
-
                 $results['successful'][] = [
                     'index' => $index,
                     'post_id' => $postId,
                     'title' => get_the_title($postId),
-                    'compiled_at' => current_time('mysql'),
                     'main_css' => $cssContent !== null,
                     'editor_css' => $editorCssContent !== null,
                 ];
