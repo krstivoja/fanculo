@@ -13,9 +13,15 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
   useEffect(() => {
     if (selectedPost?.id) {
       loadPartials();
-      loadSelectedPartials();
     }
   }, [selectedPost?.id]);
+
+  // Load selected partials after global/available partials are loaded
+  useEffect(() => {
+    if (selectedPost?.id && !loading) {
+      loadSelectedPartials();
+    }
+  }, [selectedPost?.id, globalPartials, availablePartials, loading]);
 
   const loadPartials = async () => {
     try {
@@ -44,7 +50,33 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
           ? JSON.parse(blockSelectedPartials)
           : blockSelectedPartials;
         console.log('Parsed selected partials:', parsed);
-        setSelectedPartials(Array.isArray(parsed) ? parsed : []);
+
+        // If we have an array of IDs, convert them to objects with partial data
+        if (Array.isArray(parsed)) {
+          const partialsWithData = parsed.map(item => {
+            // If it's just an ID, find the partial data
+            if (typeof item === 'number' || typeof item === 'string') {
+              const partialId = typeof item === 'string' ? parseInt(item) : item;
+              // Find this partial in available or global partials
+              const foundPartial = [...availablePartials, ...globalPartials].find(p => p.id === partialId);
+              if (foundPartial) {
+                return {
+                  id: foundPartial.id,
+                  slug: foundPartial.slug,
+                  title: foundPartial.title,
+                  order: parsed.indexOf(item) + 1
+                };
+              }
+              // If not found, just store the ID
+              return { id: partialId, title: `Partial ${partialId}`, order: parsed.indexOf(item) + 1 };
+            }
+            // If it's already an object, use it as-is
+            return item;
+          });
+          setSelectedPartials(partialsWithData);
+        } else {
+          setSelectedPartials([]);
+        }
       } catch (e) {
         console.error('Error parsing selected partials:', e);
         setSelectedPartials([]);
@@ -57,9 +89,11 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
 
   const updateSelectedPartials = (newSelected) => {
     console.log('Updating selected partials:', newSelected);
-    console.log('Calling onMetaChange with:', 'blocks', 'selected_partials', JSON.stringify(newSelected));
+    // Extract just the IDs for database storage
+    const partialIds = newSelected.map(p => p.id || p);
+    console.log('Calling onMetaChange with partial IDs:', partialIds);
     setSelectedPartials(newSelected);
-    onMetaChange('blocks', 'selected_partials', JSON.stringify(newSelected));
+    onMetaChange('blocks', 'selected_partials', JSON.stringify(partialIds));
   };
 
   const addPartial = (partial) => {

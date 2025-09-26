@@ -153,7 +153,7 @@ class BulkQueryService
                         'js' => $postMeta[MetaKeysConstants::BLOCK_JS] ?? '',
                         'attributes' => $postMeta[MetaKeysConstants::BLOCK_ATTRIBUTES] ?? '',
                         'settings' => $postMeta[MetaKeysConstants::BLOCK_SETTINGS] ?? '',
-                        'selected_partials' => $postMeta[MetaKeysConstants::BLOCK_SELECTED_PARTIALS] ?? '',
+                        // Note: selected_partials now loaded from database table in PostsApiController
                         'inner_blocks_settings' => $postMeta[MetaKeysConstants::BLOCK_INNER_BLOCKS_SETTINGS] ?? '',
                     ];
                     break;
@@ -192,7 +192,7 @@ class BulkQueryService
             MetaKeysConstants::BLOCK_JS,
             MetaKeysConstants::BLOCK_ATTRIBUTES,
             MetaKeysConstants::BLOCK_SETTINGS,
-            MetaKeysConstants::BLOCK_SELECTED_PARTIALS,
+            // Note: BLOCK_SELECTED_PARTIALS now in database table
             MetaKeysConstants::BLOCK_INNER_BLOCKS_SETTINGS,
 
             // Symbol meta keys
@@ -248,7 +248,7 @@ class BulkQueryService
                 MetaKeysConstants::BLOCK_JS,
                 MetaKeysConstants::BLOCK_ATTRIBUTES,
                 MetaKeysConstants::BLOCK_SETTINGS,
-                MetaKeysConstants::BLOCK_SELECTED_PARTIALS,
+                // Note: BLOCK_SELECTED_PARTIALS now in database table
                 MetaKeysConstants::BLOCK_INNER_BLOCKS_SETTINGS,
             ]);
         }

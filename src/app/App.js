@@ -130,19 +130,55 @@ const App = () => {
             // Get global partials using centralized API client
             const partialsData = await apiClient.getScssPartials();
             const globalPartials = partialsData.global_partials || [];
+            const availablePartials = partialsData.available_partials || [];
 
-            // Get selected partials from current state
-            let selectedPartials = [];
+            // Get selected partial IDs from current state
+            let selectedPartialIds = [];
             const selectedPartialsString = metaData.blocks?.selected_partials;
             if (selectedPartialsString) {
                 try {
-                    selectedPartials = JSON.parse(selectedPartialsString);
+                    selectedPartialIds = JSON.parse(selectedPartialsString);
                 } catch (e) {
                     console.warn('Failed to parse current selected partials:', e);
                 }
             }
 
-            return { globalPartials, selectedPartials };
+            // Enrich selected partial IDs with their data
+            const enrichedSelectedPartials = [];
+            if (Array.isArray(selectedPartialIds)) {
+                // Create a combined lookup map for efficiency
+                const allPartials = [...globalPartials, ...availablePartials];
+                const partialsLookup = {};
+                allPartials.forEach(partial => {
+                    partialsLookup[partial.id] = partial;
+                });
+
+                selectedPartialIds.forEach((partialId, index) => {
+                    // Handle both number and string IDs
+                    const id = typeof partialId === 'string' ? parseInt(partialId) : partialId;
+                    const partialData = partialsLookup[id];
+
+                    if (partialData) {
+                        enrichedSelectedPartials.push({
+                            id: partialData.id,
+                            title: partialData.title,
+                            slug: partialData.slug,
+                            order: index + 1  // Use the order from the selected array
+                        });
+                    } else {
+                        // If partial data not found, create a minimal object
+                        console.warn(`Selected partial ${id} not found in available partials`);
+                        enrichedSelectedPartials.push({
+                            id: id,
+                            title: `Partial ${id}`,
+                            slug: `partial-${id}`,
+                            order: index + 1
+                        });
+                    }
+                });
+            }
+
+            return { globalPartials, selectedPartials: enrichedSelectedPartials };
         } catch (error) {
             console.error('Error getting current partials:', error);
             return { globalPartials: [], selectedPartials: [] };

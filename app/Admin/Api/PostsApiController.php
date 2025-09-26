@@ -304,6 +304,7 @@ class PostsApiController
                 }
                 $formattedMeta['blocks']['settings'] = json_encode($blockSettings);
                 $formattedMeta['blocks']['inner_blocks_settings'] = json_encode($innerBlocksSettings);
+                $formattedMeta['blocks']['selected_partials'] = json_encode($dbSettings['selected_partials'] ?? []);
             }
 
             // Add SCSS partial settings if this is a SCSS partial
@@ -397,6 +398,7 @@ class PostsApiController
                 }
                 $formattedMeta['blocks']['settings'] = json_encode($blockSettings);
                 $formattedMeta['blocks']['inner_blocks_settings'] = json_encode($innerBlocksSettings);
+                $formattedMeta['blocks']['selected_partials'] = json_encode($dbSettings['selected_partials'] ?? []);
             }
         }
 
@@ -637,7 +639,7 @@ class PostsApiController
                         'js' => get_post_meta($postId, MetaKeysConstants::BLOCK_JS, true),
                         'attributes' => get_post_meta($postId, MetaKeysConstants::BLOCK_ATTRIBUTES, true),
                         'settings' => !empty($settingsData) ? json_encode($settingsData) : '',
-                        'selected_partials' => get_post_meta($postId, MetaKeysConstants::BLOCK_SELECTED_PARTIALS, true),
+                        'selected_partials' => !empty($dbSettings['selected_partials']) ? json_encode($dbSettings['selected_partials']) : '',
                         'inner_blocks_settings' => !empty($innerBlocksData) ? json_encode($innerBlocksData) : '',
                     ];
                     break;
@@ -746,14 +748,20 @@ class PostsApiController
                 }
             }
 
+            // Parse selected partials and add to database settings
+            if (isset($blocks['selected_partials'])) {
+                $selectedPartialsJson = sanitize_textarea_field($blocks['selected_partials']);
+                $selectedPartialsData = json_decode($selectedPartialsJson, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $dbSettings['selected_partials'] = $selectedPartialsData;
+                } else {
+                    $dbSettings['selected_partials'] = [];
+                }
+            }
+
             // Save to database table if we have settings
             if (!empty($dbSettings)) {
                 BlockSettingsRepository::save($postId, $dbSettings);
-            }
-
-            // Keep saving selected partials to post meta for now
-            if (isset($blocks['selected_partials'])) {
-                update_post_meta($postId, MetaKeysConstants::BLOCK_SELECTED_PARTIALS, sanitize_textarea_field($blocks['selected_partials']));
             }
         }
 
@@ -1084,6 +1092,7 @@ class PostsApiController
                 }
                 $formattedMeta['blocks']['settings'] = json_encode($blockSettings);
                 $formattedMeta['blocks']['inner_blocks_settings'] = json_encode($innerBlocksSettings);
+                $formattedMeta['blocks']['selected_partials'] = json_encode($dbSettings['selected_partials'] ?? []);
             }
         }
 

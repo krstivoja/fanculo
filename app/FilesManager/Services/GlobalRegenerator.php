@@ -6,6 +6,7 @@ use Fanculo\Content\FunculoPostType;
 use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use Fanculo\Database\ScssPartialsSettingsRepository;
+use Fanculo\Database\BlockSettingsRepository;
 use WP_Post;
 
 class GlobalRegenerator
@@ -96,18 +97,17 @@ class GlobalRegenerator
      */
     public function postUsesGlobalPartials(int $postId): bool
     {
-        $selectedPartials = get_post_meta($postId, MetaKeysConstants::BLOCK_SELECTED_PARTIALS, true);
+        $settings = BlockSettingsRepository::get($postId);
+        $selectedPartials = $settings ? $settings['selected_partials'] : [];
 
         if (empty($selectedPartials)) {
             return false;
         }
 
         // If the post has selected partials, check if any of them are global
-        if (is_array($selectedPartials)) {
-            foreach ($selectedPartials as $partialId) {
-                if ($this->isPartialGlobal($partialId)) {
-                    return true;
-                }
+        foreach ($selectedPartials as $partialId) {
+            if ($this->isPartialGlobal($partialId)) {
+                return true;
             }
         }
 
@@ -165,19 +165,20 @@ class GlobalRegenerator
         $posts = wp_cache_get($cacheKey, 'fanculo_dependencies');
 
         if (false === $posts) {
-            $posts = get_posts([
-                'post_type' => FunculoPostType::getPostType(),
-                'post_status' => 'publish',
-                'numberposts' => -1,
-                // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Cached query for dependency tracking
-                'meta_query' => [
-                    [
-                        'key' => MetaKeysConstants::BLOCK_SELECTED_PARTIALS,
-                        'value' => serialize(strval($partialId)),
-                        'compare' => 'LIKE'
-                    ]
-                ]
-            ]);
+            // Get blocks that use this partial from database
+            $blockSettings = BlockSettingsRepository::getBlocksUsingPartial($partialId);
+            $postIds = array_column($blockSettings, 'post_id');
+
+            if (empty($postIds)) {
+                $posts = [];
+            } else {
+                $posts = get_posts([
+                    'post_type' => FunculoPostType::getPostType(),
+                    'post_status' => 'publish',
+                    'post__in' => $postIds,
+                    'numberposts' => -1
+                ]);
+            }
 
             // Cache for 5 minutes since dependencies can change
             wp_cache_set($cacheKey, $posts, 'fanculo_dependencies', 300);
