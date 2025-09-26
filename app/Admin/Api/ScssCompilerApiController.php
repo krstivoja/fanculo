@@ -9,6 +9,7 @@ use Fanculo\Content\FunculoPostType;
 use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use Fanculo\Admin\Api\Services\BulkQueryService;
+use Fanculo\Database\ScssPartialsSettingsRepository;
 
 class ScssCompilerApiController
 {
@@ -317,27 +318,25 @@ class ScssCompilerApiController
             $available_partials = [];
 
             if (!empty($partials)) {
-                // BULK OPERATION: Fetch all meta at once - eliminates N+1 queries
+                // BULK OPERATION: Fetch settings from database - eliminates N+1 queries
                 $postIds = wp_list_pluck($partials, 'ID');
-                $metaKeys = [MetaKeysConstants::SCSS_IS_GLOBAL, MetaKeysConstants::SCSS_GLOBAL_ORDER];
-                $allMeta = $this->bulkQueryService->getBulkPostMeta($postIds, $metaKeys);
+                $scssSettings = ScssPartialsSettingsRepository::getBulk($postIds);
 
                 foreach ($partials as $partial) {
-                    $postMeta = $allMeta[$partial->ID] ?? [];
-                    $is_global = $postMeta[MetaKeysConstants::SCSS_IS_GLOBAL] ?? '';
-                    $global_order = $postMeta[MetaKeysConstants::SCSS_GLOBAL_ORDER] ?? '';
+                    $settings = $scssSettings[$partial->ID] ?? null;
+                    $is_global = $settings ? $settings['is_global'] : false;
+                    $global_order = $settings ? $settings['global_order'] : 999;
 
                     $partial_data = [
                         'id' => $partial->ID,
                         'title' => $partial->post_title,
                         'slug' => $partial->post_name,
-                        'is_global' => (bool) $is_global,
-                        'global_order' => $global_order ? (int) $global_order : 999
+                        'is_global' => $is_global,
+                        'global_order' => $global_order
                     ];
 
-
-                    // Check if is_global is explicitly set to '1' (string) or 1 (int) or true (bool)
-                    if ($is_global === '1' || $is_global === 1 || $is_global === true) {
+                    // Check if is_global is true
+                    if ($is_global) {
                         $global_partials[] = $partial_data;
                     } else {
                         $available_partials[] = $partial_data;
@@ -388,13 +387,18 @@ class ScssCompilerApiController
         }
 
         try {
-            // Update global setting
-            update_post_meta($post_id, MetaKeysConstants::SCSS_IS_GLOBAL, $is_global ? 1 : 0);
+            // Update global settings in database table
+            $settings = [
+                'is_global' => (bool) $is_global
+            ];
 
             // Update global order if provided
             if ($global_order !== null) {
-                update_post_meta($post_id, MetaKeysConstants::SCSS_GLOBAL_ORDER, (int) $global_order);
+                $settings['global_order'] = (int) $global_order;
             }
+
+            // Save to database
+            ScssPartialsSettingsRepository::save($post_id, $settings);
 
             return new WP_REST_Response([
                 'success' => true,

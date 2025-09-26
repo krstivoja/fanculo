@@ -5,6 +5,7 @@ namespace Fanculo\FilesManager\Services;
 use Fanculo\Content\FunculoPostType;
 use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
+use Fanculo\Database\ScssPartialsSettingsRepository;
 use WP_Post;
 
 class GlobalRegenerator
@@ -118,8 +119,8 @@ class GlobalRegenerator
      */
     public function isPartialGlobal(int $partialId): bool
     {
-        $isGlobal = get_post_meta($partialId, MetaKeysConstants::SCSS_IS_GLOBAL, true);
-        return $isGlobal === '1' || $isGlobal === 1 || $isGlobal === true;
+        $settings = ScssPartialsSettingsRepository::get($partialId);
+        return $settings ? $settings['is_global'] : false;
     }
 
     /**
@@ -131,27 +132,22 @@ class GlobalRegenerator
         $partials = wp_cache_get($cacheKey, 'fanculo_global_data');
 
         if (false === $partials) {
-            $partials = get_posts([
-                'post_type' => FunculoPostType::getPostType(),
-                'post_status' => 'publish',
-                'numberposts' => -1,
-                // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Cached query for global partials
-                'tax_query' => [
-                    [
-                        'taxonomy' => FunculoTypeTaxonomy::getTaxonomy(),
-                        'field' => 'slug',
-                        'terms' => FunculoTypeTaxonomy::getTermScssPartials()
-                    ]
-                ],
-                // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Cached query for global partials
-                'meta_query' => [
-                    [
-                        'key' => MetaKeysConstants::SCSS_IS_GLOBAL,
-                        'value' => ['1', 1, true],
-                        'compare' => 'IN'
-                    ]
-                ]
-            ]);
+            // Get global partials from database
+            $globalSettings = ScssPartialsSettingsRepository::getGlobalPartials();
+            $partialIds = array_column($globalSettings, 'post_id');
+
+            if (empty($partialIds)) {
+                $partials = [];
+            } else {
+                // Get the actual posts for these IDs
+                $partials = get_posts([
+                    'post_type' => FunculoPostType::getPostType(),
+                    'post_status' => 'publish',
+                    'post__in' => $partialIds,
+                    'numberposts' => -1,
+                    'orderby' => 'post__in'
+                ]);
+            }
 
             // Cache for 10 minutes
             wp_cache_set($cacheKey, $partials, 'fanculo_global_data', 600);
