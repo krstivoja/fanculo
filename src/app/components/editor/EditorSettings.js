@@ -5,8 +5,12 @@ import ScssPartialsCombined from './ScssPartialsCombined';
 import InnerBlocksSettings from './InnerBlocksSettings';
 import ScssPartialSettings from './ScssPartialSettings';
 import { apiClient } from '../../../utils';
+import { useEditor } from '../../hooks';
 
-const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) => {
+const EditorSettings = ({ onSave, saveStatus }) => {
+  const { selectedPost, metaData, updateMeta, deletePost } = useEditor();
+  const onMetaChange = updateMeta;
+  const onPostDelete = deletePost;
   const [blockCategories, setBlockCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -161,11 +165,7 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
 
               {/* SCSS Partial Settings */}
               {isScssPartial && (
-                <ScssPartialSettings
-                  selectedPost={selectedPost}
-                  metaData={metaData}
-                  onMetaChange={onMetaChange}
-                />
+                <ScssPartialSettings />
               )}
 
               {isBlockType && (
@@ -205,11 +205,7 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
 
                   {/* Inner Blocks Settings */}
                   <div className="pt-4 border-t border-outline">
-                    <InnerBlocksSettings
-                      selectedPost={selectedPost}
-                      metaData={metaData}
-                      onMetaChange={onMetaChange}
-                    />
+                    <InnerBlocksSettings />
                   </div>
                 </div>
               )}
@@ -235,11 +231,7 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
         {/* SCSS Partials Tab - Combined view */}
         {isBlockType && activeTab === 'partials' && (
           <div className="flex-1 overflow-hidden">
-            <ScssPartialsCombined
-              selectedPost={selectedPost}
-              metaData={metaData}
-              onMetaChange={onMetaChange}
-            />
+            <ScssPartialsCombined />
           </div>
         )}
       </div>

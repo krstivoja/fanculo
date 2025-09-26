@@ -2,25 +2,10 @@ import React from 'react';
 import BlocksMetaboxes from './BlocksMetaboxes';
 import SymbolsMetaboxes from './SymbolsMetaboxes';
 import ScssPartialsMetaboxes from './ScssPartialsMetaboxes';
+import { useEditor } from '../../../hooks';
 
-const MetaboxContainer = ({ selectedPost, metaData, onMetaChange, titleComponent }) => {
-
-  // Determine post type from terms
-  const getPostType = () => {
-    if (!selectedPost?.terms || !selectedPost.terms.length) {
-      console.log('No terms found for post:', selectedPost);
-      return null;
-    }
-    const termSlug = selectedPost.terms[0].slug;
-    console.log('Post type determined:', termSlug, 'from terms:', selectedPost.terms);
-    return termSlug;
-  };
-
-  // Handle meta field changes - delegate to parent
-  const handleMetaChange = (section, field, value) => {
-    onMetaChange(section, field, value);
-  };
-
+const MetaboxContainer = ({ titleComponent }) => {
+  const { selectedPost, getPostType } = useEditor();
   const postType = getPostType();
 
   if (!selectedPost) {
@@ -30,28 +15,15 @@ const MetaboxContainer = ({ selectedPost, metaData, onMetaChange, titleComponent
   return (
     <>
       {postType === 'blocks' && (
-        <BlocksMetaboxes
-          metaData={metaData}
-          onChange={handleMetaChange}
-          titleComponent={titleComponent}
-        />
+        <BlocksMetaboxes titleComponent={titleComponent} />
       )}
 
       {postType === 'symbols' && (
-        <SymbolsMetaboxes
-          metaData={metaData}
-          onChange={handleMetaChange}
-          titleComponent={titleComponent}
-        />
+        <SymbolsMetaboxes titleComponent={titleComponent} />
       )}
 
       {postType === 'scss-partials' && (
-        <ScssPartialsMetaboxes
-          metaData={metaData}
-          onChange={handleMetaChange}
-          titleComponent={titleComponent}
-          selectedPost={selectedPost}
-        />
+        <ScssPartialsMetaboxes titleComponent={titleComponent} />
       )}
 
       {!postType && (
