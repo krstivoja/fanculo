@@ -356,12 +356,18 @@ async function getPartialScssContent(partialId) {
  * @returns {Promise<object>} - Object with finalScss string and lineMap array
  */
 export async function buildFinalScss(userScss, globalPartials = [], selectedPartials = []) {
+    console.log('📦 buildFinalScss called with:', {
+        hasUserScss: !!userScss,
+        globalPartialsCount: globalPartials.length,
+        selectedPartialsCount: selectedPartials.length
+    });
     const scssBlocks = [];
     const lineMap = []; // Track which line belongs to which source
     let currentLine = 1;
 
     // Add global partials first (sorted by global_order)
     const sortedGlobalPartials = [...globalPartials].sort((a, b) => a.global_order - b.global_order);
+    console.log('🌍 Including global partials in compilation:', sortedGlobalPartials);
     for (const partial of sortedGlobalPartials) {
         const content = await getPartialScssContent(partial.id);
         if (content.trim()) {
@@ -371,6 +377,7 @@ export async function buildFinalScss(userScss, globalPartials = [], selectedPart
 
             // Add content lines
             const contentLines = content.split('\n');
+            console.log(`   📄 Adding ${contentLines.length} lines from global partial "${partial.title}"`);
             for (let i = 0; i < contentLines.length; i++) {
                 scssBlocks.push(contentLines[i]);
                 lineMap.push({
@@ -434,8 +441,18 @@ export async function buildFinalScss(userScss, globalPartials = [], selectedPart
         }
     }
 
+    const finalScss = scssBlocks.join('\n');
+
+    console.log('🏗️ Final SCSS Built:', {
+        totalLines: scssBlocks.length,
+        globalPartialsIncluded: globalPartials.length,
+        selectedPartialsIncluded: selectedPartials.length,
+        preview: finalScss.substring(0, 500) + (finalScss.length > 500 ? '...' : ''),
+        fullContent: finalScss
+    });
+
     return {
-        finalScss: scssBlocks.join('\n'),
+        finalScss: finalScss,
         lineMap: lineMap
     };
 }
@@ -448,6 +465,15 @@ export async function buildFinalScss(userScss, globalPartials = [], selectedPart
  * @returns {Promise<string>} - The compiled CSS
  */
 export async function compileScss(scssCode, postId = null, currentPartials = null) {
+    console.log('🔧 compileScss called with:', {
+        hasScssCode: !!scssCode,
+        postId: postId,
+        hasCurrentPartials: !!currentPartials,
+        currentPartialsDetail: currentPartials ? {
+            globalCount: currentPartials.globalPartials?.length || 0,
+            selectedCount: currentPartials.selectedPartials?.length || 0
+        } : null
+    });
 
     if (!scssCode || !scssCode.trim()) {
         return scssCode || '';
@@ -461,8 +487,8 @@ export async function compileScss(scssCode, postId = null, currentPartials = nul
             await initScssCompiler();
         }
 
-        // If postId is provided, get partials and build final SCSS
-        if (postId) {
+        // If postId or currentPartials is provided, get partials and build final SCSS
+        if (postId || currentPartials) {
             let globalPartials = [];
             let selectedPartials = [];
 
@@ -509,7 +535,7 @@ export async function compileScss(scssCode, postId = null, currentPartials = nul
         // Try to determine which file/section the error is in
         let enhancedError = error.message;
 
-        if (postId) {
+        if (postId || currentPartials) {
             enhancedError = analyzeScssError(error.message, finalScss);
         }
 

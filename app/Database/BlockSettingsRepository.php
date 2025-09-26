@@ -45,6 +45,13 @@ class BlockSettingsRepository
             $row['selected_partials'] = [];
         }
 
+        // Convert editor_selected_partials from JSON to array
+        if (!empty($row['editor_selected_partials'])) {
+            $row['editor_selected_partials'] = json_decode($row['editor_selected_partials'], true) ?: [];
+        } else {
+            $row['editor_selected_partials'] = [];
+        }
+
         // Convert boolean fields to actual booleans
         $row['supports_inner_blocks'] = (bool) $row['supports_inner_blocks'];
 
@@ -162,6 +169,29 @@ class BlockSettingsRepository
             }
         }
 
+        // Handle editor_selected_partials - convert array to JSON string
+        if (array_key_exists('editor_selected_partials', $settings)) {
+            if (is_array($settings['editor_selected_partials'])) {
+                $data['editor_selected_partials'] = json_encode(array_values(array_filter($settings['editor_selected_partials'])));
+            } else if (is_string($settings['editor_selected_partials'])) {
+                // If it's already a JSON string, validate and store it
+                $decoded = json_decode($settings['editor_selected_partials'], true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $data['editor_selected_partials'] = $settings['editor_selected_partials'];
+                } else {
+                    $data['editor_selected_partials'] = '[]';
+                }
+            } else {
+                $data['editor_selected_partials'] = '[]';
+            }
+        } elseif ($exists && isset($existingData['editor_selected_partials'])) {
+            if (is_array($existingData['editor_selected_partials'])) {
+                $data['editor_selected_partials'] = json_encode(array_values($existingData['editor_selected_partials']));
+            } else {
+                $data['editor_selected_partials'] = '[]';
+            }
+        }
+
         if ($exists) {
             // Update existing record
             $data['updated_at'] = current_time('mysql');
@@ -184,6 +214,7 @@ class BlockSettingsRepository
             if (!isset($data['template'])) $data['template'] = null;
             if (!isset($data['template_lock'])) $data['template_lock'] = null;
             if (!isset($data['selected_partials'])) $data['selected_partials'] = null;
+            if (!isset($data['editor_selected_partials'])) $data['editor_selected_partials'] = null;
 
             $result = $wpdb->insert($table_name, $data);
         }
@@ -248,6 +279,13 @@ class BlockSettingsRepository
                 $row['selected_partials'] = [];
             }
 
+            // Convert editor_selected_partials from JSON to array
+            if (!empty($row['editor_selected_partials'])) {
+                $row['editor_selected_partials'] = json_decode($row['editor_selected_partials'], true) ?: [];
+            } else {
+                $row['editor_selected_partials'] = [];
+            }
+
             // Convert boolean fields
             $row['supports_inner_blocks'] = (bool) $row['supports_inner_blocks'];
         }
@@ -292,6 +330,13 @@ class BlockSettingsRepository
                 $row['selected_partials'] = json_decode($row['selected_partials'], true) ?: [];
             } else {
                 $row['selected_partials'] = [];
+            }
+
+            // Convert editor_selected_partials from JSON to array
+            if (!empty($row['editor_selected_partials'])) {
+                $row['editor_selected_partials'] = json_decode($row['editor_selected_partials'], true) ?: [];
+            } else {
+                $row['editor_selected_partials'] = [];
             }
 
             // Convert boolean fields

@@ -305,6 +305,7 @@ class PostsApiController
                 $formattedMeta['blocks']['settings'] = json_encode($blockSettings);
                 $formattedMeta['blocks']['inner_blocks_settings'] = json_encode($innerBlocksSettings);
                 $formattedMeta['blocks']['selected_partials'] = json_encode($dbSettings['selected_partials'] ?? []);
+                $formattedMeta['blocks']['editor_selected_partials'] = json_encode($dbSettings['editor_selected_partials'] ?? []);
             }
 
             // Add SCSS partial settings if this is a SCSS partial
@@ -399,6 +400,7 @@ class PostsApiController
                 $formattedMeta['blocks']['settings'] = json_encode($blockSettings);
                 $formattedMeta['blocks']['inner_blocks_settings'] = json_encode($innerBlocksSettings);
                 $formattedMeta['blocks']['selected_partials'] = json_encode($dbSettings['selected_partials'] ?? []);
+                $formattedMeta['blocks']['editor_selected_partials'] = json_encode($dbSettings['editor_selected_partials'] ?? []);
             }
         }
 
@@ -640,6 +642,7 @@ class PostsApiController
                         'attributes' => get_post_meta($postId, MetaKeysConstants::BLOCK_ATTRIBUTES, true),
                         'settings' => !empty($settingsData) ? json_encode($settingsData) : '',
                         'selected_partials' => !empty($dbSettings['selected_partials']) ? json_encode($dbSettings['selected_partials']) : '',
+                        'editor_selected_partials' => !empty($dbSettings['editor_selected_partials']) ? json_encode($dbSettings['editor_selected_partials']) : '',
                         'inner_blocks_settings' => !empty($innerBlocksData) ? json_encode($innerBlocksData) : '',
                     ];
                     break;
@@ -756,6 +759,17 @@ class PostsApiController
                     $dbSettings['selected_partials'] = $selectedPartialsData;
                 } else {
                     $dbSettings['selected_partials'] = [];
+                }
+            }
+
+            // Parse editor selected partials and add to database settings
+            if (isset($blocks['editor_selected_partials'])) {
+                $editorSelectedPartialsJson = sanitize_textarea_field($blocks['editor_selected_partials']);
+                $editorSelectedPartialsData = json_decode($editorSelectedPartialsJson, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $dbSettings['editor_selected_partials'] = $editorSelectedPartialsData;
+                } else {
+                    $dbSettings['editor_selected_partials'] = [];
                 }
             }
 
@@ -1093,6 +1107,7 @@ class PostsApiController
                 $formattedMeta['blocks']['settings'] = json_encode($blockSettings);
                 $formattedMeta['blocks']['inner_blocks_settings'] = json_encode($innerBlocksSettings);
                 $formattedMeta['blocks']['selected_partials'] = json_encode($dbSettings['selected_partials'] ?? []);
+                $formattedMeta['blocks']['editor_selected_partials'] = json_encode($dbSettings['editor_selected_partials'] ?? []);
             }
         }
 

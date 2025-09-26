@@ -207,6 +207,7 @@ const App = () => {
 
                         // Compile SCSS to CSS with current partials support
                         const scssContent = metaData.blocks.scss;
+                        console.log('🔄 Compiling SCSS with partials data:', currentPartials);
                         const cssContent = await compileScss(scssContent, selectedPost.id, currentPartials);
 
                         console.log('✅ SCSS compiled successfully');
@@ -224,6 +225,117 @@ const App = () => {
                         setScssError(errorMessage);
                         setShowToast(true);
                         // Continue with normal save even if SCSS compilation fails
+                    }
+                }
+
+                // Check if this is a block and has editor SCSS content
+                const hasEditorScssContent = selectedPost.terms?.some(term => term.slug === 'blocks') &&
+                                           metaData.blocks?.editorScss;
+
+                console.log('🔍 Editor SCSS check:', {
+                    isBlock: selectedPost.terms?.some(term => term.slug === 'blocks'),
+                    hasEditorScss: !!metaData.blocks?.editorScss,
+                    editorScssContent: metaData.blocks?.editorScss || '(empty)',
+                    willCompile: hasEditorScssContent
+                });
+
+                if (hasEditorScssContent) {
+                    console.log('🔄 Compiling Editor SCSS for post:', selectedPost.title);
+
+                    try {
+                        // Get editor partials for compilation
+                        const editorPartialsData = await apiClient.getScssPartials();
+                        const globalPartials = editorPartialsData.global_partials || [];
+                        const availablePartials = editorPartialsData.available_partials || [];
+
+                        // Parse editor selected partials
+                        let editorSelectedPartialIds = [];
+                        const editorSelectedPartialsString = metaData.blocks?.editor_selected_partials;
+                        console.log('📝 Editor Selected Partials Raw String:', editorSelectedPartialsString);
+                        if (editorSelectedPartialsString) {
+                            try {
+                                editorSelectedPartialIds = JSON.parse(editorSelectedPartialsString);
+                                console.log('✅ Parsed Editor Selected Partial IDs:', editorSelectedPartialIds);
+                            } catch (e) {
+                                console.warn('Failed to parse editor selected partials:', e);
+                            }
+                        } else {
+                            console.log('⚠️ No editor selected partials string found');
+                        }
+
+                        // Enrich editor selected partial IDs with their data
+                        const enrichedEditorSelectedPartials = [];
+                        if (Array.isArray(editorSelectedPartialIds)) {
+                            const allPartials = [...globalPartials, ...availablePartials];
+                            console.log('📚 All Available Partials for Lookup:', allPartials.map(p => ({ id: p.id, title: p.title })));
+
+                            const partialsLookup = {};
+                            allPartials.forEach(partial => {
+                                partialsLookup[partial.id] = partial;
+                            });
+
+                            editorSelectedPartialIds.forEach((partialId, index) => {
+                                const id = typeof partialId === 'string' ? parseInt(partialId) : partialId;
+                                const partialData = partialsLookup[id];
+                                console.log(`🔍 Looking up partial ID ${id}:`, partialData ? `Found - ${partialData.title}` : 'Not found');
+
+                                if (partialData) {
+                                    enrichedEditorSelectedPartials.push({
+                                        id: partialData.id,
+                                        title: partialData.title,
+                                        slug: partialData.slug,
+                                        order: index + 1
+                                    });
+                                }
+                            });
+                            console.log('💎 Enriched Editor Selected Partials:', enrichedEditorSelectedPartials);
+                        }
+
+                        const editorCurrentPartials = {
+                            globalPartials,
+                            selectedPartials: enrichedEditorSelectedPartials
+                        };
+
+                        console.log('🔍 Editor partials for compilation:', editorCurrentPartials);
+
+                        // Compile editor SCSS to CSS with partials support
+                        const editorScssContent = metaData.blocks.editorScss;
+                        console.log('📝 Editor SCSS content to compile:', editorScssContent);
+                        console.log('🚀 Calling compileScss for editor with partials:', {
+                            hasContent: !!editorScssContent,
+                            globalCount: editorCurrentPartials.globalPartials.length,
+                            selectedCount: editorCurrentPartials.selectedPartials.length
+                        });
+                        // Pass null as postId to force using our provided editorCurrentPartials
+                        const editorCssContent = await compileScss(editorScssContent, null, editorCurrentPartials);
+
+                        console.log('✅ Editor SCSS compiled successfully');
+
+                        console.log('📊 Editor CSS Compiled Output:', {
+                            originalScss: editorScssContent,
+                            compiledCss: editorCssContent,
+                            cssLength: editorCssContent.length,
+                            includesGlobalStyles: editorCssContent.includes('box-sizing') || editorCssContent.includes('font-size'),
+                            includesSelectedStyles: editorCurrentPartials.selectedPartials.map(p => ({
+                                title: p.title,
+                                found: editorCssContent.includes(p.title) || editorCssContent.includes(p.slug)
+                            }))
+                        });
+
+                        // Save both editor SCSS and compiled CSS
+                        await apiClient.saveEditorScssContent(selectedPost.id, {
+                            editor_scss_content: editorScssContent,
+                            editor_css_content: editorCssContent,
+                        });
+
+                        console.log('✅ Editor SCSS and CSS saved successfully');
+                        console.log('🎨 Final Editor CSS:', editorCssContent);
+                    } catch (compilationError) {
+                        console.error('❌ Editor SCSS compilation failed:', compilationError);
+                        const errorMessage = compilationError.message || 'Editor SCSS compilation failed';
+                        setScssError(errorMessage);
+                        setShowToast(true);
+                        // Continue with normal save even if editor SCSS compilation fails
                     }
                 }
 

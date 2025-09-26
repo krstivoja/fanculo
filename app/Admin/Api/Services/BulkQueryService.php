@@ -150,6 +150,7 @@ class BulkQueryService
                     $formattedMeta['blocks'] = [
                         'php' => $postMeta[MetaKeysConstants::BLOCK_PHP] ?? '',
                         'scss' => $postMeta[MetaKeysConstants::BLOCK_SCSS] ?? '',
+                        'editorScss' => $postMeta[MetaKeysConstants::BLOCK_EDITOR_SCSS] ?? '',
                         'js' => $postMeta[MetaKeysConstants::BLOCK_JS] ?? '',
                         'attributes' => $postMeta[MetaKeysConstants::BLOCK_ATTRIBUTES] ?? '',
                         'settings' => $postMeta[MetaKeysConstants::BLOCK_SETTINGS] ?? '',
@@ -245,6 +246,7 @@ class BulkQueryService
             $neededKeys = array_merge($neededKeys, [
                 MetaKeysConstants::BLOCK_PHP,
                 MetaKeysConstants::BLOCK_SCSS,
+                MetaKeysConstants::BLOCK_EDITOR_SCSS,
                 MetaKeysConstants::BLOCK_JS,
                 MetaKeysConstants::BLOCK_ATTRIBUTES,
                 MetaKeysConstants::BLOCK_SETTINGS,

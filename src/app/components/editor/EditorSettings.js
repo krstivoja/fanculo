@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Textarea, Select, DashiconButton, Button } from '../ui';
 import { TrashIcon } from '../icons';
-import ScssPartialsManager from './ScssPartialsManager';
+import ScssPartialsCombined from './ScssPartialsCombined';
 import InnerBlocksSettings from './InnerBlocksSettings';
 import ScssPartialSettings from './ScssPartialSettings';
 import { apiClient } from '../../../utils';
@@ -131,14 +131,14 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
           <div className="flex p-1 border border-solid border-outline rounded-md bg-base-2">
             <Button
               variant={activeTab === 'settings' ? 'primary' : 'ghost'}
-              className="grow px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+              className="grow px-3 py-2 text-xs font-medium border-b-2 transition-colors"
               onClick={() => setActiveTab('settings')}
             >
-              Block Settings
+              Settings
             </Button>
             <Button
               variant={activeTab === 'partials' ? 'primary' : 'ghost'}
-              className="grow px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+              className="grow px-3 py-2 text-xs font-medium border-b-2 transition-colors"
               onClick={() => setActiveTab('partials')}
             >
               SCSS Partials
@@ -232,10 +232,10 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
           </div>
         )}
 
-        {/* SCSS Partials Tab */}
+        {/* SCSS Partials Tab - Combined view */}
         {isBlockType && activeTab === 'partials' && (
-          <div className="flex-1 p-4 overflow-hidden">
-            <ScssPartialsManager
+          <div className="flex-1 overflow-hidden">
+            <ScssPartialsCombined
               selectedPost={selectedPost}
               metaData={metaData}
               onMetaChange={onMetaChange}

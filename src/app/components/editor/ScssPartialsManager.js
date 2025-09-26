@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ReactTags } from '../ui';
 import { apiClient } from '../../../utils';
 
-const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
+const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'style', hideGlobalPartials = false }) => {
   const [globalPartials, setGlobalPartials] = useState([]);
   const [availablePartials, setAvailablePartials] = useState([]);
   const [selectedPartials, setSelectedPartials] = useState([]);
@@ -38,9 +38,10 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
   };
 
   const loadSelectedPartials = () => {
-    // Load selected partials from metaData
-    console.log('Loading selected partials from metaData:', metaData);
-    const blockSelectedPartials = metaData?.blocks?.selected_partials;
+    // Load selected partials from metaData based on mode
+    console.log('Loading selected partials from metaData:', metaData, 'mode:', mode);
+    const fieldName = mode === 'editorStyle' ? 'editor_selected_partials' : 'selected_partials';
+    const blockSelectedPartials = metaData?.blocks?.[fieldName];
     console.log('Block selected partials raw:', blockSelectedPartials);
 
     if (blockSelectedPartials) {
@@ -87,12 +88,13 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
   };
 
   const updateSelectedPartials = (newSelected) => {
-    console.log('Updating selected partials:', newSelected);
+    console.log('Updating selected partials:', newSelected, 'mode:', mode);
     // Extract just the IDs for database storage
     const partialIds = newSelected.map(p => p.id || p);
-    console.log('Calling onMetaChange with partial IDs:', partialIds);
+    const fieldName = mode === 'editorStyle' ? 'editor_selected_partials' : 'selected_partials';
+    console.log('Calling onMetaChange with partial IDs:', partialIds, 'field:', fieldName);
     setSelectedPartials(newSelected);
-    onMetaChange('blocks', 'selected_partials', JSON.stringify(partialIds));
+    onMetaChange('blocks', fieldName, JSON.stringify(partialIds));
   };
 
   // Convert selected partials to ReactTags format
@@ -148,8 +150,8 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Global Partials Section */}
-      {globalPartials.length > 0 && (
+      {/* Global Partials Section - only show if not hidden */}
+      {!hideGlobalPartials && globalPartials.length > 0 && (
         <div className="mb-6">
           <h4 className="font-medium text-highlight mb-3 flex items-center gap-2">
             🌍 Global Partials
@@ -170,9 +172,11 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange }) => {
 
       {/* Selected Partials Section using ReactTags */}
       <div className="flex-1">
-        <label className="block text-sm font-medium text-contrast mb-2">
-          Selected Partials
-        </label>
+        {!hideGlobalPartials && (
+          <label className="block text-sm font-medium text-contrast mb-2">
+            {mode === 'editorStyle' ? 'Editor Style Partials' : 'Selected Partials'}
+          </label>
+        )}
 
         <ReactTags
           tags={selectedTags}

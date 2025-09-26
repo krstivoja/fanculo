@@ -4,7 +4,7 @@ namespace Fanculo\Database;
 
 class DatabaseInstaller
 {
-    const TABLE_VERSION = '4.1.0';
+    const TABLE_VERSION = '4.2.0';
     const VERSION_OPTION = 'fanculo_db_version';
     const TABLE_NAME = 'fanculo_blocks_settings';
     const SCSS_TABLE_NAME = 'fanculo_scsspartials_settings';
@@ -61,6 +61,7 @@ class DatabaseInstaller
             template text DEFAULT NULL,
             template_lock varchar(50) DEFAULT NULL,
             selected_partials text DEFAULT NULL,
+            editor_selected_partials text DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),

@@ -418,6 +418,20 @@ class FunculoApiClient {
   }
 
   /**
+   * Save editor SCSS content and compiled CSS
+   * @param {number} id Post ID
+   * @param {Object} data Editor SCSS and CSS data
+   * @returns {Promise<Object>} Save result
+   */
+  async saveEditorScssContent(id, data) {
+    this.invalidateCache(`/post/${id}/editor-scss`); // Clear editor SCSS cache
+    return this.request(`/post/${id}/editor-scss`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  /**
    * Update partial global settings
    * @param {number} id Post ID
    * @param {Object} settings Global settings
