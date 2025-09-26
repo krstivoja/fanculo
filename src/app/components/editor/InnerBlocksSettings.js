@@ -141,11 +141,17 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
     }));
     setSelectedBlocks(tags);
 
-    // Load template settings from main block settings
-    const blockSettings = getBlockSettings();
-    const innerBlocksConfig = blockSettings.innerBlocks || {};
-    setDefaultTemplate(innerBlocksConfig.template || []);
-    setTemplateLock(innerBlocksConfig.templateLock || false);
+    // Load template settings from inner blocks settings
+    // Template is stored as array of block names, need to convert to nested format
+    const template = settings.template || [];
+    const nestedTemplate = Array.isArray(template)
+      ? template.map(blockName => typeof blockName === 'string' ? [blockName] : blockName)
+      : [];
+    setDefaultTemplate(nestedTemplate);
+
+    // Handle various formats of templateLock
+    const lockValue = settings.templateLock;
+    setTemplateLock(lockValue === 'true' || lockValue === true);
   }, [selectedPost, metaData]);
 
   // Fetch available blocks when component mounts or when enabled
@@ -179,9 +185,13 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
 
   // Update settings in metaData
   const updateInnerBlocksSettings = (enabled, allowedBlocks) => {
+    const currentSettings = getInnerBlocksSettings();
     const settings = {
       enabled,
-      allowed_blocks: allowedBlocks
+      allowed_blocks: allowedBlocks,
+      // Preserve template settings when updating inner blocks
+      template: currentSettings.template || [],
+      templateLock: currentSettings.templateLock || 'false'
     };
 
     if (onMetaChange) {
@@ -189,20 +199,19 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
     }
   };
 
-  // Update template settings in block settings
+  // Update template settings in inner blocks settings
   const updateTemplateSettings = (template, templateLock) => {
-    const currentBlockSettings = getBlockSettings();
+    const currentInnerBlocksSettings = getInnerBlocksSettings();
     const updatedSettings = {
-      ...currentBlockSettings,
-      innerBlocks: {
-        ...currentBlockSettings.innerBlocks,
-        template,
-        templateLock
-      }
+      ...currentInnerBlocksSettings,
+      enabled: currentInnerBlocksSettings.enabled || false,
+      allowed_blocks: currentInnerBlocksSettings.allowed_blocks || [],
+      template: template.map(block => block[0]), // Store as flat array of block names
+      templateLock: templateLock ? 'true' : 'false' // Store as string for consistency with database
     };
 
     if (onMetaChange) {
-      onMetaChange('blocks', 'settings', JSON.stringify(updatedSettings));
+      onMetaChange('blocks', 'inner_blocks_settings', JSON.stringify(updatedSettings));
     }
   };
 

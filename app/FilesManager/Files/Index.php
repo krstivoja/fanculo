@@ -2,8 +2,8 @@
 
 namespace Fanculo\FilesManager\Files;
 
-use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use Fanculo\FilesManager\Services\AttributeMapper;
+use Fanculo\Database\BlockSettingsRepository;
 
 class Index
 {
@@ -11,30 +11,20 @@ class Index
     {
         $indexJsPath = $blockDir . '/index.js';
 
-        // Get inner blocks settings if post ID is provided
+        // Get inner blocks settings from database if post ID is provided
         $innerBlocksEnabled = false;
         $allowedBlocks = [];
 
         if ($postId) {
-            $innerBlocksSettings = get_post_meta($postId, MetaKeysConstants::BLOCK_INNER_BLOCKS_SETTINGS, true);
-            if ($innerBlocksSettings) {
-                $settings = json_decode($innerBlocksSettings, true);
+            $dbSettings = BlockSettingsRepository::get($postId);
+            if ($dbSettings) {
+                $innerBlocksEnabled = $dbSettings['supports_inner_blocks'];
+                $allowedBlocks = $dbSettings['allowed_block_types'] ?? [];
 
-                // Validate JSON decode and array structure
-                if (json_last_error() === JSON_ERROR_NONE && is_array($settings)) {
-                    $innerBlocksEnabled = isset($settings['enabled']) && is_bool($settings['enabled']) ? $settings['enabled'] : false;
-                    $allowedBlocks = isset($settings['allowed_blocks']) && is_array($settings['allowed_blocks'])
-                        ? $settings['allowed_blocks']
-                        : [];
-
-                    // Additional validation for allowed blocks array
-                    $allowedBlocks = array_filter($allowedBlocks, function($block) {
-                        return is_string($block) && !empty($block);
-                    });
-                } else {
-                    // Log JSON decode error for debugging
-                    error_log('Fanculo Index Generator: Invalid JSON in inner blocks settings for post ' . $postId . ': ' . json_last_error_msg());
-                }
+                // Additional validation for allowed blocks array
+                $allowedBlocks = array_filter($allowedBlocks, function($block) {
+                    return is_string($block) && !empty($block);
+                });
             }
         }
 
@@ -43,22 +33,22 @@ class Index
         if ($innerBlocksEnabled) {
             $allowedBlocksJson = wp_json_encode($allowedBlocks, JSON_UNESCAPED_SLASHES);
 
-            // Get template and templateLock from settings if available
+            // Get template and templateLock from database settings if available
             $template = '[]'; // Default to empty template
             $templateLock = 'false';
 
-            if ($postId) {
-                $blockSettings = get_post_meta($postId, MetaKeysConstants::BLOCK_SETTINGS, true);
-                if ($blockSettings) {
-                    $settingsData = json_decode($blockSettings, true);
-                    if (json_last_error() === JSON_ERROR_NONE && is_array($settingsData)) {
-                        if (isset($settingsData['innerBlocks']['template']) && is_array($settingsData['innerBlocks']['template'])) {
-                            $template = wp_json_encode($settingsData['innerBlocks']['template'], JSON_UNESCAPED_SLASHES);
-                        }
-                        if (isset($settingsData['innerBlocks']['templateLock'])) {
-                            $templateLock = $settingsData['innerBlocks']['templateLock'] ? 'true' : 'false';
-                        }
+            if ($postId && $dbSettings) {
+                // Convert template array to nested format for InnerBlocks
+                if (!empty($dbSettings['template'])) {
+                    $templateArray = [];
+                    foreach ($dbSettings['template'] as $blockName) {
+                        $templateArray[] = [$blockName];
                     }
+                    $template = wp_json_encode($templateArray, JSON_UNESCAPED_SLASHES);
+                }
+
+                if (!empty($dbSettings['template_lock'])) {
+                    $templateLock = ($dbSettings['template_lock'] === 'true' || $dbSettings['template_lock'] === '1') ? 'true' : 'false';
                 }
             }
 
@@ -89,14 +79,8 @@ class Index
         $blockTitle = get_the_title($postId) ?: 'Untitled Block';
         $blockDescription = '';
 
-        if ($postId) {
-            $blockSettings = get_post_meta($postId, MetaKeysConstants::BLOCK_SETTINGS, true);
-            if ($blockSettings) {
-                $settingsData = json_decode($blockSettings, true);
-                if (json_last_error() === JSON_ERROR_NONE && is_array($settingsData)) {
-                    $blockDescription = isset($settingsData['description']) ? sanitize_text_field($settingsData['description']) : '';
-                }
-            }
+        if ($postId && $dbSettings) {
+            $blockDescription = !empty($dbSettings['description']) ? sanitize_text_field($dbSettings['description']) : '';
         }
 
         // Generate sidebar controls based on attributes

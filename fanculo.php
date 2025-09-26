@@ -20,6 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
+define('FANCULO_PLUGIN_FILE', __FILE__);
 define('FANCULO_URL', plugin_dir_url(__FILE__));
 define('FANCULO_PATH', plugin_dir_path(__FILE__));
 define('FANCULO_VERSION', '0.0.1');
@@ -30,15 +31,22 @@ $blocks_path = WP_PLUGIN_DIR . '/' . $blocks_dir_name;
 define('FANCULO_BLOCKS_DIR', $blocks_path);
 define('FANCULO_BLOCKS_URL', plugins_url($blocks_dir_name));
 
-
-// Require Composer autoloader
-if (file_exists(__DIR__ . '/vendor/autoload.php')) {
-    require_once __DIR__ . '/vendor/autoload.php';
+// Check for Composer autoloader
+$autoloader = __DIR__ . '/vendor/autoload.php';
+if (!file_exists($autoloader)) {
+    add_action('admin_notices', function() {
+        echo '<div class="notice notice-error"><p>';
+        echo __('Fanculo Plugin Error: Composer dependencies are missing. Please run "composer install" in the plugin directory.', 'fanculo');
+        echo '</p></div>';
+    });
+    return; // Stop plugin initialization
 }
 
+// Load Composer autoloader
+require_once $autoloader;
 
-// Initialize the plugin
+// Bootstrap the plugin
 add_action('plugins_loaded', function() {
-    \Fanculo\App::getInstance();
+    \Fanculo\App::boot(FANCULO_PLUGIN_FILE);
 });
 
