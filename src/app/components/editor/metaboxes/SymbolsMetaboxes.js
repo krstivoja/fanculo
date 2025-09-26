@@ -1,13 +1,12 @@
 import React from 'react';
 import { MonacoEditor } from '../../ui';
-import { useSymbolMetaData } from '../../../hooks';
 
-const SymbolsMetaboxes = ({ titleComponent }) => {
-  const { data: symbols, updateField } = useSymbolMetaData();
-
+const SymbolsMetaboxes = ({ metaData, onChange, titleComponent }) => {
   const handleMetaChange = (field, value) => {
-    updateField(field, value);
+    onChange('symbols', field, value);
   };
+
+  const symbols = metaData?.symbols || {};
 
   return (
     <>

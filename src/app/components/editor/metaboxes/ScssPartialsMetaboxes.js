@@ -1,13 +1,12 @@
 import React from 'react';
 import { MonacoEditor } from '../../ui';
-import { useScssPartialMetaData } from '../../../hooks';
 
-const ScssPartialsMetaboxes = ({ titleComponent }) => {
-  const { data: scssPartials, updateField } = useScssPartialMetaData();
-
+const ScssPartialsMetaboxes = ({ metaData, onChange, titleComponent }) => {
   const handleMetaChange = (field, value) => {
-    updateField(field, value);
+    onChange('scss_partials', field, value);
   };
+
+  const scssPartials = metaData?.scss_partials || {};
 
   return (
     <>

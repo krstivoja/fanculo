@@ -5,10 +5,11 @@ import { BlockIcon, SymbolIcon, StyleIcon } from '../icons';
 // Lazy load EditTitleModal - only loads when title is clicked
 const EditTitleModal = lazy(() => import('./EditTitleModal'));
 
-const EditorMain = ({ selectedPost, onTitleUpdate }) => {
+const EditorMain = ({ selectedPost, metaData, onMetaChange, onTitleUpdate }) => {
   const [isEditTitleModalOpen, setIsEditTitleModalOpen] = useState(false);
 
   console.log('EditorMain - selectedPost:', selectedPost);
+  console.log('EditorMain - metaData:', metaData);
 
   // Get the appropriate icon based on post type
   const getTypeIcon = () => {
@@ -44,6 +45,9 @@ const EditorMain = ({ selectedPost, onTitleUpdate }) => {
       {selectedPost ? (
         <>
           <MetaboxContainer
+            selectedPost={selectedPost}
+            metaData={metaData}
+            onMetaChange={onMetaChange}
             titleComponent={
               <h1
                 className="!text-5xl font-semibold cursor-pointer hover:!text-highlight hover:underline !flex items-center gap-3 !p-8 !pb-4"

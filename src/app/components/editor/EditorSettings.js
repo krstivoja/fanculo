@@ -5,12 +5,8 @@ import ScssPartialsCombined from './ScssPartialsCombined';
 import InnerBlocksSettings from './InnerBlocksSettings';
 import ScssPartialSettings from './ScssPartialSettings';
 import { apiClient } from '../../../utils';
-import { useEditor } from '../../hooks';
 
-const EditorSettings = ({ onSave, saveStatus }) => {
-  const { selectedPost, metaData, updateMeta, deletePost } = useEditor();
-  const onMetaChange = updateMeta;
-  const onPostDelete = deletePost;
+const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) => {
   const [blockCategories, setBlockCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -165,7 +161,11 @@ const EditorSettings = ({ onSave, saveStatus }) => {
 
               {/* SCSS Partial Settings */}
               {isScssPartial && (
-                <ScssPartialSettings />
+                <ScssPartialSettings
+                  selectedPost={selectedPost}
+                  metaData={metaData}
+                  onMetaChange={onMetaChange}
+                />
               )}
 
               {isBlockType && (
@@ -205,7 +205,11 @@ const EditorSettings = ({ onSave, saveStatus }) => {
 
                   {/* Inner Blocks Settings */}
                   <div className="pt-4 border-t border-outline">
-                    <InnerBlocksSettings />
+                    <InnerBlocksSettings
+                      selectedPost={selectedPost}
+                      metaData={metaData}
+                      onMetaChange={onMetaChange}
+                    />
                   </div>
                 </div>
               )}
@@ -231,7 +235,11 @@ const EditorSettings = ({ onSave, saveStatus }) => {
         {/* SCSS Partials Tab - Combined view */}
         {isBlockType && activeTab === 'partials' && (
           <div className="flex-1 overflow-hidden">
-            <ScssPartialsCombined />
+            <ScssPartialsCombined
+              selectedPost={selectedPost}
+              metaData={metaData}
+              onMetaChange={onMetaChange}
+            />
           </div>
         )}
       </div>

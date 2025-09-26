@@ -1,19 +1,15 @@
 import React, { useState } from 'react';
 import { MonacoEditor } from '../../ui';
 import AttributesManager from '../attributes/AttributesManager';
-import { useBlockMetaData } from '../../../hooks';
 
-const BlocksMetaboxes = ({ titleComponent }) => {
+const BlocksMetaboxes = ({ metaData, onChange, titleComponent }) => {
   const [activeTab, setActiveTab] = useState('php');
-  const { data: blocks, updateField } = useBlockMetaData();
 
   const handleMetaChange = (field, value) => {
-    updateField(field, value);
+    onChange('blocks', field, value);
   };
 
-  const handleAttributesChange = (_section, field, value) => {
-    updateField(field, value);
-  };
+  const blocks = metaData?.blocks || {};
 
   const tabs = [
     { id: 'php', label: 'Content', language: 'php', required: true, placeholder: 'Enter PHP code for the block...' },
@@ -54,8 +50,8 @@ const BlocksMetaboxes = ({ titleComponent }) => {
             {tab.isAttributesTab ? (
               <div className="h-full p-8">
                 <AttributesManager
-                  blockMeta={{ blocks }}
-                  onMetaChange={handleAttributesChange}
+                  blockMeta={metaData}
+                  onMetaChange={onChange}
                   blockId="current-block"
                 />
               </div>
