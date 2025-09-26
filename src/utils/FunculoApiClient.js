@@ -294,7 +294,21 @@ class FunculoApiClient {
   async getPosts(params = {}) {
     const queryString = new URLSearchParams(params).toString();
     const endpoint = `/posts${queryString ? `?${queryString}` : ''}`;
-    return this.request(endpoint);
+    const response = await this.request(endpoint);
+
+    // Handle new unified API response format
+    if (response.success !== undefined && response.data !== undefined) {
+      // New format: extract posts from data array
+      return {
+        posts: response.data,
+        total: response.meta?.pagination?.total || 0,
+        total_pages: response.meta?.pagination?.total_pages || 0,
+        current_page: response.meta?.pagination?.current_page || 1
+      };
+    }
+
+    // Old format: return as-is
+    return response;
   }
 
   /**
@@ -303,11 +317,15 @@ class FunculoApiClient {
    * @returns {Promise<Object>} Post data
    */
   async getPost(id) {
-    const result = await this.getBatchPosts([id]);
-    if (result.posts && result.posts.length > 0) {
-      return result.posts[0];
+    const response = await this.request(`/post/${id}`);
+
+    // Handle new unified API response format
+    if (response.success !== undefined && response.data !== undefined) {
+      return response.data;
     }
-    throw new Error(`Post ${id} not found`);
+
+    // Old format: return as-is
+    return response;
   }
 
   /**
@@ -318,13 +336,25 @@ class FunculoApiClient {
    */
   async getBatchPosts(postIds, options = {}) {
     const { includeMeta = true } = options;
-    return this.request('/posts/batch', {
+    const response = await this.request('/posts/batch', {
       method: 'POST',
       body: JSON.stringify({
         post_ids: postIds,
         include_meta: includeMeta
       })
     });
+
+    // Handle new unified API response format
+    if (response.success !== undefined && response.data !== undefined) {
+      return {
+        posts: response.data.posts || response.data,
+        found: response.data.found || response.meta?.found || 0,
+        not_found: response.data.not_found || []
+      };
+    }
+
+    // Old format: return as-is
+    return response;
   }
 
   /**
@@ -334,10 +364,18 @@ class FunculoApiClient {
    */
   async createPost(postData) {
     this.invalidateCache('/posts');
-    return this.request('/posts', {
+    const response = await this.request('/posts', {
       method: 'POST',
       body: JSON.stringify(postData)
     });
+
+    // Handle new unified API response format
+    if (response.success !== undefined && response.data !== undefined) {
+      return response.data;
+    }
+
+    // Old format: return as-is
+    return response;
   }
 
   /**
@@ -364,10 +402,22 @@ class FunculoApiClient {
    */
   async batchUpdatePosts(updates) {
     this.invalidateCache('/posts');
-    return this.request('/posts/batch-update', {
+    const response = await this.request('/posts/batch-update', {
       method: 'PUT',
       body: JSON.stringify({ updates })
     });
+
+    // Handle new unified API response format
+    if (response.success !== undefined && response.data !== undefined) {
+      return {
+        successful: response.data.successful || [],
+        failed: response.data.failed || [],
+        total: response.meta?.total || updates.length
+      };
+    }
+
+    // Old format: return as-is
+    return response;
   }
 
   /**
@@ -377,9 +427,20 @@ class FunculoApiClient {
    */
   async deletePost(id) {
     this.invalidateCache('/posts');
-    return this.request(`/post/${id}`, {
+    const response = await this.request(`/post/${id}`, {
       method: 'DELETE'
     });
+
+    // Handle new unified API response format
+    if (response.success !== undefined) {
+      return {
+        success: response.success,
+        message: response.meta?.message || response.data?.message || 'Post deleted successfully'
+      };
+    }
+
+    // Old format: return as-is
+    return response;
   }
 
   // ===========================================
@@ -391,7 +452,15 @@ class FunculoApiClient {
    * @returns {Promise<Object>} SCSS partials data
    */
   async getScssPartials() {
-    return this.request('/scss-partials');
+    const response = await this.request('/scss-partials');
+
+    // Handle new unified API response format
+    if (response.success !== undefined && response.data !== undefined) {
+      return response.data;
+    }
+
+    // Old format: return as-is
+    return response;
   }
 
   /**
@@ -400,7 +469,14 @@ class FunculoApiClient {
    * @returns {Promise<Object>} SCSS content data
    */
   async getScssContent(id) {
-    return this.request(`/post/${id}/scss`);
+    const response = await this.request(`/post/${id}/scss`);
+
+    // Handle new unified API response format
+    if (response.success !== undefined && response.data !== undefined) {
+      return response.data;
+    }
+
+    return response;
   }
 
   /**
@@ -411,10 +487,17 @@ class FunculoApiClient {
    */
   async saveScssContent(id, data) {
     this.invalidateCache(`/post/${id}/scss`); // Clear SCSS cache
-    return this.request(`/post/${id}/scss`, {
+    const response = await this.request(`/post/${id}/scss`, {
       method: 'POST',
       body: JSON.stringify(data)
     });
+
+    // Handle new unified API response format
+    if (response.success !== undefined && response.data !== undefined) {
+      return response.data;
+    }
+
+    return response;
   }
 
   /**
@@ -425,10 +508,17 @@ class FunculoApiClient {
    */
   async saveEditorScssContent(id, data) {
     this.invalidateCache(`/post/${id}/editor-scss`); // Clear editor SCSS cache
-    return this.request(`/post/${id}/editor-scss`, {
+    const response = await this.request(`/post/${id}/editor-scss`, {
       method: 'POST',
       body: JSON.stringify(data)
     });
+
+    // Handle new unified API response format
+    if (response.success !== undefined && response.data !== undefined) {
+      return response.data;
+    }
+
+    return response;
   }
 
   /**
@@ -439,10 +529,17 @@ class FunculoApiClient {
    */
   async updatePartialGlobalSettings(id, settings) {
     this.invalidateCache('/scss-partials'); // Clear partials cache
-    return this.request(`/scss-partial/${id}/global-setting`, {
+    const response = await this.request(`/scss-partial/${id}/global-setting`, {
       method: 'POST',
       body: JSON.stringify(settings)
     });
+
+    // Handle new unified API response format
+    if (response.success !== undefined && response.data !== undefined) {
+      return response.data;
+    }
+
+    return response;
   }
 
   // ===========================================
@@ -454,9 +551,19 @@ class FunculoApiClient {
    * @returns {Promise<Object>} Regeneration result
    */
   async regenerateFiles() {
-    return this.request('/regenerate-files', {
+    const response = await this.request('/regenerate-files', {
       method: 'POST'
     });
+
+    // Handle new unified API response format
+    if (response.success !== undefined) {
+      return {
+        success: response.success,
+        message: response.meta?.message || response.data?.message || 'Files regenerated successfully'
+      };
+    }
+
+    return response;
   }
 
   /**
@@ -464,9 +571,19 @@ class FunculoApiClient {
    * @returns {Promise<Object>} Force regeneration result
    */
   async forceRegenerateAll() {
-    return this.request('/force-regenerate-all', {
+    const response = await this.request('/force-regenerate-all', {
       method: 'POST'
     });
+
+    // Handle new unified API response format
+    if (response.success !== undefined) {
+      return {
+        success: response.success,
+        message: response.meta?.message || response.data?.message || 'All files forcefully regenerated'
+      };
+    }
+
+    return response;
   }
 
   // ===========================================
@@ -478,7 +595,15 @@ class FunculoApiClient {
    * @returns {Promise<Array>} Block categories
    */
   async getBlockCategories() {
-    return this.request('/block-categories');
+    const response = await this.request('/block-categories');
+
+    // Handle new unified API response format
+    if (response.success !== undefined && response.data !== undefined) {
+      return response.data;
+    }
+
+    // Old format: return as-is
+    return response;
   }
 
   /**
@@ -486,7 +611,15 @@ class FunculoApiClient {
    * @returns {Promise<Array>} Taxonomy terms
    */
   async getTaxonomyTerms() {
-    return this.request('/taxonomy');
+    const response = await this.request('/taxonomy');
+
+    // Handle new unified API response format
+    if (response.success !== undefined && response.data !== undefined) {
+      return response.data;
+    }
+
+    // Old format: return as-is
+    return response;
   }
 
   /**
@@ -494,7 +627,15 @@ class FunculoApiClient {
    * @returns {Promise<Object>} All registered blocks data
    */
   async getRegisteredBlocks() {
-    return this.request('/registered-blocks');
+    const response = await this.request('/registered-blocks');
+
+    // Handle new unified API response format
+    if (response.success !== undefined && response.data !== undefined) {
+      return response.data;
+    }
+
+    // Old format: return as-is
+    return response;
   }
 
   // ===========================================
@@ -507,7 +648,14 @@ class FunculoApiClient {
    * @returns {Promise<Object>} Post with all related data
    */
   async getPostWithRelated(id) {
-    return this.request(`/post/${id}/with-related`);
+    const response = await this.request(`/post/${id}/with-related`);
+
+    // Handle new unified API response format
+    if (response.success !== undefined && response.data !== undefined) {
+      return response.data;
+    }
+
+    return response;
   }
 
   /**
@@ -559,10 +707,21 @@ class FunculoApiClient {
    * @returns {Promise<Object>} Batch compilation result
    */
   async batchCompileScss(compilations) {
-    return this.request('/scss/compile-batch', {
+    const response = await this.request('/scss/compile-batch', {
       method: 'POST',
       body: JSON.stringify({ compilations })
     });
+
+    // Handle new unified API response format
+    if (response.success !== undefined && response.data !== undefined) {
+      return {
+        successful: response.data.successful || [],
+        failed: response.data.failed || [],
+        total: response.meta?.total || compilations.length
+      };
+    }
+
+    return response;
   }
 
   /**
@@ -571,10 +730,21 @@ class FunculoApiClient {
    * @returns {Promise<Object>} Bulk operations result
    */
   async executeBulkOperations(operations) {
-    return this.request('/operations/bulk', {
+    const response = await this.request('/operations/bulk', {
       method: 'POST',
       body: JSON.stringify({ operations })
     });
+
+    // Handle new unified API response format
+    if (response.success !== undefined && response.data !== undefined) {
+      return {
+        successful: response.data.successful || [],
+        failed: response.data.failed || [],
+        total: response.meta?.total || operations.length
+      };
+    }
+
+    return response;
   }
 
   /**

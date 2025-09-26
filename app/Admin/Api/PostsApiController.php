@@ -8,6 +8,8 @@ use Fanculo\FilesManager\FilesManagerService;
 use Fanculo\FilesManager\Services\DirectoryManager;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use Fanculo\Admin\Api\Services\BulkQueryService;
+use Fanculo\Admin\Api\Services\ApiResponseFormatter;
+use Fanculo\Admin\Api\Services\UnifiedApiService;
 use Fanculo\Admin\Api\ScssCompilerApiController;
 use Fanculo\Admin\Api\BlockCategoriesApiController;
 use Fanculo\Database\BlockSettingsRepository;
@@ -16,10 +18,14 @@ use Fanculo\Database\ScssPartialsSettingsRepository;
 class PostsApiController
 {
     private $bulkQueryService;
+    private $responseFormatter;
+    private $unifiedApiService;
 
     public function __construct()
     {
         $this->bulkQueryService = new BulkQueryService();
+        $this->responseFormatter = new ApiResponseFormatter();
+        $this->unifiedApiService = new UnifiedApiService();
         add_action('rest_api_init', [$this, 'registerRoutes']);
     }
 
@@ -227,12 +233,12 @@ class PostsApiController
         $query = new \WP_Query($args);
 
         if (empty($query->posts)) {
-            return new \WP_REST_Response([
-                'posts' => [],
-                'total' => 0,
-                'total_pages' => 0,
-                'current_page' => $request->get_param('page'),
-            ], 200);
+            return $this->responseFormatter->paginated(
+                [],
+                0,
+                $request->get_param('page'),
+                $request->get_param('per_page')
+            );
         }
 
         // Extract post IDs for bulk operations
@@ -335,12 +341,17 @@ class PostsApiController
         // Log performance improvement
         $this->bulkQueryService->logPerformance('getPosts', count($posts), $startTime);
 
-        return new \WP_REST_Response([
-            'posts' => $posts,
-            'total' => $query->found_posts,
-            'total_pages' => $query->max_num_pages,
-            'current_page' => $request->get_param('page'),
-        ], 200);
+        $performanceData = [
+            'duration_ms' => round((microtime(true) - $startTime) * 1000, 2),
+        ];
+
+        return $this->responseFormatter->paginated(
+            $posts,
+            $query->found_posts,
+            $request->get_param('page'),
+            $request->get_param('per_page'),
+            ['performance' => $performanceData]
+        );
     }
 
     public function getPost($request)
@@ -349,7 +360,7 @@ class PostsApiController
         $post = get_post($postId);
 
         if (!$post || $post->post_type !== FunculoPostType::getPostType()) {
-            return new \WP_Error('post_not_found', 'Post not found', ['status' => 404]);
+            return $this->responseFormatter->notFound('Post', $postId);
         }
 
         // Use bulk operations for consistency (even for single post)
@@ -417,7 +428,7 @@ class PostsApiController
             }
         }
 
-        return new \WP_REST_Response([
+        return $this->responseFormatter->item([
             'id' => $post->ID,
             'title' => get_the_title($post->ID),
             'content' => $post->post_content,
@@ -428,7 +439,7 @@ class PostsApiController
             'terms' => $postTerms,
             'edit_url' => get_edit_post_link($post->ID),
             'meta' => $formattedMeta,
-        ], 200);
+        ]);
     }
 
     public function createPost($request)
@@ -448,7 +459,7 @@ class PostsApiController
         $postId = wp_insert_post($postData);
 
         if (is_wp_error($postId)) {
-            return new \WP_Error('post_creation_failed', 'Failed to create post', ['status' => 500]);
+            return $this->responseFormatter->serverError('Failed to create post');
         }
 
         // Assign the taxonomy term
@@ -529,7 +540,7 @@ class PostsApiController
             $formattedMeta['blocks']['inner_blocks_settings'] = json_encode($innerBlocksSettings);
         }
 
-        return new \WP_REST_Response([
+        return $this->responseFormatter->created([
             'id' => $post->ID,
             'title' => get_the_title($post->ID),
             'slug' => $post->post_name,
@@ -540,7 +551,7 @@ class PostsApiController
             'terms' => $postTerms,
             'edit_url' => get_edit_post_link($post->ID),
             'meta' => $formattedMeta,
-        ], 201);
+        ]);
     }
 
     public function updatePost($request)
@@ -551,7 +562,7 @@ class PostsApiController
 
         $post = get_post($postId);
         if (!$post || $post->post_type !== FunculoPostType::getPostType()) {
-            return new \WP_Error('post_not_found', 'Post not found', ['status' => 404]);
+            return $this->responseFormatter->notFound('Post', $postId);
         }
 
         // Update post title and slug if provided
@@ -569,7 +580,7 @@ class PostsApiController
             ]);
 
             if (is_wp_error($updated)) {
-                return new \WP_Error('title_update_failed', 'Failed to update post title and slug', ['status' => 500]);
+                return $this->responseFormatter->serverError('Failed to update post title and slug');
             }
         }
 
@@ -817,7 +828,7 @@ class PostsApiController
         $post = get_post($postId);
 
         if (!$post || $post->post_type !== FunculoPostType::getPostType()) {
-            return new \WP_Error('post_not_found', 'Post not found', ['status' => 404]);
+            return $this->responseFormatter->notFound('Post', $postId);
         }
 
         // Get post terms to determine what files to delete
@@ -851,13 +862,10 @@ class PostsApiController
         $deleted = wp_delete_post($postId, true);
 
         if (!$deleted) {
-            return new \WP_Error('delete_failed', 'Failed to delete post', ['status' => 500]);
+            return $this->responseFormatter->serverError('Failed to delete post');
         }
 
-        return new \WP_REST_Response([
-            'success' => true,
-            'message' => 'Post and associated files deleted successfully'
-        ], 200);
+        return $this->responseFormatter->deleted('Post and associated files deleted successfully');
     }
 
     // ===========================================
@@ -883,7 +891,7 @@ class PostsApiController
         }
 
         if (empty($validPostIds)) {
-            return new \WP_Error('invalid_post_ids', 'No valid post IDs provided', ['status' => 400]);
+            return $this->responseFormatter->validationError(['post_ids' => 'No valid post IDs provided']);
         }
 
         // Get posts using WP_Query for better performance
@@ -898,11 +906,11 @@ class PostsApiController
         $query = new \WP_Query($args);
 
         if (empty($query->posts)) {
-            return new \WP_REST_Response([
+            return $this->responseFormatter->success([
                 'posts' => [],
                 'found' => 0,
                 'not_found' => $validPostIds,
-            ], 200);
+            ]);
         }
 
         $foundPostIds = wp_list_pluck($query->posts, 'ID');
@@ -952,12 +960,16 @@ class PostsApiController
         // Log performance
         $this->bulkQueryService->logPerformance('getBatchPosts', count($posts), $startTime);
 
-        return new \WP_REST_Response([
+        $performanceData = [
+            'duration_ms' => round((microtime(true) - $startTime) * 1000, 2),
+        ];
+
+        return $this->responseFormatter->success([
             'posts' => $posts,
             'found' => count($posts),
             'not_found' => $notFoundIds,
             'requested' => count($validPostIds),
-        ], 200);
+        ], ['performance' => $performanceData]);
     }
 
     /**
@@ -1041,9 +1053,11 @@ class PostsApiController
         // Log performance
         $this->bulkQueryService->logPerformance('batchUpdatePosts', $results['total'], $startTime);
 
-        $statusCode = empty($results['failed']) ? 200 : 207; // 207 Multi-Status for partial success
+        $performanceData = [
+            'duration_ms' => round((microtime(true) - $startTime) * 1000, 2),
+        ];
 
-        return new \WP_REST_Response($results, $statusCode);
+        return $this->responseFormatter->batch($results, $performanceData);
     }
 
     /**
@@ -1057,7 +1071,7 @@ class PostsApiController
         $post = get_post($postId);
 
         if (!$post || $post->post_type !== FunculoPostType::getPostType()) {
-            return new \WP_Error('post_not_found', 'Post not found', ['status' => 404]);
+            return $this->responseFormatter->notFound('Post', $postId);
         }
 
         // Get post data with bulk operations
@@ -1179,10 +1193,14 @@ class PostsApiController
         // Log performance
         $this->bulkQueryService->logPerformance('getPostWithRelated', 1, $startTime);
 
-        return new \WP_REST_Response([
+        $performanceData = [
+            'duration_ms' => round((microtime(true) - $startTime) * 1000, 2),
+        ];
+
+        return $this->responseFormatter->success([
             'post' => $postData,
             'related' => $relatedData,
-        ], 200);
+        ], ['performance' => $performanceData]);
     }
 
     /**
@@ -1227,9 +1245,11 @@ class PostsApiController
         // Log performance
         $this->bulkQueryService->logPerformance('executeBulkOperations', $results['total'], $startTime);
 
-        $statusCode = empty($results['failed']) ? 200 : 207;
+        $performanceData = [
+            'duration_ms' => round((microtime(true) - $startTime) * 1000, 2),
+        ];
 
-        return new \WP_REST_Response($results, $statusCode);
+        return $this->responseFormatter->batch($results, $performanceData);
     }
 
     /**
