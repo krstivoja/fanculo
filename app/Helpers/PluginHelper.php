@@ -3,6 +3,7 @@
 namespace Fanculo\Helpers;
 
 use Fanculo\Database\DatabaseInstaller;
+use Fanculo\Database\ScssPartialsSettingsRepository;
 
 class PluginHelper
 {
@@ -19,10 +20,16 @@ class PluginHelper
             // Install database tables
             DatabaseInstaller::install();
 
-            // Verify table was created
+            // Verify tables were created
             if (!DatabaseInstaller::tableExists()) {
                 self::$activation_success = false;
-                throw new \Exception('Database table creation failed');
+                throw new \Exception('Database tables creation failed');
+            }
+
+            // Migrate existing SCSS partial settings from post meta
+            $migrated = ScssPartialsSettingsRepository::migrateAll();
+            if ($migrated > 0) {
+                error_log("Fanculo Plugin: Migrated $migrated SCSS partials to new table");
             }
 
             // Flush rewrite rules for custom post types

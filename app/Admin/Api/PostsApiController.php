@@ -11,6 +11,7 @@ use Fanculo\Admin\Api\Services\BulkQueryService;
 use Fanculo\Admin\Api\ScssCompilerApiController;
 use Fanculo\Admin\Api\BlockCategoriesApiController;
 use Fanculo\Database\BlockSettingsRepository;
+use Fanculo\Database\ScssPartialsSettingsRepository;
 
 class PostsApiController
 {
@@ -248,6 +249,7 @@ class PostsApiController
 
         // BULK OPERATION 4: Load block settings from database for blocks
         $blockSettingsMap = [];
+        $scssPartialIds = [];
         foreach ($postIds as $postId) {
             $postTerms = $allTerms[$postId] ?? [];
             foreach ($postTerms as $term) {
@@ -257,8 +259,17 @@ class PostsApiController
                         $blockSettingsMap[$postId] = $dbSettings;
                     }
                     break;
+                } elseif ($term['slug'] === 'scss-partials') {
+                    $scssPartialIds[] = $postId;
+                    break;
                 }
             }
+        }
+
+        // BULK OPERATION 5: Load SCSS partial settings from database
+        $scssSettingsMap = [];
+        if (!empty($scssPartialIds)) {
+            $scssSettingsMap = ScssPartialsSettingsRepository::getBulk($scssPartialIds);
         }
 
         // Build response with prefetched data - NO MORE INDIVIDUAL QUERIES
@@ -293,6 +304,16 @@ class PostsApiController
                 }
                 $formattedMeta['blocks']['settings'] = json_encode($blockSettings);
                 $formattedMeta['blocks']['inner_blocks_settings'] = json_encode($innerBlocksSettings);
+            }
+
+            // Add SCSS partial settings if this is a SCSS partial
+            if (isset($scssSettingsMap[$post->ID])) {
+                $scssSettings = $scssSettingsMap[$post->ID];
+                if (!isset($formattedMeta['scss_partials'])) {
+                    $formattedMeta['scss_partials'] = [];
+                }
+                $formattedMeta['scss_partials']['is_global'] = $scssSettings['is_global'] ? '1' : '0';
+                $formattedMeta['scss_partials']['global_order'] = (string) $scssSettings['global_order'];
             }
 
             $posts[] = [
@@ -343,10 +364,12 @@ class PostsApiController
 
         // Load block settings from database if this is a block
         $isBlock = false;
+        $isScssPartial = false;
         foreach ($postTerms as $term) {
             if ($term['slug'] === 'blocks') {
                 $isBlock = true;
-                break;
+            } elseif ($term['slug'] === 'scss-partials') {
+                $isScssPartial = true;
             }
         }
 
@@ -374,6 +397,19 @@ class PostsApiController
                 }
                 $formattedMeta['blocks']['settings'] = json_encode($blockSettings);
                 $formattedMeta['blocks']['inner_blocks_settings'] = json_encode($innerBlocksSettings);
+            }
+        }
+
+        // Load SCSS partial settings from database
+        if ($isScssPartial) {
+            $scssSettings = ScssPartialsSettingsRepository::get($post->ID);
+            if ($scssSettings) {
+                // Add to meta in expected format
+                if (!isset($formattedMeta['scss_partials'])) {
+                    $formattedMeta['scss_partials'] = [];
+                }
+                $formattedMeta['scss_partials']['is_global'] = $scssSettings['is_global'] ? '1' : '0';
+                $formattedMeta['scss_partials']['global_order'] = (string) $scssSettings['global_order'];
             }
         }
 
@@ -615,9 +651,17 @@ class PostsApiController
                 case FunculoTypeTaxonomy::getTermScssPartials():
                     $meta['scss_partials'] = [
                         'scss' => get_post_meta($postId, MetaKeysConstants::SCSS_PARTIAL_SCSS, true),
-                        'is_global' => get_post_meta($postId, MetaKeysConstants::SCSS_IS_GLOBAL, true),
-                        'global_order' => get_post_meta($postId, MetaKeysConstants::SCSS_GLOBAL_ORDER, true),
                     ];
+
+                    // Load global settings from database table
+                    $scssSettings = ScssPartialsSettingsRepository::get($postId);
+                    if ($scssSettings) {
+                        $meta['scss_partials']['is_global'] = $scssSettings['is_global'] ? '1' : '0';
+                        $meta['scss_partials']['global_order'] = (string) $scssSettings['global_order'];
+                    } else {
+                        $meta['scss_partials']['is_global'] = '0';
+                        $meta['scss_partials']['global_order'] = '1';
+                    }
                     break;
             }
         }
@@ -727,14 +771,20 @@ class PostsApiController
             if (isset($scssPartials['scss'])) {
                 update_post_meta($postId, MetaKeysConstants::SCSS_PARTIAL_SCSS, sanitize_textarea_field($scssPartials['scss']));
             }
+
+            // Save global settings to database table
+            $scssDbSettings = [];
             if (isset($scssPartials['is_global'])) {
-                // Save as '0' or '1' for consistency
-                $isGlobal = $scssPartials['is_global'] === '1' || $scssPartials['is_global'] === 1 || $scssPartials['is_global'] === 'true' || $scssPartials['is_global'] === true ? '1' : '0';
-                update_post_meta($postId, MetaKeysConstants::SCSS_IS_GLOBAL, $isGlobal);
+                // Convert to boolean for database
+                $scssDbSettings['is_global'] = $scssPartials['is_global'] === '1' || $scssPartials['is_global'] === 1 || $scssPartials['is_global'] === 'true' || $scssPartials['is_global'] === true;
             }
             if (isset($scssPartials['global_order'])) {
-                $globalOrder = absint($scssPartials['global_order']);
-                update_post_meta($postId, MetaKeysConstants::SCSS_GLOBAL_ORDER, $globalOrder);
+                $scssDbSettings['global_order'] = absint($scssPartials['global_order']);
+            }
+
+            // Save to database table if we have settings
+            if (!empty($scssDbSettings)) {
+                ScssPartialsSettingsRepository::save($postId, $scssDbSettings);
             }
         }
     }
@@ -1001,10 +1051,12 @@ class PostsApiController
 
         // Load block settings from database if this is a block
         $isBlock = false;
+        $isScssPartial = false;
         foreach ($postTerms as $term) {
             if ($term['slug'] === 'blocks') {
                 $isBlock = true;
-                break;
+            } elseif ($term['slug'] === 'scss-partials') {
+                $isScssPartial = true;
             }
         }
 
@@ -1032,6 +1084,19 @@ class PostsApiController
                 }
                 $formattedMeta['blocks']['settings'] = json_encode($blockSettings);
                 $formattedMeta['blocks']['inner_blocks_settings'] = json_encode($innerBlocksSettings);
+            }
+        }
+
+        // Load SCSS partial settings from database
+        if ($isScssPartial) {
+            $scssSettings = ScssPartialsSettingsRepository::get($post->ID);
+            if ($scssSettings) {
+                // Add to meta in expected format
+                if (!isset($formattedMeta['scss_partials'])) {
+                    $formattedMeta['scss_partials'] = [];
+                }
+                $formattedMeta['scss_partials']['is_global'] = $scssSettings['is_global'] ? '1' : '0';
+                $formattedMeta['scss_partials']['global_order'] = (string) $scssSettings['global_order'];
             }
         }
 

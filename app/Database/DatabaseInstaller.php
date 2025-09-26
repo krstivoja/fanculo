@@ -4,21 +4,23 @@ namespace Fanculo\Database;
 
 class DatabaseInstaller
 {
-    const TABLE_VERSION = '3.1.0';
+    const TABLE_VERSION = '4.0.0';
     const VERSION_OPTION = 'fanculo_db_version';
     const TABLE_NAME = 'fanculo_blocks_settings';
+    const SCSS_TABLE_NAME = 'fanculo_scsspartials_settings';
 
     /**
-     * Install the database table
+     * Install the database tables
      */
     public static function install(): void
     {
         global $wpdb;
 
-        $table_name = self::getTableName();
         $charset_collate = $wpdb->get_charset_collate();
 
-        $sql = "CREATE TABLE $table_name (
+        // Install blocks settings table
+        $blocks_table = self::getTableName();
+        $sql_blocks = "CREATE TABLE $blocks_table (
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             post_id bigint(20) UNSIGNED NOT NULL,
             category varchar(255) DEFAULT NULL,
@@ -35,8 +37,26 @@ class DatabaseInstaller
             KEY category (category)
         ) $charset_collate;";
 
+        // Install SCSS partials settings table
+        $scss_table = self::getScssPartialsTableName();
+        $sql_scss = "CREATE TABLE $scss_table (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            post_id bigint(20) UNSIGNED NOT NULL,
+            is_global tinyint(1) DEFAULT 0,
+            global_order int(11) DEFAULT 1,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY post_id (post_id),
+            KEY is_global (is_global),
+            KEY global_order (global_order)
+        ) $charset_collate;";
+
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        $result = dbDelta($sql);
+
+        // Run dbDelta for both tables
+        $result_blocks = dbDelta($sql_blocks);
+        $result_scss = dbDelta($sql_scss);
 
         // Check for errors
         if (!empty($wpdb->last_error)) {
@@ -45,8 +65,8 @@ class DatabaseInstaller
         }
 
         // Log successful installation
-        if (!empty($result)) {
-            error_log('Fanculo Plugin: Database table installed successfully');
+        if (!empty($result_blocks) || !empty($result_scss)) {
+            error_log('Fanculo Plugin: Database tables installed successfully');
         }
 
         // Store the database version
@@ -54,21 +74,24 @@ class DatabaseInstaller
     }
 
     /**
-     * Uninstall the database table
+     * Uninstall the database tables
      */
     public static function uninstall(): void
     {
         global $wpdb;
 
-        $table_name = self::getTableName();
+        // Drop blocks table
+        $blocks_table = self::getTableName();
+        $result1 = $wpdb->query("DROP TABLE IF EXISTS $blocks_table");
 
-        // Drop the table
-        $result = $wpdb->query("DROP TABLE IF EXISTS $table_name");
+        // Drop SCSS partials table
+        $scss_table = self::getScssPartialsTableName();
+        $result2 = $wpdb->query("DROP TABLE IF EXISTS $scss_table");
 
-        if ($result === false) {
-            error_log('Fanculo Plugin: Failed to drop table - ' . $wpdb->last_error);
+        if ($result1 === false || $result2 === false) {
+            error_log('Fanculo Plugin: Failed to drop tables - ' . $wpdb->last_error);
         } else {
-            error_log('Fanculo Plugin: Database table uninstalled successfully');
+            error_log('Fanculo Plugin: Database tables uninstalled successfully');
         }
 
         // Remove the version option
@@ -103,11 +126,38 @@ class DatabaseInstaller
             return;
         }
 
-        // Future migration example:
-        // if (version_compare($from_version, '1.1.0', '<')) {
-        //     $table_name = self::getTableName();
-        //     $wpdb->query("ALTER TABLE $table_name ADD COLUMN new_field VARCHAR(255)");
-        // }
+        // Migration for version 4.0.0 - Add SCSS partials table
+        if (version_compare($from_version, '4.0.0', '<')) {
+            $scss_table = self::getScssPartialsTableName();
+
+            // Check if SCSS table doesn't exist yet
+            if (!self::specificTableExists($scss_table)) {
+                $charset_collate = $wpdb->get_charset_collate();
+
+                $sql_scss = "CREATE TABLE $scss_table (
+                    id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+                    post_id bigint(20) UNSIGNED NOT NULL,
+                    is_global tinyint(1) DEFAULT 0,
+                    global_order int(11) DEFAULT 1,
+                    created_at datetime DEFAULT CURRENT_TIMESTAMP,
+                    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    PRIMARY KEY (id),
+                    UNIQUE KEY post_id (post_id),
+                    KEY is_global (is_global),
+                    KEY global_order (global_order)
+                ) $charset_collate;";
+
+                require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+                dbDelta($sql_scss);
+
+                error_log('Fanculo Plugin: Added SCSS partials table');
+
+                // Migrate existing data from post meta
+                $repository = new \Fanculo\Database\ScssPartialsSettingsRepository();
+                $migrated = $repository::migrateAll();
+                error_log("Fanculo Plugin: Migrated $migrated SCSS partials to new table");
+            }
+        }
 
         // Update version after successful migration
         update_option(self::VERSION_OPTION, $to_version);
@@ -123,12 +173,35 @@ class DatabaseInstaller
     }
 
     /**
-     * Check if table exists
+     * Get SCSS partials table name with prefix
+     */
+    public static function getScssPartialsTableName(): string
+    {
+        global $wpdb;
+        return $wpdb->prefix . self::SCSS_TABLE_NAME;
+    }
+
+    /**
+     * Check if tables exist
      */
     public static function tableExists(): bool
     {
         global $wpdb;
-        $table_name = self::getTableName();
+        $blocks_table = self::getTableName();
+        $scss_table = self::getScssPartialsTableName();
+
+        $blocks_exists = $wpdb->get_var("SHOW TABLES LIKE '$blocks_table'") === $blocks_table;
+        $scss_exists = $wpdb->get_var("SHOW TABLES LIKE '$scss_table'") === $scss_table;
+
+        return $blocks_exists && $scss_exists;
+    }
+
+    /**
+     * Check if specific table exists
+     */
+    public static function specificTableExists(string $table_name): bool
+    {
+        global $wpdb;
         return $wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name;
     }
 }

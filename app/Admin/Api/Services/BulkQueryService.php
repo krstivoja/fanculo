@@ -167,9 +167,9 @@ class BulkQueryService
                 case FunculoTypeTaxonomy::getTermScssPartials():
                     $formattedMeta['scss_partials'] = [
                         'scss' => $postMeta[MetaKeysConstants::SCSS_PARTIAL_SCSS] ?? '',
-                        'is_global' => $postMeta[MetaKeysConstants::SCSS_IS_GLOBAL] ?? '',
-                        'global_order' => $postMeta[MetaKeysConstants::SCSS_GLOBAL_ORDER] ?? '',
                     ];
+                    // Note: is_global and global_order are now loaded from database table
+                    // in PostsApiController after this formatting is done
                     break;
             }
         }
@@ -205,8 +205,7 @@ class BulkQueryService
             MetaKeysConstants::SCSS_CONTENT,
             MetaKeysConstants::CSS_CONTENT,
             MetaKeysConstants::CSS_COMPILED_AT,
-            MetaKeysConstants::SCSS_IS_GLOBAL,
-            MetaKeysConstants::SCSS_GLOBAL_ORDER,
+            // Note: SCSS_IS_GLOBAL and SCSS_GLOBAL_ORDER are now in database table
         ];
     }
 
@@ -259,11 +258,8 @@ class BulkQueryService
         }
 
         if ($hasScssPartials) {
-            $neededKeys = array_merge($neededKeys, [
-                MetaKeysConstants::SCSS_PARTIAL_SCSS,
-                MetaKeysConstants::SCSS_IS_GLOBAL,
-                MetaKeysConstants::SCSS_GLOBAL_ORDER,
-            ]);
+            $neededKeys[] = MetaKeysConstants::SCSS_PARTIAL_SCSS;
+            // Note: is_global and global_order are now in database table
         }
 
         return array_unique($neededKeys);
