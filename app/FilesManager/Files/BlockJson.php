@@ -36,7 +36,7 @@ class BlockJson implements FileGeneratorInterface
             'icon' => $dbSettings['icon']
         ] : [];
 
-        $blockJson = $this->buildBlockJson($post, $attributes, $settings, $outputPath);
+        $blockJson = $this->buildBlockJson($post, $attributes, $settings, $outputPath, $dbSettings);
         $filepath = $outputPath . '/' . $this->getGeneratedFileName($post);
 
         $result = file_put_contents($filepath, wp_json_encode($blockJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
@@ -69,7 +69,7 @@ class BlockJson implements FileGeneratorInterface
         return true; // block.json is always generated for blocks
     }
 
-    private function buildBlockJson(WP_Post $post, $attributes, $settings, string $outputPath): array
+    private function buildBlockJson(WP_Post $post, $attributes, $settings, string $outputPath, ?array $dbSettings): array
     {
         // Parse settings data with validation
         $settingsData = [];
@@ -83,6 +83,20 @@ class BlockJson implements FileGeneratorInterface
                 $settingsData = $settings;
             }
         }
+
+        // Detect inner blocks usage from database settings or render template
+        $innerBlocksEnabled = $dbSettings['supports_inner_blocks'] ?? false;
+
+        $renderContainsInnerBlocks = false;
+        $renderFile = $outputPath . '/render.php';
+        if (file_exists($renderFile)) {
+            $renderContents = file_get_contents($renderFile);
+            if ($renderContents !== false) {
+                $renderContainsInnerBlocks = stripos($renderContents, '<innerblocks') !== false;
+            }
+        }
+
+        $usesInnerBlocks = $innerBlocksEnabled || $renderContainsInnerBlocks;
 
         // Build default block.json structure
         $blockJson = [
@@ -108,7 +122,7 @@ class BlockJson implements FileGeneratorInterface
 
         // Add supports with defaults that can be overridden
         $defaultSupports = [
-            'html' => false
+            'html' => $usesInnerBlocks
         ];
 
         // Add interactivity support if view.js will be generated
@@ -121,6 +135,14 @@ class BlockJson implements FileGeneratorInterface
             $blockJson['supports'] = wp_parse_args($settingsData['supports'], $defaultSupports);
         } else {
             $blockJson['supports'] = $defaultSupports;
+        }
+
+        if ($usesInnerBlocks) {
+            $blockJson['supports']['html'] = true;
+
+            if (!isset($blockJson['supports']['innerBlocks'])) {
+                $blockJson['supports']['innerBlocks'] = true;
+            }
         }
 
         $blockJson['textdomain'] = 'fanculo';

@@ -14,6 +14,7 @@ class Index
         // Get inner blocks settings from database if post ID is provided
         $innerBlocksEnabled = false;
         $allowedBlocks = [];
+        $dbSettings = null;
 
         if ($postId) {
             $dbSettings = BlockSettingsRepository::get($postId);
@@ -28,10 +29,25 @@ class Index
             }
         }
 
+        // Detect InnerBlocks usage directly in the render template
+        $renderContainsInnerBlocks = false;
+        $renderPath = $blockDir . '/render.php';
+        if (file_exists($renderPath)) {
+            $renderContent = file_get_contents($renderPath);
+            if ($renderContent !== false) {
+                $renderContainsInnerBlocks = stripos($renderContent, '<innerblocks') !== false;
+            }
+        }
+
+        $usesInnerBlocks = $innerBlocksEnabled || $renderContainsInnerBlocks;
+
         // Build the PARSER_OPTIONS based on inner blocks settings
         $parserOptionsJs = '';
         if ($innerBlocksEnabled) {
-            $allowedBlocksJson = wp_json_encode($allowedBlocks, JSON_UNESCAPED_SLASHES);
+            $allowedBlocks = array_values($allowedBlocks);
+            $allowedBlocksJson = empty($allowedBlocks)
+                ? 'null'
+                : wp_json_encode($allowedBlocks, JSON_UNESCAPED_SLASHES);
 
             // Get template and templateLock from database settings if available
             $template = '[]'; // Default to empty template
@@ -64,6 +80,12 @@ class Index
         allowedBlocks: {$allowedBlocksJson},{$templateProperty}
         templateLock: {$templateLock}
     };";
+        } elseif ($usesInnerBlocks) {
+            $parserOptionsJs = "
+    // InnerBlocks detected without explicit settings
+    const PARSER_OPTIONS = {
+        allowedBlocks: null
+    };";
         } else {
             $parserOptionsJs = "
     // No inner blocks - empty options
@@ -71,7 +93,7 @@ class Index
         }
 
         // Build the save function based on inner blocks settings
-        $saveFunction = $innerBlocksEnabled
+        $saveFunction = $usesInnerBlocks
             ? 'return wp.element.createElement(InnerBlocks.Content);'
             : 'return null; // Server-side rendering';
 
