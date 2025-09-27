@@ -2,6 +2,8 @@
 
 namespace Fanculo\Content\MetaBoxes;
 
+use Fanculo\Database\BlockAttributesRepository;
+
 class BlocksMetaBox extends AbstractMetaBox
 {
     public function __construct()
@@ -36,6 +38,9 @@ class BlocksMetaBox extends AbstractMetaBox
 
         // React container - React will handle the forms
         echo '<div id="blocks-metabox-react" data-post-id="' . esc_attr($post->ID) . '" data-type="blocks"></div>';
+
+        // Expose post ID to JavaScript
+        echo '<script>window.funculo_current_post_id = ' . intval($post->ID) . ';</script>';
     }
 
     protected function saveFields($postId)
@@ -70,6 +75,11 @@ class BlocksMetaBox extends AbstractMetaBox
                     $decoded = json_decode($value, true);
                     if (json_last_error() === JSON_ERROR_NONE) {
                         $value = $decoded;
+
+                        // Also save to database table
+                        if (is_array($value)) {
+                            BlockAttributesRepository::save($postId, $value);
+                        }
                     } else {
                         // Keep original value if JSON is invalid
                         $value = $this->getMetaValue($postId, $field);

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { MonacoEditor } from '../../ui';
 import AttributesManager from '../attributes/AttributesManager';
 
-const BlocksMetaboxes = ({ metaData, onChange, titleComponent }) => {
+const BlocksMetaboxes = ({ metaData, onChange, titleComponent, selectedPost }) => {
   const [activeTab, setActiveTab] = useState('php');
 
   const handleMetaChange = (field, value) => {
@@ -50,9 +50,10 @@ const BlocksMetaboxes = ({ metaData, onChange, titleComponent }) => {
             {tab.isAttributesTab ? (
               <div className="h-full p-8">
                 <AttributesManager
-                  blockMeta={metaData}
+                  blockMeta={metaData?.blocks}
                   onMetaChange={onChange}
                   blockId="current-block"
+                  postId={selectedPost?.id}
                 />
               </div>
             ) : (

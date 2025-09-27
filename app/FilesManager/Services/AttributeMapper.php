@@ -3,18 +3,61 @@
 namespace Fanculo\FilesManager\Services;
 
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
+use Fanculo\Database\BlockAttributesRepository;
 use Fanculo\FilesManager\Files\Fields\FieldRegistry;
 
 class AttributeMapper
 {
     /**
-     * Parse attributes from post meta
+     * Parse attributes from database or fall back to post meta
      *
      * @param int $postId The post ID
      * @return array Parsed and validated attributes
      */
     public static function parseAttributes(int $postId): array
     {
+        // Try to get from database first
+        $attributesFromDb = BlockAttributesRepository::get($postId);
+
+        if (!empty($attributesFromDb)) {
+            // Convert database format to expected format
+            $attributes = [];
+            foreach ($attributesFromDb as $dbAttr) {
+                $attr = [
+                    'name' => $dbAttr['attribute_name'],
+                    'type' => $dbAttr['attribute_type'],
+                    'order' => $dbAttr['attribute_order'],
+                    'id' => 'attribute-' . $dbAttr['id']
+                ];
+
+                // Add optional fields
+                if (!empty($dbAttr['label'])) $attr['label'] = $dbAttr['label'];
+                if (!empty($dbAttr['placeholder'])) $attr['placeholder'] = $dbAttr['placeholder'];
+                if (!empty($dbAttr['help_text'])) $attr['help'] = $dbAttr['help_text'];
+                if (!empty($dbAttr['default_value'])) $attr['default_value'] = $dbAttr['default_value'];
+                if (!empty($dbAttr['required'])) $attr['required'] = $dbAttr['required'];
+                if (!empty($dbAttr['validation_pattern'])) $attr['validation_pattern'] = $dbAttr['validation_pattern'];
+
+                // Handle range fields
+                if ($dbAttr['max_value'] !== null || $dbAttr['step_value'] !== null) {
+                    $attr['range'] = [];
+                    if ($dbAttr['max_value'] !== null) $attr['range']['max'] = $dbAttr['max_value'];
+                    if ($dbAttr['step_value'] !== null) $attr['range']['step'] = $dbAttr['step_value'];
+                }
+
+                // Handle options
+                if (!empty($dbAttr['options'])) {
+                    $attr['options'] = $dbAttr['options'];
+                }
+
+                if (self::validateAttribute($attr)) {
+                    $attributes[] = self::normalizeAttribute($attr);
+                }
+            }
+            return $attributes;
+        }
+
+        // Fall back to post meta (for backward compatibility)
         $attributesData = get_post_meta($postId, MetaKeysConstants::BLOCK_ATTRIBUTES, true);
 
         if (empty($attributesData)) {
@@ -39,7 +82,12 @@ class AttributeMapper
                 }
             }
 
-        } catch (Exception $e) {
+            // Migrate to database if we found attributes in meta
+            if (!empty($attributes)) {
+                BlockAttributesRepository::save($postId, $parsedData);
+            }
+
+        } catch (\Exception $e) {
             error_log('AttributeMapper: Error parsing attributes for post ' . $postId . ': ' . $e->getMessage());
         }
 
@@ -190,6 +238,12 @@ class AttributeMapper
      */
     public static function hasAttributes(int $postId): bool
     {
+        // Check database first
+        if (BlockAttributesRepository::hasAttributes($postId)) {
+            return true;
+        }
+
+        // Fall back to checking post meta
         $attributes = self::parseAttributes($postId);
         return !empty($attributes);
     }

@@ -4,10 +4,11 @@ namespace Fanculo\Database;
 
 class DatabaseInstaller
 {
-    const TABLE_VERSION = '4.2.0';
+    const TABLE_VERSION = '4.3.0';
     const VERSION_OPTION = 'fanculo_db_version';
     const TABLE_NAME = 'fanculo_blocks_settings';
     const SCSS_TABLE_NAME = 'fanculo_scsspartials_settings';
+    const ATTRIBUTES_TABLE_NAME = 'fanculo_blocks_attributes';
 
     /**
      * Install the database tables
@@ -28,8 +29,9 @@ class DatabaseInstaller
     {
         $blocks_created = self::createBlocksTableIfMissing();
         $scss_created = self::createScssTableIfMissing();
+        $attributes_created = self::createAttributesTableIfMissing();
 
-        if ($blocks_created || $scss_created) {
+        if ($blocks_created || $scss_created || $attributes_created) {
             error_log('Fanculo Plugin: Missing tables were created');
         }
     }
@@ -123,6 +125,59 @@ class DatabaseInstaller
     }
 
     /**
+     * Create block attributes table if it doesn't exist
+     */
+    public static function createAttributesTableIfMissing(): bool
+    {
+        global $wpdb;
+
+        $attributes_table = self::getAttributesTableName();
+
+        // Check if table already exists
+        if (self::specificTableExists($attributes_table)) {
+            return false;
+        }
+
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $sql_attributes = "CREATE TABLE $attributes_table (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            post_id bigint(20) UNSIGNED NOT NULL,
+            attribute_name varchar(255) NOT NULL,
+            attribute_type varchar(50) NOT NULL,
+            attribute_order int(11) DEFAULT 0,
+            label varchar(255) DEFAULT NULL,
+            placeholder varchar(255) DEFAULT NULL,
+            help_text text DEFAULT NULL,
+            default_value text DEFAULT NULL,
+            required tinyint(1) DEFAULT 0,
+            validation_pattern varchar(255) DEFAULT NULL,
+            min_value decimal(10,2) DEFAULT NULL,
+            max_value decimal(10,2) DEFAULT NULL,
+            step_value decimal(10,2) DEFAULT NULL,
+            options text DEFAULT NULL,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY post_id (post_id),
+            KEY attribute_name (attribute_name),
+            KEY attribute_type (attribute_type),
+            KEY attribute_order (attribute_order)
+        ) $charset_collate;";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        $result = dbDelta($sql_attributes);
+
+        if (!empty($wpdb->last_error)) {
+            error_log('Fanculo Plugin: Failed to create attributes table - ' . $wpdb->last_error);
+            return false;
+        }
+
+        error_log('Fanculo Plugin: Block attributes table created successfully');
+        return true;
+    }
+
+    /**
      * Uninstall the database tables
      */
     public static function uninstall(): void
@@ -137,7 +192,11 @@ class DatabaseInstaller
         $scss_table = self::getScssPartialsTableName();
         $result2 = $wpdb->query("DROP TABLE IF EXISTS $scss_table");
 
-        if ($result1 === false || $result2 === false) {
+        // Drop attributes table
+        $attributes_table = self::getAttributesTableName();
+        $result3 = $wpdb->query("DROP TABLE IF EXISTS $attributes_table");
+
+        if ($result1 === false || $result2 === false || $result3 === false) {
             error_log('Fanculo Plugin: Failed to drop tables - ' . $wpdb->last_error);
         } else {
             error_log('Fanculo Plugin: Database tables uninstalled successfully');
@@ -192,6 +251,17 @@ class DatabaseInstaller
             }
         }
 
+        // Migration for version 4.3.0 - Add block attributes table and migrate data
+        if (version_compare($from_version, '4.3.0', '<')) {
+            // The table should already be created by ensureTablesExist()
+            // Now just migrate the data if needed
+            $repository = new \Fanculo\Database\BlockAttributesRepository();
+            $migrated = $repository::migrateAll();
+            if ($migrated > 0) {
+                error_log("Fanculo Plugin: Migrated $migrated blocks' attributes to new table");
+            }
+        }
+
         // Update version after successful migration
         update_option(self::VERSION_OPTION, $to_version);
     }
@@ -215,6 +285,15 @@ class DatabaseInstaller
     }
 
     /**
+     * Get block attributes table name with prefix
+     */
+    public static function getAttributesTableName(): string
+    {
+        global $wpdb;
+        return $wpdb->prefix . self::ATTRIBUTES_TABLE_NAME;
+    }
+
+    /**
      * Check if tables exist
      */
     public static function tableExists(): bool
@@ -223,10 +302,13 @@ class DatabaseInstaller
         $blocks_table = self::getTableName();
         $scss_table = self::getScssPartialsTableName();
 
+        $attributes_table = self::getAttributesTableName();
+
         $blocks_exists = $wpdb->get_var("SHOW TABLES LIKE '$blocks_table'") === $blocks_table;
         $scss_exists = $wpdb->get_var("SHOW TABLES LIKE '$scss_table'") === $scss_table;
+        $attributes_exists = $wpdb->get_var("SHOW TABLES LIKE '$attributes_table'") === $attributes_table;
 
-        return $blocks_exists && $scss_exists;
+        return $blocks_exists && $scss_exists && $attributes_exists;
     }
 
     /**
@@ -245,6 +327,7 @@ class DatabaseInstaller
     {
         $blocks_table = self::getTableName();
         $scss_table = self::getScssPartialsTableName();
+        $attributes_table = self::getAttributesTableName();
 
         return [
             'blocks_table' => [
@@ -254,6 +337,10 @@ class DatabaseInstaller
             'scss_table' => [
                 'name' => $scss_table,
                 'exists' => self::specificTableExists($scss_table)
+            ],
+            'attributes_table' => [
+                'name' => $attributes_table,
+                'exists' => self::specificTableExists($attributes_table)
             ],
             'all_exist' => self::tableExists(),
             'version' => get_option(self::VERSION_OPTION, 'not_set')

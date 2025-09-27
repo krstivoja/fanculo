@@ -715,7 +715,14 @@ class PostsApiController
                 update_post_meta($postId, MetaKeysConstants::BLOCK_JS, sanitize_textarea_field($blocks['js']));
             }
             if (isset($blocks['attributes'])) {
-                update_post_meta($postId, MetaKeysConstants::BLOCK_ATTRIBUTES, sanitize_textarea_field($blocks['attributes']));
+                $attributesJson = sanitize_textarea_field($blocks['attributes']);
+                update_post_meta($postId, MetaKeysConstants::BLOCK_ATTRIBUTES, $attributesJson);
+
+                // Also save to database table
+                $attributesData = json_decode($attributesJson, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($attributesData)) {
+                    \Fanculo\Database\BlockAttributesRepository::save($postId, $attributesData);
+                }
             }
             // Save block settings to database table
             $dbSettings = [];

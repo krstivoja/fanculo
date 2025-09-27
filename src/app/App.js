@@ -193,6 +193,8 @@ const App = () => {
             if (selectedPost?.id) {
                 console.log('💾 Saving post data. MetaData being saved:', metaData);
 
+                // Attributes are now saved automatically via the updatePostMeta method in PostsApiController
+
                 // Check if this is a block (not SCSS partial) and has SCSS content
                 const hasScssContent = selectedPost.terms?.some(term => term.slug === 'blocks') &&
                                      metaData.blocks?.scss;
