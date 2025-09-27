@@ -1,0 +1,26 @@
+{
+    // General
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    // JavaScript / TypeScript
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    // PHP (choose one of the two below)
+    "[php]": {
+        // If you want PHP CS Fixer:
+        "editor.defaultFormatter": "junstyle.php-cs-fixer"
+        // If you prefer Intelephense instead, comment the above line and use:
+        // "editor.defaultFormatter": "bmewburn.vscode-intelephense-client"
+    },
+    // PHP CS Fixer settings (only if you’re using it)
+    "php-cs-fixer.executablePath": "~/.config/composer/vendor/bin/php-cs-fixer",
+    "php-cs-fixer.rules": "@PSR12"
+}

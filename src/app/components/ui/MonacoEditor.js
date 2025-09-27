@@ -50,7 +50,7 @@ const MonacoEditor = ({
     }
   };
 
-  // PHP/HTML context detection and switching
+  // PHP/HTML context detection (for Emmet context, not language switching)
   const setupPhpHtmlSwitching = (editor, monaco) => {
     const detectContext = () => {
       const model = editor.getModel();
@@ -69,12 +69,11 @@ const MonacoEditor = ({
       // Determine if we're inside PHP tags
       const isInPhp = lastPhpOpen > lastPhpClose && (nextPhpClose !== -1 || afterCursor.length === 0);
 
-      // Switch language context if needed
-      const newLanguage = isInPhp ? 'php' : 'html';
-      if (newLanguage !== currentLanguage) {
-        setCurrentLanguage(newLanguage);
-        // Update model language for better syntax highlighting
-        monaco.editor.setModelLanguage(model, newLanguage);
+      // Update context state but keep language as PHP for proper syntax highlighting
+      const newContext = isInPhp ? 'php' : 'html';
+      if (newContext !== currentLanguage) {
+        setCurrentLanguage(newContext);
+        // Note: We don't change monaco.editor.setModelLanguage here to preserve PHP highlighting
       }
     };
 
@@ -95,7 +94,7 @@ const MonacoEditor = ({
   return (
     <Editor
       height={height}
-      language={enablePhpHtmlSwitching ? currentLanguage : language}
+      language={language}
       value={value || ''}
       onChange={handleEditorChange}
       onMount={handleEditorDidMount}
@@ -118,7 +117,7 @@ const MonacoEditor = ({
         folding: true,
         foldingHighlight: true,
         unfoldOnClickAfterEndOfLine: true,
-        placeholder: placeholder || `Enter ${enablePhpHtmlSwitching ? currentLanguage : language} code...`,
+        placeholder: placeholder || `Enter ${language} code...`,
         // Enable better emmet support
         suggest: {
           showKeywords: true,
