@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Toggle, Hr, ReactTags } from '../ui';
-import { apiClient } from '../../../utils';
+import React, { useState, useEffect } from "react";
+import { Toggle, Hr, ReactTags } from "../ui";
+import { apiClient } from "../../../utils";
 
 // Default Template Manager Component
 const DefaultTemplateManager = ({
@@ -9,7 +9,7 @@ const DefaultTemplateManager = ({
   templateLock,
   updateTemplateSettings,
   availableBlocks,
-  allowedBlocks
+  allowedBlocks,
 }) => {
   const [templateTags, setTemplateTags] = useState([]);
   const [templateSuggestions, setTemplateSuggestions] = useState([]);
@@ -19,7 +19,7 @@ const DefaultTemplateManager = ({
     // Convert template array to tags format
     const tags = defaultTemplate.map((block, index) => ({
       id: `template-${index}`,
-      text: block[0] // First element is the block name
+      text: block[0], // First element is the block name
     }));
     setTemplateTags(tags);
 
@@ -27,7 +27,7 @@ const DefaultTemplateManager = ({
     if (allowedBlocks && allowedBlocks.length > 0) {
       const suggestions = allowedBlocks.map((blockName, index) => ({
         id: `template-suggestion-${index}`,
-        text: blockName
+        text: blockName,
       }));
       setTemplateSuggestions(suggestions);
     } else {
@@ -35,7 +35,7 @@ const DefaultTemplateManager = ({
       if (availableBlocks.length > 0) {
         const suggestions = availableBlocks.map((block, index) => ({
           id: `template-suggestion-${index}`,
-          text: block.name
+          text: block.name,
         }));
         setTemplateSuggestions(suggestions);
       }
@@ -43,22 +43,23 @@ const DefaultTemplateManager = ({
   }, [defaultTemplate, availableBlocks, allowedBlocks]);
 
   const handleTemplateDelete = (tagIndex) => {
-    const newTemplateTags = templateTags.filter((_, index) => index !== tagIndex);
+    const newTemplateTags = templateTags.filter(
+      (_, index) => index !== tagIndex
+    );
     setTemplateTags(newTemplateTags);
 
     // Convert back to template format
-    const newTemplate = newTemplateTags.map(tag => [tag.text]);
+    const newTemplate = newTemplateTags.map((tag) => [tag.text]);
     setDefaultTemplate(newTemplate);
     updateTemplateSettings(newTemplate, templateLock);
   };
 
   const handleTemplateAddition = (tag) => {
-
     const newTemplateTags = [...templateTags, tag];
     setTemplateTags(newTemplateTags);
 
     // Convert back to template format
-    const newTemplate = newTemplateTags.map(tag => [tag.text]);
+    const newTemplate = newTemplateTags.map((tag) => [tag.text]);
     setDefaultTemplate(newTemplate);
     updateTemplateSettings(newTemplate, templateLock);
   };
@@ -71,7 +72,7 @@ const DefaultTemplateManager = ({
     setTemplateTags(newTemplateTags);
 
     // Convert back to template format
-    const newTemplate = newTemplateTags.map(tag => [tag.text]);
+    const newTemplate = newTemplateTags.map((tag) => [tag.text]);
     setDefaultTemplate(newTemplate);
     updateTemplateSettings(newTemplate, templateLock);
   };
@@ -84,7 +85,7 @@ const DefaultTemplateManager = ({
         <label className="block text-sm font-medium text-highlight">
           Block added by default
         </label>
-        
+
         <ReactTags
           tags={templateTags}
           suggestions={templateSuggestions}
@@ -93,7 +94,6 @@ const DefaultTemplateManager = ({
           handleDrag={handleTemplateDrag}
           placeholder="Type a block name for template and press Enter..."
         />
-
       </div>
     </div>
   );
@@ -111,7 +111,7 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
   // Parse inner blocks settings from metaData
   const getInnerBlocksSettings = () => {
     try {
-      const settingsString = metaData?.blocks?.inner_blocks_settings || '{}';
+      const settingsString = metaData?.blocks?.inner_blocks_settings || "{}";
       return JSON.parse(settingsString);
     } catch (e) {
       return {};
@@ -121,7 +121,7 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
   // Get template settings from main block settings
   const getBlockSettings = () => {
     try {
-      const settingsString = metaData?.blocks?.settings || '{}';
+      const settingsString = metaData?.blocks?.settings || "{}";
       return JSON.parse(settingsString);
     } catch (e) {
       return {};
@@ -137,7 +137,7 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
     const blocks = settings.allowed_blocks || [];
     const tags = blocks.map((blockName, index) => ({
       id: `${index}`,
-      text: blockName
+      text: blockName,
     }));
     setSelectedBlocks(tags);
 
@@ -145,13 +145,15 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
     // Template is stored as array of block names, need to convert to nested format
     const template = settings.template || [];
     const nestedTemplate = Array.isArray(template)
-      ? template.map(blockName => typeof blockName === 'string' ? [blockName] : blockName)
+      ? template.map((blockName) =>
+          typeof blockName === "string" ? [blockName] : blockName
+        )
       : [];
     setDefaultTemplate(nestedTemplate);
 
     // Handle various formats of templateLock
     const lockValue = settings.templateLock;
-    setTemplateLock(lockValue === 'true' || lockValue === true);
+    setTemplateLock(lockValue === "true" || lockValue === true);
   }, [selectedPost, metaData]);
 
   // Fetch available blocks when component mounts or when enabled
@@ -172,12 +174,11 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
       // Create suggestions for the tag input
       const suggestions = blocks.map((block, index) => ({
         id: `suggestion-${index}`,
-        text: block.name
+        text: block.name,
       }));
       setBlockSuggestions(suggestions);
-
     } catch (error) {
-      console.error('Error fetching registered blocks:', error);
+      console.error("Error fetching registered blocks:", error);
     } finally {
       setLoading(false);
     }
@@ -191,11 +192,11 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
       allowed_blocks: allowedBlocks,
       // Preserve template settings when updating inner blocks
       template: currentSettings.template || [],
-      templateLock: currentSettings.templateLock || 'false'
+      templateLock: currentSettings.templateLock || "false",
     };
 
     if (onMetaChange) {
-      onMetaChange('blocks', 'inner_blocks_settings', JSON.stringify(settings));
+      onMetaChange("blocks", "inner_blocks_settings", JSON.stringify(settings));
     }
   };
 
@@ -206,12 +207,16 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
       ...currentInnerBlocksSettings,
       enabled: currentInnerBlocksSettings.enabled || false,
       allowed_blocks: currentInnerBlocksSettings.allowed_blocks || [],
-      template: template.map(block => block[0]), // Store as flat array of block names
-      templateLock: templateLock ? 'true' : 'false' // Store as string for consistency with database
+      template: template.map((block) => block[0]), // Store as flat array of block names
+      templateLock: templateLock ? "true" : "false", // Store as string for consistency with database
     };
 
     if (onMetaChange) {
-      onMetaChange('blocks', 'inner_blocks_settings', JSON.stringify(updatedSettings));
+      onMetaChange(
+        "blocks",
+        "inner_blocks_settings",
+        JSON.stringify(updatedSettings)
+      );
     }
   };
 
@@ -220,24 +225,25 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
     setIsEnabled(enabled);
 
     // Convert current tags back to block names
-    const blockNames = selectedBlocks.map(tag => tag.text);
+    const blockNames = selectedBlocks.map((tag) => tag.text);
     updateInnerBlocksSettings(enabled, blockNames);
   };
 
   const handleDelete = (tagIndex) => {
-    const newSelectedBlocks = selectedBlocks.filter((_, index) => index !== tagIndex);
+    const newSelectedBlocks = selectedBlocks.filter(
+      (_, index) => index !== tagIndex
+    );
     setSelectedBlocks(newSelectedBlocks);
 
-    const blockNames = newSelectedBlocks.map(tag => tag.text);
+    const blockNames = newSelectedBlocks.map((tag) => tag.text);
     updateInnerBlocksSettings(isEnabled, blockNames);
   };
 
   const handleAddition = (tag) => {
-
     const newSelectedBlocks = [...selectedBlocks, tag];
     setSelectedBlocks(newSelectedBlocks);
 
-    const blockNames = newSelectedBlocks.map(tag => tag.text);
+    const blockNames = newSelectedBlocks.map((tag) => tag.text);
     updateInnerBlocksSettings(isEnabled, blockNames);
   };
 
@@ -248,10 +254,9 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
 
     setSelectedBlocks(newSelectedBlocks);
 
-    const blockNames = newSelectedBlocks.map(tag => tag.text);
+    const blockNames = newSelectedBlocks.map((tag) => tag.text);
     updateInnerBlocksSettings(isEnabled, blockNames);
   };
-
 
   const handleTemplateLockChange = (event) => {
     const locked = event.target.checked;
@@ -260,7 +265,9 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
   };
 
   // Only show for block type posts
-  const isBlockType = selectedPost?.terms?.some(term => term.slug === 'blocks');
+  const isBlockType = selectedPost?.terms?.some(
+    (term) => term.slug === "blocks"
+  );
 
   if (!isBlockType) {
     return null;
@@ -269,38 +276,41 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
   return (
     <div className="space-y-4">
       <div className="space-y-3">
-        <h4 className="font-medium text-highlight">Inner Blocks Settings</h4>
+        {/* <h4 className="font-medium text-highlight">Inner Blocks Settings</h4> */}
 
         {/* Toggle Switch */}
         <Toggle
           checked={isEnabled}
           onChange={handleToggle}
-          label="Enable Inner Blocks"
+          label="Enable Inner Blocks Settings"
         />
 
         {/* Description */}
         <p className="text-sm text-contrast">
-          Allow this block to contain other blocks as children. When enabled, you can specify which block types are allowed.
+          Allow this block to contain other blocks as children. When enabled,
+          you can specify which block types are allowed.
         </p>
       </div>
 
       {/* Block Selection Interface */}
       {isEnabled && (
         <div className="space-y-5 p-4 border border-outline rounded-md bg-base-2">
-           <label className="block text-sm font-medium text-highlight mb-2">
-              Allowed Block Types
-            </label>       
+          <label className="block text-sm font-medium text-highlight mb-2">
+            Allowed Block Types
+          </label>
 
           {loading ? (
-            <div className="text-sm text-contrast">Loading available blocks...</div>
+            <div className="text-sm text-contrast">
+              Loading available blocks...
+            </div>
           ) : (
             <ReactTags
-            tags={selectedBlocks}
-            suggestions={blockSuggestions}
-            handleDelete={handleDelete}
-            handleAddition={handleAddition}
-            handleDrag={handleDrag}
-            placeholder="Type a block name and press Enter..."
+              tags={selectedBlocks}
+              suggestions={blockSuggestions}
+              handleDelete={handleDelete}
+              handleAddition={handleAddition}
+              handleDrag={handleDrag}
+              placeholder="Type a block name and press Enter..."
             />
           )}
 
@@ -314,7 +324,7 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
             templateLock={templateLock}
             updateTemplateSettings={updateTemplateSettings}
             availableBlocks={availableBlocks}
-            allowedBlocks={selectedBlocks.map(tag => tag.text)}
+            allowedBlocks={selectedBlocks.map((tag) => tag.text)}
           />
 
           <div className="space-y-2">
@@ -325,17 +335,14 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
             <Toggle
               checked={templateLock}
               onChange={handleTemplateLockChange}
-              label={templateLock ? 'True' : 'False'}
+              label={templateLock ? "True" : "False"}
             />
             <p className="text-xs text-contrast">
               Prevent users from adding, removing, or moving blocks.
             </p>
           </div>
-
-
         </div>
       )}
-
     </div>
   );
 };
