@@ -33,7 +33,6 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
       setLoadingCategories(true);
       try {
         const categories = await apiClient.getBlockCategories();
-        console.log('Categories response:', categories);
         setBlockCategories(Array.isArray(categories) ? categories : []);
       } catch (error) {
         console.error('Error fetching block categories:', error);

@@ -8,11 +8,10 @@ const MetaboxContainer = ({ selectedPost, metaData, onMetaChange, titleComponent
   // Determine post type from terms
   const getPostType = () => {
     if (!selectedPost?.terms || !selectedPost.terms.length) {
-      console.log('No terms found for post:', selectedPost);
+      console.error('No terms found for post:', selectedPost);
       return null;
     }
     const termSlug = selectedPost.terms[0].slug;
-    console.log('Post type determined:', termSlug, 'from terms:', selectedPost.terms);
     return termSlug;
   };
 

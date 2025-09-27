@@ -465,16 +465,6 @@ export async function buildFinalScss(userScss, globalPartials = [], selectedPart
  * @returns {Promise<string>} - The compiled CSS
  */
 export async function compileScss(scssCode, postId = null, currentPartials = null) {
-    console.log('🔧 compileScss called with:', {
-        hasScssCode: !!scssCode,
-        postId: postId,
-        hasCurrentPartials: !!currentPartials,
-        currentPartialsDetail: currentPartials ? {
-            globalCount: currentPartials.globalPartials?.length || 0,
-            selectedCount: currentPartials.selectedPartials?.length || 0
-        } : null
-    });
-
     if (!scssCode || !scssCode.trim()) {
         return scssCode || '';
     }

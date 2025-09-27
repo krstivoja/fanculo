@@ -8,8 +8,6 @@ const EditTitleModal = lazy(() => import('./EditTitleModal'));
 const EditorMain = ({ selectedPost, metaData, onMetaChange, onTitleUpdate }) => {
   const [isEditTitleModalOpen, setIsEditTitleModalOpen] = useState(false);
 
-  console.log('EditorMain - selectedPost:', selectedPost);
-  console.log('EditorMain - metaData:', metaData);
 
   // Get the appropriate icon based on post type
   const getTypeIcon = () => {

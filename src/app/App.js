@@ -46,13 +46,11 @@ const App = () => {
 
         // Store related data for potential use
         if (postWithRelated.related) {
-            console.log('📦 Related data loaded:', Object.keys(postWithRelated.related));
         }
     };
 
     // Handle meta field changes
     const handleMetaChange = (section, field, value) => {
-        console.log('App.js handleMetaChange called:', { section, field, value });
         setMetaData(prev => {
             const newMetaData = {
                 ...prev,
@@ -61,7 +59,6 @@ const App = () => {
                     [field]: value
                 }
             };
-            console.log('New metaData after change:', newMetaData);
             return newMetaData;
         });
         setSaveStatus('unsaved');
@@ -191,7 +188,6 @@ const App = () => {
 
         try {
             if (selectedPost?.id) {
-                console.log('💾 Saving post data. MetaData being saved:', metaData);
 
                 // Attributes are now saved automatically via the updatePostMeta method in PostsApiController
 
@@ -200,19 +196,15 @@ const App = () => {
                                      metaData.blocks?.scss;
 
                 if (hasScssContent) {
-                    console.log('🔄 Compiling SCSS for post:', selectedPost.title);
 
                     try {
                         // Get current partials data for real-time compilation
                         const currentPartials = await getCurrentPartials();
-                        console.log('🔍 Current partials for compilation:', currentPartials);
 
                         // Compile SCSS to CSS with current partials support
                         const scssContent = metaData.blocks.scss;
-                        console.log('🔄 Compiling SCSS with partials data:', currentPartials);
                         const cssContent = await compileScss(scssContent, selectedPost.id, currentPartials);
 
-                        console.log('✅ SCSS compiled successfully');
 
                         // Save both SCSS and compiled CSS
                         await apiClient.saveScssContent(selectedPost.id, {
@@ -220,7 +212,6 @@ const App = () => {
                             css_content: cssContent,
                         });
 
-                        console.log('✅ SCSS and CSS saved successfully');
                     } catch (compilationError) {
                         console.error('❌ SCSS compilation failed:', compilationError);
                         const errorMessage = compilationError.message || 'SCSS compilation failed';
@@ -234,15 +225,8 @@ const App = () => {
                 const hasEditorScssContent = selectedPost.terms?.some(term => term.slug === 'blocks') &&
                                            metaData.blocks?.editorScss;
 
-                console.log('🔍 Editor SCSS check:', {
-                    isBlock: selectedPost.terms?.some(term => term.slug === 'blocks'),
-                    hasEditorScss: !!metaData.blocks?.editorScss,
-                    editorScssContent: metaData.blocks?.editorScss || '(empty)',
-                    willCompile: hasEditorScssContent
-                });
 
                 if (hasEditorScssContent) {
-                    console.log('🔄 Compiling Editor SCSS for post:', selectedPost.title);
 
                     try {
                         // Get editor partials for compilation
@@ -253,23 +237,19 @@ const App = () => {
                         // Parse editor selected partials
                         let editorSelectedPartialIds = [];
                         const editorSelectedPartialsString = metaData.blocks?.editor_selected_partials;
-                        console.log('📝 Editor Selected Partials Raw String:', editorSelectedPartialsString);
                         if (editorSelectedPartialsString) {
                             try {
                                 editorSelectedPartialIds = JSON.parse(editorSelectedPartialsString);
-                                console.log('✅ Parsed Editor Selected Partial IDs:', editorSelectedPartialIds);
                             } catch (e) {
                                 console.warn('Failed to parse editor selected partials:', e);
                             }
                         } else {
-                            console.log('⚠️ No editor selected partials string found');
                         }
 
                         // Enrich editor selected partial IDs with their data
                         const enrichedEditorSelectedPartials = [];
                         if (Array.isArray(editorSelectedPartialIds)) {
                             const allPartials = [...globalPartials, ...availablePartials];
-                            console.log('📚 All Available Partials for Lookup:', allPartials.map(p => ({ id: p.id, title: p.title })));
 
                             const partialsLookup = {};
                             allPartials.forEach(partial => {
@@ -279,7 +259,6 @@ const App = () => {
                             editorSelectedPartialIds.forEach((partialId, index) => {
                                 const id = typeof partialId === 'string' ? parseInt(partialId) : partialId;
                                 const partialData = partialsLookup[id];
-                                console.log(`🔍 Looking up partial ID ${id}:`, partialData ? `Found - ${partialData.title}` : 'Not found');
 
                                 if (partialData) {
                                     enrichedEditorSelectedPartials.push({
@@ -290,7 +269,6 @@ const App = () => {
                                     });
                                 }
                             });
-                            console.log('💎 Enriched Editor Selected Partials:', enrichedEditorSelectedPartials);
                         }
 
                         const editorCurrentPartials = {
@@ -298,31 +276,13 @@ const App = () => {
                             selectedPartials: enrichedEditorSelectedPartials
                         };
 
-                        console.log('🔍 Editor partials for compilation:', editorCurrentPartials);
 
                         // Compile editor SCSS to CSS with partials support
                         const editorScssContent = metaData.blocks.editorScss;
-                        console.log('📝 Editor SCSS content to compile:', editorScssContent);
-                        console.log('🚀 Calling compileScss for editor with partials:', {
-                            hasContent: !!editorScssContent,
-                            globalCount: editorCurrentPartials.globalPartials.length,
-                            selectedCount: editorCurrentPartials.selectedPartials.length
-                        });
                         // Pass null as postId to force using our provided editorCurrentPartials
                         const editorCssContent = await compileScss(editorScssContent, null, editorCurrentPartials);
 
-                        console.log('✅ Editor SCSS compiled successfully');
 
-                        console.log('📊 Editor CSS Compiled Output:', {
-                            originalScss: editorScssContent,
-                            compiledCss: editorCssContent,
-                            cssLength: editorCssContent.length,
-                            includesGlobalStyles: editorCssContent.includes('box-sizing') || editorCssContent.includes('font-size'),
-                            includesSelectedStyles: editorCurrentPartials.selectedPartials.map(p => ({
-                                title: p.title,
-                                found: editorCssContent.includes(p.title) || editorCssContent.includes(p.slug)
-                            }))
-                        });
 
                         // Save both editor SCSS and compiled CSS
                         await apiClient.saveEditorScssContent(selectedPost.id, {
@@ -330,8 +290,6 @@ const App = () => {
                             editor_css_content: editorCssContent,
                         });
 
-                        console.log('✅ Editor SCSS and CSS saved successfully');
-                        console.log('🎨 Final Editor CSS:', editorCssContent);
                     } catch (compilationError) {
                         console.error('❌ Editor SCSS compilation failed:', compilationError);
                         const errorMessage = compilationError.message || 'Editor SCSS compilation failed';
@@ -342,9 +300,7 @@ const App = () => {
                 }
 
                 // Use batch operation to save meta data and regenerate files in one request
-                console.log('📡 Saving meta data and regenerating files via batch API:', metaData);
                 await apiClient.savePostWithOperations(selectedPost.id, metaData, true);
-                console.log('✅ Meta data saved and files regenerated successfully');
             } else {
                 // Just regenerate files if no meta changes
                 await apiClient.regenerateFiles();
@@ -456,9 +412,6 @@ const App = () => {
         const fetchRegisteredBlocks = async () => {
             try {
                 const response = await apiClient.getRegisteredBlocks();
-                console.log('🧱 All Registered WordPress Blocks:', response.blocks);
-                console.log('📊 Total Blocks Count:', response.total);
-                console.log('🕐 Timestamp:', response.timestamp);
             } catch (error) {
                 console.error('❌ Error fetching registered blocks:', error);
             }

@@ -137,7 +137,6 @@ class FunculoApiClient {
       retries: 0
     };
 
-    console.log('🚀 FunculoApiClient initialized');
   }
 
   /**
@@ -250,7 +249,6 @@ class FunculoApiClient {
       ...options
     };
 
-    console.log(`📡 ${config.method || 'GET'} ${url}`, config.body ? JSON.parse(config.body) : '');
 
     const response = await fetch(url, config);
 
@@ -904,7 +902,6 @@ class FunculoApiClient {
    * Log current statistics to console
    */
   logStats() {
-    console.log('📊 FunculoApiClient Statistics:', this.getStats());
   }
 }
 
