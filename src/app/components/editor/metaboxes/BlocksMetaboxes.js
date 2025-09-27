@@ -63,6 +63,8 @@ const BlocksMetaboxes = ({ metaData, onChange, titleComponent, selectedPost }) =
                   language={tab.language || 'plaintext'}
                   className="absolute inset-0"
                   placeholder={tab.placeholder}
+                  enableEmmet={tab.language === 'php' || tab.language === 'javascript' || tab.language === 'scss'}
+                  enablePhpHtmlSwitching={tab.language === 'php'}
                 />
             )}
           </div>

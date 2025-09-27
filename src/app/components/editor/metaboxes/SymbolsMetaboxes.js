@@ -23,6 +23,8 @@ const SymbolsMetaboxes = ({ metaData, onChange, titleComponent }) => {
           language="php"
           className="absolute inset-0"
           placeholder="Enter PHP code for the symbol..."
+          enableEmmet={true}
+          enablePhpHtmlSwitching={true}
         />
       </div>
     </>

@@ -21,17 +21,17 @@ class SettingsPage
     public function add_admin_menu()
     {
         add_menu_page(
-            'Fanculo Settings',
+            'Fanculo',
             'Fanculo',
             'manage_options',
-            'fanculo-settings',
+            'fanculo-app',
             [$this, 'render_settings_page']
         );
     }
 
     public function enqueue_scripts($hook)
     {
-        if ($hook === 'toplevel_page_fanculo-settings') {
+        if ($hook === 'toplevel_page_fanculo-app') {
             $this->adminAssets->enqueueAssets();
         }
     }

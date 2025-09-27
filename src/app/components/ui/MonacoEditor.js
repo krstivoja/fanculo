@@ -1,5 +1,10 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Editor from '@monaco-editor/react';
+import { emmetHTML, emmetCSS } from 'emmet-monaco-es';
+
+// Global Emmet initialization flags
+let globalEmmetHtmlInitialized = false;
+let globalEmmetCssInitialized = false;
 
 const MonacoEditor = ({
   value,
@@ -7,8 +12,80 @@ const MonacoEditor = ({
   language = 'javascript',
   height = '300px',
   placeholder,
+  enableEmmet = false,
+  enablePhpHtmlSwitching = false,
   ...props
 }) => {
+  const editorRef = useRef(null);
+  const monacoRef = useRef(null);
+  const [currentLanguage, setCurrentLanguage] = useState(language);
+
+  // Initialize Emmet when Monaco is ready
+  const handleEditorDidMount = (editor, monaco) => {
+    editorRef.current = editor;
+    monacoRef.current = monaco;
+
+    if (enableEmmet) {
+      // Initialize HTML Emmet for HTML-compatible languages including PHP (only once globally)
+      if ((language === 'php' || language === 'html' || language === 'javascript') && !globalEmmetHtmlInitialized) {
+        emmetHTML(monaco, ['html', 'php', 'javascript']);
+        globalEmmetHtmlInitialized = true;
+      }
+
+      // Initialize CSS Emmet for CSS-compatible languages (only once globally)
+      if ((language === 'scss' || language === 'css') && !globalEmmetCssInitialized) {
+        emmetCSS(monaco, ['scss', 'css']);
+        globalEmmetCssInitialized = true;
+      }
+    }
+
+    // Set up PHP/HTML context switching if enabled
+    if (enablePhpHtmlSwitching && language === 'php') {
+      setupPhpHtmlSwitching(editor, monaco);
+    }
+
+    // Call original onMount if provided
+    if (props.onMount) {
+      props.onMount(editor, monaco);
+    }
+  };
+
+  // PHP/HTML context detection and switching
+  const setupPhpHtmlSwitching = (editor, monaco) => {
+    const detectContext = () => {
+      const model = editor.getModel();
+      const position = editor.getPosition();
+      const fullText = model.getValue();
+      const offset = model.getOffsetAt(position);
+
+      // Find PHP opening and closing tags around cursor
+      const beforeCursor = fullText.substring(0, offset);
+      const afterCursor = fullText.substring(offset);
+
+      const lastPhpOpen = beforeCursor.lastIndexOf('<?php');
+      const lastPhpClose = beforeCursor.lastIndexOf('?>');
+      const nextPhpClose = afterCursor.indexOf('?>');
+
+      // Determine if we're inside PHP tags
+      const isInPhp = lastPhpOpen > lastPhpClose && (nextPhpClose !== -1 || afterCursor.length === 0);
+
+      // Switch language context if needed
+      const newLanguage = isInPhp ? 'php' : 'html';
+      if (newLanguage !== currentLanguage) {
+        setCurrentLanguage(newLanguage);
+        // Update model language for better syntax highlighting
+        monaco.editor.setModelLanguage(model, newLanguage);
+      }
+    };
+
+    // Set up listeners for content and cursor changes
+    editor.onDidChangeModelContent(detectContext);
+    editor.onDidChangeCursorPosition(detectContext);
+
+    // Initial detection
+    detectContext();
+  };
+
   const handleEditorChange = (value) => {
     if (onChange) {
       onChange({ target: { value } }); // Mimic textarea event structure
@@ -16,35 +93,52 @@ const MonacoEditor = ({
   };
 
   return (
-    
-      <Editor
-        height={height}
-        language={language}
-        value={value || ''}
-        onChange={handleEditorChange}
-        theme="vs-dark"
-        options={{
-          minimap: { enabled: false },
-          scrollBeyondLastLine: false,
-          fontSize: 14,
-          lineNumbers: 'on',
-          roundedSelection: false,
-          scrollbar: {
-            vertical: 'auto',
-            horizontal: 'auto'
-          },
-          automaticLayout: true,
-          tabSize: 2,
-          insertSpaces: true,
-          wordWrap: 'on',
-          bracketPairColorization: { enabled: true },
-          folding: true,
-          foldingHighlight: true,
-          unfoldOnClickAfterEndOfLine: true,
-          placeholder: placeholder || `Enter ${language} code...`
-        }}
-        {...props}
-      />
+    <Editor
+      height={height}
+      language={enablePhpHtmlSwitching ? currentLanguage : language}
+      value={value || ''}
+      onChange={handleEditorChange}
+      onMount={handleEditorDidMount}
+      theme="vs-dark"
+      options={{
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        fontSize: 14,
+        lineNumbers: 'on',
+        roundedSelection: false,
+        scrollbar: {
+          vertical: 'auto',
+          horizontal: 'auto'
+        },
+        automaticLayout: true,
+        tabSize: 2,
+        insertSpaces: true,
+        wordWrap: 'on',
+        bracketPairColorization: { enabled: true },
+        folding: true,
+        foldingHighlight: true,
+        unfoldOnClickAfterEndOfLine: true,
+        placeholder: placeholder || `Enter ${enablePhpHtmlSwitching ? currentLanguage : language} code...`,
+        // Enable better emmet support
+        suggest: {
+          showKeywords: true,
+          showSnippets: true,
+          showFunctions: true,
+          showConstants: true,
+          showOperators: true,
+          showModules: true,
+          showProperties: true,
+          showEvents: true,
+          showReferences: true,
+        },
+        quickSuggestions: {
+          other: true,
+          comments: false,
+          strings: true
+        }
+      }}
+      {...props}
+    />
   );
 };
 
