@@ -46,17 +46,28 @@
         'datetime', 'open', 'tabindex'
     ];
 
-    // Key generation counter for collision prevention
-    let keyCounter = 0;
-
     /**
      * Generate stable, collision-free keys
      * @param {string} prefix - Key prefix
-     * @param {number} index - Element index
+     * @param {string} path - Structural path for element
      * @returns {string} Unique key
      */
-    function generateStableKey(prefix, index) {
-        return `${prefix}-${index}-${++keyCounter}`;
+    function generateStableKey(prefix, path) {
+        const normalizedPath = (path === undefined || path === null || path === '')
+            ? 'root'
+            : String(path);
+        return `${prefix}-${normalizedPath}`;
+    }
+
+    /**
+     * Build stable path notation for nested elements
+     * @param {string} parentPath - Existing path string
+     * @param {number} index - Child index within parent
+     * @returns {string} Combined path
+     */
+    function buildChildPath(parentPath, index) {
+        const childIndex = String(index);
+        return parentPath ? `${parentPath}.${childIndex}` : childIndex;
     }
 
     /**
@@ -166,7 +177,7 @@
             const container = document.createElement('div');
             container.innerHTML = processedHtml.trim();
 
-            const convertDomToReact = (domNode) => {
+            const convertDomToReact = (domNode, path = '') => {
                 if (domNode.nodeType === Node.ELEMENT_NODE) {
                     const tagName = domNode.tagName.toLowerCase();
 
@@ -178,7 +189,7 @@
                     // Handle <innerblocks /> tags
                     if (tagName === 'innerblocks') {
                         const innerBlocksProps = {
-                            key: generateStableKey('innerblocks', keyCounter),
+                            key: generateStableKey('innerblocks', path),
                             allowedBlocks: options.allowedBlocks || null,
                             template: options.template || [],
                             templateLock: options.templateLock || false
@@ -199,7 +210,7 @@
                     // Handle <div class="fanculo-block-inserter"> elements
                     if (tagName === 'div' && domNode.classList && domNode.classList.contains('fanculo-block-inserter')) {
                         const innerBlocksProps = {
-                            key: generateStableKey('fanculo-inserter', keyCounter),
+                            key: generateStableKey('fanculo-inserter', path),
                             allowedBlocks: options.allowedBlocks || null,
                             template: options.template || [],
                             templateLock: options.templateLock || false
@@ -219,16 +230,10 @@
 
                     const children = [];
                     domNode.childNodes.forEach((child, index) => {
-                        const element = convertDomToReact(child);
+                        const childPath = buildChildPath(path, index);
+                        const element = convertDomToReact(child, childPath);
                         if (element !== null) {
-                            // Add stable key to child elements
-                            if (typeof element === 'object' && element.type) {
-                                children.push(cloneElement(element, {
-                                    key: element.key || generateStableKey('child', index)
-                                }));
-                            } else {
-                                children.push(element);
-                            }
+                            children.push(element);
                         }
                     });
 
@@ -245,7 +250,7 @@
                     }
 
                     // Add stable key for this element
-                    props.key = generateStableKey(tagName, keyCounter);
+                    props.key = generateStableKey(tagName, path);
 
                     return createElement(tagName, props, ...children);
                 } else if (domNode.nodeType === Node.TEXT_NODE) {
@@ -255,8 +260,8 @@
             };
 
             const elements = [];
-            container.childNodes.forEach((node) => {
-                const element = convertDomToReact(node);
+            container.childNodes.forEach((node, index) => {
+                const element = convertDomToReact(node, String(index));
                 if (element !== null) {
                     elements.push(element);
                 }
@@ -464,13 +469,13 @@
 
                 // Memoize parsed content without blockProps to avoid pointless re-parses
                 const parsedContent = useMemo(() => {
-                    if (isLoading || !serverContent) return null;
+                    if (!serverContent) return null;
 
                     return window.FanculoBlockRenderer.parseServerContent(
                         serverContent,
                         parserOptions
                     );
-                }, [serverContent, isLoading, parserOptions]);
+                }, [serverContent, parserOptions]);
 
                 // Apply blockProps to parsed content
                 const renderedContent = useMemo(() => {
@@ -484,8 +489,8 @@
                     );
                 }, [parsedContent, blockProps]);
 
-                if (isLoading) {
-                    return createElement("div", blockProps,
+                if (!renderedContent) {
+                    return createElement('div', blockProps,
                         createElement(Spinner)
                     );
                 }
