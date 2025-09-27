@@ -3,11 +3,14 @@
 namespace Fanculo\Admin\Api;
 
 use Fanculo\Content\FunculoTypeTaxonomy;
+use Fanculo\Admin\Api\Services\ApiResponseFormatter;
 
 class TaxonomyApiController
 {
+    private $responseFormatter;
     public function __construct()
     {
+        $this->responseFormatter = new ApiResponseFormatter();
         add_action('rest_api_init', [$this, 'registerRoutes']);
     }
 
@@ -44,8 +47,9 @@ class TaxonomyApiController
             ];
         }
 
-        return new \WP_REST_Response([
-            'terms' => $termData,
-        ], 200);
+        return $this->responseFormatter->collection(
+            $termData,
+            ['total' => count($termData)]
+        );
     }
 }

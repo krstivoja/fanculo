@@ -2,10 +2,14 @@
 
 namespace Fanculo\Admin\Api;
 
+use Fanculo\Admin\Api\Services\ApiResponseFormatter;
+
 class BlockCategoriesApiController
 {
+    private $responseFormatter;
     public function __construct()
     {
+        $this->responseFormatter = new ApiResponseFormatter();
         add_action('rest_api_init', [$this, 'registerRoutes']);
     }
 
@@ -37,7 +41,10 @@ class BlockCategoriesApiController
         ];
 
 
-        return rest_ensure_response($test_categories);
+        return $this->responseFormatter->collection(
+            $test_categories,
+            ['total' => count($test_categories)]
+        );
     }
 
     private function formatCategoryTitle($slug)

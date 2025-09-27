@@ -3,6 +3,7 @@
 namespace Fanculo\Admin\Api;
 
 use Fanculo\Database\BlockAttributesRepository;
+use Fanculo\Admin\Api\Services\ApiResponseFormatter;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
@@ -12,8 +13,10 @@ use WP_Error;
  */
 class BlockAttributesApiController
 {
+    private $responseFormatter;
     public function __construct()
     {
+        $this->responseFormatter = new ApiResponseFormatter();
         add_action('rest_api_init', [$this, 'registerRoutes']);
     }
 
@@ -179,18 +182,12 @@ class BlockAttributesApiController
         // Verify the post exists and is of type 'funculo'
         $post = get_post($post_id);
         if (!$post || $post->post_type !== 'funculo') {
-            return new WP_REST_Response([
-                'success' => false,
-                'message' => 'Invalid post ID'
-            ], 404);
+            return $this->responseFormatter->notFound('Post', $post_id);
         }
 
         $attributes = BlockAttributesRepository::get($post_id);
 
-        return new WP_REST_Response([
-            'success' => true,
-            'data' => $attributes
-        ], 200);
+        return $this->responseFormatter->success($attributes);
     }
 
     /**
@@ -204,27 +201,22 @@ class BlockAttributesApiController
         // Verify the post exists
         $post = get_post($post_id);
         if (!$post || $post->post_type !== 'funculo') {
-            return new WP_REST_Response([
-                'success' => false,
-                'message' => 'Invalid post ID'
-            ], 404);
+            return $this->responseFormatter->notFound('Post', $post_id);
         }
 
         // Validate attributes array
         if (!isset($attributes['attributes']) || !is_array($attributes['attributes'])) {
-            return new WP_REST_Response([
-                'success' => false,
-                'message' => 'Invalid attributes data'
-            ], 400);
+            return $this->responseFormatter->validationError(
+                ['attributes' => 'Invalid attributes data']
+            );
         }
 
         // Validate each attribute
         foreach ($attributes['attributes'] as $attr) {
             if (empty($attr['name']) || empty($attr['type'])) {
-                return new WP_REST_Response([
-                    'success' => false,
-                    'message' => 'Each attribute must have a name and type'
-                ], 400);
+                return $this->responseFormatter->validationError(
+                    ['attributes' => 'Each attribute must have a name and type']
+                );
             }
         }
 
@@ -234,17 +226,13 @@ class BlockAttributesApiController
             // Get the saved attributes to return
             $saved_attributes = BlockAttributesRepository::get($post_id);
 
-            return new WP_REST_Response([
-                'success' => true,
-                'data' => $saved_attributes,
-                'message' => 'Attributes saved successfully'
-            ], 200);
+            return $this->responseFormatter->updated(
+                $saved_attributes,
+                ['message' => 'Attributes saved successfully']
+            );
         }
 
-        return new WP_REST_Response([
-            'success' => false,
-            'message' => 'Failed to save attributes'
-        ], 500);
+        return $this->responseFormatter->serverError('Failed to save attributes');
     }
 
     /**
@@ -262,17 +250,13 @@ class BlockAttributesApiController
         $result = BlockAttributesRepository::saveAttribute($post_id, $attribute);
 
         if ($result) {
-            return new WP_REST_Response([
-                'success' => true,
-                'data' => ['id' => $result],
-                'message' => 'Attribute updated successfully'
-            ], 200);
+            return $this->responseFormatter->updated(
+                ['id' => $result],
+                ['message' => 'Attribute updated successfully']
+            );
         }
 
-        return new WP_REST_Response([
-            'success' => false,
-            'message' => 'Failed to update attribute'
-        ], 500);
+        return $this->responseFormatter->serverError('Failed to update attribute');
     }
 
     /**
@@ -285,16 +269,10 @@ class BlockAttributesApiController
         $result = BlockAttributesRepository::deleteAttribute($attr_id);
 
         if ($result) {
-            return new WP_REST_Response([
-                'success' => true,
-                'message' => 'Attribute deleted successfully'
-            ], 200);
+            return $this->responseFormatter->deleted('Attribute deleted successfully');
         }
 
-        return new WP_REST_Response([
-            'success' => false,
-            'message' => 'Failed to delete attribute'
-        ], 500);
+        return $this->responseFormatter->serverError('Failed to delete attribute');
     }
 
     /**
@@ -307,16 +285,10 @@ class BlockAttributesApiController
         $result = BlockAttributesRepository::delete($post_id);
 
         if ($result) {
-            return new WP_REST_Response([
-                'success' => true,
-                'message' => 'All attributes deleted successfully'
-            ], 200);
+            return $this->responseFormatter->deleted('All attributes deleted successfully');
         }
 
-        return new WP_REST_Response([
-            'success' => false,
-            'message' => 'Failed to delete attributes'
-        ], 500);
+        return $this->responseFormatter->serverError('Failed to delete attributes');
     }
 
     /**
@@ -327,19 +299,15 @@ class BlockAttributesApiController
         $params = $request->get_json_params();
 
         if (!isset($params['post_ids']) || !is_array($params['post_ids'])) {
-            return new WP_REST_Response([
-                'success' => false,
-                'message' => 'Invalid post_ids parameter'
-            ], 400);
+            return $this->responseFormatter->validationError(
+                ['post_ids' => 'Invalid post_ids parameter']
+            );
         }
 
         $post_ids = array_map('intval', $params['post_ids']);
         $attributes = BlockAttributesRepository::getMultiple($post_ids);
 
-        return new WP_REST_Response([
-            'success' => true,
-            'data' => $attributes
-        ], 200);
+        return $this->responseFormatter->success($attributes);
     }
 
     /**
@@ -354,19 +322,22 @@ class BlockAttributesApiController
             $post_id = intval($params['post_id']);
             $result = BlockAttributesRepository::migrateFromPostMeta($post_id);
 
-            return new WP_REST_Response([
-                'success' => $result,
-                'message' => $result ? 'Migration completed' : 'Migration failed'
-            ], $result ? 200 : 500);
+            if ($result) {
+                return $this->responseFormatter->success(
+                    ['post_id' => $post_id],
+                    ['message' => 'Migration completed']
+                );
+            } else {
+                return $this->responseFormatter->serverError('Migration failed');
+            }
         } else {
             // Migrate all posts
             $migrated = BlockAttributesRepository::migrateAll();
 
-            return new WP_REST_Response([
-                'success' => true,
-                'data' => ['migrated' => $migrated],
-                'message' => "Migrated $migrated blocks"
-            ], 200);
+            return $this->responseFormatter->success(
+                ['migrated' => $migrated],
+                ['message' => "Migrated $migrated blocks"]
+            );
         }
     }
 }

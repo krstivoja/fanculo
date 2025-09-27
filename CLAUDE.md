@@ -260,6 +260,41 @@ app/
   - `ScssCompilerApiController.php`: SCSS compile endpoints
 - Add a separate API reference (paths, methods, payloads, errors) and link it here.
 
+#### D-6a (MUST) API Response Standards
+- **ALL** API controllers **MUST** use `ApiResponseFormatter` for responses
+- **NEVER** return raw `WP_REST_Response` or `rest_ensure_response()` directly
+- **ALWAYS** inject `ApiResponseFormatter` in controller constructor
+- Response patterns to use:
+  - Success: `$this->responseFormatter->success($data, $meta)`
+  - Collection: `$this->responseFormatter->collection($items, $meta)`
+  - Paginated: `$this->responseFormatter->paginated($items, $total, $page, $perPage)`
+  - Created: `$this->responseFormatter->created($data, $meta)`
+  - Updated: `$this->responseFormatter->updated($data, $meta)`
+  - Deleted: `$this->responseFormatter->deleted($message, $meta)`
+  - Item: `$this->responseFormatter->item($item, $meta)`
+  - Empty: `$this->responseFormatter->empty($message)`
+- Error patterns (returns WP_Error):
+  - Validation: `$this->responseFormatter->validationError($errors)`
+  - Not Found: `$this->responseFormatter->notFound($resource, $id)`
+  - Permission: `$this->responseFormatter->permissionDenied($message)`
+  - Server Error: `$this->responseFormatter->serverError($message)`
+- Benefits: Consistent structure, automatic timestamps, proper metadata, standardized error handling
+- Example:
+  ```php
+  class MyApiController {
+      private $responseFormatter;
+
+      public function __construct() {
+          $this->responseFormatter = new ApiResponseFormatter();
+      }
+
+      public function getItems() {
+          $items = get_items();
+          return $this->responseFormatter->collection($items, ['total' => count($items)]);
+      }
+  }
+  ```
+
 #### D-7 (SHOULD) Metaboxes
 - Definitions in `app/MetaBoxes/`:
   - `BlocksMetaBox.php`: block metadata

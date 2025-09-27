@@ -2,10 +2,14 @@
 
 namespace Fanculo\Admin\Api;
 
+use Fanculo\Admin\Api\Services\ApiResponseFormatter;
+
 class RegisteredBlocksApiController
 {
+    private $responseFormatter;
     public function __construct()
     {
+        $this->responseFormatter = new ApiResponseFormatter();
         add_action('rest_api_init', [$this, 'registerRoutes']);
     }
 
@@ -52,10 +56,9 @@ class RegisteredBlocksApiController
             ];
         }
 
-        return new \WP_REST_Response([
-            'blocks' => $blocks_data,
-            'total' => count($blocks_data),
-            'timestamp' => current_time('mysql')
-        ], 200);
+        return $this->responseFormatter->collection(
+            $blocks_data,
+            ['total' => count($blocks_data)]
+        );
     }
 }
