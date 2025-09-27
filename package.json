@@ -19,6 +19,7 @@
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "@tailwindcss/cli": "^4.1.13",
+    "emmet-monaco-es": "^5.6.1",
     "immutable": "^5.1.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
