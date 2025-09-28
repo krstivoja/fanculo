@@ -44,34 +44,68 @@ class FunculoSassCompiler {
         this.sass = null;
         this.isInitialized = false;
         this.baseUrl = getPluginBaseUrl();
+        this.loadingPromise = null; // Prevent duplicate loading
     }
 
     async initialize() {
         if (this.isInitialized) return this.sass;
 
-        try {
-            await this.loadSassCompiler();
-            this.isInitialized = true;
-            return this.sass;
-        } catch (error) {
-            console.error('❌ Failed to initialize SCSS compiler:', error);
-            throw error;
+        // Return existing loading promise if already in progress
+        if (this.loadingPromise) {
+            return this.loadingPromise;
         }
+
+        // Create and memoize the loading promise
+        this.loadingPromise = (async () => {
+            try {
+                await this.loadSassCompiler();
+                this.isInitialized = true;
+                return this.sass;
+            } catch (error) {
+                console.error('❌ Failed to initialize SCSS compiler:', error);
+                // Reset loading promise on failure so it can be retried
+                this.loadingPromise = null;
+                throw error;
+            }
+        })();
+
+        return this.loadingPromise;
     }
 
     async loadSassCompiler() {
         return new Promise((resolve, reject) => {
-            // Load the bundled SCSS compiler from dist/scss-compiler/
+            // Check if scripts are already loaded to prevent duplication
             const bundleUrl = this.baseUrl + 'dist/scss-compiler/sass-bundle.min.js';
+            const sassUrl = this.baseUrl + 'dist/scss-compiler/sass.dart.min.js';
 
+            // Check if bundle script already exists
+            if (document.querySelector(`script[src="${bundleUrl}"][data-fanculo-sass="bundle"]`)) {
+                // Bundle already loaded, check for sass script
+                if (document.querySelector(`script[src="${sassUrl}"][data-fanculo-sass="dart"]`)) {
+                    // Both scripts already loaded, try to initialize
+                    try {
+                        this.sass = new window.SassBundled.default();
+                        this.sass.initialize().then(() => {
+                            resolve(this.sass);
+                        }).catch(reject);
+                        return;
+                    } catch (error) {
+                        console.error('❌ Scripts loaded but initialization failed:', error);
+                        reject(error);
+                        return;
+                    }
+                }
+            }
+
+            // Load the bundled SCSS compiler from dist/scss-compiler/
             const bundleScript = document.createElement('script');
             bundleScript.src = bundleUrl;
+            bundleScript.setAttribute('data-fanculo-sass', 'bundle'); // Mark for deduplication
             bundleScript.onload = () => {
                 // Load the Dart Sass compiler
-                const sassUrl = this.baseUrl + 'dist/scss-compiler/sass.dart.min.js';
-
                 const sassScript = document.createElement('script');
                 sassScript.src = sassUrl;
+                sassScript.setAttribute('data-fanculo-sass', 'dart'); // Mark for deduplication
                 sassScript.onload = () => {
                     try {
                         // Use the bundled SassCompiler class
