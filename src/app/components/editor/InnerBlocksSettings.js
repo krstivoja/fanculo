@@ -167,7 +167,9 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
     setLoading(true);
     try {
       const response = await apiClient.getRegisteredBlocks();
-      const blocks = response.blocks || [];
+      const blocks = Array.isArray(response)
+        ? response
+        : response?.blocks || response?.data || [];
 
       setAvailableBlocks(blocks);
 
