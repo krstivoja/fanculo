@@ -33,7 +33,6 @@ define('FANCULO_BLOCKS_URL', plugins_url($blocks_dir_name));
 
 // Check for Composer autoloader
 $autoloader = __DIR__ . '/vendor/autoload.php';
-
 if (!file_exists($autoloader)) {
     add_action('admin_notices', function() {
         echo '<div class="notice notice-error"><p>';
@@ -44,21 +43,9 @@ if (!file_exists($autoloader)) {
 }
 
 // Load Composer autoloader
-try {
-    require_once $autoloader;
-} catch (Throwable $e) {
-    return;
-}
+require_once $autoloader;
 
 // Bootstrap the plugin
 add_action('plugins_loaded', function() {
-    try {
-        \Fanculo\App::boot(FANCULO_PLUGIN_FILE);
-    } catch (Throwable $e) {
-        // Prevent the white screen by showing the error
-        if (WP_DEBUG && WP_DEBUG_DISPLAY) {
-            wp_die('Fanculo Plugin Error: ' . $e->getMessage() . '<br><pre>' . $e->getTraceAsString() . '</pre>');
-        }
-    }
+    \Fanculo\App::boot(FANCULO_PLUGIN_FILE);
 });
-
