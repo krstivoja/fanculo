@@ -13,8 +13,8 @@ use function wp_localize_script;
 
 class ScriptLoader
 {
-    public const HOT_RELOAD_HANDLE = 'fanculo-simple-hot-reload';
-    public const HOT_RELOAD_FILE = 'assets/js/simple-hot-reload.js';
+    public const HOT_RELOAD_HANDLE = 'fanculo-hot-reload';
+    public const HOT_RELOAD_FILE = 'assets/js/hot-reload.js';
     public const BLOCK_RENDERER_HANDLE = 'fanculo-block-renderer';
     public const BLOCK_RENDERER_FILE = 'assets/js/block-renderer.js';
 

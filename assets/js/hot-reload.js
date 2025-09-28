@@ -20,7 +20,7 @@ class FanculoSimpleHotReload {
     this.setupBroadcastChannel();
     this.setupStorageListener();
 
-    console.log("🔥 Fanculo Simple Hot Reload initialized for", this.source);
+    // console.log("🔥 Fanculo Simple Hot Reload initialized for", this.source);
   }
 
   /**
@@ -31,7 +31,11 @@ class FanculoSimpleHotReload {
 
     if (url.includes("post.php") || url.includes("post-new.php")) {
       return "editor";
-    } else if (url.includes("fanculo") || url.includes("studio") || url.includes("admin.php")) {
+    } else if (
+      url.includes("fanculo") ||
+      url.includes("studio") ||
+      url.includes("admin.php")
+    ) {
       return "studio";
     } else {
       return "frontend";
@@ -43,12 +47,14 @@ class FanculoSimpleHotReload {
    */
   setupBroadcastChannel() {
     try {
-      this.channel = new BroadcastChannel("fanculo-simple-hot-reload");
+      this.channel = new BroadcastChannel("fanculo-hot-reload");
       this.channel.onmessage = (event) => this.handleMessage(event.data);
       this.connected = true;
-      console.log("📡 Fanculo Simple BroadcastChannel connected");
+      // console.log("📡 Fanculo Simple BroadcastChannel connected");
     } catch (error) {
-      console.warn("❌ BroadcastChannel not supported, using localStorage fallback");
+      console.warn(
+        "❌ BroadcastChannel not supported, using localStorage fallback"
+      );
       this.connected = false;
     }
   }
@@ -58,7 +64,7 @@ class FanculoSimpleHotReload {
    */
   setupStorageListener() {
     window.addEventListener("storage", (event) => {
-      if (event.key === "fanculo-simple-hot-reload") {
+      if (event.key === "fanculo-hot-reload") {
         try {
           const data = JSON.parse(event.newValue);
           this.handleMessage(data);
@@ -81,20 +87,20 @@ class FanculoSimpleHotReload {
       blockSlug: blockData.blockSlug || blockData.slug,
       blockName: blockData.blockName || blockData.title,
       changes: blockData.changes || ["all"],
-      content: blockData.content || {}
+      content: blockData.content || {},
     };
 
-    console.log("🚀 Fanculo: Sending hot reload signal", message);
+    // console.log("🚀 Fanculo: Sending hot reload signal", message);
 
     if (this.connected && this.channel) {
       this.channel.postMessage(message);
     } else {
       // Fallback to localStorage
-      localStorage.setItem("fanculo-simple-hot-reload", JSON.stringify(message));
+      localStorage.setItem("fanculo-hot-reload", JSON.stringify(message));
       // Trigger storage event for same-window communication
       window.dispatchEvent(
         new StorageEvent("storage", {
-          key: "fanculo-simple-hot-reload",
+          key: "fanculo-hot-reload",
           newValue: JSON.stringify(message),
         })
       );
@@ -105,7 +111,7 @@ class FanculoSimpleHotReload {
    * Handle incoming hot reload messages
    */
   handleMessage(data) {
-    console.log("📨 Fanculo: Received hot reload message", data);
+    // console.log("📨 Fanculo: Received hot reload message", data);
 
     if (!data || !data.type || data.type !== "hot-reload") {
       return;
@@ -124,7 +130,10 @@ class FanculoSimpleHotReload {
         this.handleFrontendHotReload(data);
         break;
       default:
-        console.log("📨 Hot reload received but not processed for source:", this.source);
+      // console.log(
+      //   "📨 Hot reload received but not processed for source:",
+      //   this.source
+      // );
     }
   }
 
@@ -132,18 +141,24 @@ class FanculoSimpleHotReload {
    * Handle hot reload in Gutenberg editor
    */
   handleEditorHotReload(data) {
-    console.log("🎯 Fanculo Editor: Processing hot reload for block", data.blockSlug);
-    console.log("📦 Content received:", {
-      css: data.content?.css?.length || 0,
-      editorCss: data.content?.editorCss?.length || 0,
-      php: data.content?.php?.length || 0,
-      js: data.content?.js?.length || 0
-    });
+    // console.log(
+    //   "🎯 Fanculo Editor: Processing hot reload for block",
+    //   data.blockSlug
+    // );
+    // console.log("📦 Content received:", {
+    //   css: data.content?.css?.length || 0,
+    //   editorCss: data.content?.editorCss?.length || 0,
+    //   php: data.content?.php?.length || 0,
+    //   js: data.content?.js?.length || 0,
+    // });
 
     // Show first 200 chars of PHP content for debugging
-    if (data.content?.php) {
-      console.log("🔍 PHP content preview:", data.content.php.substring(0, 200) + "...");
-    }
+    // if (data.content?.php) {
+    //   console.log(
+    //     "🔍 PHP content preview:",
+    //     data.content.php.substring(0, 200) + "..."
+    //   );
+    // }
 
     if (!window.wp?.data) {
       console.warn("wp.data not available for block refresh");
@@ -152,7 +167,10 @@ class FanculoSimpleHotReload {
 
     // Inject updated styles immediately
     if (data.content.css) {
-      console.log("💉 Injecting CSS:", data.content.css.substring(0, 100) + "...");
+      // console.log(
+      //   "💉 Injecting CSS:",
+      //   data.content.css.substring(0, 100) + "..."
+      // );
       this.injectStyle(data.blockSlug, data.content.css);
       this.injectStyleIntoIframe(data.blockSlug, data.content.css);
     } else {
@@ -160,10 +178,15 @@ class FanculoSimpleHotReload {
     }
 
     if (data.content.editorCss) {
-      console.log("💉 Injecting Editor CSS:", data.content.editorCss.substring(0, 100) + "...");
-      this.injectStyleIntoIframe(data.blockSlug, data.content.editorCss, "editor");
-    } else {
-      console.log("⚠️ No Editor CSS content to inject");
+      // console.log(
+      //   "💉 Injecting Editor CSS:",
+      //   data.content.editorCss.substring(0, 100) + "..."
+      // );
+      this.injectStyleIntoIframe(
+        data.blockSlug,
+        data.content.editorCss,
+        "editor"
+      );
     }
 
     // Refresh blocks in editor
@@ -174,7 +197,10 @@ class FanculoSimpleHotReload {
    * Handle hot reload on frontend
    */
   handleFrontendHotReload(data) {
-    console.log("🌐 Fanculo Frontend: Processing hot reload for block", data.blockSlug);
+    // console.log(
+    //   "🌐 Fanculo Frontend: Processing hot reload for block",
+    //   data.blockSlug
+    // );
 
     // Inject updated styles
     if (data.content.css) {
@@ -183,7 +209,7 @@ class FanculoSimpleHotReload {
 
     // For major changes, reload the page
     if (data.changes.includes("php") || data.changes.includes("render")) {
-      console.log("🔄 Fanculo Frontend: Reloading page for structural changes");
+      // console.log("🔄 Fanculo Frontend: Reloading page for structural changes");
       setTimeout(() => window.location.reload(), 1000);
     }
   }
@@ -206,7 +232,7 @@ class FanculoSimpleHotReload {
     style.textContent = css;
     document.head.appendChild(style);
 
-    console.log("✅ Fanculo: Injected style for block", blockSlug);
+    // console.log("✅ Fanculo: Injected style for block", blockSlug);
   }
 
   /**
@@ -224,7 +250,10 @@ class FanculoSimpleHotReload {
     // Wait for iframe to be ready
     const injectIntoIframe = () => {
       try {
-        if (iframe.contentDocument && iframe.contentDocument.readyState === "complete") {
+        if (
+          iframe.contentDocument &&
+          iframe.contentDocument.readyState === "complete"
+        ) {
           // Remove existing style
           const existingStyle = iframe.contentDocument.getElementById(styleId);
           if (existingStyle) {
@@ -237,12 +266,18 @@ class FanculoSimpleHotReload {
           style.textContent = css;
           iframe.contentDocument.head.appendChild(style);
 
-          console.log(`✅ Fanculo: Injected ${type} into iframe for block`, blockSlug);
+          // console.log(
+          //   `✅ Fanculo: Injected ${type} into iframe for block`,
+          //   blockSlug
+          // );
         } else {
           setTimeout(injectIntoIframe, 100);
         }
       } catch (error) {
-        console.warn(`❌ Fanculo: Failed to inject ${type} into iframe:`, error);
+        console.warn(
+          `❌ Fanculo: Failed to inject ${type} into iframe:`,
+          error
+        );
       }
     };
 
@@ -273,11 +308,16 @@ class FanculoSimpleHotReload {
     };
 
     const targetBlocks = findBlocks(blocks);
-    console.log("🎯 Fanculo: Found", targetBlocks.length, "blocks to refresh for", blockSlug);
+    // console.log(
+    //   "🎯 Fanculo: Found",
+    //   targetBlocks.length,
+    //   "blocks to refresh for",
+    //   blockSlug
+    // );
 
     if (targetBlocks.length > 0) {
       targetBlocks.forEach((block) => {
-        console.log("🔄 Fanculo: Force refreshing block", block.clientId);
+        // console.log("🔄 Fanculo: Force refreshing block", block.clientId);
 
         // Strategy 1: Replace the block entirely to force complete re-render
         try {
@@ -288,13 +328,17 @@ class FanculoSimpleHotReload {
           const currentBlock = getBlock(block.clientId);
           if (currentBlock) {
             // Create a new block with the same attributes but force re-render
-            const newBlock = wp.blocks.createBlock(currentBlock.name, {
-              ...currentBlock.attributes,
-              // Add a timestamp to force WordPress to re-render
-              fanculoRefresh: Date.now()
-            }, currentBlock.innerBlocks);
+            const newBlock = wp.blocks.createBlock(
+              currentBlock.name,
+              {
+                ...currentBlock.attributes,
+                // Add a timestamp to force WordPress to re-render
+                fanculoRefresh: Date.now(),
+              },
+              currentBlock.innerBlocks
+            );
 
-            console.log("🔄 Fanculo: Replacing block to force re-render");
+            // console.log("🔄 Fanculo: Replacing block to force re-render");
             replaceBlock(block.clientId, newBlock);
 
             // Clean up the refresh attribute after a short delay
@@ -304,12 +348,18 @@ class FanculoSimpleHotReload {
               if (refreshedBlock && refreshedBlock.attributes.fanculoRefresh) {
                 const cleanAttributes = { ...refreshedBlock.attributes };
                 delete cleanAttributes.fanculoRefresh;
-                dispatch("core/block-editor").updateBlockAttributes(newBlock.clientId, cleanAttributes);
+                dispatch("core/block-editor").updateBlockAttributes(
+                  newBlock.clientId,
+                  cleanAttributes
+                );
               }
             }, 500);
           }
         } catch (error) {
-          console.warn("🔄 Fanculo: Block replacement failed, trying fallback:", error);
+          console.warn(
+            "🔄 Fanculo: Block replacement failed, trying fallback:",
+            error
+          );
 
           // Fallback: Force re-render using attributes
           const originalAttributes = { ...block.attributes };
@@ -318,12 +368,15 @@ class FanculoSimpleHotReload {
           // Add temporary attribute to force re-render
           dispatch("core/block-editor").updateBlockAttributes(block.clientId, {
             ...originalAttributes,
-            fanculoRefresh: refreshTime
+            fanculoRefresh: refreshTime,
           });
 
           // Remove temporary attribute
           setTimeout(() => {
-            dispatch("core/block-editor").updateBlockAttributes(block.clientId, originalAttributes);
+            dispatch("core/block-editor").updateBlockAttributes(
+              block.clientId,
+              originalAttributes
+            );
           }, 200);
         }
       });
@@ -339,15 +392,21 @@ class FanculoSimpleHotReload {
 
       // Use wp.apiFetch if available (authenticated), otherwise use fetch
       if (window.wp?.apiFetch) {
-        console.log("🔍 Fanculo: Fetching block data via wp.apiFetch for post", postId);
+        // console.log(
+        //   "🔍 Fanculo: Fetching block data via wp.apiFetch for post",
+        //   postId
+        // );
         result = await window.wp.apiFetch({
           path: `/funculo/v1/post/${postId}`,
-          method: 'GET'
+          method: "GET",
         });
-        console.log("✅ Fanculo: API response received", result);
-        console.log("🔍 Fanculo: Meta structure:", result.data?.meta);
-        console.log("🔍 Fanculo: Blocks meta:", result.data?.meta?.blocks);
-        console.log("🔍 Fanculo: Available meta keys:", Object.keys(result.data?.meta?.blocks || {}));
+        // console.log("✅ Fanculo: API response received", result);
+        // console.log("🔍 Fanculo: Meta structure:", result.data?.meta);
+        // console.log("🔍 Fanculo: Blocks meta:", result.data?.meta?.blocks);
+        // console.log(
+        //   "🔍 Fanculo: Available meta keys:",
+        //   Object.keys(result.data?.meta?.blocks || {})
+        // );
       } else {
         // Fallback to regular fetch (will fail if authentication required)
         const response = await fetch(`/wp-json/funculo/v1/post/${postId}`);
@@ -367,10 +426,13 @@ class FanculoSimpleHotReload {
         blockName: post.title?.rendered || post.title,
         content: {
           css: post.meta?.blocks?.cssContent || post.meta?.blocks?.scss || "",
-          editorCss: post.meta?.blocks?.editorCssContent || post.meta?.blocks?.editorScss || "",
+          editorCss:
+            post.meta?.blocks?.editorCssContent ||
+            post.meta?.blocks?.editorScss ||
+            "",
           php: post.meta?.blocks?.php || post.meta?.symbols?.php || "",
-          js: post.meta?.blocks?.js || ""
-        }
+          js: post.meta?.blocks?.js || "",
+        },
       };
     } catch (error) {
       console.warn("Failed to fetch block data:", error);
@@ -382,11 +444,11 @@ class FanculoSimpleHotReload {
    * Studio save handler - call this when saving in studio
    */
   async onStudioSave(postId, changes = ["all"]) {
-    console.log("💾 Fanculo Studio: Save detected for post", postId);
+    // console.log("💾 Fanculo Studio: Save detected for post", postId);
 
     // Wait a moment for SCSS compilation to complete
-    console.log("⏳ Fanculo: Waiting for SCSS compilation to complete...");
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // console.log("⏳ Fanculo: Waiting for SCSS compilation to complete...");
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Get current block data
     const blockData = await this.fetchBlockData(postId);
@@ -405,7 +467,7 @@ class FanculoSimpleHotReload {
       this.channel.close();
     }
     this.connected = false;
-    console.log("🔌 Fanculo Simple Hot Reload destroyed");
+    // console.log("🔌 Fanculo Simple Hot Reload destroyed");
   }
 }
 
@@ -434,7 +496,10 @@ function initializeFanculoSimpleHotReload() {
 
 // Initialize when DOM is ready
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initializeFanculoSimpleHotReload);
+  document.addEventListener(
+    "DOMContentLoaded",
+    initializeFanculoSimpleHotReload
+  );
 } else {
   initializeFanculoSimpleHotReload();
 }

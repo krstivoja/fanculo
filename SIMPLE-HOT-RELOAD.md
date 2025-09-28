@@ -7,12 +7,14 @@ The new simplified hot reload system uses direct browser-to-browser communicatio
 ## How It Works
 
 ### 1. **Studio Side (Save Detection)**
+
 - When user saves in Fanculo studio, the `useHotReloadSave` hook triggers
 - Calls `window.fanculoSimpleHotReload.onStudioSave(postId, ["all"])`
 - Fetches current block data from `/wp-json/funculo/v1/post/{postId}` API
 - Sends hot reload signal via BroadcastChannel or localStorage fallback
 
 ### 2. **Communication Layer**
+
 - **Primary**: BroadcastChannel API for instant cross-tab communication
 - **Fallback**: localStorage events for older browsers
 - **Message Format**:
@@ -34,13 +36,15 @@ The new simplified hot reload system uses direct browser-to-browser communicatio
   ```
 
 ### 3. **Gutenberg Editor Side (Receive & Apply)**
-- Listens for hot reload messages via `simple-hot-reload.js`
+
+- Listens for hot reload messages via `hot-reload.js`
 - When message received:
   - Immediately injects updated CSS into editor iframe
   - Refreshes matching blocks in Gutenberg via block selection
   - No polling, no complex PHP services, no file generation triggers
 
 ### 4. **Frontend Side (Optional)**
+
 - Same listener can handle frontend updates
 - Injects CSS immediately for style changes
 - Reloads page for structural (PHP) changes
@@ -48,6 +52,7 @@ The new simplified hot reload system uses direct browser-to-browser communicatio
 ## Architecture Benefits
 
 ### Before (Complex System)
+
 - ❌ Multiple PHP services (MinimalHotReloadService, HotReloadService, etc.)
 - ❌ REST API polling every 2-10 seconds
 - ❌ Complex file generation triggers and coordination
@@ -56,7 +61,8 @@ The new simplified hot reload system uses direct browser-to-browser communicatio
 - ❌ Hard to debug with many moving parts
 
 ### After (Simple System)
-- ✅ Single JavaScript file (`simple-hot-reload.js`)
+
+- ✅ Single JavaScript file (`hot-reload.js`)
 - ✅ Instant BroadcastChannel communication (0ms delay)
 - ✅ Direct browser-to-browser data transfer
 - ✅ Uses existing API endpoints for data fetching
@@ -65,7 +71,7 @@ The new simplified hot reload system uses direct browser-to-browser communicatio
 
 ## Files Changed
 
-1. **New**: `assets/js/simple-hot-reload.js` - Core communication system
+1. **New**: `assets/js/hot-reload.js` - Core communication system
 2. **Modified**: `src/app/hooks/useHotReload.js` - Studio save integration
 3. **Modified**: `app/Services/GutenbergSync.php` - Script loading
 4. **Modified**: `app/App.php` - Removed complex services
@@ -80,11 +86,13 @@ The new simplified hot reload system uses direct browser-to-browser communicatio
 ## Testing
 
 1. **Setup**:
+
    - Open Fanculo studio (admin.php?page=fanculo) and Gutenberg editor in separate tabs
    - Make sure you're logged into WordPress in both tabs
    - Select a block to edit in studio (e.g., "sss" block)
 
 2. **Edit**: Make changes to a block in studio:
+
    - Try changing CSS styles in the "Style" tab
    - Try changing PHP content in the "Content" tab
    - Try changing editor styles in the "Editor Style" tab
@@ -92,6 +100,7 @@ The new simplified hot reload system uses direct browser-to-browser communicatio
 3. **Save**: Press Ctrl+S or Cmd+S in studio (or click save button if available)
 
 4. **Verify**: Changes should appear instantly in Gutenberg editor
+
    - CSS changes: Styles update immediately
    - PHP changes: Block refreshes with new content
    - No page refresh needed
@@ -110,12 +119,14 @@ The new simplified hot reload system uses direct browser-to-browser communicatio
 ## Debugging
 
 Enable console logs to see the communication flow:
+
 ```js
 // In browser console
 window.fanculoSimpleHotReload.debugMode = true;
 ```
 
 Console logs will show:
+
 - `🚀 Sending hot reload signal` (studio side)
 - `📨 Received hot reload message` (editor side)
 - `✅ Injected style for block` (style updates)
