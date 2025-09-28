@@ -1,29 +1,232 @@
 /**
  * Fanculo Development Mode Admin Client
- * Always-on hot reload functionality in Gutenberg editor
+ * Handles admin bar toggle and hot reload functionality in Gutenberg editor
  */
 
 (function() {
     'use strict';
 
+    // Dev Toggle Handler
+    class FanculoDevToggle {
+        constructor() {
+            this.init();
+        }
+
+        init() {
+            const checkbox = document.getElementById('fanculo-dev-checkbox');
+            if (!checkbox) return;
+
+            checkbox.addEventListener('change', (e) => {
+                this.handleToggle(e.target.checked);
+            });
+
+            // Show current connection status
+            this.updateConnectionStatus();
+
+            // Add keyboard shortcut (Ctrl/Cmd + Shift + H)
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'H') {
+                    e.preventDefault();
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event('change'));
+
+                    const message = checkbox.checked ?
+                        'Hot reload enabled via keyboard shortcut' :
+                        'Hot reload disabled via keyboard shortcut';
+                    this.showNotification(message, 'success');
+                }
+            });
+        }
+
+        async handleToggle(enabled) {
+            const toggle = document.querySelector('.fanculo-dev-toggle');
+            const icon = toggle.querySelector('.toggle-icon');
+
+            // Immediate UI feedback
+            toggle.classList.add('loading');
+            icon.textContent = '⏳';
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'fanculo_toggle_dev_mode');
+                formData.append('enable', enabled);
+                formData.append('nonce', fanculoDevData.toggleNonce);
+
+                const response = await fetch(fanculoDevData.ajaxUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const payload = data.data || {};
+                    const isEnabled = !!payload.is_enabled;
+
+                    // Update shared dev data
+                    fanculoDevData.isDevMode = isEnabled;
+                    if (payload.stream_nonce) {
+                        fanculoDevData.streamNonce = payload.stream_nonce;
+                    }
+                    if (payload.stream_url) {
+                        fanculoDevData.streamUrl = payload.stream_url;
+                    }
+
+                    // Update UI state
+                    toggle.classList.remove('loading');
+                    toggle.classList.toggle('active', isEnabled);
+                    toggle.classList.toggle('inactive', !isEnabled);
+                    icon.textContent = isEnabled ? '🔥' : '❄️';
+
+                    // Show success notification
+                    this.showNotification(payload.message || 'Hot reload updated', 'success');
+
+                    // Reconnect/disconnect dev clients
+                    if (isEnabled) {
+                        if (window.fanculoDevInstance?.stopConnection) {
+                            window.fanculoDevInstance.stopConnection();
+                        }
+
+                        if (window.fanculoDevInstance?.startConnection) {
+                            window.fanculoDevInstance.startConnection();
+                        } else if (window.FanculoDevClient) {
+                            window.fanculoDevInstance = new FanculoDevClient();
+                            window.fanculoDevInstance.startConnection?.();
+                        }
+                    } else {
+                        this.disconnectDevClients();
+                    }
+
+                } else {
+                    throw new Error(data.data?.message || 'Toggle failed');
+                }
+
+            } catch (error) {
+                console.error('Dev mode toggle failed:', error);
+
+                // Revert checkbox state
+                document.getElementById('fanculo-dev-checkbox').checked = !enabled;
+                toggle.classList.remove('loading');
+                icon.textContent = !enabled ? '🔥' : '❄️';
+
+                this.showNotification(`Toggle failed: ${error.message}`, 'error');
+            }
+        }
+
+        initializeDevClients() {
+            // Start dev client connection when enabled
+            if (window.fanculoDevInstance?.startConnection) {
+                window.fanculoDevInstance.startConnection();
+            } else if (window.FanculoDevClient) {
+                // Fallback: create new instance if none exists
+                window.fanculoDevInstance = new FanculoDevClient();
+            }
+        }
+
+        disconnectDevClients() {
+            // Stop dev client connection when disabled
+            if (window.fanculoDevInstance?.stopConnection) {
+                window.fanculoDevInstance.stopConnection();
+            }
+            fanculoDevData.isDevMode = false;
+        }
+
+        showNotification(message, type) {
+            // Create floating notification
+            const notification = document.createElement('div');
+            notification.className = `fanculo-notification ${type}`;
+            notification.textContent = message;
+
+            Object.assign(notification.style, {
+                position: 'fixed',
+                top: '40px',
+                right: '20px',
+                padding: '12px 20px',
+                borderRadius: '6px',
+                color: 'white',
+                backgroundColor: type === 'success' ? '#28a745' : '#dc3545',
+                zIndex: '999999',
+                fontSize: '14px',
+                fontWeight: '500',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                transform: 'translateX(100%)',
+                transition: 'transform 0.3s ease'
+            });
+
+            document.body.appendChild(notification);
+
+            // Animate in
+            requestAnimationFrame(() => {
+                notification.style.transform = 'translateX(0)';
+            });
+
+            // Auto remove
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        updateConnectionStatus() {
+            // Add connection indicator to toggle
+            const toggle = document.querySelector('.fanculo-dev-toggle');
+            if (!toggle) return;
+
+            const indicator = document.createElement('span');
+            indicator.className = 'connection-indicator';
+            indicator.title = 'Hot reload connection status';
+
+            // Monitor connection and update indicator
+            if (window.fanculoDevInstance) {
+                indicator.textContent = '●';
+                indicator.style.color = '#28a745'; // Connected
+            } else {
+                indicator.textContent = '●';
+                indicator.style.color = '#6c757d'; // Disconnected
+            }
+
+            toggle.appendChild(indicator);
+        }
+    }
+
     // Hot Reload Client for Gutenberg Editor
     class FanculoDevClient {
         constructor() {
-            console.log('Fanculo Dev: Initializing FanculoDevClient...');
             this.reconnectAttempts = 0;
             this.maxReconnectAttempts = 5;
             this.useEventSource = window.EventSource && !this.isOldBrowser();
             this.isConnected = false;
-            this.shouldReconnect = true; // Always true in always-on mode
+            this.shouldReconnect = Boolean(fanculoDevData?.isDevMode);
 
-            console.log('Fanculo Dev: EventSource support:', this.useEventSource);
-            console.log('Fanculo Dev: Starting connection...');
-
-            // Always start connection immediately
-            this.initConnection();
+            // Only start connection if dev mode is currently enabled
+            if (this.shouldReconnect) {
+                this.initConnection();
+            }
             this.showDevHUD();
+        }
 
-            console.log('Fanculo Dev: FanculoDevClient initialized successfully');
+        // Method to start connection when dev mode is enabled
+        startConnection() {
+            this.shouldReconnect = true;
+            fanculoDevData.isDevMode = true;
+            if (!this.isConnected) {
+                this.initConnection();
+            }
+        }
+
+        // Method to stop connection when dev mode is disabled
+        stopConnection() {
+            this.shouldReconnect = false;
+            this.isConnected = false;
+            if (this.eventSource) {
+                this.eventSource.close();
+                this.eventSource = null;
+            }
+            if (this.pollInterval) {
+                clearInterval(this.pollInterval);
+                this.pollInterval = null;
+            }
+            this.updateHUDStatus('disconnected');
         }
 
         isOldBrowser() {
@@ -32,19 +235,11 @@
         }
 
         initConnection() {
-            if (!this.shouldReconnect) {
-                console.log('Fanculo Dev: Connection disabled, skipping initialization');
+            if (!this.shouldReconnect || !fanculoDevData?.isDevMode) {
                 return;
             }
 
-            if (this.isConnected) {
-                console.log('Fanculo Dev: Already connected, skipping initialization');
-                return;
-            }
-
-            console.log('Fanculo Dev: Establishing connection...');
             this.isConnected = true;
-
             if (this.useEventSource) {
                 this.initEventSource();
             } else {
@@ -344,7 +539,7 @@
         }
 
         handleReconnect() {
-            if (!this.shouldReconnect) {
+            if (!this.shouldReconnect || !fanculoDevData?.isDevMode) {
                 return;
             }
 
@@ -459,35 +654,34 @@
         }
     }
 
-    // Simple initialization - only once
-    function initializeFanculoDevClient() {
-        if (window.fanculoDevInstance) {
-            console.log('Fanculo Dev: Client already initialized');
-            return;
-        }
-
-        if (!window.fanculoDevData) {
-            console.log('Fanculo Dev: fanculoDevData not available - skipping hot reload');
-            return;
-        }
-
-        try {
-            console.log('Fanculo Dev: Initializing hot reload client...');
-            window.fanculoDevInstance = new FanculoDevClient();
-            console.log('Fanculo Dev: Hot reload client initialized successfully');
-        } catch (error) {
-            console.error('Fanculo Dev: Failed to initialize client:', error);
-        }
-    }
-
     // Initialize when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeFanculoDevClient);
-    } else {
-        initializeFanculoDevClient();
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initialize toggle
+        if (document.getElementById('fanculo-dev-checkbox')) {
+            window.fanculoToggle = new FanculoDevToggle();
+        }
+
+        // Initialize dev client if we have the required data (regardless of current dev mode state)
+        if (fanculoDevData &&
+            (wp?.data?.select('core')?.canUser('create', 'posts') ||
+             document.querySelector('#fanculo-dev-checkbox'))) {
+            window.fanculoDevInstance = new FanculoDevClient();
+        }
+    });
+
+    // Also try to initialize when WordPress is ready (for Gutenberg)
+    if (window.wp?.domReady) {
+        wp.domReady(() => {
+            if (fanculoDevData &&
+                wp?.data?.select('core/block-editor')?.getBlocks &&
+                !window.fanculoDevInstance) {
+                window.fanculoDevInstance = new FanculoDevClient();
+            }
+        });
     }
 
-    // Expose class globally for debugging
+    // Expose classes globally for debugging
+    window.FanculoDevToggle = FanculoDevToggle;
     window.FanculoDevClient = FanculoDevClient;
 
 })();
