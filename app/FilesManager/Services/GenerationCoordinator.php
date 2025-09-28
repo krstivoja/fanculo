@@ -34,10 +34,8 @@ class GenerationCoordinator
             return;
         }
 
-        // Smart save: just regenerate (with logging to debug any issues)
-        error_log("Fanculo: Starting file generation for post {$postId} ({$post->post_title})");
+        // Smart save: just regenerate
         $this->generateFilesForSinglePost($postId, $post);
-        error_log("Fanculo: Completed file generation for post {$postId}");
 
         // Check if this post affects global files
         if ($this->globalRegenerator->detectGlobalImpact($postId, $post)) {

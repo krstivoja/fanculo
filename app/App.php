@@ -111,25 +111,12 @@ class App
      */
     public function initializeServices(): void
     {
-        error_log('Fanculo: Starting service initialization...');
-
         try {
-            error_log('Fanculo: Initializing FileGenerationService...');
             // new FileGenerationService(); // TEMPORARILY DISABLED - THIS IS CAUSING THE WHITE SCREEN
-
-            error_log('Fanculo: Initializing BlockRegistrationService...');
             new BlockRegistrationService();
-
-            error_log('Fanculo: Initializing InnerBlocksService...');
             new InnerBlocksService();
-
-            error_log('Fanculo: Initializing GutenbergSync...');
             new GutenbergSync();
-
-            error_log('Fanculo: All services initialized successfully');
         } catch (Throwable $e) {
-            error_log('Fanculo: Service initialization failed: ' . $e->getMessage());
-            error_log('Fanculo: Stack trace: ' . $e->getTraceAsString());
             throw $e;
         }
     }

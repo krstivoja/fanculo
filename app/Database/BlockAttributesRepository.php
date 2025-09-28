@@ -147,7 +147,6 @@ class BlockAttributesRepository
         } catch (\Exception $e) {
             // Rollback transaction
             $wpdb->query('ROLLBACK');
-            error_log('Fanculo: Failed to save block attributes - ' . $e->getMessage());
             return false;
         }
     }
@@ -311,7 +310,6 @@ class BlockAttributesRepository
         if (is_string($attributes_json)) {
             $attributes = json_decode($attributes_json, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                error_log("Fanculo: Failed to parse attributes JSON for post $post_id");
                 return false;
             }
         } elseif (is_array($attributes_json)) {

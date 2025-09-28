@@ -105,8 +105,6 @@ class BlockAttributesApiController
             ]
         ]);
 
-        error_log('Fanculo: Route registration result for blocks/attributes: success');
-
         // Single attribute operations
         register_rest_route('fanculo/v1', '/blocks/(?P<post_id>\d+)/attributes/(?P<attr_id>\d+)', [
             [
