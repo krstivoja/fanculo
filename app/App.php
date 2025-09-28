@@ -8,7 +8,6 @@ use Fanculo\Admin\Api\Api;
 use Fanculo\Content\FunculoPostType;
 use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Content\MetaBoxes\MetaBoxHelper;
-use Fanculo\Services\FileGenerationService;
 use Fanculo\Services\BlockRegistrationService;
 use Fanculo\Services\InnerBlocksService;
 // Removed HotReloadService - using simple browser communication
@@ -112,7 +111,6 @@ class App
     public function initializeServices(): void
     {
         try {
-            // new FileGenerationService(); // TEMPORARILY DISABLED - THIS IS CAUSING THE WHITE SCREEN
             new BlockRegistrationService();
             new InnerBlocksService();
             new GutenbergSync();

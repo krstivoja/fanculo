@@ -48,9 +48,7 @@ class ContentTypeProcessor
             $generator->generate($postId, $post, $outputPath);
 
             // Trigger hot reload event if file changed
-            error_log("Fanculo ContentTypeProcessor: File change check for {$generator->getGeneratedFileName($post)} - changed: " . ($fileChanged ? 'yes' : 'no'));
             if ($fileChanged) {
-                error_log("Fanculo ContentTypeProcessor: Triggering fanculo_file_generated action for post $postId, file {$generator->getGeneratedFileName($post)}");
                 do_action('fanculo_file_generated', $postId, $generator->getGeneratedFileName($post), $filePath, $fileChanged);
             }
         }
@@ -173,49 +171,11 @@ class ContentTypeProcessor
     }
 
     /**
-     * Check if file content has changed by comparing with existing file
+     * Check if file content has changed - simplified for hot reload
      */
     private function hasFileContentChanged(int $postId, string $filePath, $generator): bool
     {
-        // If file doesn't exist, it's considered changed
-        if (!file_exists($filePath)) {
-            return true;
-        }
-
-        // Get current file content
-        $currentContent = file_get_contents($filePath);
-        if ($currentContent === false) {
-            return true;
-        }
-
-        // Generate new content to compare
-        $tempPost = get_post($postId);
-        if (!$tempPost) {
-            return false;
-        }
-
-        // Create a temporary file to get the new content
-        $tempPath = $filePath . '.temp';
-        $generated = $generator->generate($postId, $tempPost, dirname($filePath));
-        
-        if (!$generated) {
-            return false;
-        }
-
-        // Read the newly generated content
-        $newContent = file_get_contents($filePath);
-        if ($newContent === false) {
-            return false;
-        }
-
-        // Compare content
-        $changed = $currentContent !== $newContent;
-
-        // Clean up temp file if it was created
-        if (file_exists($tempPath)) {
-            unlink($tempPath);
-        }
-
-        return $changed;
+        // Always assume file changed for hot reload - let the browser handle optimization
+        return true;
     }
 }
