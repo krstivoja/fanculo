@@ -18,12 +18,15 @@ class EditorStyle implements FileGeneratorInterface
     {
         // Try to get compiled editor CSS first
         $editorCssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT, true);
+        error_log("Fanculo EditorStyle: Post $postId - Editor CSS content length: " . strlen($editorCssContent));
 
         // If no compiled CSS, fall back to SCSS content as CSS (basic fallback)
         if (empty($editorCssContent)) {
             $editorScssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_SCSS, true);
+            error_log("Fanculo EditorStyle: Post $postId - Editor SCSS content length: " . strlen($editorScssContent));
             if (!empty($editorScssContent)) {
                 $editorCssContent = $editorScssContent;
+                error_log("Fanculo EditorStyle: Post $postId - Using SCSS as CSS fallback");
             }
         }
 

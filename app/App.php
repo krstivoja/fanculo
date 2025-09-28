@@ -4,12 +4,15 @@ namespace Fanculo;
 
 use Fanculo\Admin\SettingsPage;
 use Fanculo\Admin\Api\Api;
+// Removed complex hot reload API controllers
 use Fanculo\Content\FunculoPostType;
 use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Content\MetaBoxes\MetaBoxHelper;
 use Fanculo\Services\FileGenerationService;
 use Fanculo\Services\BlockRegistrationService;
 use Fanculo\Services\InnerBlocksService;
+// Removed HotReloadService - using simple browser communication
+use Fanculo\Services\GutenbergSync;
 use Fanculo\Helpers\PluginHelper;
 use Fanculo\Database\DatabaseInstaller;
 
@@ -100,6 +103,7 @@ class App
     public function initializeRestApi(): void
     {
         new Api();
+        // Removed complex hot reload API controllers - using simple browser-to-browser communication
     }
 
     /**
@@ -107,8 +111,27 @@ class App
      */
     public function initializeServices(): void
     {
-        new FileGenerationService();
-        new BlockRegistrationService();
-        new InnerBlocksService();
+        error_log('Fanculo: Starting service initialization...');
+
+        try {
+            error_log('Fanculo: Initializing FileGenerationService...');
+            // new FileGenerationService(); // TEMPORARILY DISABLED - THIS IS CAUSING THE WHITE SCREEN
+
+            error_log('Fanculo: Initializing BlockRegistrationService...');
+            new BlockRegistrationService();
+
+            error_log('Fanculo: Initializing InnerBlocksService...');
+            new InnerBlocksService();
+
+            error_log('Fanculo: Initializing GutenbergSync...');
+            new GutenbergSync();
+
+            error_log('Fanculo: All services initialized successfully');
+        } catch (Throwable $e) {
+            error_log('Fanculo: Service initialization failed: ' . $e->getMessage());
+            error_log('Fanculo: Stack trace: ' . $e->getTraceAsString());
+            throw $e;
+        }
     }
+
 }

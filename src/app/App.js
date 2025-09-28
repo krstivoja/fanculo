@@ -6,6 +6,7 @@ import EditorSettings from './components/editor/EditorSettings';
 import EditorNoPosts from './components/editor/EditorNoPosts';
 import { Toast } from './components/ui';
 import { compileScss, apiClient, errorHandler } from '../utils';
+import { useHotReloadSave } from './hooks/useHotReload';
 import './style.css';
 
 
@@ -182,8 +183,8 @@ const App = () => {
         }
     };
 
-    // Save meta data
-    const handleSave = async () => {
+    // Original save function without hot reload
+    const originalHandleSave = async () => {
         setSaveStatus('saving');
 
         try {
@@ -313,6 +314,16 @@ const App = () => {
             setSaveStatus('error');
         }
     };
+
+    // Hot reload-enabled save function
+    const { saveWithHotReload } = useHotReloadSave(
+        selectedPost?.id,
+        'block.json', // Default file type for triggering hot reload
+        originalHandleSave
+    );
+
+    // Use the wrapped save function
+    const handleSave = saveWithHotReload;
 
     const fetchPosts = async (showLoading = true) => {
         try {

@@ -7,10 +7,12 @@ use Fanculo\FilesManager\FilesManagerService;
 class FileGenerationService
 {
     private $filesManagerService;
+    private $hotReloadService;
 
     public function __construct()
     {
         $this->filesManagerService = new FilesManagerService();
+        $this->hotReloadService = new MinimalHotReloadService();
         $this->initializeHooks();
     }
 
@@ -30,6 +32,9 @@ class FileGenerationService
 
         // Add admin action for manual testing
         add_action('wp_ajax_fanculo_test_generation', [$this, 'testFileGeneration']);
+        
+        // Hook into file generation completion for hot reload
+        add_action('fanculo_file_generated', [$this, 'onFileGenerated'], 10, 4);
     }
 
     public function onPostSave($postId, $post, $update)
@@ -89,5 +94,45 @@ class FileGenerationService
         $result = $this->filesManagerService->debugTest();
         echo esc_html($result);
         wp_die();
+    }
+
+    /**
+     * Handle file generation completion and trigger hot reload
+     * 
+     * @param int $postId The post ID
+     * @param string $fileType The type of file generated
+     * @param string $filePath The path to the generated file
+     * @param bool $fileChanged Whether the file content actually changed
+     */
+    public function onFileGenerated(int $postId, string $fileType, string $filePath, bool $fileChanged): void
+    {
+        // Trigger hot reload if file changed
+        if ($fileChanged) {
+            $this->hotReloadService->onFileGenerated($postId, $fileType, $filePath, $fileChanged);
+        }
+    }
+
+    /**
+     * Get hot reload service instance
+     */
+    public function getHotReloadService(): MinimalHotReloadService
+    {
+        return $this->hotReloadService;
+    }
+
+    /**
+     * Enable or disable hot reload
+     */
+    public function setHotReloadEnabled(bool $enabled): void
+    {
+        $this->hotReloadService->setEnabled($enabled);
+    }
+
+    /**
+     * Check if hot reload is enabled
+     */
+    public function isHotReloadEnabled(): bool
+    {
+        return $this->hotReloadService->isEnabled();
     }
 }
