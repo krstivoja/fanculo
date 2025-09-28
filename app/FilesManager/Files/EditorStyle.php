@@ -17,11 +17,12 @@ class EditorStyle implements FileGeneratorInterface
     public function generate(int $postId, WP_Post $post, string $outputPath): bool
     {
         // Try to get compiled editor CSS first
-        $editorCssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT, true);
+        $editorCssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT, true);        
 
         // If no compiled CSS, fall back to SCSS content as CSS (basic fallback)
         if (empty($editorCssContent)) {
             $editorScssContent = get_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_SCSS, true);
+            
             if (!empty($editorScssContent)) {
                 $editorCssContent = $editorScssContent;
             }

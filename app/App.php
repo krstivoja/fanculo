@@ -4,12 +4,14 @@ namespace Fanculo;
 
 use Fanculo\Admin\SettingsPage;
 use Fanculo\Admin\Api\Api;
+// Removed complex hot reload API controllers
 use Fanculo\Content\FunculoPostType;
 use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Content\MetaBoxes\MetaBoxHelper;
-use Fanculo\Services\FileGenerationService;
 use Fanculo\Services\BlockRegistrationService;
 use Fanculo\Services\InnerBlocksService;
+// Removed HotReloadService - using simple browser communication
+use Fanculo\Services\GutenbergSync;
 use Fanculo\Helpers\PluginHelper;
 use Fanculo\Database\DatabaseInstaller;
 
@@ -100,6 +102,7 @@ class App
     public function initializeRestApi(): void
     {
         new Api();
+        // Removed complex hot reload API controllers - using simple browser-to-browser communication
     }
 
     /**
@@ -107,8 +110,13 @@ class App
      */
     public function initializeServices(): void
     {
-        new FileGenerationService();
-        new BlockRegistrationService();
-        new InnerBlocksService();
+        try {
+            new BlockRegistrationService();
+            new InnerBlocksService();
+            new GutenbergSync();
+        } catch (Throwable $e) {
+            throw $e;
+        }
     }
+
 }

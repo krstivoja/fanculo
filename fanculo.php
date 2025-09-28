@@ -49,4 +49,3 @@ require_once $autoloader;
 add_action('plugins_loaded', function() {
     \Fanculo\App::boot(FANCULO_PLUGIN_FILE);
 });
-

@@ -220,7 +220,6 @@ class BlockSettingsRepository
         }
 
         if ($result === false) {
-            error_log('Fanculo: Failed to save block settings - ' . $wpdb->last_error);
             return false;
         }
 

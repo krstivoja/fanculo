@@ -70,7 +70,6 @@ class ScssPartialsSettingsRepository
         }
 
         if ($result === false) {
-            error_log('Fanculo: Failed to save SCSS partial settings - ' . $wpdb->last_error);
             return false;
         }
 

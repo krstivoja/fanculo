@@ -3,19 +3,18 @@
 namespace Fanculo\Services;
 
 use Fanculo\FilesManager\Services\InnerBlocksProcessor;
+use function add_action;
 
 /**
  * Handles InnerBlocks-related WordPress hooks and script enqueuing
  */
 class InnerBlocksService
 {
+    private ScriptLoader $loader;
+
     public function __construct()
     {
-        $this->initHooks();
-    }
-
-    private function initHooks(): void
-    {
+        $this->loader = new ScriptLoader();
         add_action('enqueue_block_editor_assets', [$this, 'enqueueParserScript'], 5); // Load early
     }
 
@@ -24,14 +23,7 @@ class InnerBlocksService
      */
     public function enqueueParserScript(): void
     {
-        // Always enqueue the new block renderer for all blocks
-        wp_enqueue_script(
-            'fanculo-block-renderer',
-            FANCULO_URL . 'assets/js/block-renderer.js',
-            ['wp-element', 'wp-block-editor', 'wp-components', 'wp-data'],
-            FANCULO_VERSION,
-            true
-        );
+        $this->loader->enqueueBlockRenderer();
 
         // Enqueue the old parser only if needed for InnerBlocks
         InnerBlocksProcessor::enqueueParserScript();

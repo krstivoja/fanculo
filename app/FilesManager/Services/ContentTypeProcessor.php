@@ -40,7 +40,17 @@ class ContentTypeProcessor
                 continue;
             }
 
+            // Check if file content has changed before generating
+            $filePath = $outputPath . '/' . $generator->getGeneratedFileName($post);
+            $fileChanged = $this->hasFileContentChanged($postId, $filePath, $generator);
+
+            // Generate the file
             $generator->generate($postId, $post, $outputPath);
+
+            // Trigger hot reload event if file changed
+            if ($fileChanged) {
+                do_action('fanculo_file_generated', $postId, $generator->getGeneratedFileName($post), $filePath, $fileChanged);
+            }
         }
     }
 
@@ -157,6 +167,15 @@ class ContentTypeProcessor
     public function requiresValidation(string $contentType): bool
     {
         // All content types should be validated
+        return true;
+    }
+
+    /**
+     * Check if file content has changed - simplified for hot reload
+     */
+    private function hasFileContentChanged(int $postId, string $filePath, $generator): bool
+    {
+        // Always assume file changed for hot reload - let the browser handle optimization
         return true;
     }
 }
