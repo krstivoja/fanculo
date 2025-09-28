@@ -32,7 +32,6 @@ class Api
         $this->registeredBlocksController = new RegisteredBlocksApiController();
         $this->blockAttributesController = new BlockAttributesApiController();
 
-
     }
 
     // Note: Route registration is now handled by individual controllers

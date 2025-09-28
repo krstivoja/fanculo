@@ -10,7 +10,6 @@ use Fanculo\Content\MetaBoxes\MetaBoxHelper;
 use Fanculo\Services\FileGenerationService;
 use Fanculo\Services\BlockRegistrationService;
 use Fanculo\Services\InnerBlocksService;
-use Fanculo\Dev\HotReloadService;
 use Fanculo\Helpers\PluginHelper;
 use Fanculo\Database\DatabaseInstaller;
 
@@ -111,8 +110,5 @@ class App
         new FileGenerationService();
         new BlockRegistrationService();
         new InnerBlocksService();
-
-        // Initialize hot reload service (dev environment only)
-        new HotReloadService();
     }
 }

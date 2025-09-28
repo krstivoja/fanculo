@@ -4,7 +4,6 @@ namespace Fanculo\FilesManager\Services;
 
 use Fanculo\Content\FunculoPostType;
 use Fanculo\Content\FunculoTypeTaxonomy;
-use Fanculo\Services\DevReloadManager;
 use WP_Post;
 
 class GenerationCoordinator
@@ -132,29 +131,6 @@ class GenerationCoordinator
 
         foreach ($terms as $term) {
             $this->contentTypeProcessor->processContentType($postId, $post, $term->slug);
-
-            // Record hot reload events based on content type
-            error_log("Fanculo GenerationCoordinator: Processing content type '{$term->slug}' for post '{$post->post_name}' (ID: {$postId})");
-            switch ($term->slug) {
-                case 'block':
-                    error_log("Fanculo GenerationCoordinator: Recording block_updated event");
-                    DevReloadManager::recordBlockUpdated($post->post_name, $postId);
-                    break;
-                case 'symbol':
-                    DevReloadManager::recordSymbolUpdated($post->post_name);
-                    break;
-                case 'scss-partial':
-                    DevReloadManager::recordScssUpdated($post->post_name);
-                    break;
-                default:
-                    DevReloadManager::recordEvent('content_updated', [
-                        'type' => $term->slug,
-                        'slug' => $post->post_name,
-                        'post_id' => $postId,
-                        'message' => "Content '{$post->post_name}' of type '{$term->slug}' updated"
-                    ]);
-                    break;
-            }
         }
     }
 
