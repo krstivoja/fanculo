@@ -2,36 +2,51 @@
 
 namespace Fanculo\FilesManager\Files;
 
+use Fanculo\FilesManager\Interfaces\FileGeneratorInterface;
+use Fanculo\Content\FunculoTypeTaxonomy;
+use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use Fanculo\FilesManager\Services\AttributeMapper;
 use Fanculo\Database\BlockSettingsRepository;
+use WP_Post;
 
-class Index
+class Index implements FileGeneratorInterface
 {
-    public static function generate(string $blockDir, string $blockSlug, int $postId = null): bool
+    public function canGenerate(string $contentType): bool
     {
-        $indexJsPath = $blockDir . '/index.js';
+        return $contentType === FunculoTypeTaxonomy::getTermBlocks();
+    }
 
-        // Get inner blocks settings from database if post ID is provided
+    public function generate(int $postId, WP_Post $post, string $outputPath): bool
+    {
+        // Verify and create output path if needed
+        if (!is_dir($outputPath)) {
+            if (!wp_mkdir_p($outputPath)) {
+                error_log('Index Generator: Failed to create output directory: ' . $outputPath);
+                return false;
+            }
+        }
+
+        $indexJsPath = $outputPath . '/' . $this->getGeneratedFileName($post);
+        $blockSlug = $post->post_name;
+
+        // Get inner blocks settings from database
         $innerBlocksEnabled = false;
         $allowedBlocks = [];
-        $dbSettings = null;
+        $dbSettings = BlockSettingsRepository::get($postId);
 
-        if ($postId) {
-            $dbSettings = BlockSettingsRepository::get($postId);
-            if ($dbSettings) {
-                $innerBlocksEnabled = $dbSettings['supports_inner_blocks'];
-                $allowedBlocks = $dbSettings['allowed_block_types'] ?? [];
+        if ($dbSettings) {
+            $innerBlocksEnabled = $dbSettings['supports_inner_blocks'];
+            $allowedBlocks = $dbSettings['allowed_block_types'] ?? [];
 
-                // Additional validation for allowed blocks array
-                $allowedBlocks = array_filter($allowedBlocks, function($block) {
-                    return is_string($block) && !empty($block);
-                });
-            }
+            // Additional validation for allowed blocks array
+            $allowedBlocks = array_filter($allowedBlocks, function($block) {
+                return is_string($block) && !empty($block);
+            });
         }
 
         // Detect InnerBlocks usage directly in the render template
         $renderContainsInnerBlocks = false;
-        $renderPath = $blockDir . '/render.php';
+        $renderPath = $outputPath . '/render.php';
         if (file_exists($renderPath)) {
             $renderContent = file_get_contents($renderPath);
             if ($renderContent !== false) {
@@ -53,7 +68,7 @@ class Index
             $template = '[]'; // Default to empty template
             $templateLock = 'false';
 
-            if ($postId && $dbSettings) {
+            if ($dbSettings) {
                 // Convert template array to nested format for InnerBlocks
                 if (!empty($dbSettings['template'])) {
                     $templateArray = [];
@@ -101,14 +116,14 @@ class Index
         $blockTitle = get_the_title($postId) ?: 'Untitled Block';
         $blockDescription = '';
 
-        if ($postId && $dbSettings) {
+        if ($dbSettings) {
             $blockDescription = !empty($dbSettings['description']) ? sanitize_text_field($dbSettings['description']) : '';
         }
 
         // Generate sidebar controls based on attributes
         $sidebarControls = '';
         $hasAttributes = false;
-        if ($postId && AttributeMapper::hasAttributes($postId)) {
+        if (AttributeMapper::hasAttributes($postId)) {
             $hasAttributes = true;
             $sidebarControls = AttributeMapper::generateSidebarControls($postId);
         }
@@ -161,19 +176,10 @@ class Index
             }
         });
     });
-})()';;
+})()';
 
         // Replace the placeholder with actual block slug
         $content = str_replace('BLOCK_SLUG_PLACEHOLDER', $blockSlug, $content);
-
-        // Ensure the target directory exists
-        $blockDirPath = dirname($indexJsPath);
-        if (!is_dir($blockDirPath)) {
-            if (!wp_mkdir_p($blockDirPath)) {
-                error_log('Fanculo Index Generator: Failed to create directory: ' . $blockDirPath);
-                return false;
-            }
-        }
 
         // Write the file with error handling and logging
         error_log("Fanculo Index Generator: Writing to {$indexJsPath}");
@@ -185,6 +191,39 @@ class Index
         }
 
         error_log("Fanculo Index Generator: Successfully wrote {$result} bytes to {$indexJsPath}");
+        return true;
+    }
+
+    public function getRequiredMetaKeys(): array
+    {
+        return [
+            MetaKeysConstants::BLOCK_ATTRIBUTES,
+            MetaKeysConstants::BLOCK_PHP,
+        ];
+    }
+
+    public function getGeneratedFileName(WP_Post $post): string
+    {
+        return 'index.js';
+    }
+
+    public function getFileExtension(): string
+    {
+        return 'js';
+    }
+
+    public function validate(int $postId): bool
+    {
+        // Check if this is a block post type
+        $post = get_post($postId);
+        if (!$post) {
+            return false;
+        }
+
+        // Validate that required block settings exist
+        $dbSettings = BlockSettingsRepository::get($postId);
+
+        // Index.js can be generated for any block, even without explicit settings
         return true;
     }
 }
