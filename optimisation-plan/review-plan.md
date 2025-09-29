@@ -9,8 +9,8 @@ plugin shows good engineering practices but has several areas for improvement.
 ### PHP Architecture Issues
 
 1. ~~ Inconsistent namespace usage - Mix of Fanculo\ and missing namespaces ~~
-2. N+1 query problems in PostsApiController despite bulk optimizations
-3. Large monolithic controllers - PostsApiController is 1300+ lines
+2. ~~ N+1 query problems in PostsApiController despite bulk optimizations ~~
+3. ~~ Large monolithic controllers - PostsApiController is 1300+ lines ~~
 4. Inconsistent error handling patterns across services
 5. Missing interface implementations for file generators
 
