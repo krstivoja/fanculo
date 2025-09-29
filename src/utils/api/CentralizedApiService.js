@@ -132,15 +132,15 @@ class CentralizedApiService {
   }
 
   /**
-   * Delete post - invalidates relevant caches
+   * Delete post - invalidates relevant caches (optimized)
    */
   async deletePost(postId) {
     const result = await this.apiClient.deletePost(postId);
 
-    // Invalidate related caches
+    // Invalidate only specific caches to avoid performance issues
     this.cache.invalidate(this.cache.generateKey('post-with-related', { postId }));
+    this.cache.invalidate(this.cache.generateKey('post', { postId }));
     this.cache.invalidatePattern('posts');
-    this.cache.invalidatePattern('scss-partials');
 
     return result;
   }
@@ -206,6 +206,20 @@ class CentralizedApiService {
     this.cache.clear();
 
     return result;
+  }
+
+  /**
+   * Warm cache with frequently accessed data
+   */
+  async warmCache() {
+    const warmingFunctions = {
+      'posts': () => this.apiClient.getPosts({ per_page: 100 }),
+      'scss-partials': () => this.apiClient.getScssPartials(),
+      'registered-blocks': () => this.apiClient.getRegisteredBlocks(),
+      'block-categories': () => this.apiClient.getBlockCategories()
+    };
+
+    await this.cache.warmCache(warmingFunctions);
   }
 
   /**

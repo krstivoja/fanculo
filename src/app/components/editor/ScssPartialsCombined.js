@@ -3,28 +3,11 @@ import ScssPartialsManager from './ScssPartialsManager';
 import { apiClient } from '../../../utils';
 import centralizedApi from '../../../utils/api/CentralizedApiService';
 
-const ScssPartialsCombined = ({ selectedPost, metaData, onMetaChange }) => {
-  const [globalPartials, setGlobalPartials] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Load global partials data on component mount
-  useEffect(() => {
-    if (selectedPost?.id) {
-      loadGlobalPartials();
-    }
-  }, [selectedPost?.id]);
-
-  const loadGlobalPartials = async () => {
-    try {
-      const data = await centralizedApi.getScssPartials();
-      console.log('SCSS Partials API Response:', data);
-      setGlobalPartials(data.global_partials || []);
-    } catch (error) {
-      console.error('Error loading partials:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+const ScssPartialsCombined = ({ selectedPost, metaData, onMetaChange, sharedData, dataLoading }) => {
+  // Get partials data from shared data (no API call needed)
+  const globalPartials = sharedData?.scssPartials?.global_partials || [];
+  const availablePartials = sharedData?.scssPartials?.available_partials || [];
+  const loading = dataLoading?.scssPartials || false;
 
   if (loading) {
     return <div className="p-4 text-center text-contrast">Loading partials...</div>;
@@ -62,6 +45,8 @@ const ScssPartialsCombined = ({ selectedPost, metaData, onMetaChange }) => {
             onMetaChange={onMetaChange}
             mode="style"
             hideGlobalPartials={true}
+            sharedData={sharedData}
+            dataLoading={dataLoading}
           />
         </div>
       </div>
@@ -76,6 +61,8 @@ const ScssPartialsCombined = ({ selectedPost, metaData, onMetaChange }) => {
             onMetaChange={onMetaChange}
             mode="editorStyle"
             hideGlobalPartials={true}
+            sharedData={sharedData}
+            dataLoading={dataLoading}
           />
         </div>
       </div>

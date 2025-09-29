@@ -11,14 +11,32 @@ import { useHotReloadSave } from "../hooks/useHotReload";
 import "./style.css";
 
 const App = () => {
+  // Core data state
   const [groupedPosts, setGroupedPosts] = useState({
     blocks: [],
     symbols: [],
     "scss-partials": [],
   });
-  const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState(null);
   const [metaData, setMetaData] = useState({});
+
+  // Shared data state - fetched once and passed down to children
+  const [sharedData, setSharedData] = useState({
+    scssPartials: { global_partials: [], available_partials: [] },
+    registeredBlocks: [],
+    blockCategories: [],
+  });
+
+  // Loading states
+  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState({
+    posts: true,
+    scssPartials: true,
+    registeredBlocks: true,
+    blockCategories: true,
+  });
+
+  // App state
   const [saveStatus, setSaveStatus] = useState("");
   const [scssError, setScssError] = useState(null);
   const [showToast, setShowToast] = useState(false);
@@ -348,77 +366,110 @@ const App = () => {
   // Use the wrapped save function
   const handleSave = saveWithHotReload;
 
-  const fetchPosts = useCallback(async (showLoading = true) => {
+  // Centralized data loading with cache warming and parallel fetching
+  const loadAllData = useCallback(async (showInitialLoading = true) => {
     try {
-      if (showLoading) setLoading(true);
+      if (showInitialLoading) setLoading(true);
 
-      // Use centralized API service with caching and deduplication
-      const data = await centralizedApi.getPosts({ per_page: 100 });
-      const posts = data.posts || [];
+      // Warm cache in background for instant subsequent access
+      centralizedApi.warmCache().catch(error => {
+        console.warn('Cache warming failed:', error);
+      });
 
-      // Pre-allocate arrays for better performance
-      const grouped = {
-        blocks: [],
-        symbols: [],
-        "scss-partials": [],
-      };
+      // Load all shared data in parallel for maximum performance
+      const [postsResult, scssPartialsResult, registeredBlocksResult, blockCategoriesResult] = await Promise.allSettled([
+        centralizedApi.getPosts({ per_page: 100 }),
+        centralizedApi.getScssPartials(),
+        centralizedApi.getRegisteredBlocks(),
+        centralizedApi.getBlockCategories()
+      ]);
 
-      // Group posts by their taxonomy terms
-      for (let i = 0; i < posts.length; i++) {
-        const post = posts[i];
-        const terms = post.terms;
+      // Process posts data
+      if (postsResult.status === 'fulfilled') {
+        const posts = postsResult.value.posts || [];
+        const grouped = { blocks: [], symbols: [], "scss-partials": [] };
 
-        if (terms && terms.length > 0) {
-          const termSlug = terms[0].slug;
-          if (grouped[termSlug]) {
-            grouped[termSlug].push(post);
+        // Group posts by taxonomy terms
+        for (const post of posts) {
+          const terms = post.terms;
+          if (terms && terms.length > 0) {
+            const termSlug = terms[0].slug;
+            if (grouped[termSlug]) {
+              grouped[termSlug].push(post);
+            }
+          }
+        }
+        setGroupedPosts(grouped);
+
+        // Background preload commonly accessed posts
+        const allPosts = [...grouped.blocks, ...grouped.symbols, ...grouped["scss-partials"]];
+        if (allPosts.length > 1 && showInitialLoading) {
+          const preloadIds = allPosts.slice(1, 4).map(post => post.id);
+          if (preloadIds.length > 0) {
+            centralizedApi.getBatchPostsWithRelated(preloadIds).catch(error => {
+              console.warn('Background preloading failed:', error);
+            });
+          }
+        }
+
+        // Auto-select first post if none selected
+        if (!selectedPost && showInitialLoading) {
+          const firstPost = grouped.blocks[0] || grouped.symbols[0] || grouped["scss-partials"][0];
+          if (firstPost) {
+            handlePostSelect(firstPost);
           }
         }
       }
 
-      setGroupedPosts(grouped);
+      // Update shared data state with results
+      setSharedData(prevData => ({
+        ...prevData,
+        scssPartials: scssPartialsResult.status === 'fulfilled'
+          ? scssPartialsResult.value
+          : prevData.scssPartials,
+        registeredBlocks: registeredBlocksResult.status === 'fulfilled'
+          ? (Array.isArray(registeredBlocksResult.value) ? registeredBlocksResult.value : registeredBlocksResult.value?.blocks || registeredBlocksResult.value?.data || [])
+          : prevData.registeredBlocks,
+        blockCategories: blockCategoriesResult.status === 'fulfilled'
+          ? (Array.isArray(blockCategoriesResult.value) ? blockCategoriesResult.value : [])
+          : prevData.blockCategories
+      }));
 
-      // Batch preload commonly accessed posts for better performance
-      const allPosts = [...grouped.blocks, ...grouped.symbols, ...grouped["scss-partials"]];
-      if (allPosts.length > 1 && showLoading) {
-        // Preload first 3 posts in background for faster access
-        const preloadIds = allPosts.slice(1, 4).map(post => post.id);
-        if (preloadIds.length > 0) {
-          centralizedApi.getBatchPostsWithRelated(preloadIds).catch(error => {
-            console.warn('Background preloading failed:', error);
-          });
-        }
-      }
-
-      // Auto-select the first available post if none is selected
-      if (!selectedPost && showLoading) {
-        const firstPost =
-          grouped.blocks[0] ||
-          grouped.symbols[0] ||
-          grouped["scss-partials"][0];
-        if (firstPost) {
-          handlePostSelect(firstPost);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching posts:", error);
-      setGroupedPosts({
-        blocks: [],
-        symbols: [],
-        "scss-partials": [],
+      // Update individual loading states for fine-grained control
+      setDataLoading({
+        posts: postsResult.status !== 'fulfilled',
+        scssPartials: scssPartialsResult.status !== 'fulfilled',
+        registeredBlocks: registeredBlocksResult.status !== 'fulfilled',
+        blockCategories: blockCategoriesResult.status !== 'fulfilled'
       });
+
+    } catch (error) {
+      console.error('Error loading app data:', error);
+      setGroupedPosts({ blocks: [], symbols: [], "scss-partials": [] });
     } finally {
-      if (showLoading) setLoading(false);
+      if (showInitialLoading) setLoading(false);
     }
   }, [selectedPost, handlePostSelect]);
 
-  // Function to refresh the posts list (can be called after creating new posts)
-  const refreshPosts = useCallback(() => {
-    fetchPosts(false);
-  }, [fetchPosts]);
+  // Function to refresh all data (can be called after creating new posts)
+  const refreshData = useCallback(() => {
+    loadAllData(false);
+  }, [loadAllData]);
 
-  // Handle post deletion
+  // Handle post deletion with optimistic updates
   const handlePostDelete = useCallback((deletedPostId) => {
+    // Optimistically update the UI first for immediate feedback
+    setGroupedPosts(prevGrouped => {
+      const updated = { ...prevGrouped };
+
+      // Remove the deleted post from the appropriate group
+      Object.keys(updated).forEach(key => {
+        updated[key] = updated[key].filter(post => post.id !== deletedPostId);
+      });
+
+      return updated;
+    });
+
     // Clear selected post if it was the one deleted
     if (selectedPost && selectedPost.id === deletedPostId) {
       setSelectedPost(null);
@@ -426,47 +477,51 @@ const App = () => {
       setSaveStatus("");
     }
 
-    // Refresh the posts list to remove the deleted post
-    refreshPosts();
-  }, [selectedPost, refreshPosts]);
+    // No need to clear cache - deletion already handles cache invalidation
+    // The optimistic update provides immediate UI feedback
+  }, [selectedPost]);
 
-  // Handle post creation
+  // Handle post creation with optimistic updates
   const handlePostCreate = useCallback(async (postData) => {
     try {
-      // Use centralized API service which handles cache invalidation
+      // Create post via API
       const newPost = await centralizedApi.createPost({
         title: postData.title,
         taxonomy_term: postData.type,
         status: "publish",
       });
 
-      // Refresh posts to include the new post
-      refreshPosts();
+      // Optimistically add the new post to the UI
+      setGroupedPosts(prevGrouped => {
+        const updated = { ...prevGrouped };
+        const termSlug = postData.type;
+
+        // Add to the appropriate group
+        if (updated[termSlug]) {
+          updated[termSlug] = [...updated[termSlug], newPost];
+        }
+
+        return updated;
+      });
+
       // Auto-select the newly created post
       setTimeout(() => {
         handlePostSelect(newPost);
       }, 100);
+
+      // Cache is already invalidated by createPost method
+      // Optimistic update provides immediate UI feedback
     } catch (error) {
       console.error("Error creating post:", error);
       alert("Failed to create post: " + error.message);
+      // Refresh data to get the actual state on error
+      refreshData();
     }
-  }, [refreshPosts, handlePostSelect]);
+  }, [handlePostSelect, refreshData]);
 
   useEffect(() => {
-    // Always use the API call to get full meta data
-    // The pre-loaded data doesn't include the full meta structure
-    fetchPosts();
-
-    // Fetch and console log all registered blocks
-    const fetchRegisteredBlocks = async () => {
-      try {
-        const response = await centralizedApi.getRegisteredBlocks();
-      } catch (error) {
-        console.error("❌ Error fetching registered blocks:", error);
-      }
-    };
-
-    fetchRegisteredBlocks();
+    // Load all shared data with cache warming on app initialization
+    loadAllData();
   }, []);
 
   // Memoize computed values (must be before any early returns)
@@ -498,7 +553,7 @@ const App = () => {
             onSave={handleSave}
             saveStatus={saveStatus}
             hasUnsavedChanges={hasUnsavedChanges}
-            onPostsRefresh={refreshPosts}
+            onPostsRefresh={refreshData}
           />
           <EditorNoPosts onPostCreate={handlePostCreate} />
         </div>
@@ -523,7 +578,7 @@ const App = () => {
           onSave={handleSave}
           saveStatus={saveStatus}
           hasUnsavedChanges={hasUnsavedChanges}
-          onPostsRefresh={refreshPosts}
+          onPostsRefresh={refreshData}
         />
 
         <div className="flex w-full flex-1 min-h-0">
@@ -531,7 +586,7 @@ const App = () => {
             groupedPosts={groupedPosts}
             selectedPost={selectedPost}
             onPostSelect={handlePostSelect}
-            onPostsRefresh={refreshPosts}
+            onPostsRefresh={refreshData}
           />
           <EditorMain
             selectedPost={selectedPost}
@@ -544,6 +599,8 @@ const App = () => {
             metaData={metaData}
             onMetaChange={handleMetaChange}
             onPostDelete={handlePostDelete}
+            sharedData={sharedData}
+            dataLoading={dataLoading}
           />
         </div>
       </div>

@@ -7,9 +7,7 @@ import ScssPartialSettings from './ScssPartialSettings';
 import { apiClient } from '../../../utils';
 import centralizedApi from '../../../utils/api/CentralizedApiService';
 
-const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) => {
-  const [blockCategories, setBlockCategories] = useState([]);
-  const [loadingCategories, setLoadingCategories] = useState(false);
+const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete, sharedData, dataLoading }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState('settings');
 
@@ -37,23 +35,9 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
   const [category, setCategory] = useState(settings.category || '');
   const [icon, setIcon] = useState(settings.icon || 'search');
 
-  // Fetch block categories on component mount
-  useEffect(() => {
-    const fetchCategories = async () => {
-      setLoadingCategories(true);
-      try {
-        const categories = await centralizedApi.getBlockCategories();
-        setBlockCategories(Array.isArray(categories) ? categories : []);
-      } catch (error) {
-        console.error('Error fetching block categories:', error);
-        setBlockCategories([]);
-      } finally {
-        setLoadingCategories(false);
-      }
-    };
-
-    fetchCategories();
-  }, []);
+  // Get block categories from shared data (no API call needed)
+  const blockCategories = sharedData?.blockCategories || [];
+  const loadingCategories = dataLoading?.blockCategories || false;
 
   // Update local state when selectedPost or metaData changes
   useEffect(() => {
@@ -111,13 +95,20 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
     setIsDeleting(true);
 
     try {
-      await centralizedApi.deletePost(selectedPost.id);
+      // First, attempt the actual deletion BEFORE optimistic update
+      console.log('🗑️ Attempting to delete post:', selectedPost.id);
+      const result = await centralizedApi.deletePost(selectedPost.id);
+      console.log('✅ Delete result:', result);
+
+      // Only update UI after successful deletion
       if (onPostDelete) {
         onPostDelete(selectedPost.id);
       }
+
     } catch (error) {
-      console.error('Error deleting post:', error);
-      alert('Failed to delete post: ' + error.message);
+      console.error('❌ Error deleting post:', error);
+      alert('Failed to delete post: ' + (error.message || 'Unknown error'));
+      // Don't call onPostDelete if deletion failed
     } finally {
       setIsDeleting(false);
     }
@@ -220,6 +211,8 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
                       selectedPost={selectedPost}
                       metaData={metaData}
                       onMetaChange={onMetaChange}
+                      sharedData={sharedData}
+                      dataLoading={dataLoading}
                     />
                   </div>
                 </div>
@@ -250,6 +243,8 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
               selectedPost={selectedPost}
               metaData={metaData}
               onMetaChange={onMetaChange}
+              sharedData={sharedData}
+              dataLoading={dataLoading}
             />
           </div>
         )}

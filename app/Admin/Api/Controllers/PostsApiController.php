@@ -8,6 +8,7 @@ use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use Fanculo\Database\BlockSettingsRepository;
 use Fanculo\Database\ScssPartialsSettingsRepository;
 use Fanculo\FilesManager\FilesManagerService;
+use Fanculo\FilesManager\Services\DirectoryManager;
 use Fanculo\Admin\Api\Services\BulkQueryService;
 
 /**
@@ -496,7 +497,44 @@ class PostsApiController extends BaseApiController
 
     public function deletePost($request)
     {
-        // This method will be copied from the original controller
-        return $this->responseFormatter->deleted('Post deleted successfully', []);
+        try {
+            $postId = $request->get_param('id');
+            $post = get_post($postId);
+
+            if (!$post || $post->post_type !== FunculoPostType::getPostType()) {
+                return $this->responseFormatter->notFound('Post', $postId);
+            }
+
+            // For now, just delete the post from database - file cleanup can be added later
+            // This ensures the core deletion works first
+            $deleted = wp_delete_post($postId, true);
+
+            if (!$deleted) {
+                return $this->responseFormatter->serverError('Failed to delete post from database');
+            }
+
+            // Clean up repository data - with error handling
+            try {
+                if (class_exists('Fanculo\Database\BlockSettingsRepository')) {
+                    BlockSettingsRepository::delete($postId);
+                }
+            } catch (\Exception $e) {
+                error_log('Warning: Could not delete block settings: ' . $e->getMessage());
+            }
+
+            try {
+                if (class_exists('Fanculo\Database\ScssPartialsSettingsRepository')) {
+                    ScssPartialsSettingsRepository::delete($postId);
+                }
+            } catch (\Exception $e) {
+                error_log('Warning: Could not delete SCSS partial settings: ' . $e->getMessage());
+            }
+
+            return $this->responseFormatter->deleted('Post deleted successfully');
+
+        } catch (\Exception $e) {
+            error_log('Delete post error: ' . $e->getMessage());
+            return $this->responseFormatter->serverError('Delete operation failed: ' . $e->getMessage());
+        }
     }
 }

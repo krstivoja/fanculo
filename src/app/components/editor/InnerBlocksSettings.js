@@ -100,13 +100,15 @@ const DefaultTemplateManager = ({
   );
 };
 
-const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
+const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange, sharedData, dataLoading }) => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [selectedBlocks, setSelectedBlocks] = useState([]);
-  const [availableBlocks, setAvailableBlocks] = useState([]);
   const [blockSuggestions, setBlockSuggestions] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [defaultTemplate, setDefaultTemplate] = useState([]);
+
+  // Get available blocks from shared data (no API call needed)
+  const availableBlocks = sharedData?.registeredBlocks || [];
+  const loading = dataLoading?.registeredBlocks || false;
   const [templateLock, setTemplateLock] = useState(false);
 
   // Parse inner blocks settings from metaData
@@ -155,36 +157,17 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
     setTemplateLock(lockValue === 'true' || lockValue === true);
   }, [selectedPost, metaData]);
 
-  // Fetch available blocks when component mounts or when enabled
+  // Update block suggestions when available blocks change
   useEffect(() => {
-    if (isEnabled) {
-      fetchAvailableBlocks();
-    }
-  }, [isEnabled]);
-
-  const fetchAvailableBlocks = async () => {
-    setLoading(true);
-    try {
-      const response = await centralizedApi.getRegisteredBlocks();
-      const blocks = Array.isArray(response)
-        ? response
-        : response?.blocks || response?.data || [];
-
-      setAvailableBlocks(blocks);
-
+    if (availableBlocks.length > 0) {
       // Create suggestions for the tag input
-      const suggestions = blocks.map((block, index) => ({
+      const suggestions = availableBlocks.map((block, index) => ({
         id: `suggestion-${index}`,
         text: block.name
       }));
       setBlockSuggestions(suggestions);
-
-    } catch (error) {
-      console.error('Error fetching registered blocks:', error);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [availableBlocks]);
 
   // Update settings in metaData
   const updateInnerBlocksSettings = (enabled, allowedBlocks) => {

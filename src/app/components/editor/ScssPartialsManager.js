@@ -3,46 +3,25 @@ import { ReactTags } from '../ui';
 import { apiClient } from '../../../utils';
 import centralizedApi from '../../../utils/api/CentralizedApiService';
 
-const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'style', hideGlobalPartials = false }) => {
-  const [globalPartials, setGlobalPartials] = useState([]);
-  const [availablePartials, setAvailablePartials] = useState([]);
+const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'style', hideGlobalPartials = false, sharedData, dataLoading }) => {
   const [selectedPartials, setSelectedPartials] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  // Get partials data from shared data (no API call needed)
+  const globalPartials = sharedData?.scssPartials?.global_partials || [];
+  const availablePartials = sharedData?.scssPartials?.available_partials || [];
+  const loading = dataLoading?.scssPartials || false;
 
   // Memoize field name based on mode to prevent recalculation
   const fieldName = useMemo(() => {
     return mode === 'editorStyle' ? 'editor_selected_partials' : 'selected_partials';
   }, [mode]);
 
-  // Load partials data on component mount
+  // Load selected partials when data is available
   useEffect(() => {
-    if (selectedPost?.id) {
-      loadPartials();
-    }
-  }, [selectedPost?.id]);
-
-  // Load selected partials after global/available partials are loaded
-  useEffect(() => {
-    if (selectedPost?.id && !loading) {
+    if (selectedPost?.id && !loading && availablePartials.length >= 0) {
       loadSelectedPartials();
     }
-  }, [selectedPost?.id, globalPartials, availablePartials, loading]);
-
-  // Memoize expensive partials loading function
-  const loadPartials = useCallback(async () => {
-    try {
-      const data = await centralizedApi.getScssPartials();
-      console.log('SCSS Partials API Response:', data);
-      setGlobalPartials(data.global_partials || []);
-      setAvailablePartials(data.available_partials || []);
-      console.log('Global partials set:', data.global_partials || []);
-      console.log('Available partials set:', data.available_partials || []);
-    } catch (error) {
-      console.error('Error loading partials:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  }, [selectedPost?.id, loading, availablePartials, globalPartials]);
 
   // Memoize expensive selected partials processing
   const processSelectedPartials = useMemo(() => {
