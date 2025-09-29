@@ -8,24 +8,11 @@ use WP_Error;
 use Fanculo\Content\FunculoPostType;
 use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
-use Fanculo\Admin\Api\Services\BulkQueryService;
-use Fanculo\Admin\Api\Services\UnifiedApiService;
-use Fanculo\Admin\Api\Services\ApiResponseFormatter;
+use Fanculo\Admin\Api\Controllers\BaseApiController;
 use Fanculo\Database\ScssPartialsSettingsRepository;
 
-class ScssCompilerApiController
+class ScssCompilerApiController extends BaseApiController
 {
-    private $bulkQueryService;
-    private $unifiedApiService;
-    private $responseFormatter;
-
-    public function __construct()
-    {
-        $this->bulkQueryService = new BulkQueryService();
-        $this->unifiedApiService = new UnifiedApiService();
-        $this->responseFormatter = new ApiResponseFormatter();
-        add_action('rest_api_init', [$this, 'registerRoutes']);
-    }
 
     public function registerRoutes()
     {
@@ -117,15 +104,6 @@ class ScssCompilerApiController
         ]);
     }
 
-    public function checkPermissions()
-    {
-        return current_user_can('edit_posts');
-    }
-
-    public function checkCreatePermissions()
-    {
-        return current_user_can('publish_posts');
-    }
 
     /**
      * Compile SCSS content to CSS and save it as meta
@@ -280,56 +258,63 @@ class ScssCompilerApiController
     public function getScssPartials(WP_REST_Request $request)
     {
         try {
-            // Use unified service for cached fetch
-            $cacheKey = 'fanculo_scss_partials_api';
-            $partials = $this->unifiedApiService->fetchWithCache(
-                $cacheKey,
-                function() {
-                    return get_posts([
-                        'post_type' => FunculoPostType::getPostType(),
-                        'post_status' => 'publish',
-                        'numberposts' => -1,
-                        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Cached query, acceptable performance
-                        'tax_query' => [
-                            [
-                                'taxonomy' => FunculoTypeTaxonomy::getTaxonomy(),
-                                'field' => 'slug',
-                                'terms' => FunculoTypeTaxonomy::getTermScssPartials()
-                            ]
-                        ]
-                    ]);
-                },
-                300 // 5 minutes cache
-            );
+            $startTime = microtime(true);
 
-            $formatted_partials = [];
+            // Step 1: WP_Query for SCSS partial posts
+            $args = [
+                'post_type' => FunculoPostType::getPostType(),
+                'post_status' => 'publish',
+                'posts_per_page' => -1,
+                // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Cached operation, acceptable performance
+                'tax_query' => [
+                    [
+                        'taxonomy' => FunculoTypeTaxonomy::getTaxonomy(),
+                        'field' => 'slug',
+                        'terms' => FunculoTypeTaxonomy::getTermScssPartials()
+                    ]
+                ]
+            ];
+
+            $query = new \WP_Query($args);
+
+            if (empty($query->posts)) {
+                return $this->responseFormatter->success([
+                    'global_partials' => [],
+                    'available_partials' => []
+                ]);
+            }
+
+            // Extract post IDs for bulk operations
+            $postIds = wp_list_pluck($query->posts, 'ID');
+
+            // Execute standardized bulk pipeline (Steps 2-6)
+            $pipelineResult = $this->standardBulkPipeline->executeBulkPipeline($postIds, [
+                'skipBlockSettings' => true, // We only need SCSS settings
+                'skipBlockAttributes' => true,
+            ]);
+
+            // Build response using pipeline data
             $global_partials = [];
             $available_partials = [];
 
-            if (!empty($partials)) {
-                // BULK OPERATION: Fetch settings from database - eliminates N+1 queries
-                $postIds = wp_list_pluck($partials, 'ID');
-                $scssSettings = ScssPartialsSettingsRepository::getBulk($postIds);
+            foreach ($query->posts as $post) {
+                $scssSettings = $pipelineResult->scssSettings[$post->ID] ?? null;
+                $is_global = $scssSettings ? $scssSettings['is_global'] : false;
+                $global_order = $scssSettings ? $scssSettings['global_order'] : 999;
 
-                foreach ($partials as $partial) {
-                    $settings = $scssSettings[$partial->ID] ?? null;
-                    $is_global = $settings ? $settings['is_global'] : false;
-                    $global_order = $settings ? $settings['global_order'] : 999;
+                $partial_data = [
+                    'id' => $post->ID,
+                    'title' => $post->post_title,
+                    'slug' => $post->post_name,
+                    'is_global' => $is_global,
+                    'global_order' => $global_order
+                ];
 
-                    $partial_data = [
-                        'id' => $partial->ID,
-                        'title' => $partial->post_title,
-                        'slug' => $partial->post_name,
-                        'is_global' => $is_global,
-                        'global_order' => $global_order
-                    ];
-
-                    // Check if is_global is true
-                    if ($is_global) {
-                        $global_partials[] = $partial_data;
-                    } else {
-                        $available_partials[] = $partial_data;
-                    }
+                // Categorize by global status
+                if ($is_global) {
+                    $global_partials[] = $partial_data;
+                } else {
+                    $available_partials[] = $partial_data;
                 }
             }
 
@@ -343,13 +328,23 @@ class ScssCompilerApiController
                 return strcmp($a['title'], $b['title']);
             });
 
+            // Log performance
+            $this->bulkQueryService->logPerformance('getScssPartials', count($query->posts), $startTime);
+
+            $performanceData = [
+                'duration_ms' => round((microtime(true) - $startTime) * 1000, 2),
+                'total_partials' => count($query->posts),
+                'global_count' => count($global_partials),
+                'available_count' => count($available_partials),
+            ];
+
             return $this->responseFormatter->success([
                 'global_partials' => $global_partials,
                 'available_partials' => $available_partials
-            ]);
+            ], ['performance' => $performanceData]);
 
         } catch (\Exception $e) {
-            return new WP_Error('fetch_partials_error', $e->getMessage(), ['status' => 500]);
+            return $this->responseFormatter->serverError('Failed to fetch SCSS partials: ' . $e->getMessage());
         }
     }
 
@@ -410,57 +405,114 @@ class ScssCompilerApiController
      */
     public function batchCompileScss(WP_REST_Request $request)
     {
+        $startTime = microtime(true);
         $compilations = $request->get_param('compilations');
 
-        // Use unified service for batch operations
-        return $this->unifiedApiService->executeBatchOperations(
-            $compilations,
-            function($compilation, $index) {
-                // Validate compilation
+        if (empty($compilations) || !is_array($compilations)) {
+            return $this->responseFormatter->validationError(['compilations' => 'Compilations array is required']);
+        }
+
+        if (count($compilations) > 10) {
+            return $this->responseFormatter->validationError(['compilations' => 'Maximum 10 compilations allowed per batch']);
+        }
+
+        // Extract and validate post IDs
+        $postIds = [];
+        foreach ($compilations as $compilation) {
+            if (isset($compilation['post_id'])) {
+                $postIds[] = absint($compilation['post_id']);
+            }
+        }
+
+        if (empty($postIds)) {
+            return $this->responseFormatter->validationError(['compilations' => 'At least one valid post ID is required']);
+        }
+
+        // Get posts using WP_Query (Step 1)
+        $args = [
+            'post_type' => FunculoPostType::getPostType(),
+            'post_status' => 'any',
+            'post__in' => $postIds,
+            'posts_per_page' => count($postIds),
+        ];
+
+        $query = new \WP_Query($args);
+
+        // Create a map of existing posts for quick lookup
+        $existingPosts = [];
+        foreach ($query->posts as $post) {
+            $existingPosts[$post->ID] = $post;
+        }
+
+        $results = [
+            'successful' => [],
+            'failed' => [],
+            'total' => count($compilations),
+        ];
+
+        // Process each compilation
+        foreach ($compilations as $index => $compilation) {
+            try {
                 if (!isset($compilation['post_id'])) {
                     throw new \Exception('Post ID is required');
                 }
 
-                $postId = (int)$compilation['post_id'];
+                $postId = absint($compilation['post_id']);
+                if (!isset($existingPosts[$postId])) {
+                    throw new \Exception('Post not found');
+                }
+
                 $scssContent = $compilation['scss_content'] ?? null;
                 $cssContent = $compilation['css_content'] ?? null;
                 $editorScssContent = $compilation['editor_scss_content'] ?? null;
                 $editorCssContent = $compilation['editor_css_content'] ?? null;
 
-                // Verify the post exists
-                $post = get_post($postId);
-                if (!$post) {
-                    throw new \Exception('Post not found');
-                }
-
                 // Save main SCSS content if provided
                 if ($scssContent !== null) {
-                    update_post_meta($postId, MetaKeysConstants::SCSS_CONTENT, $scssContent);
+                    update_post_meta($postId, MetaKeysConstants::SCSS_CONTENT, sanitize_textarea_field($scssContent));
                 }
 
                 // Save main CSS content if provided
                 if ($cssContent !== null) {
-                    update_post_meta($postId, MetaKeysConstants::CSS_CONTENT, $cssContent);
+                    update_post_meta($postId, MetaKeysConstants::CSS_CONTENT, sanitize_textarea_field($cssContent));
                 }
 
                 // Save editor SCSS content if provided
                 if ($editorScssContent !== null) {
-                    update_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_SCSS, $editorScssContent);
+                    update_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_SCSS, sanitize_textarea_field($editorScssContent));
                 }
 
                 // Save editor CSS content if provided
                 if ($editorCssContent !== null) {
-                    update_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT, $editorCssContent);
+                    update_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT, sanitize_textarea_field($editorCssContent));
                 }
 
-                return [
+                $results['successful'][] = [
+                    'index' => $index,
                     'post_id' => $postId,
                     'title' => get_the_title($postId),
-                    'main_css' => $cssContent !== null,
-                    'editor_css' => $editorCssContent !== null,
+                    'main_css_updated' => $cssContent !== null,
+                    'editor_css_updated' => $editorCssContent !== null,
                 ];
-            },
-            ['max_operations' => 10] // Original limit was 10
-        );
+
+            } catch (\Exception $e) {
+                $results['failed'][] = [
+                    'index' => $index,
+                    'post_id' => $compilation['post_id'] ?? 'unknown',
+                    'error' => $e->getMessage(),
+                ];
+            }
+        }
+
+        // Log performance
+        $this->bulkQueryService->logPerformance('batchCompileScss', $results['total'], $startTime);
+
+        $performanceData = [
+            'duration_ms' => round((microtime(true) - $startTime) * 1000, 2),
+            'successful_count' => count($results['successful']),
+            'failed_count' => count($results['failed']),
+        ];
+
+        return $this->responseFormatter->batch($results, $performanceData);
     }
 }

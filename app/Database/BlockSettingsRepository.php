@@ -4,21 +4,22 @@ namespace Fanculo\Database;
 
 /**
  * Repository for managing block settings in the database
+ *
+ * Implements the standardized bulk operations interface for consistent
+ * performance and error handling across all repository classes.
  */
-class BlockSettingsRepository
+class BlockSettingsRepository extends AbstractBulkRepository
 {
     /**
      * Get block settings by post ID
      */
     public static function get(int $post_id): ?array
     {
-        global $wpdb;
-
+        $post_id = self::validatePostId($post_id);
         $table_name = DatabaseInstaller::getTableName();
-        $row = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM $table_name WHERE post_id = %d",
-            $post_id
-        ), ARRAY_A);
+
+        $query = "SELECT * FROM $table_name WHERE post_id = %d";
+        $row = self::executeRowQuery($query, [$post_id], "get block settings for post {$post_id}");
 
         if (!$row) {
             return null;
@@ -34,19 +35,17 @@ class BlockSettingsRepository
      */
     public static function getBulk(array $post_ids): array
     {
-        global $wpdb;
+        $post_ids = self::validatePostIds($post_ids);
 
         if (empty($post_ids)) {
             return [];
         }
 
         $table_name = DatabaseInstaller::getTableName();
-        $placeholders = implode(',', array_fill(0, count($post_ids), '%d'));
+        $placeholders = self::createPlaceholders($post_ids);
 
-        $rows = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $table_name WHERE post_id IN ($placeholders)",
-            ...$post_ids
-        ), ARRAY_A);
+        $query = "SELECT * FROM $table_name WHERE post_id IN ($placeholders)";
+        $rows = self::executeQuery($query, $post_ids, "bulk get block settings");
 
         $result = [];
         foreach ($rows as $row) {
@@ -270,15 +269,11 @@ class BlockSettingsRepository
      */
     public static function delete(int $post_id): bool
     {
-        global $wpdb;
-
+        $post_id = self::validatePostId($post_id);
         $table_name = DatabaseInstaller::getTableName();
-        $result = $wpdb->delete(
-            $table_name,
-            ['post_id' => $post_id]
-        );
 
-        return $result !== false;
+        $query = "DELETE FROM $table_name WHERE post_id = %d";
+        return self::executeWriteQuery($query, [$post_id], "delete block settings for post {$post_id}");
     }
 
     /**

@@ -3,24 +3,11 @@
 namespace Fanculo\Admin\Api;
 
 use Fanculo\FilesManager\FilesManagerService;
-use Fanculo\Admin\Api\Services\UnifiedApiService;
-use Fanculo\Admin\Api\Services\ApiResponseFormatter;
-use Fanculo\Admin\Api\Services\BulkQueryService;
+use Fanculo\Admin\Api\Controllers\BaseApiController;
 use Fanculo\Content\FunculoPostType;
 
-class FileGenerationApiController
+class FileGenerationApiController extends BaseApiController
 {
-    private $unifiedApiService;
-    private $responseFormatter;
-    private $bulkQueryService;
-
-    public function __construct()
-    {
-        $this->unifiedApiService = new UnifiedApiService();
-        $this->responseFormatter = new ApiResponseFormatter();
-        $this->bulkQueryService = new BulkQueryService();
-        add_action('rest_api_init', [$this, 'registerRoutes']);
-    }
 
     public function registerRoutes()
     {
@@ -76,15 +63,6 @@ class FileGenerationApiController
         ]);
     }
 
-    public function checkPermissions()
-    {
-        return current_user_can('edit_posts');
-    }
-
-    public function checkCreatePermissions()
-    {
-        return current_user_can('publish_posts');
-    }
 
     public function regenerateFiles($request)
     {
@@ -134,37 +112,75 @@ class FileGenerationApiController
      */
     public function batchGenerateFiles($request)
     {
+        $startTime = microtime(true);
         $postIds = $request->get_param('post_ids');
         $regenerate = $request->get_param('regenerate');
 
-        // Use unified service for batch operations
-        return $this->unifiedApiService->executeBatchOperations(
-            $postIds,
-            function($postId, $index) use ($regenerate) {
-                // Validate post ID
-                if (!is_numeric($postId)) {
-                    throw new \Exception('Invalid post ID');
-                }
+        // Validate post IDs
+        $postIds = array_map('absint', array_filter($postIds));
+        if (empty($postIds)) {
+            return $this->responseFormatter->validationError(['post_ids' => 'At least one valid post ID is required']);
+        }
 
-                $postId = (int)$postId;
-                $post = get_post($postId);
+        // Get posts using WP_Query (Step 1)
+        $args = [
+            'post_type' => FunculoPostType::getPostType(),
+            'post_status' => 'any',
+            'post__in' => $postIds,
+            'posts_per_page' => count($postIds),
+        ];
 
-                if (!$post || $post->post_type !== FunculoPostType::getPostType()) {
-                    throw new \Exception('Post not found or invalid type');
-                }
+        $query = new \WP_Query($args);
 
+        if (empty($query->posts)) {
+            return $this->responseFormatter->collection([], [
+                'message' => 'No valid posts found',
+                'requested_count' => count($postIds),
+            ]);
+        }
+
+        // Execute standardized bulk pipeline to get post data efficiently
+        $pipelineResult = $this->standardBulkPipeline->executeBulkPipeline(wp_list_pluck($query->posts, 'ID'));
+
+        $results = [
+            'successful' => [],
+            'failed' => [],
+            'total' => count($query->posts),
+        ];
+
+        // Generate files for each post
+        $filesManagerService = new FilesManagerService();
+        foreach ($query->posts as $index => $post) {
+            try {
                 // Generate files for this post
-                $filesManagerService = new FilesManagerService();
-                $filesManagerService->generateFilesOnPostSave($postId, $post, $regenerate);
+                $filesManagerService->generateFilesOnPostSave($post->ID, $post, $regenerate);
 
-                return [
-                    'post_id' => $postId,
-                    'title' => get_the_title($postId),
+                $results['successful'][] = [
+                    'index' => $index,
+                    'post_id' => $post->ID,
+                    'title' => get_the_title($post->ID),
                     'regenerated' => $regenerate,
                 ];
-            },
-            ['max_operations' => 20, 'timeout' => 60]
-        );
+
+            } catch (\Exception $e) {
+                $results['failed'][] = [
+                    'index' => $index,
+                    'post_id' => $post->ID,
+                    'error' => $e->getMessage(),
+                ];
+            }
+        }
+
+        // Log performance
+        $this->bulkQueryService->logPerformance('batchGenerateFiles', $results['total'], $startTime);
+
+        $performanceData = [
+            'duration_ms' => round((microtime(true) - $startTime) * 1000, 2),
+            'successful_count' => count($results['successful']),
+            'failed_count' => count($results['failed']),
+        ];
+
+        return $this->responseFormatter->batch($results, $performanceData);
     }
 
     /**
@@ -172,45 +188,65 @@ class FileGenerationApiController
      */
     public function checkFilesStatus($request)
     {
+        $startTime = microtime(true);
         $postIds = $request->get_param('post_ids');
 
-        // Use unified service with caching
-        $cacheKey = 'fanculo_files_status_' . md5(serialize($postIds));
+        // Validate post IDs
+        $postIds = array_map('absint', array_filter($postIds));
+        if (empty($postIds)) {
+            return $this->responseFormatter->validationError(['post_ids' => 'At least one valid post ID is required']);
+        }
 
-        $status = $this->unifiedApiService->fetchWithCache(
-            $cacheKey,
-            function() use ($postIds) {
-                $statuses = [];
-                $filesManagerService = new FilesManagerService();
+        // Get posts using WP_Query (Step 1)
+        $args = [
+            'post_type' => FunculoPostType::getPostType(),
+            'post_status' => 'any',
+            'post__in' => $postIds,
+            'posts_per_page' => count($postIds),
+        ];
 
-                foreach ($postIds as $postId) {
-                    if (!is_numeric($postId)) {
-                        $statuses[$postId] = ['error' => 'Invalid post ID'];
-                        continue;
-                    }
+        $query = new \WP_Query($args);
 
-                    $postId = (int)$postId;
-                    $post = get_post($postId);
+        if (empty($query->posts)) {
+            return $this->responseFormatter->collection([], [
+                'message' => 'No valid posts found',
+                'requested_count' => count($postIds),
+            ]);
+        }
 
-                    if (!$post || $post->post_type !== FunculoPostType::getPostType()) {
-                        $statuses[$postId] = ['error' => 'Post not found'];
-                        continue;
-                    }
+        // Execute standardized bulk pipeline to get post data efficiently
+        $pipelineResult = $this->standardBulkPipeline->executeBulkPipeline(wp_list_pluck($query->posts, 'ID'));
 
-                    // Check if files exist (you'll need to implement this method in FilesManagerService)
-                    // For now, we'll just return basic info
-                    $statuses[$postId] = [
-                        'exists' => true,
-                        'title' => get_the_title($postId),
-                        'last_modified' => $post->post_modified,
-                    ];
-                }
+        // Build file status response
+        $formatOptions = [
+            'applyDatabaseSettingsFormatting' => false,
+            'includeEditUrl' => false,
+            'includeDates' => true,
+        ];
 
-                return $statuses;
-            },
-            60 // 1 minute cache for status checks
-        );
+        $statusList = [];
+        foreach ($query->posts as $post) {
+            $postData = $this->standardBulkPipeline->formatPostData($post, $pipelineResult, $formatOptions);
 
-        return $this->responseFormatter->success($status);
+            $statusList[] = [
+                'post_id' => $post->ID,
+                'title' => $post->post_title,
+                'status' => $post->post_status,
+                'type' => $postData['terms'][0]['slug'] ?? 'unknown',
+                'last_modified' => $post->post_modified,
+                'files_exist' => true, // TODO: Implement actual file existence check
+            ];
+        }
+
+        // Log performance
+        $this->bulkQueryService->logPerformance('checkFilesStatus', count($statusList), $startTime);
+
+        $performanceData = [
+            'duration_ms' => round((microtime(true) - $startTime) * 1000, 2),
+            'requested_count' => count($postIds),
+            'found_count' => count($statusList),
+        ];
+
+        return $this->responseFormatter->collection($statusList, ['performance' => $performanceData]);
     }
 }

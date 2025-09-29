@@ -2,6 +2,7 @@
 
 namespace Fanculo\Admin\Api\Controllers;
 
+use Fanculo\Content\FunculoPostType;
 use Fanculo\FilesManager\FilesManagerService;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use Fanculo\Database\BlockAttributesRepository;
@@ -91,11 +92,60 @@ class PostsOperationsApiController extends BaseApiController
                 if (!isset($data['id'])) {
                     throw new \Exception('Post ID required for get_post operation');
                 }
-                $post = get_post($data['id']);
+                $postId = absint($data['id']);
+                $post = get_post($postId);
                 if (!$post) {
                     throw new \Exception('Post not found');
                 }
-                return ['id' => $post->ID, 'title' => $post->post_title];
+
+                // Use standardized bulk pipeline for consistent data format
+                $pipelineResult = $this->standardBulkPipeline->executeSinglePostPipeline($postId);
+                $formatOptions = [
+                    'applyDatabaseSettingsFormatting' => true,
+                    'includeEditUrl' => false,
+                    'includeDates' => true,
+                ];
+
+                return $this->standardBulkPipeline->formatPostData($post, $pipelineResult, $formatOptions);
+
+            case 'get_posts_bulk':
+                if (!isset($data['ids']) || !is_array($data['ids'])) {
+                    throw new \Exception('Post IDs array required for get_posts_bulk operation');
+                }
+                $postIds = array_map('absint', array_filter($data['ids']));
+                if (empty($postIds)) {
+                    throw new \Exception('At least one valid post ID is required');
+                }
+
+                // Get posts using WP_Query (Step 1)
+                $args = [
+                    'post_type' => FunculoPostType::getPostType(),
+                    'post_status' => 'any',
+                    'post__in' => $postIds,
+                    'posts_per_page' => count($postIds),
+                ];
+                $query = new \WP_Query($args);
+
+                if (empty($query->posts)) {
+                    return [];
+                }
+
+                // Execute standardized bulk pipeline (Steps 2-6)
+                $pipelineResult = $this->standardBulkPipeline->executeBulkPipeline($postIds);
+
+                // Format posts
+                $formatOptions = [
+                    'applyDatabaseSettingsFormatting' => true,
+                    'includeEditUrl' => false,
+                    'includeDates' => true,
+                ];
+
+                $posts = [];
+                foreach ($query->posts as $post) {
+                    $posts[] = $this->standardBulkPipeline->formatPostData($post, $pipelineResult, $formatOptions);
+                }
+
+                return $posts;
 
             case 'update_meta':
                 if (!isset($data['post_id']) || !isset($data['meta'])) {

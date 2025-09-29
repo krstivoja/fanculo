@@ -167,108 +167,21 @@ class PostsApiController extends BaseApiController
         // Extract post IDs for bulk operations
         $postIds = wp_list_pluck($query->posts, 'ID');
 
-        // BULK OPERATION 1: Fetch all terms at once - eliminates N+1
-        $allTerms = $this->bulkQueryService->getBulkPostTerms($postIds, FunculoTypeTaxonomy::getTaxonomy());
+        // Execute standardized bulk pipeline (Steps 2-6)
+        $pipelineResult = $this->standardBulkPipeline->executeBulkPipeline($postIds);
 
-        // BULK OPERATION 2: Get optimized meta keys based on content types
-        $optimizedMetaKeys = $this->bulkQueryService->getOptimizedMetaKeys($allTerms);
+        // Build response using standardized formatting
+        $formatOptions = [
+            'applyDatabaseSettingsFormatting' => true,
+            'includeEditUrl' => true,
+            'includeExcerpt' => true,
+            'includeDates' => true,
+            'excerptLength' => 20
+        ];
 
-        // BULK OPERATION 3: Fetch all meta at once - eliminates N+1
-        $allMeta = $this->bulkQueryService->getBulkPostMeta($postIds, $optimizedMetaKeys);
-
-        // BULK OPERATION 4: Identify blocks and SCSS partials efficiently
-        $blockPostIds = [];
-        $scssPartialIds = [];
-        foreach ($postIds as $postId) {
-            $postTerms = $allTerms[$postId] ?? [];
-            foreach ($postTerms as $term) {
-                if ($term['slug'] === 'blocks') {
-                    $blockPostIds[] = $postId;
-                    break;
-                } elseif ($term['slug'] === 'scss-partials') {
-                    $scssPartialIds[] = $postId;
-                    break;
-                }
-            }
-        }
-
-        // BULK OPERATION 5: Load block settings from database in ONE query
-        $blockSettingsMap = [];
-        if (!empty($blockPostIds)) {
-            $blockSettingsMap = BlockSettingsRepository::getBulk($blockPostIds);
-        }
-
-        // BULK OPERATION 6: Load SCSS partial settings from database
-        $scssSettingsMap = [];
-        if (!empty($scssPartialIds)) {
-            $scssSettingsMap = ScssPartialsSettingsRepository::getBulk($scssPartialIds);
-        }
-
-        // OPTIMIZATION: Pre-fetch titles and edit links to avoid repeated function calls
-        $postTitles = wp_list_pluck($query->posts, 'post_title', 'ID');
-        $editLinks = [];
-        foreach ($query->posts as $post) {
-            $editLinks[$post->ID] = get_edit_post_link($post->ID);
-        }
-
-        // Build response with prefetched data - NO MORE INDIVIDUAL QUERIES
         $posts = [];
         foreach ($query->posts as $post) {
-            $postTerms = $allTerms[$post->ID] ?? [];
-            $postMeta = $allMeta[$post->ID] ?? [];
-            $formattedMeta = $this->bulkQueryService->formatPostMeta($postMeta, $postTerms);
-
-            // Add block settings if this is a block
-            if (isset($blockSettingsMap[$post->ID])) {
-                $dbSettings = $blockSettingsMap[$post->ID];
-
-                // Format settings for frontend compatibility
-                $blockSettings = [
-                    'category' => $dbSettings['category'],
-                    'description' => $dbSettings['description'],
-                    'icon' => $dbSettings['icon']
-                ];
-
-                // Format inner blocks settings
-                $innerBlocksSettings = [
-                    'enabled' => $dbSettings['supports_inner_blocks'],
-                    'allowed_blocks' => $dbSettings['allowed_block_types'],
-                    'template' => $dbSettings['template'],
-                    'templateLock' => $dbSettings['template_lock']
-                ];
-
-                // Add to meta in expected format
-                if (!isset($formattedMeta['blocks'])) {
-                    $formattedMeta['blocks'] = [];
-                }
-                $formattedMeta['blocks']['settings'] = json_encode($blockSettings);
-                $formattedMeta['blocks']['inner_blocks_settings'] = json_encode($innerBlocksSettings);
-                $formattedMeta['blocks']['selected_partials'] = json_encode($dbSettings['selected_partials'] ?? []);
-                $formattedMeta['blocks']['editor_selected_partials'] = json_encode($dbSettings['editor_selected_partials'] ?? []);
-            }
-
-            // Add SCSS partial settings if this is a SCSS partial
-            if (isset($scssSettingsMap[$post->ID])) {
-                $scssSettings = $scssSettingsMap[$post->ID];
-                if (!isset($formattedMeta['scss_partials'])) {
-                    $formattedMeta['scss_partials'] = [];
-                }
-                $formattedMeta['scss_partials']['is_global'] = $scssSettings['is_global'] ? '1' : '0';
-                $formattedMeta['scss_partials']['global_order'] = (string) $scssSettings['global_order'];
-            }
-
-            $posts[] = [
-                'id' => $post->ID,
-                'title' => $postTitles[$post->ID] ?? 'Untitled',
-                'slug' => $post->post_name,
-                'status' => $post->post_status,
-                'date' => $post->post_date,
-                'modified' => $post->post_modified,
-                'excerpt' => wp_trim_words($post->post_content, 20),
-                'terms' => $postTerms,
-                'edit_url' => $editLinks[$post->ID] ?? '',
-                'meta' => $formattedMeta,
-            ];
+            $posts[] = $this->standardBulkPipeline->formatPostData($post, $pipelineResult, $formatOptions);
         }
 
         // Log performance improvement

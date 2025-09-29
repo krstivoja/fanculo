@@ -40,83 +40,20 @@ class PostsQueryApiController extends BaseApiController
             return $this->responseFormatter->notFound('Post', $postId);
         }
 
-        // Get post data with bulk operations
-        $allTerms = $this->bulkQueryService->getBulkPostTerms([$post->ID], FunculoTypeTaxonomy::getTaxonomy());
-        $postTerms = $allTerms[$post->ID] ?? [];
+        // Execute standardized bulk pipeline for single post
+        $pipelineResult = $this->standardBulkPipeline->executeSinglePostPipeline($post->ID);
 
-        $optimizedMetaKeys = $this->bulkQueryService->getOptimizedMetaKeys($allTerms);
-        $allMeta = $this->bulkQueryService->getBulkPostMeta([$post->ID], $optimizedMetaKeys);
-        $postMeta = $allMeta[$post->ID] ?? [];
-
-        // Format the meta data
-        $formattedMeta = $this->bulkQueryService->formatPostMeta($postMeta, $postTerms);
-
-        // Load block settings from database if this is a block
-        $isBlock = false;
-        $isScssPartial = false;
-        foreach ($postTerms as $term) {
-            if ($term['slug'] === 'blocks') {
-                $isBlock = true;
-            } elseif ($term['slug'] === 'scss-partials') {
-                $isScssPartial = true;
-            }
-        }
-
-        if ($isBlock) {
-            $dbSettings = BlockSettingsRepository::get($post->ID);
-            if ($dbSettings) {
-                // Format settings for frontend compatibility
-                $blockSettings = [
-                    'category' => $dbSettings['category'],
-                    'description' => $dbSettings['description'],
-                    'icon' => $dbSettings['icon']
-                ];
-
-                // Format inner blocks settings
-                $innerBlocksSettings = [
-                    'enabled' => $dbSettings['supports_inner_blocks'],
-                    'allowed_blocks' => $dbSettings['allowed_block_types'],
-                    'template' => $dbSettings['template'],
-                    'templateLock' => $dbSettings['template_lock']
-                ];
-
-                // Add to meta in expected format
-                if (!isset($formattedMeta['blocks'])) {
-                    $formattedMeta['blocks'] = [];
-                }
-                $formattedMeta['blocks']['settings'] = json_encode($blockSettings);
-                $formattedMeta['blocks']['inner_blocks_settings'] = json_encode($innerBlocksSettings);
-                $formattedMeta['blocks']['selected_partials'] = json_encode($dbSettings['selected_partials'] ?? []);
-                $formattedMeta['blocks']['editor_selected_partials'] = json_encode($dbSettings['editor_selected_partials'] ?? []);
-            }
-        }
-
-        // Load SCSS partial settings from database
-        if ($isScssPartial) {
-            $scssSettings = ScssPartialsSettingsRepository::get($post->ID);
-            if ($scssSettings) {
-                // Add to meta in expected format
-                if (!isset($formattedMeta['scss_partials'])) {
-                    $formattedMeta['scss_partials'] = [];
-                }
-                $formattedMeta['scss_partials']['is_global'] = $scssSettings['is_global'] ? '1' : '0';
-                $formattedMeta['scss_partials']['global_order'] = (string) $scssSettings['global_order'];
-            }
-        }
-
-        // Build basic post data
-        $postData = [
-            'id' => $post->ID,
-            'title' => get_the_title($post->ID),
-            'content' => $post->post_content,
-            'slug' => $post->post_name,
-            'status' => $post->post_status,
-            'date' => $post->post_date,
-            'modified' => $post->post_modified,
-            'terms' => $postTerms,
-            'edit_url' => get_edit_post_link($post->ID),
-            'meta' => $formattedMeta,
+        // Format post data with standardized formatting
+        $formatOptions = [
+            'applyDatabaseSettingsFormatting' => true,
+            'includeEditUrl' => true,
+            'includeDates' => true,
         ];
+
+        $postData = $this->standardBulkPipeline->formatPostData($post, $pipelineResult, $formatOptions);
+
+        // Add content field (specific to this endpoint)
+        $postData['content'] = $post->post_content;
 
         // Add related data based on post type
         $relatedData = [];

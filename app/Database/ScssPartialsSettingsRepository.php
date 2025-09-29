@@ -4,26 +4,35 @@ namespace Fanculo\Database;
 
 /**
  * Repository for managing SCSS partials settings in the database
+ *
+ * Implements the standardized bulk operations interface for consistent
+ * performance and error handling across all repository classes.
  */
-class ScssPartialsSettingsRepository
+class ScssPartialsSettingsRepository extends AbstractBulkRepository
 {
     /**
      * Get SCSS partial settings by post ID
      */
     public static function get(int $post_id): ?array
     {
-        global $wpdb;
-
+        $post_id = self::validatePostId($post_id);
         $table_name = DatabaseInstaller::getScssPartialsTableName();
-        $row = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM $table_name WHERE post_id = %d",
-            $post_id
-        ), ARRAY_A);
+
+        $query = "SELECT * FROM $table_name WHERE post_id = %d";
+        $row = self::executeRowQuery($query, [$post_id], "get SCSS partial settings for post {$post_id}");
 
         if (!$row) {
             return null;
         }
 
+        return self::processRow($row);
+    }
+
+    /**
+     * Process a database row to standardize data types
+     */
+    private static function processRow(array $row): array
+    {
         // Convert boolean field to actual boolean
         $row['is_global'] = (bool) $row['is_global'];
         // Ensure global_order is integer
@@ -81,15 +90,11 @@ class ScssPartialsSettingsRepository
      */
     public static function delete(int $post_id): bool
     {
-        global $wpdb;
-
+        $post_id = self::validatePostId($post_id);
         $table_name = DatabaseInstaller::getScssPartialsTableName();
-        $result = $wpdb->delete(
-            $table_name,
-            ['post_id' => $post_id]
-        );
 
-        return $result !== false;
+        $query = "DELETE FROM $table_name WHERE post_id = %d";
+        return self::executeWriteQuery($query, [$post_id], "delete SCSS partial settings for post {$post_id}");
     }
 
     /**
@@ -145,36 +150,21 @@ class ScssPartialsSettingsRepository
      */
     public static function getBulk(array $post_ids): array
     {
+        $post_ids = self::validatePostIds($post_ids);
+
         if (empty($post_ids)) {
             return [];
         }
 
-        global $wpdb;
         $table_name = DatabaseInstaller::getScssPartialsTableName();
+        $placeholders = self::createPlaceholders($post_ids);
 
-        // Sanitize post IDs
-        $post_ids = array_map('absint', $post_ids);
-        $post_ids = array_filter($post_ids);
+        $query = "SELECT * FROM $table_name WHERE post_id IN ($placeholders)";
+        $results = self::executeQuery($query, $post_ids, "bulk get SCSS partial settings");
 
-        if (empty($post_ids)) {
-            return [];
-        }
-
-        // Build placeholders
-        $placeholders = implode(',', array_fill(0, count($post_ids), '%d'));
-
-        // Get all settings for these post IDs
-        $results = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $table_name WHERE post_id IN ($placeholders)",
-            $post_ids
-        ), ARRAY_A);
-
-        // Group by post_id and process
         $settings_by_post = [];
         foreach ($results as $row) {
-            $row['is_global'] = (bool) $row['is_global'];
-            $row['global_order'] = (int) $row['global_order'];
-            $settings_by_post[$row['post_id']] = $row;
+            $settings_by_post[$row['post_id']] = self::processRow($row);
         }
 
         return $settings_by_post;

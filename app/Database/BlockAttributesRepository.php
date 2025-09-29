@@ -6,8 +6,11 @@ use Fanculo\Admin\Api\Services\MetaKeysConstants;
 
 /**
  * Repository for managing block attributes in the database
+ *
+ * Implements the standardized bulk operations interface for consistent
+ * performance and error handling across all repository classes.
  */
-class BlockAttributesRepository
+class BlockAttributesRepository extends AbstractBulkRepository
 {
     /**
      * Get all attributes for a block

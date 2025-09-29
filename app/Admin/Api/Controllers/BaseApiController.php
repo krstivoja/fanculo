@@ -5,24 +5,35 @@ namespace Fanculo\Admin\Api\Controllers;
 use Fanculo\Admin\Api\Services\BulkQueryService;
 use Fanculo\Admin\Api\Services\ApiResponseFormatter;
 use Fanculo\Admin\Api\Services\UnifiedApiService;
+use Fanculo\Admin\Api\Services\StandardBulkPipeline;
+use Fanculo\Admin\Api\Traits\BulkOperationTrait;
+use Fanculo\Admin\Api\Traits\PerformanceLoggingTrait;
+use Fanculo\Admin\Api\Traits\CachingIntegrationTrait;
 
 /**
  * Base API Controller with shared functionality
  *
  * Provides common services, permission checking, and utilities
- * for all Fanculo API controllers.
+ * for all Fanculo API controllers. Includes standardized bulk operations,
+ * performance logging, and caching integration.
  */
 abstract class BaseApiController
 {
+    use BulkOperationTrait;
+    use PerformanceLoggingTrait;
+    use CachingIntegrationTrait;
+
     protected $bulkQueryService;
     protected $responseFormatter;
     protected $unifiedApiService;
+    protected $standardBulkPipeline;
 
     public function __construct()
     {
         $this->bulkQueryService = new BulkQueryService();
         $this->responseFormatter = new ApiResponseFormatter();
         $this->unifiedApiService = new UnifiedApiService();
+        $this->standardBulkPipeline = new StandardBulkPipeline($this->bulkQueryService);
         add_action('rest_api_init', [$this, 'registerRoutes']);
     }
 
