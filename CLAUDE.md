@@ -54,6 +54,7 @@ These rules ensure maintainability, safety, and developer velocity.
 
 #### C-10 (MUST) Security (PHP + JS)
 - Validate/sanitize input; escape output (`esc_html`, `esc_attr`, etc.). Use nonces for actions and prepared statements for DB. Never inject unsanitized HTML in JS.
+- Follow sanitization standards defined in C-19 for consistent, secure input handling across all controllers
 
 #### C-11 (MUST) PHP standards and namespaces
 - Follow WordPress standards; PSR-4 under `Fanculo\…`; class names match files and directories.
@@ -88,6 +89,19 @@ These rules ensure maintainability, safety, and developer velocity.
   - Test fixtures/HTML → `/test/fixtures/`
   - E2E tests → `/test/e2e/`
 - When creating new test files, immediately place them in the correct test subdirectory
+
+#### C-19 (MUST) Sanitization standards and patterns
+- **ALWAYS** use centralized `SanitizationService` for complex validation needs
+- **NEVER** use `$this` context in closures within REST API validation callbacks
+- **PREFER** simple WordPress functions (`sanitize_text_field`, `sanitize_textarea_field`) for straightforward cases
+- **AVOID** complex trait methods in REST API route argument callbacks
+- **Context-aware sanitization patterns**:
+  - PHP/SCSS/JS code: Preserve content while ensuring string type, validate dangerous functions
+  - JSON data: Validate JSON format, fallback to `{}` for invalid JSON
+  - Boolean flags: Convert to `'1'`/`'0'` strings for WordPress meta compatibility
+  - Integer values: Use `intval()` with min/max constraints
+- **Testing requirement**: Always test API endpoints after sanitization changes
+- **Bulk operations awareness**: Remember that editor may use bulk operations API, not individual CRUD endpoints
 
 
 ---
@@ -141,13 +155,14 @@ These rules ensure maintainability, safety, and developer velocity.
 
 #### O-10 (SHOULD) PHP domain boundaries
 - Controllers: `app/Admin/Api/*Controller.php` (thin, single responsibility).
-- Services: shared cross-domain services in `app/Services/`; generation-specific services in `app/FilesManager/Services/`.
+- Services: shared cross-domain services in `app/Services/`; generation-specific services in `app/FilesManager/Services/`; sanitization services in `app/Admin/Api/Services/`.
 - Contracts/Interfaces colocated in `app/FilesManager/Contracts/` (or promote to `app/Contracts/` if reused beyond FilesManager).
 - Generators in `app/FilesManager/Generators/` mapped 1:1 to output artifacts.
 - Mappers in `app/FilesManager/Mappers/` with documented input/output shapes.
 - Domain models and registration in `app/Content/` (optionally rename to `app/Domain/` for clarity).
 - Meta boxes in `app/MetaBoxes/` with `*MetaBox.php` suffix; `AbstractMetaBox.php` is the base.
 - Helpers in `app/Helpers/` remain stateless; stateful logic belongs in Services.
+- Traits in `app/Admin/Api/Traits/` for shared controller functionality (sanitization, caching, etc.).
 - Standardize namespaces under `Fanculo\{Area}\...` aligned with folders (PSR-4 `Fanculo\` → `app/`).
 
 #### O-11 (SHOULD) Example target layout (JS)
@@ -177,6 +192,9 @@ src/
 app/
   Admin/
     Api/
+      Controllers/
+      Services/     (SanitizationService, etc.)
+      Traits/       (SanitizationTrait, etc.)
   Content/          (or Domain/)
   FilesManager/
     Contracts/
@@ -295,6 +313,27 @@ app/
   }
   ```
 
+#### D-6b (MUST) API Sanitization Standards
+- **REST API validation patterns**: Use simple WordPress functions in validation callbacks to avoid closure context issues
+- **Safe sanitization callback examples**:
+  ```php
+  // GOOD: Simple WordPress function
+  'sanitize_callback' => 'sanitize_text_field'
+
+  // GOOD: Simple closure with direct value handling
+  'sanitize_callback' => function($value) {
+      return min(100, max(1, intval($value)));
+  }
+
+  // BAD: Using $this in closure (causes fatal errors)
+  'sanitize_callback' => function($value) {
+      return $this->getSanitizationService()->sanitizeText($value);
+  }
+  ```
+- **Complex sanitization**: Use dedicated methods in controller for complex sanitization, call them from simple closures
+- **Bulk operations**: Remember to add file generation triggers to bulk update operations, not just individual CRUD endpoints
+- **Testing protocol**: Always test API endpoints after sanitization changes; verify both individual and bulk operations work
+
 #### D-7 (SHOULD) Metaboxes
 - Definitions in `app/MetaBoxes/`:
   - `BlocksMetaBox.php`: block metadata
@@ -319,10 +358,11 @@ app/
 
 #### D-11 (SHOULD) Where to find things (quick map)
 - APIs: `app/Admin/Api/*`
-- Services: `app/Services/*`, `app/FilesManager/Services/*`
+- Services: `app/Services/*`, `app/FilesManager/Services/*`, `app/Admin/Api/Services/*` (sanitization)
 - Generators: `app/FilesManager/Generators/*`
 - Mappers: `app/FilesManager/Mappers/*`
 - Contracts: `app/FilesManager/Contracts/*`
+- API Traits: `app/Admin/Api/Traits/*` (sanitization, caching, bulk operations)
 - Editor UI: `src/app/components/editor/*`
 - Reusable UI: `src/app/components/ui/*`
 - Icons: `src/app/components/icons/*`

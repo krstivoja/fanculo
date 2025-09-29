@@ -28,18 +28,113 @@ class PostsOperationsApiController extends BaseApiController
             'permission_callback' => [$this, 'checkCreatePermissions'],
             'args' => [
                 'operations' => [
+                    'type' => 'array',
                     'required' => true,
+                    'sanitize_callback' => function($value) {
+                        return $this->sanitizeBulkOperations($value);
+                    },
                     'validate_callback' => function($param) {
-                        return is_array($param) && !empty($param);
+                        return is_array($param) && !empty($param) && count($param) <= 50;
                     }
                 ]
             ]
         ]);
     }
 
+    /**
+     * Sanitize bulk operations array
+     */
+    private function sanitizeBulkOperations(array $operations): array
+    {
+        $sanitized = [];
+        $max_operations = 50;
+        $count = 0;
+
+        foreach ($operations as $index => $operation) {
+            if ($count >= $max_operations) {
+                break;
+            }
+
+            if (!is_array($operation)) {
+                continue;
+            }
+
+            $sanitized_op = [];
+
+            // Sanitize operation type
+            if (isset($operation['type'])) {
+                $sanitized_op['type'] = $this->getSanitizationService()->sanitizeText($operation['type'], 'key');
+            }
+
+            // Sanitize operation data
+            if (isset($operation['data']) && is_array($operation['data'])) {
+                $sanitized_op['data'] = $this->sanitizeOperationData($operation['data'], $sanitized_op['type'] ?? '');
+            }
+
+            if (!empty($sanitized_op['type']) && !empty($sanitized_op['data'])) {
+                $sanitized[] = $sanitized_op;
+                $count++;
+            }
+        }
+
+        return $sanitized;
+    }
+
+    /**
+     * Sanitize operation data based on operation type
+     */
+    private function sanitizeOperationData(array $data, string $operation_type): array
+    {
+        $service = $this->getSanitizationService();
+        $sanitized = [];
+
+        switch ($operation_type) {
+            case 'get_post':
+            case 'regenerate_files':
+                if (isset($data['id'])) {
+                    $sanitized['id'] = $service->sanitizeInteger($data['id'], 1);
+                }
+                break;
+
+            case 'get_posts_bulk':
+                if (isset($data['ids']) && is_array($data['ids'])) {
+                    $sanitized['ids'] = array_filter(
+                        array_map(function($id) use ($service) {
+                            return $service->sanitizeInteger($id, 1);
+                        }, $data['ids']),
+                        function($id) { return $id > 0; }
+                    );
+                }
+                break;
+
+            case 'update_meta':
+                if (isset($data['post_id'])) {
+                    $sanitized['post_id'] = $service->sanitizeInteger($data['post_id'], 1);
+                }
+                if (isset($data['meta']) && is_array($data['meta'])) {
+                    $sanitized['meta'] = $this->sanitizeNestedMeta($data['meta']);
+                }
+                break;
+
+            default:
+                // For unknown operation types, do basic array sanitization
+                foreach ($data as $key => $value) {
+                    $sanitized_key = $service->sanitizeText($key, 'key');
+                    if (is_array($value)) {
+                        $sanitized[$sanitized_key] = $service->sanitizeArray($value);
+                    } else {
+                        $sanitized[$sanitized_key] = $service->sanitizeText($value, 'textarea');
+                    }
+                }
+        }
+
+        return $sanitized;
+    }
+
     public function executeBulkOperations($request)
     {
         $startTime = microtime(true);
+        // Operations are already sanitized by route args
         $operations = $request->get_param('operations');
         $results = [
             'successful' => [],
@@ -171,40 +266,39 @@ class PostsOperationsApiController extends BaseApiController
     }
 
     /**
-     * Update post meta data
+     * Update post meta data - data is already sanitized by sanitizeNestedMeta
      */
     private function updatePostMeta($postId, $metaData)
     {
+        // Meta data is already sanitized at the request level
+
         // Update blocks meta
         if (isset($metaData['blocks'])) {
             $blocks = $metaData['blocks'];
             if (isset($blocks['php'])) {
-                update_post_meta($postId, MetaKeysConstants::BLOCK_PHP, wp_unslash($blocks['php']));
+                update_post_meta($postId, MetaKeysConstants::BLOCK_PHP, $blocks['php']);
             }
             if (isset($blocks['scss'])) {
-                $scssContent = sanitize_textarea_field($blocks['scss']);
-                update_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, $scssContent);
+                update_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, $blocks['scss']);
                 // If SCSS content is empty, also clear compiled CSS
-                if (empty($scssContent)) {
+                if (empty($blocks['scss'])) {
                     update_post_meta($postId, MetaKeysConstants::CSS_CONTENT, '');
                 }
             }
             if (isset($blocks['editorScss'])) {
-                $editorScssContent = sanitize_textarea_field($blocks['editorScss']);
-                update_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_SCSS, $editorScssContent);
+                update_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_SCSS, $blocks['editorScss']);
                 // If editor SCSS content is empty, also clear compiled editor CSS
-                if (empty($editorScssContent)) {
+                if (empty($blocks['editorScss'])) {
                     update_post_meta($postId, MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT, '');
                 }
             }
             if (isset($blocks['js'])) {
-                update_post_meta($postId, MetaKeysConstants::BLOCK_JS, sanitize_textarea_field($blocks['js']));
+                update_post_meta($postId, MetaKeysConstants::BLOCK_JS, $blocks['js']);
             }
             if (isset($blocks['attributes'])) {
-                $attributesJson = sanitize_textarea_field($blocks['attributes']);
-                update_post_meta($postId, MetaKeysConstants::BLOCK_ATTRIBUTES, $attributesJson);
+                update_post_meta($postId, MetaKeysConstants::BLOCK_ATTRIBUTES, $blocks['attributes']);
                 // Also save to database table
-                $attributesData = json_decode($attributesJson, true);
+                $attributesData = json_decode($blocks['attributes'], true);
                 if (json_last_error() === JSON_ERROR_NONE && is_array($attributesData)) {
                     BlockAttributesRepository::save($postId, $attributesData);
                 }
@@ -212,10 +306,9 @@ class PostsOperationsApiController extends BaseApiController
 
             // Save block settings to database table
             $dbSettings = [];
-            // Parse block settings JSON
+            // Parse block settings JSON (already sanitized)
             if (isset($blocks['settings'])) {
-                $settingsJson = sanitize_textarea_field($blocks['settings']);
-                $settingsData = json_decode($settingsJson, true);
+                $settingsData = json_decode($blocks['settings'], true);
                 if ($settingsData) {
                     $dbSettings['category'] = $settingsData['category'] ?? null;
                     $dbSettings['description'] = $settingsData['description'] ?? null;
@@ -223,10 +316,9 @@ class PostsOperationsApiController extends BaseApiController
                 }
             }
 
-            // Parse inner blocks settings JSON
+            // Parse inner blocks settings JSON (already sanitized)
             if (isset($blocks['inner_blocks_settings'])) {
-                $innerBlocksJson = sanitize_textarea_field($blocks['inner_blocks_settings']);
-                $innerBlocksData = json_decode($innerBlocksJson, true);
+                $innerBlocksData = json_decode($blocks['inner_blocks_settings'], true);
                 if ($innerBlocksData) {
                     $dbSettings['supports_inner_blocks'] = $innerBlocksData['enabled'] ?? false;
                     $dbSettings['allowed_block_types'] = $innerBlocksData['allowed_blocks'] ?? [];
@@ -235,19 +327,17 @@ class PostsOperationsApiController extends BaseApiController
                 }
             }
 
-            // Parse selected partials JSON
+            // Parse selected partials JSON (already sanitized)
             if (isset($blocks['selected_partials'])) {
-                $partialsJson = sanitize_textarea_field($blocks['selected_partials']);
-                $partialsData = json_decode($partialsJson, true);
+                $partialsData = json_decode($blocks['selected_partials'], true);
                 if ($partialsData) {
                     $dbSettings['selected_partials'] = $partialsData;
                 }
             }
 
-            // Parse editor selected partials JSON
+            // Parse editor selected partials JSON (already sanitized)
             if (isset($blocks['editor_selected_partials'])) {
-                $editorPartialsJson = sanitize_textarea_field($blocks['editor_selected_partials']);
-                $editorPartialsData = json_decode($editorPartialsJson, true);
+                $editorPartialsData = json_decode($blocks['editor_selected_partials'], true);
                 if ($editorPartialsData) {
                     $dbSettings['editor_selected_partials'] = $editorPartialsData;
                 }
@@ -259,19 +349,19 @@ class PostsOperationsApiController extends BaseApiController
             }
         }
 
-        // Update symbols meta
+        // Update symbols meta (already sanitized)
         if (isset($metaData['symbols'])) {
             $symbols = $metaData['symbols'];
             if (isset($symbols['php'])) {
-                update_post_meta($postId, MetaKeysConstants::SYMBOL_PHP, wp_unslash($symbols['php']));
+                update_post_meta($postId, MetaKeysConstants::SYMBOL_PHP, $symbols['php']);
             }
         }
 
-        // Update SCSS partials meta
+        // Update SCSS partials meta (already sanitized)
         if (isset($metaData['scss_partials'])) {
             $scssPartials = $metaData['scss_partials'];
             if (isset($scssPartials['scss'])) {
-                update_post_meta($postId, MetaKeysConstants::SCSS_PARTIAL_CONTENT, sanitize_textarea_field($scssPartials['scss']));
+                update_post_meta($postId, MetaKeysConstants::SCSS_PARTIAL_CONTENT, $scssPartials['scss']);
             }
 
             // Handle global settings - save to database table
@@ -291,6 +381,17 @@ class PostsOperationsApiController extends BaseApiController
             if (!empty($globalSettings)) {
                 ScssPartialsSettingsRepository::save($postId, $globalSettings);
             }
+        }
+
+        // Trigger file generation after meta data update
+        error_log("Fanculo Debug: Triggering file generation after meta update for post ID: $postId");
+        $post = get_post($postId);
+        if ($post) {
+            $filesManagerService = new FilesManagerService();
+            $result = $filesManagerService->generateFilesOnPostSave($postId, $post, true);
+            error_log("Fanculo Debug: File generation result: " . print_r($result, true));
+        } else {
+            error_log("Fanculo Debug: Could not find post with ID: $postId");
         }
     }
 }

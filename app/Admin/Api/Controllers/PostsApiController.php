@@ -32,22 +32,38 @@ class PostsApiController extends BaseApiController
                 'callback' => [$this, 'getPosts'],
                 'permission_callback' => [$this, 'checkPermissions'],
                 'args' => [
-                    'taxonomy_filter' => [
-                        'default' => '',
-                        'sanitize_callback' => 'sanitize_text_field',
-                    ],
                     'search' => [
+                        'type' => 'string',
                         'default' => '',
-                        'sanitize_callback' => 'sanitize_text_field',
+                        'sanitize_callback' => 'sanitize_text_field'
                     ],
                     'per_page' => [
+                        'type' => 'integer',
                         'default' => 20,
-                        'sanitize_callback' => 'absint',
+                        'sanitize_callback' => function($value) {
+                            return min(100, max(1, intval($value)));
+                        }
                     ],
                     'page' => [
+                        'type' => 'integer',
                         'default' => 1,
-                        'sanitize_callback' => 'absint',
+                        'sanitize_callback' => function($value) {
+                            return max(1, intval($value));
+                        }
                     ],
+                    'status' => [
+                        'type' => 'string',
+                        'default' => 'publish',
+                        'sanitize_callback' => 'sanitize_text_field'
+                    ],
+                    'taxonomy_filter' => [
+                        'type' => 'string',
+                        'default' => '',
+                        'sanitize_callback' => 'sanitize_text_field',
+                        'validate_callback' => function($param) {
+                            return empty($param) || in_array($param, ['blocks', 'symbols', 'scss-partials']);
+                        }
+                    ]
                 ],
             ],
             [
@@ -56,13 +72,15 @@ class PostsApiController extends BaseApiController
                 'permission_callback' => [$this, 'checkCreatePermissions'],
                 'args' => [
                     'title' => [
+                        'type' => 'string',
                         'required' => true,
                         'sanitize_callback' => 'sanitize_text_field',
                         'validate_callback' => function($param) {
-                            return !empty(trim($param));
+                            return !empty(trim($param)) && strlen($param) <= 255;
                         }
                     ],
                     'taxonomy_term' => [
+                        'type' => 'string',
                         'required' => true,
                         'sanitize_callback' => 'sanitize_text_field',
                         'validate_callback' => function($param) {
@@ -75,11 +93,9 @@ class PostsApiController extends BaseApiController
                         }
                     ],
                     'status' => [
+                        'type' => 'string',
                         'default' => 'publish',
-                        'sanitize_callback' => 'sanitize_text_field',
-                        'validate_callback' => function($param) {
-                            return in_array($param, ['draft', 'publish', 'private']);
-                        }
+                        'sanitize_callback' => 'sanitize_text_field'
                     ],
                 ],
             ]
@@ -98,16 +114,23 @@ class PostsApiController extends BaseApiController
                 'permission_callback' => [$this, 'checkCreatePermissions'],
                 'args' => [
                     'meta' => [
+                        'type' => 'array',
                         'required' => false,
+                        'sanitize_callback' => function($value) {
+                            // Simple sanitization for nested meta data
+                            if (!is_array($value)) return [];
+                            return $this->sanitizeMetaSimple($value);
+                        },
                         'validate_callback' => function($param) {
                             return is_array($param);
                         }
                     ],
                     'title' => [
+                        'type' => 'string',
                         'required' => false,
                         'sanitize_callback' => 'sanitize_text_field',
                         'validate_callback' => function($param) {
-                            return !empty(trim($param));
+                            return !empty(trim($param)) && strlen($param) <= 255;
                         }
                     ],
                 ],
@@ -404,8 +427,166 @@ class PostsApiController extends BaseApiController
 
     public function updatePost($request)
     {
-        // This method will be copied from the original controller
-        return $this->responseFormatter->updated([], []);
+        $postId = $request->get_param('id');
+        $post = get_post($postId);
+
+        if (!$post || $post->post_type !== FunculoPostType::getPostType()) {
+            return $this->responseFormatter->notFound('Post', $postId);
+        }
+
+        try {
+            // Parameters are already sanitized by route args
+            $title = $request->get_param('title');
+            $meta = $request->get_param('meta');
+
+            // Update title if provided
+            if (!empty($title)) {
+                wp_update_post([
+                    'ID' => $postId,
+                    'post_title' => $title, // Already sanitized
+                ]);
+            }
+
+            // Update meta if provided
+            if (!empty($meta) && is_array($meta)) {
+                // Meta is already sanitized by sanitizeNestedMeta
+                foreach ($meta as $category => $data) {
+                    if (!is_array($data)) continue;
+
+                    foreach ($data as $key => $value) {
+                        // Construct proper meta key
+                        $meta_key = $this->buildMetaKey($category, $key);
+                        if ($meta_key) {
+                            update_post_meta($postId, $meta_key, $value);
+                        }
+                    }
+                }
+            }
+
+            // Trigger file generation if meta was updated
+            if (!empty($meta)) {
+                error_log("Fanculo Debug: Starting file generation for post ID: $postId");
+                error_log("Fanculo Debug: Meta data: " . print_r($meta, true));
+
+                $filesManagerService = new FilesManagerService();
+                $result = $filesManagerService->generateFilesOnPostSave($postId, $post, true);
+
+                error_log("Fanculo Debug: File generation result: " . print_r($result, true));
+            }
+
+            // Get updated post data using bulk operations for consistency
+            $allTerms = $this->bulkQueryService->getBulkPostTerms([$post->ID], FunculoTypeTaxonomy::getTaxonomy());
+            $postTerms = $allTerms[$post->ID] ?? [];
+
+            $optimizedMetaKeys = $this->bulkQueryService->getOptimizedMetaKeys($allTerms);
+            $allMeta = $this->bulkQueryService->getBulkPostMeta([$post->ID], $optimizedMetaKeys);
+            $postMeta = $allMeta[$post->ID] ?? [];
+            $formattedMeta = $this->bulkQueryService->formatPostMeta($postMeta, $postTerms);
+
+            $postData = [
+                'id' => $post->ID,
+                'title' => get_the_title($post->ID),
+                'slug' => $post->post_name,
+                'status' => $post->post_status,
+                'date' => $post->post_date,
+                'modified' => $post->post_modified,
+                'terms' => $postTerms,
+                'edit_url' => get_edit_post_link($post->ID),
+                'meta' => $formattedMeta,
+            ];
+
+            return $this->responseFormatter->updated($postData, []);
+
+        } catch (\Exception $e) {
+            error_log('Update post error: ' . $e->getMessage());
+            return $this->responseFormatter->serverError('Update operation failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Simple sanitization for nested meta data
+     */
+    private function sanitizeMetaSimple($metaData)
+    {
+        if (!is_array($metaData)) return [];
+
+        $sanitized = [];
+        foreach ($metaData as $category => $data) {
+            $sanitizedCategory = sanitize_key($category);
+            if (!is_array($data)) continue;
+
+            $sanitized[$sanitizedCategory] = [];
+            foreach ($data as $key => $value) {
+                $sanitizedKey = sanitize_key($key);
+
+                // Different sanitization based on key type
+                switch ($key) {
+                    case 'php':
+                        // For PHP code, preserve content but ensure it's a string
+                        $sanitized[$sanitizedCategory][$sanitizedKey] = is_string($value) ? $value : '';
+                        break;
+                    case 'scss':
+                    case 'editorScss':
+                        // For SCSS code, preserve content but ensure it's a string
+                        $sanitized[$sanitizedCategory][$sanitizedKey] = is_string($value) ? $value : '';
+                        break;
+                    case 'js':
+                        // For JS code, preserve content but ensure it's a string
+                        $sanitized[$sanitizedCategory][$sanitizedKey] = is_string($value) ? $value : '';
+                        break;
+                    case 'settings':
+                    case 'attributes':
+                    case 'inner_blocks_settings':
+                    case 'selected_partials':
+                    case 'editor_selected_partials':
+                        // For JSON data, validate it's valid JSON
+                        if (is_string($value)) {
+                            $decoded = json_decode($value, true);
+                            $sanitized[$sanitizedCategory][$sanitizedKey] = (json_last_error() === JSON_ERROR_NONE) ? $value : '{}';
+                        } else {
+                            $sanitized[$sanitizedCategory][$sanitizedKey] = '{}';
+                        }
+                        break;
+                    case 'is_global':
+                        $sanitized[$sanitizedCategory][$sanitizedKey] = $value ? '1' : '0';
+                        break;
+                    case 'global_order':
+                        $sanitized[$sanitizedCategory][$sanitizedKey] = (string) intval($value);
+                        break;
+                    default:
+                        $sanitized[$sanitizedCategory][$sanitizedKey] = sanitize_textarea_field($value);
+                }
+            }
+        }
+
+        return $sanitized;
+    }
+
+    /**
+     * Build proper meta key from category and key
+     */
+    private function buildMetaKey(string $category, string $key): ?string
+    {
+        $meta_key_map = [
+            'blocks' => [
+                'php' => MetaKeysConstants::BLOCK_PHP,
+                'scss' => MetaKeysConstants::BLOCK_SCSS,
+                'js' => MetaKeysConstants::BLOCK_JS,
+                'settings' => MetaKeysConstants::BLOCK_SETTINGS,
+                'attributes' => MetaKeysConstants::BLOCK_ATTRIBUTES,
+                'inner_blocks_settings' => MetaKeysConstants::INNER_BLOCKS_SETTINGS,
+            ],
+            'symbols' => [
+                'php' => MetaKeysConstants::SYMBOL_PHP,
+            ],
+            'scss_partials' => [
+                'scss' => MetaKeysConstants::SCSS_PARTIAL_CONTENT,
+                'is_global' => MetaKeysConstants::SCSS_IS_GLOBAL,
+                'global_order' => MetaKeysConstants::SCSS_GLOBAL_ORDER,
+            ]
+        ];
+
+        return $meta_key_map[$category][$key] ?? null;
     }
 
     public function deletePost($request)

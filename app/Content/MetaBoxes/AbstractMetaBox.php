@@ -135,11 +135,8 @@ abstract class AbstractMetaBox
 
     protected function sanitizePhpCode($code)
     {
-        if (!$this->validatePhpCode($code)) {
-            return '';
-        }
-
-        return wp_unslash($code);
+        $sanitizationService = new \Fanculo\Admin\Api\Services\SanitizationService();
+        return $sanitizationService->sanitizePhpCode($code, ['validate_syntax' => false]);
     }
 
     protected function renderCodeField($name, $label, $value, $language = 'php')

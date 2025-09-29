@@ -9,6 +9,7 @@ use Fanculo\Admin\Api\Services\StandardBulkPipeline;
 use Fanculo\Admin\Api\Traits\BulkOperationTrait;
 use Fanculo\Admin\Api\Traits\PerformanceLoggingTrait;
 use Fanculo\Admin\Api\Traits\CachingIntegrationTrait;
+use Fanculo\Admin\Api\Traits\SanitizationTrait;
 
 /**
  * Base API Controller with shared functionality
@@ -22,6 +23,7 @@ abstract class BaseApiController
     use BulkOperationTrait;
     use PerformanceLoggingTrait;
     use CachingIntegrationTrait;
+    use SanitizationTrait;
 
     protected $bulkQueryService;
     protected $responseFormatter;
