@@ -253,17 +253,14 @@ class PostsApiController
         // BULK OPERATION 3: Fetch all meta at once - eliminates N+1
         $allMeta = $this->bulkQueryService->getBulkPostMeta($postIds, $optimizedMetaKeys);
 
-        // BULK OPERATION 4: Load block settings from database for blocks
-        $blockSettingsMap = [];
+        // BULK OPERATION 4: Identify blocks and SCSS partials efficiently
+        $blockPostIds = [];
         $scssPartialIds = [];
         foreach ($postIds as $postId) {
             $postTerms = $allTerms[$postId] ?? [];
             foreach ($postTerms as $term) {
                 if ($term['slug'] === 'blocks') {
-                    $dbSettings = BlockSettingsRepository::get($postId);
-                    if ($dbSettings) {
-                        $blockSettingsMap[$postId] = $dbSettings;
-                    }
+                    $blockPostIds[] = $postId;
                     break;
                 } elseif ($term['slug'] === 'scss-partials') {
                     $scssPartialIds[] = $postId;
@@ -272,10 +269,23 @@ class PostsApiController
             }
         }
 
-        // BULK OPERATION 5: Load SCSS partial settings from database
+        // BULK OPERATION 5: Load block settings from database in ONE query
+        $blockSettingsMap = [];
+        if (!empty($blockPostIds)) {
+            $blockSettingsMap = BlockSettingsRepository::getBulk($blockPostIds);
+        }
+
+        // BULK OPERATION 6: Load SCSS partial settings from database
         $scssSettingsMap = [];
         if (!empty($scssPartialIds)) {
             $scssSettingsMap = ScssPartialsSettingsRepository::getBulk($scssPartialIds);
+        }
+
+        // OPTIMIZATION: Pre-fetch titles and edit links to avoid repeated function calls
+        $postTitles = wp_list_pluck($query->posts, 'post_title', 'ID');
+        $editLinks = [];
+        foreach ($query->posts as $post) {
+            $editLinks[$post->ID] = get_edit_post_link($post->ID);
         }
 
         // Build response with prefetched data - NO MORE INDIVIDUAL QUERIES
@@ -326,14 +336,14 @@ class PostsApiController
 
             $posts[] = [
                 'id' => $post->ID,
-                'title' => get_the_title($post->ID),
+                'title' => $postTitles[$post->ID] ?? 'Untitled',
                 'slug' => $post->post_name,
                 'status' => $post->post_status,
                 'date' => $post->post_date,
                 'modified' => $post->post_modified,
                 'excerpt' => wp_trim_words($post->post_content, 20),
                 'terms' => $postTerms,
-                'edit_url' => get_edit_post_link($post->ID),
+                'edit_url' => $editLinks[$post->ID] ?? '',
                 'meta' => $formattedMeta,
             ];
         }
