@@ -444,18 +444,23 @@ class FanculoSimpleHotReload {
    * Studio save handler - call this when saving in studio
    */
   async onStudioSave(postId, changes = ["all"]) {
-    // console.log("💾 Fanculo Studio: Save detected for post", postId);
+    console.log("💾 Fanculo Studio: Save detected for post", postId);
 
     // Wait a moment for SCSS compilation to complete
-    // console.log("⏳ Fanculo: Waiting for SCSS compilation to complete...");
+    console.log("⏳ Fanculo: Waiting for SCSS compilation to complete...");
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Get current block data
+    console.log("📡 Fanculo: Fetching block data for post", postId);
     const blockData = await this.fetchBlockData(postId);
+    console.log("📦 Fanculo: Block data received:", blockData);
 
     if (blockData) {
       blockData.changes = changes;
+      console.log("🚀 Fanculo: Triggering hot reload with data");
       this.triggerHotReload(blockData);
+    } else {
+      console.error("❌ Fanculo: No block data received for post", postId);
     }
   }
 

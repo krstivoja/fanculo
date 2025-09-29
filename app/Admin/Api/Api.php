@@ -2,7 +2,10 @@
 
 namespace Fanculo\Admin\Api;
 
-use Fanculo\Admin\Api\PostsApiController;
+use Fanculo\Admin\Api\Controllers\PostsApiController;
+use Fanculo\Admin\Api\Controllers\PostsBatchApiController;
+use Fanculo\Admin\Api\Controllers\PostsQueryApiController;
+use Fanculo\Admin\Api\Controllers\PostsOperationsApiController;
 use Fanculo\Admin\Api\TaxonomyApiController;
 use Fanculo\Admin\Api\BlockCategoriesApiController;
 use Fanculo\Admin\Api\FileGenerationApiController;
@@ -14,6 +17,9 @@ use Fanculo\Content\FunculoTypeTaxonomy;
 class Api
 {
     private $postsController;
+    private $postsBatchController;
+    private $postsQueryController;
+    private $postsOperationsController;
     private $taxonomyController;
     private $blockCategoriesController;
     private $fileGenerationController;
@@ -23,8 +29,13 @@ class Api
 
     public function __construct()
     {
-        // Initialize controllers - each handles its own route registration
+        // Initialize refactored posts controllers - each handles its own route registration
         $this->postsController = new PostsApiController();
+        $this->postsBatchController = new PostsBatchApiController();
+        $this->postsQueryController = new PostsQueryApiController();
+        $this->postsOperationsController = new PostsOperationsApiController();
+
+        // Initialize other controllers
         $this->taxonomyController = new TaxonomyApiController();
         $this->blockCategoriesController = new BlockCategoriesApiController();
         $this->fileGenerationController = new FileGenerationApiController();

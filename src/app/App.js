@@ -328,9 +328,11 @@ const App = () => {
 
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus(""), 3000);
+      return true; // Return success for hot reload
     } catch (error) {
       console.error("Error saving/generating:", error);
       setSaveStatus("error");
+      return false; // Return failure for hot reload
     }
   };
 
