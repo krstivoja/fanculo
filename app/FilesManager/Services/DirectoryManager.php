@@ -3,7 +3,6 @@
 namespace Fanculo\FilesManager\Services;
 
 use Fanculo\FilesManager\Files\IndexAssets;
-use Fanculo\FilesManager\Files\Index;
 
 class DirectoryManager
 {
@@ -43,14 +42,15 @@ class DirectoryManager
         if (!file_exists($blockDir)) {
             $result = wp_mkdir_p($blockDir);
             if (!$result) {
+                error_log('DirectoryManager: Failed to create block directory: ' . $blockDir);
                 return $blockDir; // Return early if directory creation failed
             }
         }
 
-        // Always generate assets (for cache-busting) and index files when processing a block
+        // Generate index.asset.php (always the same, so handled here as utility)
         IndexAssets::generate($blockDir);
-        Index::generate($blockDir, $blockSlug, $postId);
 
+        // Other files (index.js, render.php, etc.) are handled by the unified generation system
         return $blockDir;
     }
 

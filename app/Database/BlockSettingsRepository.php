@@ -24,6 +24,45 @@ class BlockSettingsRepository
             return null;
         }
 
+        return self::processRow($row);
+    }
+
+    /**
+     * Get block settings for multiple post IDs in a single query
+     * @param array $post_ids Array of post IDs
+     * @return array Associative array with post_id as key and settings array as value
+     */
+    public static function getBulk(array $post_ids): array
+    {
+        global $wpdb;
+
+        if (empty($post_ids)) {
+            return [];
+        }
+
+        $table_name = DatabaseInstaller::getTableName();
+        $placeholders = implode(',', array_fill(0, count($post_ids), '%d'));
+
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table_name WHERE post_id IN ($placeholders)",
+            ...$post_ids
+        ), ARRAY_A);
+
+        $result = [];
+        foreach ($rows as $row) {
+            $result[$row['post_id']] = self::processRow($row);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Process a single database row (shared logic between get() and getBulk())
+     * @param array $row Raw database row
+     * @return array Processed row with proper data types
+     */
+    private static function processRow(array $row): array
+    {
         // Convert allowed_block_types from comma-separated to array
         if (!empty($row['allowed_block_types'])) {
             $row['allowed_block_types'] = explode(',', $row['allowed_block_types']);
@@ -255,38 +294,9 @@ class BlockSettingsRepository
             ARRAY_A
         );
 
-        // Process each row
+        // Process each row using shared logic
         foreach ($rows as &$row) {
-            // Convert allowed_block_types from comma-separated to array
-            if (!empty($row['allowed_block_types'])) {
-                $row['allowed_block_types'] = explode(',', $row['allowed_block_types']);
-            } else {
-                $row['allowed_block_types'] = [];
-            }
-
-            // Convert template from comma-separated to array
-            if (!empty($row['template'])) {
-                $row['template'] = explode(',', $row['template']);
-            } else {
-                $row['template'] = [];
-            }
-
-            // Convert selected_partials from JSON to array
-            if (!empty($row['selected_partials'])) {
-                $row['selected_partials'] = json_decode($row['selected_partials'], true) ?: [];
-            } else {
-                $row['selected_partials'] = [];
-            }
-
-            // Convert editor_selected_partials from JSON to array
-            if (!empty($row['editor_selected_partials'])) {
-                $row['editor_selected_partials'] = json_decode($row['editor_selected_partials'], true) ?: [];
-            } else {
-                $row['editor_selected_partials'] = [];
-            }
-
-            // Convert boolean fields
-            $row['supports_inner_blocks'] = (bool) $row['supports_inner_blocks'];
+            $row = self::processRow($row);
         }
 
         return $rows;
@@ -308,38 +318,9 @@ class BlockSettingsRepository
             json_encode($partial_id)
         ), ARRAY_A);
 
-        // Process each row
+        // Process each row using shared logic
         foreach ($rows as &$row) {
-            // Convert allowed_block_types from comma-separated to array
-            if (!empty($row['allowed_block_types'])) {
-                $row['allowed_block_types'] = explode(',', $row['allowed_block_types']);
-            } else {
-                $row['allowed_block_types'] = [];
-            }
-
-            // Convert template from comma-separated to array
-            if (!empty($row['template'])) {
-                $row['template'] = explode(',', $row['template']);
-            } else {
-                $row['template'] = [];
-            }
-
-            // Convert selected_partials from JSON to array
-            if (!empty($row['selected_partials'])) {
-                $row['selected_partials'] = json_decode($row['selected_partials'], true) ?: [];
-            } else {
-                $row['selected_partials'] = [];
-            }
-
-            // Convert editor_selected_partials from JSON to array
-            if (!empty($row['editor_selected_partials'])) {
-                $row['editor_selected_partials'] = json_decode($row['editor_selected_partials'], true) ?: [];
-            } else {
-                $row['editor_selected_partials'] = [];
-            }
-
-            // Convert boolean fields
-            $row['supports_inner_blocks'] = (bool) $row['supports_inner_blocks'];
+            $row = self::processRow($row);
         }
 
         return $rows;

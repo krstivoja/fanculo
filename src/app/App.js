@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import EditorList from "./components/editor/EditorList";
 import EditorHeader from "./components/editor/EditorHeader";
 import EditorMain from "./components/editor/EditorMain";
@@ -34,7 +34,7 @@ const App = () => {
   }, []);
 
   // Fetch post with related data using optimized batch operation
-  const handlePostSelect = async (post) => {
+  const handlePostSelect = useCallback(async (post) => {
     // Always use batch operation to get complete post data with related info
     const postWithRelated = await apiClient.getPostWithRelated(post.id);
     const fullPost = postWithRelated.post;
@@ -47,10 +47,10 @@ const App = () => {
     // Store related data for potential use
     if (postWithRelated.related) {
     }
-  };
+  }, []);
 
   // Handle meta field changes
-  const handleMetaChange = (section, field, value) => {
+  const handleMetaChange = useCallback((section, field, value) => {
     setMetaData((prev) => {
       const newMetaData = {
         ...prev,
@@ -68,10 +68,10 @@ const App = () => {
       setScssError(null);
       setShowToast(false);
     }
-  };
+  }, []);
 
   // Update post title
-  const handleTitleUpdate = async (newTitle) => {
+  const handleTitleUpdate = useCallback(async (newTitle) => {
     if (!selectedPost?.id) return;
 
     try {
@@ -84,15 +84,15 @@ const App = () => {
       console.error("Error updating title:", error);
       throw error;
     }
-  };
+  }, [selectedPost?.id]);
 
   // Handle toast close
-  const handleToastClose = () => {
+  const handleToastClose = useCallback(() => {
     setShowToast(false);
-  };
+  }, []);
 
   // Handle opening partial for editing from toast
-  const handleOpenPartial = async (partialName) => {
+  const handleOpenPartial = useCallback(async (partialName) => {
     try {
       // Find the partial post by title/name using centralized API client
       const data = await apiClient.getPosts({ per_page: 100 });
@@ -124,71 +124,73 @@ const App = () => {
     } catch (error) {
       console.error("Error opening partial:", error);
     }
-  };
+  }, []);
 
   // Get current partials data for compilation
-  const getCurrentPartials = async () => {
-    try {
-      // Get global partials using centralized API client
-      const partialsData = await apiClient.getScssPartials();
-      const globalPartials = partialsData.global_partials || [];
-      const availablePartials = partialsData.available_partials || [];
+  const getCurrentPartials = useMemo(() => {
+    return async () => {
+      try {
+        // Get global partials using centralized API client
+        const partialsData = await apiClient.getScssPartials();
+        const globalPartials = partialsData.global_partials || [];
+        const availablePartials = partialsData.available_partials || [];
 
-      // Get selected partial IDs from current state
-      let selectedPartialIds = [];
-      const selectedPartialsString = metaData.blocks?.selected_partials;
-      if (selectedPartialsString) {
-        try {
-          selectedPartialIds = JSON.parse(selectedPartialsString);
-        } catch (e) {
-          console.warn("Failed to parse current selected partials:", e);
-        }
-      }
-
-      // Enrich selected partial IDs with their data
-      const enrichedSelectedPartials = [];
-      if (Array.isArray(selectedPartialIds)) {
-        // Create a combined lookup map for efficiency
-        const allPartials = [...globalPartials, ...availablePartials];
-        const partialsLookup = {};
-        allPartials.forEach((partial) => {
-          partialsLookup[partial.id] = partial;
-        });
-
-        selectedPartialIds.forEach((partialId, index) => {
-          // Handle both number and string IDs
-          const id =
-            typeof partialId === "string" ? parseInt(partialId) : partialId;
-          const partialData = partialsLookup[id];
-
-          if (partialData) {
-            enrichedSelectedPartials.push({
-              id: partialData.id,
-              title: partialData.title,
-              slug: partialData.slug,
-              order: index + 1, // Use the order from the selected array
-            });
-          } else {
-            // If partial data not found, create a minimal object
-            console.warn(
-              `Selected partial ${id} not found in available partials`
-            );
-            enrichedSelectedPartials.push({
-              id: id,
-              title: `Partial ${id}`,
-              slug: `partial-${id}`,
-              order: index + 1,
-            });
+        // Get selected partial IDs from current state
+        let selectedPartialIds = [];
+        const selectedPartialsString = metaData.blocks?.selected_partials;
+        if (selectedPartialsString) {
+          try {
+            selectedPartialIds = JSON.parse(selectedPartialsString);
+          } catch (e) {
+            console.warn("Failed to parse current selected partials:", e);
           }
-        });
-      }
+        }
 
-      return { globalPartials, selectedPartials: enrichedSelectedPartials };
-    } catch (error) {
-      console.error("Error getting current partials:", error);
-      return { globalPartials: [], selectedPartials: [] };
-    }
-  };
+        // Enrich selected partial IDs with their data
+        const enrichedSelectedPartials = [];
+        if (Array.isArray(selectedPartialIds)) {
+          // Create a combined lookup map for efficiency
+          const allPartials = [...globalPartials, ...availablePartials];
+          const partialsLookup = {};
+          allPartials.forEach((partial) => {
+            partialsLookup[partial.id] = partial;
+          });
+
+          selectedPartialIds.forEach((partialId, index) => {
+            // Handle both number and string IDs
+            const id =
+              typeof partialId === "string" ? parseInt(partialId) : partialId;
+            const partialData = partialsLookup[id];
+
+            if (partialData) {
+              enrichedSelectedPartials.push({
+                id: partialData.id,
+                title: partialData.title,
+                slug: partialData.slug,
+                order: index + 1, // Use the order from the selected array
+              });
+            } else {
+              // If partial data not found, create a minimal object
+              console.warn(
+                `Selected partial ${id} not found in available partials`
+              );
+              enrichedSelectedPartials.push({
+                id: id,
+                title: `Partial ${id}`,
+                slug: `partial-${id}`,
+                order: index + 1,
+              });
+            }
+          });
+        }
+
+        return { globalPartials, selectedPartials: enrichedSelectedPartials };
+      } catch (error) {
+        console.error("Error getting current partials:", error);
+        return { globalPartials: [], selectedPartials: [] };
+      }
+    };
+  }, [metaData.blocks?.selected_partials]);
 
   // Original save function without hot reload
   const originalHandleSave = async () => {
@@ -328,9 +330,11 @@ const App = () => {
 
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus(""), 3000);
+      return true; // Return success for hot reload
     } catch (error) {
       console.error("Error saving/generating:", error);
       setSaveStatus("error");
+      return false; // Return failure for hot reload
     }
   };
 
@@ -343,7 +347,7 @@ const App = () => {
   // Use the wrapped save function
   const handleSave = saveWithHotReload;
 
-  const fetchPosts = async (showLoading = true) => {
+  const fetchPosts = useCallback(async (showLoading = true) => {
     try {
       if (showLoading) setLoading(true);
 
@@ -393,15 +397,15 @@ const App = () => {
     } finally {
       if (showLoading) setLoading(false);
     }
-  };
+  }, [selectedPost, handlePostSelect]);
 
   // Function to refresh the posts list (can be called after creating new posts)
-  const refreshPosts = () => {
+  const refreshPosts = useCallback(() => {
     fetchPosts(false);
-  };
+  }, [fetchPosts]);
 
   // Handle post deletion
-  const handlePostDelete = (deletedPostId) => {
+  const handlePostDelete = useCallback((deletedPostId) => {
     // Clear selected post if it was the one deleted
     if (selectedPost && selectedPost.id === deletedPostId) {
       setSelectedPost(null);
@@ -411,10 +415,10 @@ const App = () => {
 
     // Refresh the posts list to remove the deleted post
     refreshPosts();
-  };
+  }, [selectedPost, refreshPosts]);
 
   // Handle post creation
-  const handlePostCreate = async (postData) => {
+  const handlePostCreate = useCallback(async (postData) => {
     try {
       // Use centralized API client to create post
       const newPost = await apiClient.createPost({
@@ -433,7 +437,7 @@ const App = () => {
       console.error("Error creating post:", error);
       alert("Failed to create post: " + error.message);
     }
-  };
+  }, [refreshPosts, handlePostSelect]);
 
   useEffect(() => {
     // Always use the API call to get full meta data
@@ -452,12 +456,25 @@ const App = () => {
     fetchRegisteredBlocks();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
-
-  const totalPosts =
+  // Memoize computed values (must be before any early returns)
+  const totalPosts = useMemo(() =>
     groupedPosts.blocks.length +
     groupedPosts.symbols.length +
-    groupedPosts["scss-partials"].length;
+    groupedPosts["scss-partials"].length,
+    [groupedPosts.blocks.length, groupedPosts.symbols.length, groupedPosts["scss-partials"].length]
+  );
+
+  const toastIsVisible = useMemo(() =>
+    showToast && scssError,
+    [showToast, scssError]
+  );
+
+  const hasUnsavedChanges = useMemo(() =>
+    saveStatus === "unsaved",
+    [saveStatus]
+  );
+
+  if (loading) return <div>Loading...</div>;
 
   // Show empty state when no posts exist
   if (totalPosts === 0) {
@@ -467,7 +484,7 @@ const App = () => {
           <EditorHeader
             onSave={handleSave}
             saveStatus={saveStatus}
-            hasUnsavedChanges={saveStatus === "unsaved"}
+            hasUnsavedChanges={hasUnsavedChanges}
             onPostsRefresh={refreshPosts}
           />
           <EditorNoPosts onPostCreate={handlePostCreate} />
@@ -478,7 +495,7 @@ const App = () => {
           message={scssError}
           type="error"
           title="SCSS Compilation Error"
-          isVisible={showToast && scssError}
+          isVisible={toastIsVisible}
           onClose={handleToastClose}
           onOpenPartial={handleOpenPartial}
         />
@@ -492,7 +509,7 @@ const App = () => {
         <EditorHeader
           onSave={handleSave}
           saveStatus={saveStatus}
-          hasUnsavedChanges={saveStatus === "unsaved"}
+          hasUnsavedChanges={hasUnsavedChanges}
           onPostsRefresh={refreshPosts}
         />
 
@@ -523,7 +540,7 @@ const App = () => {
         message={scssError}
         type="error"
         title="SCSS Compilation Error"
-        isVisible={showToast && scssError}
+        isVisible={toastIsVisible}
         onClose={handleToastClose}
         onOpenPartial={handleOpenPartial}
       />
