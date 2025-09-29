@@ -16,11 +16,11 @@ plugin shows good engineering practices but has several areas for improvement.
 
 ### React/JS Performance Issues
 
-1. No React.memo() usage for expensive components
-2. Missing useCallback/useMemo optimizations in App.js
-3. Inefficient re-renders due to object creation in render methods
-4. Large bundle sizes - no code splitting beyond lazy loading modal
-5. API call inefficiencies - redundant requests in component tree
+1. ~~ No React.memo() usage for expensive components ~~
+2. ~~ Missing useCallback/useMemo optimizations in App.js ~~
+3. ~~ Inefficient re-renders due to object creation in render methods ~~
+4. ~~ Large bundle sizes - no code splitting beyond lazy loading modal ~~
+5. ~~ API call inefficiencies - redundant requests in component tree ~~
 
 ### Database & Caching Issues
 

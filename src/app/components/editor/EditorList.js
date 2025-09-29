@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { TAXONOMY_TERMS } from '../../constants/taxonomy';
 import { Button } from '../ui';
 
 const EditorList = ({ groupedPosts, selectedPost, onPostSelect }) => {
   const [activeTab, setActiveTab] = useState('blocks');
-  const totalPosts = groupedPosts.blocks.length + groupedPosts.symbols.length + groupedPosts['scss-partials'].length;
 
-  // Get the appropriate icon for a post (only for blocks)
-  const getPostIcon = (post, termSlug) => {
+  // Memoize total posts calculation
+  const totalPosts = useMemo(() =>
+    groupedPosts.blocks.length + groupedPosts.symbols.length + groupedPosts['scss-partials'].length,
+    [groupedPosts.blocks.length, groupedPosts.symbols.length, groupedPosts['scss-partials'].length]
+  );
+
+  // Memoize the expensive icon parsing logic
+  const getPostIcon = useCallback((post, termSlug) => {
     // Only show icons for blocks
     if (termSlug !== 'blocks') {
       return null;
@@ -34,7 +39,45 @@ const EditorList = ({ groupedPosts, selectedPost, onPostSelect }) => {
 
     // Default icon for blocks
     return 'dashicons-search';
-  };
+  }, []); // No dependencies as it's pure function
+
+  // Memoize tab click handler
+  const handleTabClick = useCallback((slug) => {
+    setActiveTab(slug);
+  }, []);
+
+  // Memoize expensive post rendering for each term
+  const renderPostList = useCallback((posts, termSlug) => {
+    if (posts.length === 0) {
+      const termName = TAXONOMY_TERMS.find(t => t.slug === termSlug)?.name || termSlug;
+      return <p>No {termName.toLowerCase()} found</p>;
+    }
+
+    return (
+      <ul className="overflow-y-auto h-full">
+        {posts.map(post => {
+          // Get the actual term slug from the post's terms
+          const postTermSlug = post.terms && post.terms.length > 0 ? post.terms[0].slug : termSlug;
+          const iconClass = getPostIcon(post, postTermSlug);
+
+          return (
+            <li
+              key={post.id}
+              onClick={() => onPostSelect(post)}
+              className={`cursor-pointer p-2 rounded flex items-center gap-2 ${
+                selectedPost?.id === post.id
+                  ? 'bg-action text-highlight hover:bg-action'
+                  : 'hover:bg-action/10'
+              }`}
+            >
+              {iconClass && <span className={`dashicons ${iconClass} text-sm`}></span>}
+              <span>{post.title}</span>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }, [selectedPost?.id, onPostSelect, getPostIcon]);
 
   return (
     <aside id="editor-list" className='flex flex-col h-full border-r border-solid border-outline w-[400px]'>
@@ -48,7 +91,7 @@ const EditorList = ({ groupedPosts, selectedPost, onPostSelect }) => {
               key={term.slug}
               variant={activeTab === term.slug ? 'primary' : 'ghost'}
               className="grow"
-              onClick={() => setActiveTab(term.slug)}
+              onClick={() => handleTabClick(term.slug)}
             >
               {term.name}
             </Button>
@@ -63,33 +106,7 @@ const EditorList = ({ groupedPosts, selectedPost, onPostSelect }) => {
             key={term.slug}
             className={`h-full ${activeTab === term.slug ? 'block' : 'hidden'}`}
           >
-            {groupedPosts[term.slug].length > 0 ? (
-              <ul className="overflow-y-auto h-full">
-                {groupedPosts[term.slug].map(post => {
-                  // Get the actual term slug from the post's terms
-                  const postTermSlug = post.terms && post.terms.length > 0 ? post.terms[0].slug : term.slug;
-
-                  const iconClass = getPostIcon(post, postTermSlug);
-
-                  return (
-                    <li
-                      key={post.id}
-                      onClick={() => onPostSelect(post)}
-                      className={`cursor-pointer p-2 rounded flex items-center gap-2 ${
-                        selectedPost?.id === post.id
-                          ? 'bg-action text-highlight hover:bg-action'
-                          : 'hover:bg-action/10'
-                      }`}
-                    >
-                      {iconClass && <span className={`dashicons ${iconClass} text-sm`}></span>}
-                      <span>{post.title}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p>No {term.name.toLowerCase()} found</p>
-            )}
+            {renderPostList(groupedPosts[term.slug], term.slug)}
           </div>
         ))}
       </div>
@@ -97,4 +114,21 @@ const EditorList = ({ groupedPosts, selectedPost, onPostSelect }) => {
   );
 };
 
-export default EditorList;
+// Memoize the component to prevent unnecessary re-renders
+export default React.memo(EditorList, (prevProps, nextProps) => {
+  // Custom comparison function for expensive props
+  return (
+    // Check if groupedPosts arrays have same lengths and contents
+    prevProps.groupedPosts.blocks.length === nextProps.groupedPosts.blocks.length &&
+    prevProps.groupedPosts.symbols.length === nextProps.groupedPosts.symbols.length &&
+    prevProps.groupedPosts['scss-partials'].length === nextProps.groupedPosts['scss-partials'].length &&
+    // Check if the posts arrays reference the same objects (shallow comparison)
+    prevProps.groupedPosts.blocks === nextProps.groupedPosts.blocks &&
+    prevProps.groupedPosts.symbols === nextProps.groupedPosts.symbols &&
+    prevProps.groupedPosts['scss-partials'] === nextProps.groupedPosts['scss-partials'] &&
+    // Check if selectedPost is the same
+    prevProps.selectedPost?.id === nextProps.selectedPost?.id &&
+    // Check if onPostSelect function reference is the same
+    prevProps.onPostSelect === nextProps.onPostSelect
+  );
+});

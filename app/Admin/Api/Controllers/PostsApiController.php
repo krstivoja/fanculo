@@ -7,6 +7,8 @@ use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use Fanculo\Database\BlockSettingsRepository;
 use Fanculo\Database\ScssPartialsSettingsRepository;
+use Fanculo\FilesManager\FilesManagerService;
+use Fanculo\Admin\Api\Services\BulkQueryService;
 
 /**
  * Posts API Controller - Basic CRUD Operations
@@ -376,8 +378,114 @@ class PostsApiController extends BaseApiController
 
     public function createPost($request)
     {
-        // This method will be copied from the original controller
-        return $this->responseFormatter->created([], []);
+        $title = $request->get_param('title');
+        $taxonomyTerm = $request->get_param('taxonomy_term');
+        $status = $request->get_param('status') ?? 'publish';
+
+        // Create the post
+        $postData = [
+            'post_title' => $title,
+            'post_type' => FunculoPostType::getPostType(),
+            'post_status' => $status,
+            'post_author' => get_current_user_id(),
+        ];
+
+        $postId = wp_insert_post($postData);
+
+        if (is_wp_error($postId)) {
+            return $this->responseFormatter->serverError('Failed to create post');
+        }
+
+        // Assign the taxonomy term
+        $term = get_term_by('slug', $taxonomyTerm, FunculoTypeTaxonomy::getTaxonomy());
+        if ($term) {
+            wp_set_post_terms($postId, [$term->term_id], FunculoTypeTaxonomy::getTaxonomy());
+        }
+
+        // Set default category for blocks
+        if ($taxonomyTerm === 'blocks') {
+            // Save default settings to database table instead of post meta
+            $defaultSettings = [
+                'description' => '',
+                'category' => 'text', // First category from BlockCategoriesApiController
+                'icon' => 'search',
+                'supports_inner_blocks' => false,
+                'allowed_block_types' => [],
+                'template' => [],
+                'template_lock' => null
+            ];
+            BlockSettingsRepository::save($postId, $defaultSettings);
+
+            // Set default PHP content for blocks
+            $defaultPhpContent = '<div <?php echo get_block_wrapper_attributes(); ?>>
+
+    <!-- Your code goes here -->
+
+</div>';
+            update_post_meta($postId, MetaKeysConstants::BLOCK_PHP, $defaultPhpContent);
+
+            // Set default SCSS content for blocks
+            $blockSlug = sanitize_title($title);
+            $defaultScssContent = '.wp-block-fanculo-' . $blockSlug . ' {
+
+}';
+            update_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, $defaultScssContent);
+        }
+
+        // Get the created post data and trigger file generation
+        $post = get_post($postId);
+        if ($post) {
+            $filesManagerService = new FilesManagerService();
+            $filesManagerService->generateFilesOnPostSave($postId, $post, false);
+        }
+
+        // Use bulk operations for consistency
+        $allTerms = $this->bulkQueryService->getBulkPostTerms([$post->ID], FunculoTypeTaxonomy::getTaxonomy());
+        $postTerms = $allTerms[$post->ID] ?? [];
+
+        // Get optimized meta keys and fetch meta
+        $optimizedMetaKeys = $this->bulkQueryService->getOptimizedMetaKeys($allTerms);
+        $allMeta = $this->bulkQueryService->getBulkPostMeta([$post->ID], $optimizedMetaKeys);
+        $postMeta = $allMeta[$post->ID] ?? [];
+        $formattedMeta = $this->bulkQueryService->formatPostMeta($postMeta, $postTerms);
+
+        // Add block settings if this was a block
+        if ($taxonomyTerm === 'blocks') {
+            // Format settings for frontend compatibility
+            $blockSettings = [
+                'category' => $defaultSettings['category'],
+                'description' => $defaultSettings['description'],
+                'icon' => $defaultSettings['icon']
+            ];
+
+            // Format inner blocks settings
+            $innerBlocksSettings = [
+                'enabled' => $defaultSettings['supports_inner_blocks'],
+                'allowed_blocks' => $defaultSettings['allowed_block_types'],
+                'template' => $defaultSettings['template'],
+                'templateLock' => $defaultSettings['template_lock']
+            ];
+
+            // Add to meta in expected format
+            if (!isset($formattedMeta['blocks'])) {
+                $formattedMeta['blocks'] = [];
+            }
+            $formattedMeta['blocks']['settings'] = json_encode($blockSettings);
+            $formattedMeta['blocks']['inner_blocks_settings'] = json_encode($innerBlocksSettings);
+        }
+
+        return $this->responseFormatter->created([
+            'id' => $post->ID,
+            'title' => get_the_title($post->ID),
+            'slug' => $post->post_name,
+            'status' => $post->post_status,
+            'date' => $post->post_date,
+            'modified' => $post->post_modified,
+            'excerpt' => wp_trim_words($post->post_content, 20),
+            'terms' => $postTerms,
+            'edit_url' => get_edit_post_link($post->ID),
+            'meta' => $formattedMeta,
+        ]);
     }
 
     public function updatePost($request)
