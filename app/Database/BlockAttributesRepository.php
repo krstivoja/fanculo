@@ -255,41 +255,12 @@ class BlockAttributesRepository
 
     /**
      * Get attributes for multiple blocks
+     * @deprecated Use getBulk() instead for consistent data processing
      */
     public static function getMultiple(array $post_ids): array
     {
-        if (empty($post_ids)) {
-            return [];
-        }
-
-        global $wpdb;
-
-        $table_name = DatabaseInstaller::getAttributesTableName();
-        $placeholders = implode(',', array_fill(0, count($post_ids), '%d'));
-
-        $rows = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $table_name WHERE post_id IN ($placeholders) ORDER BY post_id, attribute_order, id",
-            ...$post_ids
-        ), ARRAY_A);
-
-        // Group by post_id
-        $grouped = [];
-        foreach ($rows as $row) {
-            $post_id = $row['post_id'];
-
-            // Process attribute
-            if (!empty($row['options'])) {
-                $row['options'] = json_decode($row['options'], true) ?: [];
-            }
-            $row['required'] = (bool) $row['required'];
-
-            if (!isset($grouped[$post_id])) {
-                $grouped[$post_id] = [];
-            }
-            $grouped[$post_id][] = $row;
-        }
-
-        return $grouped;
+        // Delegate to getBulk() for consistency and complete data processing
+        return self::getBulk($post_ids);
     }
 
     /**
@@ -356,6 +327,67 @@ class BlockAttributesRepository
         }
 
         return $migrated;
+    }
+
+    /**
+     * Get attributes for multiple post IDs in a single query
+     * @param array $post_ids Array of post IDs
+     * @return array Associative array with post_id as key and attributes array as value
+     */
+    public static function getBulk(array $post_ids): array
+    {
+        global $wpdb;
+
+        if (empty($post_ids)) {
+            return [];
+        }
+
+        $table_name = DatabaseInstaller::getAttributesTableName();
+        $placeholders = implode(',', array_fill(0, count($post_ids), '%d'));
+
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table_name WHERE post_id IN ($placeholders) ORDER BY post_id, attribute_order, id",
+            ...$post_ids
+        ), ARRAY_A);
+
+        if (!$rows) {
+            return [];
+        }
+
+        // Group results by post_id and process each attribute
+        $result = [];
+        foreach ($rows as $row) {
+            $post_id = $row['post_id'];
+
+            if (!isset($result[$post_id])) {
+                $result[$post_id] = [];
+            }
+
+            // Process attribute data (same logic as get() method)
+            if (!empty($row['options'])) {
+                $row['options'] = json_decode($row['options'], true) ?: [];
+            } else {
+                $row['options'] = null;
+            }
+
+            // Convert boolean fields
+            $row['required'] = (bool) $row['required'];
+
+            // Convert numeric fields
+            if ($row['min_value'] !== null) {
+                $row['min_value'] = floatval($row['min_value']);
+            }
+            if ($row['max_value'] !== null) {
+                $row['max_value'] = floatval($row['max_value']);
+            }
+            if ($row['step_value'] !== null) {
+                $row['step_value'] = floatval($row['step_value']);
+            }
+
+            $result[$post_id][] = $row;
+        }
+
+        return $result;
     }
 
     /**
