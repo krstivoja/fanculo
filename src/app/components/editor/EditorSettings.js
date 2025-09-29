@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Textarea, Select, DashiconButton, Button } from '../ui';
 import { TrashIcon } from '../icons';
 import ScssPartialsCombined from './ScssPartialsCombined';
@@ -12,17 +12,26 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
   const [isDeleting, setIsDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState('settings');
 
-  // Parse settings from metaData
-  const getSettings = () => {
+  // Memoize expensive settings parsing
+  const settings = useMemo(() => {
     try {
       const settingsString = metaData?.blocks?.settings || '{}';
       return JSON.parse(settingsString);
     } catch (e) {
       return {};
     }
-  };
+  }, [metaData?.blocks?.settings]);
+  // Memoize expensive post type checks
+  const postTypeInfo = useMemo(() => ({
+    isBlockType: selectedPost?.terms?.some(term => term.slug === 'blocks') || false,
+    isScssPartial: selectedPost?.terms?.some(term => term.slug === 'scss-partials') || false,
+    postInfo: {
+      id: selectedPost?.id,
+      type: selectedPost?.terms?.[0]?.name || 'N/A',
+      slug: selectedPost?.slug || 'N/A'
+    }
+  }), [selectedPost?.terms, selectedPost?.id, selectedPost?.slug]);
 
-  const settings = getSettings();
   const [description, setDescription] = useState(settings.description || '');
   const [category, setCategory] = useState(settings.category || '');
   const [icon, setIcon] = useState(settings.icon || 'search');
@@ -47,17 +56,15 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
 
   // Update local state when selectedPost or metaData changes
   useEffect(() => {
-    const currentSettings = getSettings();
-    setDescription(currentSettings.description || '');
-    setCategory(currentSettings.category || '');
-    setIcon(currentSettings.icon || 'search');
-  }, [selectedPost, metaData]);
+    setDescription(settings.description || '');
+    setCategory(settings.category || '');
+    setIcon(settings.icon || 'search');
+  }, [settings]);
 
-  // Update settings in metaData when local state changes
-  const updateSettings = (newDescription, newCategory, newIcon) => {
-    const currentSettings = getSettings();
+  // Memoize expensive settings update function
+  const updateSettings = useCallback((newDescription, newCategory, newIcon) => {
     const updatedSettings = {
-      ...currentSettings,
+      ...settings,
       description: newDescription,
       category: newCategory,
       icon: newIcon
@@ -66,26 +73,32 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
     if (onMetaChange) {
       onMetaChange('blocks', 'settings', JSON.stringify(updatedSettings));
     }
-  };
+  }, [settings, onMetaChange]);
 
-  const handleDescriptionChange = (e) => {
+  // Memoize event handlers
+  const handleDescriptionChange = useCallback((e) => {
     const newDescription = e.target.value;
     setDescription(newDescription);
     updateSettings(newDescription, category, icon);
-  };
+  }, [updateSettings, category, icon]);
 
-  const handleCategoryChange = (e) => {
+  const handleCategoryChange = useCallback((e) => {
     const newCategory = e.target.value;
     setCategory(newCategory);
     updateSettings(description, newCategory, icon);
-  };
+  }, [updateSettings, description, icon]);
 
-  const handleIconChange = (newIcon) => {
+  const handleIconChange = useCallback((newIcon) => {
     setIcon(newIcon);
     updateSettings(description, category, newIcon);
-  };
+  }, [updateSettings, description, category]);
 
-  const handleDelete = async () => {
+  // Memoize tab switching
+  const handleTabClick = useCallback((tab) => {
+    setActiveTab(tab);
+  }, []);
+
+  const handleDelete = useCallback(async () => {
     if (!selectedPost) return;
 
     const confirmed = window.confirm(
@@ -107,15 +120,13 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
     } finally {
       setIsDeleting(false);
     }
-  };
+  }, [selectedPost, onPostDelete]);
 
   if (!selectedPost) {
     return null;
   }
 
-  // Check post type
-  const isBlockType = selectedPost.terms && selectedPost.terms.some(term => term.slug === 'blocks');
-  const isScssPartial = selectedPost.terms && selectedPost.terms.some(term => term.slug === 'scss-partials');
+  const { isBlockType, isScssPartial, postInfo } = postTypeInfo;
 
   return (
     <aside id="editor-settings" className='grow max-w-[var(--sidebar)] border-l border-solid border-outline flex flex-col'>
@@ -131,14 +142,14 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
             <Button
               variant={activeTab === 'settings' ? 'primary' : 'ghost'}
               className="grow px-3 py-2 text-xs font-medium border-b-2 transition-colors"
-              onClick={() => setActiveTab('settings')}
+              onClick={() => handleTabClick('settings')}
             >
               Settings
             </Button>
             <Button
               variant={activeTab === 'partials' ? 'primary' : 'ghost'}
               className="grow px-3 py-2 text-xs font-medium border-b-2 transition-colors"
-              onClick={() => setActiveTab('partials')}
+              onClick={() => handleTabClick('partials')}
             >
               SCSS Partials
             </Button>
@@ -153,9 +164,9 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
           <div className="flex-1 p-4 overflow-y-auto">
             <div className="space-y-4">
               <div className="text-sm text-contrast space-y-2">
-                <div><strong>ID:</strong> {selectedPost.id}</div>
-                <div><strong>Type:</strong> {selectedPost.terms?.[0]?.name || 'N/A'}</div>
-                <div><strong>Slug:</strong> {selectedPost.slug || 'N/A'}</div>
+                <div><strong>ID:</strong> {postInfo.id}</div>
+                <div><strong>Type:</strong> {postInfo.type}</div>
+                <div><strong>Slug:</strong> {postInfo.slug}</div>
               </div>
 
               {/* SCSS Partial Settings */}
@@ -246,4 +257,21 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
   );
 };
 
-export default EditorSettings;
+// Memoize the component to prevent unnecessary re-renders of expensive settings panels
+export default React.memo(EditorSettings, (prevProps, nextProps) => {
+  // Custom comparison function for expensive settings panels
+  return (
+    // Check if selectedPost is the same
+    prevProps.selectedPost?.id === nextProps.selectedPost?.id &&
+    prevProps.selectedPost?.title === nextProps.selectedPost?.title &&
+    // Deep comparison of terms for post type determination
+    JSON.stringify(prevProps.selectedPost?.terms) === JSON.stringify(nextProps.selectedPost?.terms) &&
+    // Check if metaData reference is the same (most critical for preventing expensive re-renders)
+    prevProps.metaData === nextProps.metaData &&
+    // Check if metaData.blocks.settings specifically changed (the expensive part)
+    prevProps.metaData?.blocks?.settings === nextProps.metaData?.blocks?.settings &&
+    // Check if callback functions are the same reference
+    prevProps.onMetaChange === nextProps.onMetaChange &&
+    prevProps.onPostDelete === nextProps.onPostDelete
+  );
+});

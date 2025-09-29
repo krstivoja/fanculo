@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '../../ui';
 import { useAttributeOperations } from './hooks/useAttributeOperations';
 import AttributeItem from './AttributeItem';
@@ -45,32 +45,36 @@ const AttributesManager = ({ blockMeta, onMetaChange, blockId, postId: propPostI
     const [localAttributes, setLocalAttributes] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    const needsOptions = (type) => ATTRIBUTE_TYPES_WITH_OPTIONS.includes(type);
-    const needsRange = (type) => ATTRIBUTE_TYPES_WITH_RANGE.includes(type);
+    // Memoize expensive type checking functions
+    const needsOptions = useCallback((type) => ATTRIBUTE_TYPES_WITH_OPTIONS.includes(type), []);
+    const needsRange = useCallback((type) => ATTRIBUTE_TYPES_WITH_RANGE.includes(type), []);
 
-    // Initialize local attributes from blockMeta
-    useEffect(() => {
-        if (blockMeta?.attributes) {
-            try {
-                // Parse attributes from JSON if it's a string
-                const parsedAttributes = typeof blockMeta.attributes === 'string'
-                    ? JSON.parse(blockMeta.attributes)
-                    : blockMeta.attributes;
-
-                if (Array.isArray(parsedAttributes)) {
-                    setLocalAttributes(parsedAttributes);
-                }
-            } catch (e) {
-                console.error('Failed to parse attributes:', e);
-                setLocalAttributes([]);
-            }
-        } else {
-            setLocalAttributes([]);
+    // Memoize parsed attributes to prevent repeated JSON parsing
+    const parsedAttributes = useMemo(() => {
+        if (!blockMeta?.attributes) {
+            return [];
         }
-    }, [blockMeta]);
 
-    // Update local state and notify parent (parent handles the actual save)
-    const updateParentStateWithAttributes = (newAttributes) => {
+        try {
+            // Parse attributes from JSON if it's a string
+            const parsed = typeof blockMeta.attributes === 'string'
+                ? JSON.parse(blockMeta.attributes)
+                : blockMeta.attributes;
+
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+            console.error('Failed to parse attributes:', e);
+            return [];
+        }
+    }, [blockMeta?.attributes]);
+
+    // Initialize local attributes from memoized parsed attributes
+    useEffect(() => {
+        setLocalAttributes(parsedAttributes);
+    }, [parsedAttributes]);
+
+    // Memoize expensive update function to prevent recreation
+    const updateParentStateWithAttributes = useCallback((newAttributes) => {
         setLocalAttributes(newAttributes);
         setLocalChanges(true);
 
@@ -78,7 +82,7 @@ const AttributesManager = ({ blockMeta, onMetaChange, blockId, postId: propPostI
         // The attributes will be saved as JSON in meta, and also to the database table via the PHP save hook
         const attributesJson = JSON.stringify(newAttributes, null, 2);
         onMetaChange('blocks', 'attributes', attributesJson);
-    };
+    }, [onMetaChange]);
 
     // No longer need to expose save function since attributes are saved with meta
     // The attributes are now saved via the main save process in PostsApiController::updatePostMeta
@@ -86,9 +90,30 @@ const AttributesManager = ({ blockMeta, onMetaChange, blockId, postId: propPostI
     // Initialize hooks with callbacks
     const operationHandlers = useAttributeOperations(localAttributes, updateParentStateWithAttributes);
 
-    // Remove auto-save on blur - we'll use a Save button instead
+    // Memoize empty handler for optimization
+    const emptyBlurHandler = useCallback(() => {}, []);
 
-    // No loading state needed since we get attributes from meta directly
+    // Memoize the attributes list rendering to prevent expensive re-renders
+    const attributesList = useMemo(() => {
+        return localAttributes.map((attribute, index) => (
+            <AttributeItem
+                key={attribute.id || index}
+                attribute={attribute}
+                index={index}
+                operationHandlers={operationHandlers}
+                onBlur={emptyBlurHandler}
+            />
+        ));
+    }, [localAttributes, operationHandlers, emptyBlurHandler]);
+
+    // Memoize empty state to prevent recreation
+    const emptyStateElement = useMemo(() => (
+        localAttributes.length === 0 ? (
+            <p className="text-contrast text-center py-8">
+                No attributes defined. Click "Add attribute" to create one.
+            </p>
+        ) : null
+    ), [localAttributes.length]);
 
     return (
         <div className="attributes-manager max-h-[calc(100vh-200px)] h-full overflow-y-auto flex flex-col">
@@ -105,26 +130,28 @@ const AttributesManager = ({ blockMeta, onMetaChange, blockId, postId: propPostI
             </div>
 
             {/* Empty state */}
-            {localAttributes.length === 0 && (
-                <p className="text-contrast text-center py-8">
-                    No attributes defined. Click "Add attribute" to create one.
-                </p>
-            )}
+            {emptyStateElement}
 
             {/* Attributes list */}
             <div className="attribute-rows min-h-[100px] max-h-full overflow-y-auto overflow-x-hidden space-y-2">
-                {localAttributes.map((attribute, index) => (
-                    <AttributeItem
-                        key={attribute.id || index}
-                        attribute={attribute}
-                        index={index}
-                        operationHandlers={operationHandlers}
-                        onBlur={() => {}} // Remove auto-save on blur
-                    />
-                ))}
+                {attributesList}
             </div>
         </div>
     );
 };
 
-export default AttributesManager;
+// Memoize the component to prevent expensive attribute rendering re-calculations
+export default React.memo(AttributesManager, (prevProps, nextProps) => {
+    // Custom comparison function for complex attribute rendering logic
+    return (
+        // Check if blockMeta.attributes (the expensive part) has changed
+        prevProps.blockMeta?.attributes === nextProps.blockMeta?.attributes &&
+        // Check if other blockMeta properties are the same
+        prevProps.blockMeta === nextProps.blockMeta &&
+        // Check if callback functions are the same reference
+        prevProps.onMetaChange === nextProps.onMetaChange &&
+        // Check if block and post IDs are the same
+        prevProps.blockId === nextProps.blockId &&
+        prevProps.postId === nextProps.postId
+    );
+});
