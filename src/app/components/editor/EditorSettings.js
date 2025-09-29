@@ -5,6 +5,7 @@ import ScssPartialsCombined from './ScssPartialsCombined';
 import InnerBlocksSettings from './InnerBlocksSettings';
 import ScssPartialSettings from './ScssPartialSettings';
 import { apiClient } from '../../../utils';
+import centralizedApi from '../../../utils/api/CentralizedApiService';
 
 const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) => {
   const [blockCategories, setBlockCategories] = useState([]);
@@ -41,7 +42,7 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
     const fetchCategories = async () => {
       setLoadingCategories(true);
       try {
-        const categories = await apiClient.getBlockCategories();
+        const categories = await centralizedApi.getBlockCategories();
         setBlockCategories(Array.isArray(categories) ? categories : []);
       } catch (error) {
         console.error('Error fetching block categories:', error);
@@ -110,7 +111,7 @@ const EditorSettings = ({ selectedPost, metaData, onMetaChange, onPostDelete }) 
     setIsDeleting(true);
 
     try {
-      await apiClient.deletePost(selectedPost.id);
+      await centralizedApi.deletePost(selectedPost.id);
       if (onPostDelete) {
         onPostDelete(selectedPost.id);
       }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ReactTags } from '../ui';
 import { apiClient } from '../../../utils';
+import centralizedApi from '../../../utils/api/CentralizedApiService';
 
 const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'style', hideGlobalPartials = false }) => {
   const [globalPartials, setGlobalPartials] = useState([]);
@@ -30,7 +31,7 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'sty
   // Memoize expensive partials loading function
   const loadPartials = useCallback(async () => {
     try {
-      const data = await apiClient.getScssPartials();
+      const data = await centralizedApi.getScssPartials();
       console.log('SCSS Partials API Response:', data);
       setGlobalPartials(data.global_partials || []);
       setAvailablePartials(data.available_partials || []);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Toggle, Hr, ReactTags } from '../ui';
 import { apiClient } from '../../../utils';
+import centralizedApi from '../../../utils/api/CentralizedApiService';
 
 // Default Template Manager Component
 const DefaultTemplateManager = ({
@@ -164,7 +165,7 @@ const InnerBlocksSettings = ({ selectedPost, metaData, onMetaChange }) => {
   const fetchAvailableBlocks = async () => {
     setLoading(true);
     try {
-      const response = await apiClient.getRegisteredBlocks();
+      const response = await centralizedApi.getRegisteredBlocks();
       const blocks = Array.isArray(response)
         ? response
         : response?.blocks || response?.data || [];

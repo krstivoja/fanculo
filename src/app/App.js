@@ -6,6 +6,7 @@ import EditorSettings from "./components/editor/EditorSettings";
 import EditorNoPosts from "./components/editor/EditorNoPosts";
 import { Toast } from "./components/ui";
 import { compileScss, apiClient, errorHandler } from "../utils";
+import centralizedApi from "../utils/api/CentralizedApiService";
 import { useHotReloadSave } from "../hooks/useHotReload";
 import "./style.css";
 
@@ -36,7 +37,7 @@ const App = () => {
   // Fetch post with related data using optimized batch operation
   const handlePostSelect = useCallback(async (post) => {
     // Always use batch operation to get complete post data with related info
-    const postWithRelated = await apiClient.getPostWithRelated(post.id);
+    const postWithRelated = await centralizedApi.getPostWithRelated(post.id);
     const fullPost = postWithRelated.post;
 
     setSelectedPost(fullPost);
@@ -91,11 +92,11 @@ const App = () => {
     setShowToast(false);
   }, []);
 
-  // Handle opening partial for editing from toast
+  // Handle opening partial for editing from toast - use cached data when possible
   const handleOpenPartial = useCallback(async (partialName) => {
     try {
-      // Find the partial post by title/name using centralized API client
-      const data = await apiClient.getPosts({ per_page: 100 });
+      // Use cached posts data first, fall back to fresh fetch if needed
+      const data = await centralizedApi.getPosts({ per_page: 100 });
       const posts = data.posts || [];
 
       // Find the partial with matching title
@@ -109,8 +110,8 @@ const App = () => {
         // Close the toast and navigate to the partial
         setShowToast(false);
 
-        // Always use optimized batch operation
-        const partialWithRelated = await apiClient.getPostWithRelated(
+        // Use centralized API service with caching
+        const partialWithRelated = await centralizedApi.getPostWithRelated(
           targetPartial.id
         );
         const fullPartial = partialWithRelated.post;
@@ -130,8 +131,8 @@ const App = () => {
   const getCurrentPartials = useMemo(() => {
     return async () => {
       try {
-        // Get global partials using centralized API client
-        const partialsData = await apiClient.getScssPartials();
+        // Get global partials using centralized API service with caching
+        const partialsData = await centralizedApi.getScssPartials();
         const globalPartials = partialsData.global_partials || [];
         const availablePartials = partialsData.available_partials || [];
 
@@ -219,7 +220,7 @@ const App = () => {
             );
 
             // Save both SCSS and compiled CSS
-            await apiClient.saveScssContent(selectedPost.id, {
+            await centralizedApi.saveScssContent(selectedPost.id, {
               scss_content: scssContent,
               css_content: cssContent,
             });
@@ -304,7 +305,7 @@ const App = () => {
             );
 
             // Save both editor SCSS and compiled CSS
-            await apiClient.saveEditorScssContent(selectedPost.id, {
+            await centralizedApi.saveEditorScssContent(selectedPost.id, {
               editor_scss_content: editorScssContent,
               editor_css_content: editorCssContent,
             });
@@ -322,10 +323,10 @@ const App = () => {
         }
 
         // Use batch operation to save meta data and regenerate files in one request
-        await apiClient.savePostWithOperations(selectedPost.id, metaData, true);
+        await centralizedApi.savePostWithOperations(selectedPost.id, metaData, true);
       } else {
         // Just regenerate files if no meta changes
-        await apiClient.regenerateFiles();
+        await centralizedApi.regenerateFiles();
       }
 
       setSaveStatus("saved");
@@ -351,8 +352,8 @@ const App = () => {
     try {
       if (showLoading) setLoading(true);
 
-      // Use the centralized API client to fetch posts
-      const data = await apiClient.getPosts({ per_page: 100 });
+      // Use centralized API service with caching and deduplication
+      const data = await centralizedApi.getPosts({ per_page: 100 });
       const posts = data.posts || [];
 
       // Pre-allocate arrays for better performance
@@ -376,6 +377,18 @@ const App = () => {
       }
 
       setGroupedPosts(grouped);
+
+      // Batch preload commonly accessed posts for better performance
+      const allPosts = [...grouped.blocks, ...grouped.symbols, ...grouped["scss-partials"]];
+      if (allPosts.length > 1 && showLoading) {
+        // Preload first 3 posts in background for faster access
+        const preloadIds = allPosts.slice(1, 4).map(post => post.id);
+        if (preloadIds.length > 0) {
+          centralizedApi.getBatchPostsWithRelated(preloadIds).catch(error => {
+            console.warn('Background preloading failed:', error);
+          });
+        }
+      }
 
       // Auto-select the first available post if none is selected
       if (!selectedPost && showLoading) {
@@ -420,8 +433,8 @@ const App = () => {
   // Handle post creation
   const handlePostCreate = useCallback(async (postData) => {
     try {
-      // Use centralized API client to create post
-      const newPost = await apiClient.createPost({
+      // Use centralized API service which handles cache invalidation
+      const newPost = await centralizedApi.createPost({
         title: postData.title,
         taxonomy_term: postData.type,
         status: "publish",
@@ -447,7 +460,7 @@ const App = () => {
     // Fetch and console log all registered blocks
     const fetchRegisteredBlocks = async () => {
       try {
-        const response = await apiClient.getRegisteredBlocks();
+        const response = await centralizedApi.getRegisteredBlocks();
       } catch (error) {
         console.error("❌ Error fetching registered blocks:", error);
       }

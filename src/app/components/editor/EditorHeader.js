@@ -2,6 +2,7 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Button, Toast } from '../ui';
 import { LogoIcon, WordPressIcon } from '../icons';
 import { apiClient } from '../../../utils';
+import centralizedApi from '../../../utils/api/CentralizedApiService';
 
 // Lazy load AddPostModal - only loads when needed
 const AddPostModal = lazy(() => import('./AddPostModal'));
@@ -30,7 +31,7 @@ const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh })
     try {
       console.log('Creating post with data:', postData);
 
-      const newPost = await apiClient.createPost({
+      const newPost = await centralizedApi.createPost({
         title: postData.title,
         status: 'publish',
         taxonomy_term: postData.type
@@ -59,7 +60,7 @@ const EditorHeader = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh })
       console.log('Force regenerating all files...');
 
       // Use centralized API client for force regeneration
-      const result = await apiClient.forceRegenerateAll();
+      const result = await centralizedApi.forceRegenerateAll();
       console.log('All files regenerated successfully:', result);
       setToast({ show: true, message: '✅ All files regenerated successfully!', type: 'success' });
 

@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from './index.js';
+import centralizedApi from './api/CentralizedApiService.js';
 
 let sassCompiler = null;
 
@@ -137,7 +138,7 @@ async function initScssCompiler() {
  */
 export async function getBlockPartials(postId) {
     // Always use optimized batch operation for maximum performance
-    const postWithRelated = await apiClient.getPostWithRelated(postId);
+    const postWithRelated = await centralizedApi.getPostWithRelated(postId);
 
     const blockData = postWithRelated.post;
     const partialsData = postWithRelated.related?.scss_partials;
@@ -340,7 +341,7 @@ ${originalLine} │ (error line)
 async function getPartialScssContent(partialId) {
     try {
         // Use centralized API client to get partial content
-        const partialData = await apiClient.getPost(partialId);
+        const partialData = await centralizedApi.getPost(partialId);
         return partialData.meta?.scss_partials?.scss || '';
     } catch (error) {
         console.warn(`Failed to fetch SCSS content for partial ${partialId}:`, error);

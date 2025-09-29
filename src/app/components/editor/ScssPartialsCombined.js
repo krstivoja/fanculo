@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ScssPartialsManager from './ScssPartialsManager';
 import { apiClient } from '../../../utils';
+import centralizedApi from '../../../utils/api/CentralizedApiService';
 
 const ScssPartialsCombined = ({ selectedPost, metaData, onMetaChange }) => {
   const [globalPartials, setGlobalPartials] = useState([]);
@@ -15,7 +16,7 @@ const ScssPartialsCombined = ({ selectedPost, metaData, onMetaChange }) => {
 
   const loadGlobalPartials = async () => {
     try {
-      const data = await apiClient.getScssPartials();
+      const data = await centralizedApi.getScssPartials();
       console.log('SCSS Partials API Response:', data);
       setGlobalPartials(data.global_partials || []);
     } catch (error) {
