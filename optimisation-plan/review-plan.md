@@ -34,7 +34,7 @@ plugin shows good engineering practices but has several areas for improvement.
 
 1. Missing input validation in several API endpoints
 2. ~~ Inconsistent sanitization patterns across PHP files ~~
-3. No rate limiting on API endpoints
+3. Not for now - No rate limiting on API endpoints
 4. Missing nonce verification in some AJAX calls
 
 ### WordPress Standards Issues

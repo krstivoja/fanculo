@@ -390,7 +390,7 @@ class FanculoSimpleHotReload {
     try {
       let result;
 
-      // Use wp.apiFetch if available (authenticated), otherwise use fetch
+      // Use wp.apiFetch if available (authenticated), otherwise use fetch with nonce
       if (window.wp?.apiFetch) {
         // console.log(
         //   "🔍 Fanculo: Fetching block data via wp.apiFetch for post",
@@ -407,10 +407,17 @@ class FanculoSimpleHotReload {
         //   "🔍 Fanculo: Available meta keys:",
         //   Object.keys(result.data?.meta?.blocks || {})
         // );
-      } else {
-        // Fallback to regular fetch (will fail if authentication required)
-        const response = await fetch(`/wp-json/funculo/v1/post/${postId}`);
+      } else if (window.fanculoHotReload?.nonce) {
+        // Fallback to regular fetch with nonce header
+        const response = await fetch(`/wp-json/funculo/v1/post/${postId}`, {
+          headers: {
+            'X-WP-Nonce': window.fanculoHotReload.nonce
+          }
+        });
         result = await response.json();
+      } else {
+        console.error("Fanculo: No authentication method available (wp.apiFetch or nonce)");
+        return null;
       }
 
       if (!result.success || !result.data) {
