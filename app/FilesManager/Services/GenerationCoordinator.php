@@ -24,22 +24,50 @@ class GenerationCoordinator
      */
     public function handlePostSave(int $postId, WP_Post $post, bool $update): void
     {
+        error_log("Fanculo Debug: handlePostSave called for post ID: $postId, title: {$post->post_title}");
 
         if ($post->post_type !== FunculoPostType::getPostType()) {
+            error_log("Fanculo Debug: Skipping - wrong post type: {$post->post_type}");
             return;
         }
 
         // Guard: Skip if regeneration is not needed
         if ($this->shouldSkipRegeneration($postId, $post)) {
+            error_log("Fanculo Debug: Skipping - regeneration not needed");
             return;
         }
 
         // Smart save: just regenerate
+        error_log("Fanculo Debug: Generating files for post ID: $postId");
         $this->generateFilesForSinglePost($postId, $post);
 
-        // Check if this post affects global files
+        // Check if this post affects other posts (SCSS partials)
         if ($this->globalRegenerator->detectGlobalImpact($postId, $post)) {
-            $this->globalRegenerator->regenerateGlobalDependencies();
+            try {
+                // For SCSS partials: regenerate only the blocks that use this specific partial
+                $terms = wp_get_post_terms($postId, FunculoTypeTaxonomy::getTaxonomy());
+                $isScssPartial = false;
+
+                if (!empty($terms) && !is_wp_error($terms)) {
+                    foreach ($terms as $term) {
+                        if ($term->slug === FunculoTypeTaxonomy::getTermScssPartials()) {
+                            $isScssPartial = true;
+                            break;
+                        }
+                    }
+                }
+
+                if ($isScssPartial) {
+                    // Targeted regeneration: only blocks using this specific partial
+                    $this->globalRegenerator->regenerateBlocksUsingPartial($postId);
+                } else {
+                    // Fallback to regenerating all global dependencies
+                    $this->globalRegenerator->regenerateGlobalDependencies();
+                }
+            } catch (\Exception $e) {
+                error_log("Fanculo Error: Failed to regenerate dependent blocks - " . $e->getMessage());
+                // Continue execution - don't block the save operation
+            }
         }
     }
 

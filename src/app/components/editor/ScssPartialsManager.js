@@ -16,6 +16,10 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'sty
     return mode === 'editorStyle' ? 'editor_selected_partials' : 'selected_partials';
   }, [mode]);
 
+  const camelFieldName = useMemo(() => {
+    return mode === 'editorStyle' ? 'editorSelectedPartials' : 'selectedPartials';
+  }, [mode]);
+
   // Load selected partials when data is available
   useEffect(() => {
     if (selectedPost?.id && !loading && availablePartials.length >= 0) {
@@ -25,11 +29,15 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'sty
 
   // Memoize expensive selected partials processing
   const processSelectedPartials = useMemo(() => {
-    const blockSelectedPartials = metaData?.blocks?.[fieldName];
-    console.log('Block selected partials raw:', blockSelectedPartials);
+    console.log('🔍 ScssPartialsManager processSelectedPartials - metaData:', metaData);
+    console.log('🔍 ScssPartialsManager processSelectedPartials - metaData.blocks:', metaData?.blocks);
+    console.log('🔍 ScssPartialsManager processSelectedPartials - fieldName:', fieldName);
+    const blockSelectedPartials =
+      metaData?.blocks?.[fieldName] ?? metaData?.blocks?.[camelFieldName];
+    console.log('🔍 ScssPartialsManager processSelectedPartials - blockSelectedPartials:', blockSelectedPartials);
 
     if (!blockSelectedPartials) {
-      console.log('No selected partials found in metaData');
+      console.log('❌ No selected partials found in metaData');
       return [];
     }
 
@@ -68,7 +76,7 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'sty
     }
 
     return [];
-  }, [metaData?.blocks, fieldName, availablePartials, globalPartials]);
+  }, [metaData?.blocks, fieldName, camelFieldName, availablePartials, globalPartials]);
 
   const loadSelectedPartials = useCallback(() => {
     // Load selected partials from metaData based on mode
@@ -218,6 +226,20 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'sty
 
 // Memoize the component to prevent expensive SCSS partials list processing re-renders
 export default React.memo(ScssPartialsManager, (prevProps, nextProps) => {
+  const prevSelected =
+    prevProps.metaData?.blocks?.selected_partials ??
+    prevProps.metaData?.blocks?.selectedPartials;
+  const nextSelected =
+    nextProps.metaData?.blocks?.selected_partials ??
+    nextProps.metaData?.blocks?.selectedPartials;
+
+  const prevEditorSelected =
+    prevProps.metaData?.blocks?.editor_selected_partials ??
+    prevProps.metaData?.blocks?.editorSelectedPartials;
+  const nextEditorSelected =
+    nextProps.metaData?.blocks?.editor_selected_partials ??
+    nextProps.metaData?.blocks?.editorSelectedPartials;
+
   // Custom comparison function for SCSS partials list processing
   return (
     // Check if selectedPost is the same
@@ -225,8 +247,8 @@ export default React.memo(ScssPartialsManager, (prevProps, nextProps) => {
     // Check if metaData reference is the same (most critical for expensive processing)
     prevProps.metaData === nextProps.metaData &&
     // Check if mode-specific fields have changed (the expensive parts)
-    prevProps.metaData?.blocks?.selected_partials === nextProps.metaData?.blocks?.selected_partials &&
-    prevProps.metaData?.blocks?.editor_selected_partials === nextProps.metaData?.blocks?.editor_selected_partials &&
+    prevSelected === nextSelected &&
+    prevEditorSelected === nextEditorSelected &&
     // Check if callback function reference is the same
     prevProps.onMetaChange === nextProps.onMetaChange &&
     // Check if configuration props are the same

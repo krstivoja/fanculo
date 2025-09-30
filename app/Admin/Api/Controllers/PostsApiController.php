@@ -279,7 +279,10 @@ class PostsApiController extends BaseApiController
                 }
                 $formattedMeta['blocks']['settings'] = json_encode($blockSettings);
                 $formattedMeta['blocks']['inner_blocks_settings'] = json_encode($innerBlocksSettings);
-                $formattedMeta['blocks']['selected_partials'] = json_encode($dbSettings['selected_partials'] ?? []);
+                $selectedPartials = $dbSettings['selected_partials'] ?? [];
+                error_log("Fanculo Debug: PostsApiController getPost - selected_partials type: " . gettype($selectedPartials) . ", is_array: " . (is_array($selectedPartials) ? 'YES' : 'NO') . ", count: " . (is_array($selectedPartials) ? count($selectedPartials) : 'N/A') . ", content: " . json_encode($selectedPartials));
+                $formattedMeta['blocks']['selected_partials'] = json_encode($selectedPartials);
+                error_log("Fanculo Debug: PostsApiController getPost - final JSON to send: " . $formattedMeta['blocks']['selected_partials']);
                 $formattedMeta['blocks']['editor_selected_partials'] = json_encode($dbSettings['editor_selected_partials'] ?? []);
             }
         }
@@ -580,7 +583,7 @@ class PostsApiController extends BaseApiController
                 'php' => MetaKeysConstants::SYMBOL_PHP,
             ],
             'scss_partials' => [
-                'scss' => MetaKeysConstants::SCSS_PARTIAL_CONTENT,
+                'scss' => MetaKeysConstants::SCSS_PARTIAL_SCSS,
                 'is_global' => MetaKeysConstants::SCSS_IS_GLOBAL,
                 'global_order' => MetaKeysConstants::SCSS_GLOBAL_ORDER,
             ]
