@@ -35,11 +35,11 @@ plugin shows good engineering practices but has several areas for improvement.
 1. Missing input validation in several API endpoints
 2. ~~ Inconsistent sanitization patterns across PHP files ~~
 3. Not for now - No rate limiting on API endpoints
-4. Missing nonce verification in some AJAX calls
+4. ~~ Missing nonce verification in some AJAX calls ~~
 
 ### WordPress Standards Issues
 
-1. Non-standard block.json structure compared to Gutenberg core
+1. NOT NEEDED - Non-standard block.json structure compared to Gutenberg core
 2. Missing required block supports features
 3. Inconsistent with core block patterns for attributes and metadata
 4. No support for theme.json integration

@@ -122,7 +122,9 @@ class BlockJson implements FileGeneratorInterface
 
         // Add supports with defaults that can be overridden
         $defaultSupports = [
-            'html' => $usesInnerBlocks
+            'html' => $usesInnerBlocks,
+            'align' => ['left', 'center', 'right', 'wide', 'full'],
+            'anchor' => true
         ];
 
         // Add interactivity support if view.js will be generated
