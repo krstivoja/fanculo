@@ -18,7 +18,8 @@ export const useHotReloadSave = (postId, originalSaveFunction) => {
       // Trigger hot reload after successful save
       if (result !== false && window.fanculoSimpleHotReload) {
         console.log('🚀 Triggering hot reload...');
-        await window.fanculoSimpleHotReload.onStudioSave(postId, ["all"]);
+        // Pass null to auto-detect changes
+        await window.fanculoSimpleHotReload.onStudioSave(postId, null);
         console.log('✅ Hot reload triggered successfully');
       } else {
         console.log('❌ Hot reload not triggered. Result:', result, 'HotReload available:', !!window.fanculoSimpleHotReload);

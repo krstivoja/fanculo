@@ -10,6 +10,7 @@ class FanculoSimpleHotReload {
     this.channel = null;
     this.connected = false;
     this.source = this.detectSource();
+    this.lastSavedContent = {}; // Track last saved content per block
     this.init();
   }
 
@@ -95,13 +96,14 @@ class FanculoSimpleHotReload {
     if (this.connected && this.channel) {
       this.channel.postMessage(message);
     } else {
-      // Fallback to localStorage
-      localStorage.setItem("fanculo-hot-reload", JSON.stringify(message));
+      // Fallback to localStorage - stringify once
+      const messageJson = JSON.stringify(message);
+      localStorage.setItem("fanculo-hot-reload", messageJson);
       // Trigger storage event for same-window communication
       window.dispatchEvent(
         new StorageEvent("storage", {
           key: "fanculo-hot-reload",
-          newValue: JSON.stringify(message),
+          newValue: messageJson,
         })
       );
     }
@@ -202,19 +204,22 @@ class FanculoSimpleHotReload {
     //   data.blockSlug
     // );
 
-    // Check if PHP content changed
-    const hasPhpChanges = data.changes.includes("php") ||
-                          data.changes.includes("render") ||
-                          data.changes.includes("all");
+    // Default changes to ["all"] if not provided
+    const changes = data.changes || ["all"];
+
+    // Check if PHP content changed (requires full page reload)
+    const hasPhpChanges = changes.includes("php") ||
+                          changes.includes("render") ||
+                          changes.includes("all");
 
     if (hasPhpChanges) {
       // console.log("🔄 Fanculo Frontend: Reloading page for structural changes");
-      setTimeout(() => window.location.reload(), 500);
-      return; // Don't bother injecting CSS, we're reloading
+      window.location.reload();
+      return;
     }
 
-    // Inject updated styles for CSS-only changes
-    if (data.content && data.content.css) {
+    // CSS-only changes: instant update without reload
+    if (changes.includes("css") && data.content && data.content.css) {
       this.injectStyle(data.blockSlug, data.content.css);
     }
   }
@@ -225,17 +230,17 @@ class FanculoSimpleHotReload {
   injectStyle(blockSlug, css) {
     const styleId = `fanculo-simple-style-${blockSlug}`;
 
-    // Remove existing style
-    const existingStyle = document.getElementById(styleId);
-    if (existingStyle) {
-      existingStyle.remove();
+    // Reuse existing style element if present
+    let style = document.getElementById(styleId);
+    if (style) {
+      style.textContent = css;
+    } else {
+      // Create new style element
+      style = document.createElement("style");
+      style.id = styleId;
+      style.textContent = css;
+      document.head.appendChild(style);
     }
-
-    // Create new style element
-    const style = document.createElement("style");
-    style.id = styleId;
-    style.textContent = css;
-    document.head.appendChild(style);
 
     // console.log("✅ Fanculo: Injected style for block", blockSlug);
   }
@@ -251,6 +256,8 @@ class FanculoSimpleHotReload {
     }
 
     const styleId = `fanculo-simple-${type}-${blockSlug}`;
+    const MAX_ATTEMPTS = 50; // 5 seconds max
+    let attempts = 0;
 
     // Wait for iframe to be ready
     const injectIntoIframe = () => {
@@ -259,24 +266,29 @@ class FanculoSimpleHotReload {
           iframe.contentDocument &&
           iframe.contentDocument.readyState === "complete"
         ) {
-          // Remove existing style
-          const existingStyle = iframe.contentDocument.getElementById(styleId);
-          if (existingStyle) {
-            existingStyle.remove();
+          // Reuse existing style element if present
+          let style = iframe.contentDocument.getElementById(styleId);
+          if (style) {
+            style.textContent = css;
+          } else {
+            // Create new style element
+            style = iframe.contentDocument.createElement("style");
+            style.id = styleId;
+            style.textContent = css;
+            iframe.contentDocument.head.appendChild(style);
           }
-
-          // Create new style element
-          const style = iframe.contentDocument.createElement("style");
-          style.id = styleId;
-          style.textContent = css;
-          iframe.contentDocument.head.appendChild(style);
 
           // console.log(
           //   `✅ Fanculo: Injected ${type} into iframe for block`,
           //   blockSlug
           // );
-        } else {
+        } else if (attempts < MAX_ATTEMPTS) {
+          attempts++;
           setTimeout(injectIntoIframe, 100);
+        } else {
+          console.warn(
+            `❌ Fanculo: Iframe not ready after ${MAX_ATTEMPTS} attempts`
+          );
         }
       } catch (error) {
         console.warn(
@@ -296,14 +308,19 @@ class FanculoSimpleHotReload {
     const { select, dispatch } = window.wp.data;
     const blocks = select("core/block-editor").getBlocks();
 
+    // Early return if no blocks at all
+    if (!blocks || blocks.length === 0) {
+      return;
+    }
+
+    const targetBlockName = `fanculo/${blockSlug}`;
+
     const findBlocks = (blocks) => {
       let matchingBlocks = [];
       blocks.forEach((block) => {
-        if (block.name && block.name.startsWith("fanculo/")) {
-          const blockName = block.name.replace("fanculo/", "");
-          if (blockName === blockSlug) {
-            matchingBlocks.push(block);
-          }
+        // Direct comparison is faster than string manipulation
+        if (block.name === targetBlockName) {
+          matchingBlocks.push(block);
         }
         if (block.innerBlocks && block.innerBlocks.length > 0) {
           matchingBlocks = matchingBlocks.concat(findBlocks(block.innerBlocks));
@@ -453,9 +470,43 @@ class FanculoSimpleHotReload {
   }
 
   /**
+   * Detect what actually changed by comparing with last saved state
+   */
+  detectChanges(postId, newContent) {
+    const lastContent = this.lastSavedContent[postId];
+
+    if (!lastContent) {
+      // First save, assume all changed
+      this.lastSavedContent[postId] = { ...newContent };
+      return ["all"];
+    }
+
+    const changes = [];
+
+    if (lastContent.css !== newContent.css) {
+      changes.push("css");
+    }
+    if (lastContent.editorCss !== newContent.editorCss) {
+      changes.push("editorCss");
+    }
+    if (lastContent.php !== newContent.php) {
+      changes.push("php");
+    }
+    if (lastContent.js !== newContent.js) {
+      changes.push("js");
+    }
+
+    // Update last saved state
+    this.lastSavedContent[postId] = { ...newContent };
+
+    // If nothing changed, return empty array (shouldn't happen, but just in case)
+    return changes.length > 0 ? changes : ["all"];
+  }
+
+  /**
    * Studio save handler - call this when saving in studio
    */
-  async onStudioSave(postId, changes = ["all"]) {
+  async onStudioSave(postId, changes = null) {
     console.log("💾 Fanculo Studio: Save detected for post", postId);
 
     // Wait a moment for SCSS compilation to complete
@@ -468,7 +519,9 @@ class FanculoSimpleHotReload {
     console.log("📦 Fanculo: Block data received:", blockData);
 
     if (blockData) {
-      blockData.changes = changes;
+      // Auto-detect changes if not explicitly provided
+      blockData.changes = changes || this.detectChanges(postId, blockData.content);
+      console.log("🔍 Fanculo: Detected changes:", blockData.changes);
       console.log("🚀 Fanculo: Triggering hot reload with data");
       this.triggerHotReload(blockData);
     } else {
