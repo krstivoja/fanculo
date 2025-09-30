@@ -13,6 +13,19 @@ use Fanculo\Admin\Api\Services\MetaKeysConstants;
 class BlockAttributesRepository extends AbstractBulkRepository
 {
     /**
+     * Convert attribute name to camelCase for JavaScript/block.json compatibility
+     *
+     * @param string $name The attribute name
+     * @return string CamelCase name
+     */
+    private static function toCamelCase(string $name): string
+    {
+        // Remove special characters and convert to camelCase
+        // e.g., "wow testssss" -> "wowTestssss"
+        return lcfirst(str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', strtolower($name)))));
+    }
+
+    /**
      * Get all attributes for a block
      */
     public static function get(int $post_id): array
@@ -76,7 +89,7 @@ class BlockAttributesRepository extends AbstractBulkRepository
             foreach ($attributes as $index => $attr) {
                 $data = [
                     'post_id' => $post_id,
-                    'attribute_name' => sanitize_key($attr['name'] ?? ''),
+                    'attribute_name' => self::toCamelCase($attr['name'] ?? ''),
                     'attribute_type' => sanitize_text_field($attr['type'] ?? 'text'),
                     'attribute_order' => isset($attr['order']) ? intval($attr['order']) : $index,
                 ];
@@ -181,7 +194,7 @@ class BlockAttributesRepository extends AbstractBulkRepository
 
         $data = [
             'post_id' => $post_id,
-            'attribute_name' => sanitize_key($attribute['name'] ?? ''),
+            'attribute_name' => self::toCamelCase($attribute['name'] ?? ''),
             'attribute_type' => sanitize_text_field($attribute['type'] ?? 'text'),
             'attribute_order' => isset($attribute['order']) ? intval($attribute['order']) : 0,
             'updated_at' => current_time('mysql')

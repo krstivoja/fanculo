@@ -130,7 +130,7 @@ class AttributeMapper
     private static function normalizeAttribute(array $attr): array
     {
         $normalized = [
-            'name' => sanitize_key($attr['name']),
+            'name' => self::toCamelCase($attr['name']),
             'type' => sanitize_text_field($attr['type'] ?? 'text'),
             'label' => sanitize_text_field($attr['label'] ?? $attr['name']),
             'id' => sanitize_key($attr['id'] ?? $attr['name'])
