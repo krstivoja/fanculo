@@ -20,7 +20,7 @@ class FanculoSimpleHotReload {
     this.setupBroadcastChannel();
     this.setupStorageListener();
 
-    // console.log("🔥 Fanculo Simple Hot Reload initialized for", this.source);
+    console.log("🔥 Fanculo Simple Hot Reload initialized for", this.source);
   }
 
   /**
@@ -28,14 +28,14 @@ class FanculoSimpleHotReload {
    */
   detectSource() {
     const url = window.location.href;
+    const pathname = window.location.pathname;
 
-    if (url.includes("post.php") || url.includes("post-new.php")) {
+    // Check if we're in WordPress admin area
+    const isAdmin = pathname.includes('/wp-admin/');
+
+    if (isAdmin && (url.includes("post.php") || url.includes("post-new.php"))) {
       return "editor";
-    } else if (
-      url.includes("fanculo") ||
-      url.includes("studio") ||
-      url.includes("admin.php")
-    ) {
+    } else if (isAdmin) {
       return "studio";
     } else {
       return "frontend";
@@ -111,7 +111,7 @@ class FanculoSimpleHotReload {
    * Handle incoming hot reload messages
    */
   handleMessage(data) {
-    // console.log("📨 Fanculo: Received hot reload message", data);
+    console.log("📨 Fanculo: Received hot reload message", data);
 
     if (!data || !data.type || data.type !== "hot-reload") {
       return;
@@ -119,8 +119,11 @@ class FanculoSimpleHotReload {
 
     // Only process messages from other sources
     if (data.source === this.source) {
+      console.log("📨 Ignoring message from same source:", this.source);
       return;
     }
+
+    console.log("📨 Processing message for source:", this.source);
 
     switch (this.source) {
       case "editor":
@@ -130,10 +133,10 @@ class FanculoSimpleHotReload {
         this.handleFrontendHotReload(data);
         break;
       default:
-      // console.log(
-      //   "📨 Hot reload received but not processed for source:",
-      //   this.source
-      // );
+        console.log(
+          "📨 Hot reload received but not processed for source:",
+          this.source
+        );
     }
   }
 
@@ -197,20 +200,32 @@ class FanculoSimpleHotReload {
    * Handle hot reload on frontend
    */
   handleFrontendHotReload(data) {
-    // console.log(
-    //   "🌐 Fanculo Frontend: Processing hot reload for block",
-    //   data.blockSlug
-    // );
+    console.log(
+      "🌐 Fanculo Frontend: Processing hot reload for block",
+      data.blockSlug
+    );
+    console.log("📦 Content received:", data.content);
+    console.log("📦 Changes array:", data.changes);
+    console.log("📦 CSS length:", data.content?.css?.length || 0);
+    console.log("📦 PHP length:", data.content?.php?.length || 0);
 
-    // Inject updated styles
-    if (data.content.css) {
-      this.injectStyle(data.blockSlug, data.content.css);
+    // Check if PHP content changed
+    const hasPhpChanges = data.changes.includes("php") ||
+                          data.changes.includes("render") ||
+                          data.changes.includes("all");
+
+    if (hasPhpChanges) {
+      console.log("🔄 Fanculo Frontend: PHP changes detected, reloading page...");
+      setTimeout(() => window.location.reload(), 500);
+      return; // Don't bother injecting CSS, we're reloading
     }
 
-    // For major changes, reload the page
-    if (data.changes.includes("php") || data.changes.includes("render")) {
-      // console.log("🔄 Fanculo Frontend: Reloading page for structural changes");
-      setTimeout(() => window.location.reload(), 1000);
+    // Inject updated styles for CSS-only changes
+    if (data.content && data.content.css) {
+      console.log("💉 Injecting CSS into frontend:", data.content.css.substring(0, 200));
+      this.injectStyle(data.blockSlug, data.content.css);
+    } else {
+      console.warn("⚠️ No CSS content to inject");
     }
   }
 
@@ -223,6 +238,7 @@ class FanculoSimpleHotReload {
     // Remove existing style
     const existingStyle = document.getElementById(styleId);
     if (existingStyle) {
+      console.log("🗑️ Removing existing style:", styleId);
       existingStyle.remove();
     }
 
@@ -232,7 +248,8 @@ class FanculoSimpleHotReload {
     style.textContent = css;
     document.head.appendChild(style);
 
-    // console.log("✅ Fanculo: Injected style for block", blockSlug);
+    console.log("✅ Fanculo: Injected style for block", blockSlug);
+    console.log("✅ Style element in DOM:", document.getElementById(styleId));
   }
 
   /**

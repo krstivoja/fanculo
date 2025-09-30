@@ -13,6 +13,7 @@ class GutenbergSync
         $this->loader = new ScriptLoader();
         add_action('enqueue_block_editor_assets', [$this, 'enqueue']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue']);
+        add_action('wp_enqueue_scripts', [$this, 'enqueue']);
     }
 
     public function enqueue(): void
