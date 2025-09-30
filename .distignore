@@ -3,22 +3,27 @@
 .DS_Store?
 ._*
 .Trashes
-.claude
-.vscode
+.claude/*
+.vscode/*
+.git/*
+.gitignore
+.gitattributes
+.distignore
 
-# Folders
+# Folders - exclude directories and their contents
+code-standars/*
+Docs/*
+EXAMPLES/*
+node_modules/*
+optimisation-plan/*
+src/*
+code-standards/*
 
-/code-standars/
-/Docs/
-/EXAMPLES/
-/node_modules/
-/optimisation-plan/
-/src/
-
+# Build and config files
 build-scss.js
 build.js
-ClAUDE.md
-compoer.json
-compoer.lock
+CLAUDE.md
+composer.json
+composer.lock
 package.json
 package-lock.json
