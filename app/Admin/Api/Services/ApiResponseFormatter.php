@@ -4,15 +4,33 @@ namespace Fanculo\Admin\Api\Services;
 
 use WP_REST_Response;
 use WP_Error;
+use Fanculo\Helpers\CaseTransformer;
 
 /**
  * API Response Formatter for consistent response structure
  *
  * Provides standardized response formatting across all API endpoints,
  * ensuring consistent structure for success, error, and batch responses.
+ * Automatically transforms response keys from snake_case to camelCase for JavaScript consumption.
  */
 class ApiResponseFormatter
 {
+    /**
+     * Whether to transform response keys to camelCase
+     *
+     * @var bool
+     */
+    private $transformKeys = true;
+
+    /**
+     * Constructor
+     *
+     * @param bool $transformKeys Whether to transform keys to camelCase
+     */
+    public function __construct(bool $transformKeys = true)
+    {
+        $this->transformKeys = $transformKeys;
+    }
     /**
      * Format a successful response
      *
@@ -23,6 +41,15 @@ class ApiResponseFormatter
      */
     public function success($data, array $meta = [], int $status = 200): WP_REST_Response
     {
+        // Transform data keys if enabled
+        if ($this->transformKeys) {
+            $data = CaseTransformer::transformApiResponse(is_array($data) ? $data : [$data]);
+            // If single item was wrapped, unwrap it
+            if (!is_array($data) && isset($data[0])) {
+                $data = $data[0];
+            }
+        }
+
         $response = [
             'success' => true,
             'data' => $data,
@@ -142,6 +169,13 @@ class ApiResponseFormatter
      */
     public function collection(array $items, array $meta = []): WP_REST_Response
     {
+        // Transform each item in the collection
+        if ($this->transformKeys) {
+            $items = array_map(function($item) {
+                return is_array($item) ? CaseTransformer::transformApiResponse($item) : $item;
+            }, $items);
+        }
+
         return $this->success($items, array_merge(['count' => count($items)], $meta));
     }
 

@@ -141,7 +141,7 @@ export async function getBlockPartials(postId) {
     const postWithRelated = await centralizedApi.getPostWithRelated(postId);
 
     const blockData = postWithRelated.post;
-    const partialsData = postWithRelated.related?.scss_partials;
+    const partialsData = postWithRelated.related?.scssPartials;
 
     let selectedPartials = [];
     const selectedPartialsString = blockData.meta?.blocks?.selected_partials;
@@ -155,7 +155,7 @@ export async function getBlockPartials(postId) {
     }
 
     return {
-        globalPartials: partialsData?.global_partials || [],
+        globalPartials: partialsData?.globalPartials || [],
         selectedPartials: selectedPartials || []
     };
 }
@@ -342,7 +342,7 @@ async function getPartialScssContent(partialId) {
     try {
         // Use centralized API client to get partial content
         const partialData = await centralizedApi.getPost(partialId);
-        return partialData.meta?.scss_partials?.scss || '';
+        return partialData.meta?.scssPartials?.scss || '';
     } catch (error) {
         console.warn(`Failed to fetch SCSS content for partial ${partialId}:`, error);
     }

@@ -7,6 +7,7 @@
     "build": "node build.js --production",
     "dev": "node build.js --watch",
     "build:scss": "node build-scss.js",
+    "build:zip": "zip -r fanculo.zip . -x@.distignore -x '*.zip'",
     "update:sass": "npm update sass && npm run build",
     "version-check": "npm list sass immutable"
   },

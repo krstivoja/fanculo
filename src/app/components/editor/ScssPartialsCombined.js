@@ -5,8 +5,8 @@ import centralizedApi from '../../../utils/api/CentralizedApiService';
 
 const ScssPartialsCombined = ({ selectedPost, metaData, onMetaChange, sharedData, dataLoading }) => {
   // Get partials data from shared data (no API call needed)
-  const globalPartials = sharedData?.scssPartials?.global_partials || [];
-  const availablePartials = sharedData?.scssPartials?.available_partials || [];
+  const globalPartials = sharedData?.scssPartials?.globalPartials || [];
+  const availablePartials = sharedData?.scssPartials?.availablePartials || [];
   const loading = dataLoading?.scssPartials || false;
 
   if (loading) {

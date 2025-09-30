@@ -98,6 +98,16 @@ These rules ensure maintainability, safety, and developer velocity.
 - **Context-aware sanitization patterns**:
   - PHP/SCSS/JS code: Preserve content while ensuring string type, validate dangerous functions
   - JSON data: Validate JSON format, fallback to `{}` for invalid JSON
+
+#### C-20 (MUST) Naming conventions across layers
+- **Database columns**: `snake_case` (e.g., `attribute_name`, `supports_inner_blocks`, `is_global`)
+- **PHP meta keys**: `snake_case` with `_funculo_` prefix (e.g., `_funculo_block_php`, `_funculo_scss_partial_scss`)
+- **JavaScript/React variables**: `camelCase` (e.g., `globalPartials`, `availablePartials`, `innerBlocksSettings`)
+- **API responses**: Automatically transformed from `snake_case` to `camelCase` via `ApiResponseFormatter` and `CaseTransformer`
+- **HTML data attributes**: `kebab-case` (e.g., `data-post-id`, `data-type`)
+- **URL slugs & taxonomy terms**: `kebab-case` (e.g., `"scss-partials"`)
+- **Block attributes**: `camelCase` for consistency with JavaScript (e.g., `wowTestssss`)
+- **Why**: Maintains WordPress/PHP conventions (snake_case) while providing clean JavaScript conventions (camelCase)
   - Boolean flags: Convert to `'1'`/`'0'` strings for WordPress meta compatibility
   - Integer values: Use `intval()` with min/max constraints
 - **Testing requirement**: Always test API endpoints after sanitization changes

@@ -7,8 +7,8 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'sty
   const [selectedPartials, setSelectedPartials] = useState([]);
 
   // Get partials data from shared data (no API call needed)
-  const globalPartials = sharedData?.scssPartials?.global_partials || [];
-  const availablePartials = sharedData?.scssPartials?.available_partials || [];
+  const globalPartials = sharedData?.scssPartials?.globalPartials || [];
+  const availablePartials = sharedData?.scssPartials?.availablePartials || [];
   const loading = dataLoading?.scssPartials || false;
 
   // Memoize field name based on mode to prevent recalculation

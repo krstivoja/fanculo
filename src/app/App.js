@@ -22,7 +22,7 @@ const App = () => {
 
   // Shared data state - fetched once and passed down to children
   const [sharedData, setSharedData] = useState({
-    scssPartials: { global_partials: [], available_partials: [] },
+    scssPartials: { globalPartials: [], availablePartials: [] },
     registeredBlocks: [],
     blockCategories: [],
   });
@@ -151,8 +151,8 @@ const App = () => {
       try {
         // Get global partials using centralized API service with caching
         const partialsData = await centralizedApi.getScssPartials();
-        const globalPartials = partialsData.global_partials || [];
-        const availablePartials = partialsData.available_partials || [];
+        const globalPartials = partialsData.globalPartials || [];
+        const availablePartials = partialsData.availablePartials || [];
 
         // Get selected partial IDs from current state
         let selectedPartialIds = [];
@@ -261,9 +261,9 @@ const App = () => {
           try {
             // Get editor partials for compilation
             const editorPartialsData = await apiClient.getScssPartials();
-            const globalPartials = editorPartialsData.global_partials || [];
+            const globalPartials = editorPartialsData.globalPartials || [];
             const availablePartials =
-              editorPartialsData.available_partials || [];
+              editorPartialsData.availablePartials || [];
 
             // Parse editor selected partials
             let editorSelectedPartialIds = [];

@@ -1,0 +1,24 @@
+# Hidden files
+.DS_Store
+.DS_Store?
+._*
+.Trashes
+.claude
+.vscode
+
+# Folders
+
+/code-standars/
+/Docs/
+/EXAMPLES/
+/node_modules/
+/optimisation-plan/
+/src/
+
+build-scss.js
+build.js
+ClAUDE.md
+compoer.json
+compoer.lock
+package.json
+package-lock.json
