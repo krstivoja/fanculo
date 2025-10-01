@@ -78,9 +78,12 @@ class BlockSettingsRepository extends AbstractBulkRepository
 
         // Convert selected_partials from JSON to array
         if (!empty($row['selected_partials'])) {
-            $row['selected_partials'] = json_decode($row['selected_partials'], true) ?: [];
+            $decoded = json_decode($row['selected_partials'], true);
+            error_log("Fanculo Debug: BlockSettingsRepository retrieving selected_partials - Raw from DB: " . $row['selected_partials'] . ", Decoded type: " . gettype($decoded) . ", Count: " . (is_array($decoded) ? count($decoded) : 'N/A') . ", Content: " . json_encode($decoded));
+            $row['selected_partials'] = $decoded ?: [];
         } else {
             $row['selected_partials'] = [];
+            error_log("Fanculo Debug: BlockSettingsRepository retrieving selected_partials - Empty field, returning empty array");
         }
 
         // Convert editor_selected_partials from JSON to array
@@ -186,18 +189,23 @@ class BlockSettingsRepository extends AbstractBulkRepository
 
         // Handle selected_partials - convert array to JSON string
         if (array_key_exists('selected_partials', $settings)) {
+            error_log("Fanculo Debug: BlockSettingsRepository saving selected_partials - Input: " . print_r($settings['selected_partials'], true));
             if (is_array($settings['selected_partials'])) {
                 $data['selected_partials'] = json_encode(array_values(array_filter($settings['selected_partials'])));
+                error_log("Fanculo Debug: BlockSettingsRepository - Array converted to JSON: " . $data['selected_partials']);
             } else if (is_string($settings['selected_partials'])) {
                 // If it's already a JSON string, validate and store it
                 $decoded = json_decode($settings['selected_partials'], true);
                 if (json_last_error() === JSON_ERROR_NONE) {
                     $data['selected_partials'] = $settings['selected_partials'];
+                    error_log("Fanculo Debug: BlockSettingsRepository - Valid JSON string stored: " . $data['selected_partials']);
                 } else {
                     $data['selected_partials'] = '[]';
+                    error_log("Fanculo Debug: BlockSettingsRepository - Invalid JSON, stored empty array");
                 }
             } else {
                 $data['selected_partials'] = '[]';
+                error_log("Fanculo Debug: BlockSettingsRepository - Non-array/non-string, stored empty array");
             }
         } elseif ($exists && isset($existingData['selected_partials'])) {
             if (is_array($existingData['selected_partials'])) {
@@ -205,6 +213,7 @@ class BlockSettingsRepository extends AbstractBulkRepository
             } else {
                 $data['selected_partials'] = '[]';
             }
+            error_log("Fanculo Debug: BlockSettingsRepository - Using existing data: " . $data['selected_partials']);
         }
 
         // Handle editor_selected_partials - convert array to JSON string
@@ -306,19 +315,68 @@ class BlockSettingsRepository extends AbstractBulkRepository
 
         $table_name = DatabaseInstaller::getTableName();
 
-        // Use JSON_CONTAINS to find blocks with this partial ID
-        $rows = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $table_name
-            WHERE JSON_CONTAINS(selected_partials, %s, '$')",
-            json_encode($partial_id)
-        ), ARRAY_A);
+        try {
+            // Use JSON_CONTAINS to find blocks with this partial ID
+            $rows = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM $table_name
+                WHERE JSON_CONTAINS(selected_partials, %s, '$')",
+                json_encode($partial_id)
+            ), ARRAY_A);
 
-        // Process each row using shared logic
-        foreach ($rows as &$row) {
-            $row = self::processRow($row);
+            // Check for database errors
+            if ($wpdb->last_error) {
+                error_log("Fanculo DB Error in getBlocksUsingPartial: " . $wpdb->last_error);
+                // Fallback to LIKE search if JSON_CONTAINS fails
+                return self::getBlocksUsingPartialFallback($partial_id);
+            }
+
+            if (!$rows) {
+                return [];
+            }
+
+            // Process each row using shared logic
+            foreach ($rows as &$row) {
+                $row = self::processRow($row);
+            }
+
+            return $rows;
+        } catch (\Exception $e) {
+            error_log("Fanculo Exception in getBlocksUsingPartial: " . $e->getMessage());
+            // Fallback to safe search method
+            return self::getBlocksUsingPartialFallback($partial_id);
+        }
+    }
+
+    /**
+     * Fallback method to find blocks using partial (doesn't require JSON_CONTAINS)
+     */
+    private static function getBlocksUsingPartialFallback(int $partial_id): array
+    {
+        global $wpdb;
+
+        $table_name = DatabaseInstaller::getTableName();
+
+        // Get all rows and filter in PHP
+        $rows = $wpdb->get_results("SELECT * FROM $table_name", ARRAY_A);
+
+        if (!$rows) {
+            return [];
         }
 
-        return $rows;
+        $result = [];
+        foreach ($rows as $row) {
+            $selectedPartials = [];
+            if (!empty($row['selected_partials'])) {
+                $selectedPartials = json_decode($row['selected_partials'], true) ?: [];
+            }
+
+            // Check if partial_id is in the array
+            if (in_array($partial_id, $selectedPartials)) {
+                $result[] = self::processRow($row);
+            }
+        }
+
+        return $result;
     }
 
     /**

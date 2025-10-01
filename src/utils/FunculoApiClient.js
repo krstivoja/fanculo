@@ -299,8 +299,9 @@ class FunculoApiClient {
     // Handle new unified API response format
     if (response.success !== undefined && response.data !== undefined) {
       // New format: extract posts from data array
+      const posts = this.normalizePostCollection(response.data);
       return {
-        posts: response.data,
+        posts,
         total: response.meta?.pagination?.total || 0,
         total_pages: response.meta?.pagination?.total_pages || 0,
         current_page: response.meta?.pagination?.current_page || 1,
@@ -321,7 +322,7 @@ class FunculoApiClient {
 
     // Handle new unified API response format
     if (response.success !== undefined && response.data !== undefined) {
-      return response.data;
+      return this.normalizePost(response.data);
     }
 
     // Old format: return as-is
@@ -346,8 +347,10 @@ class FunculoApiClient {
 
     // Handle new unified API response format
     if (response.success !== undefined && response.data !== undefined) {
+      const postsPayload = response.data.posts || response.data;
+      const posts = this.normalizePostCollection(postsPayload);
       return {
-        posts: response.data.posts || response.data,
+        posts,
         found: response.data.found || response.meta?.found || 0,
         not_found: response.data.not_found || [],
       };
@@ -657,14 +660,24 @@ class FunculoApiClient {
    * @returns {Promise<Object>} Post with all related data
    */
   async getPostWithRelated(id) {
-    const response = await this.request(`/post/${id}/with-related`);
+    try {
+      const response = await this.request(`/post/${id}/with-related`);
 
-    // Handle new unified API response format
-    if (response.success !== undefined && response.data !== undefined) {
-      return response.data;
+      console.log('🔍 FunculoApiClient getPostWithRelated - response:', response);
+
+      // Handle new unified API response format
+      if (response.success !== undefined && response.data !== undefined) {
+        const normalized = this.normalizePostWithRelatedPayload(response.data);
+        console.log('✅ FunculoApiClient - returning normalized data with selected_partials:', normalized?.post?.meta?.blocks?.selected_partials);
+        return normalized;
+      }
+
+      console.log('⚠️ FunculoApiClient - response format unexpected, returning raw:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ FunculoApiClient getPostWithRelated - ERROR:', error);
+      throw error;
     }
-
-    return response;
   }
 
   /**
@@ -889,6 +902,124 @@ class FunculoApiClient {
     const size = this.cache.size;
     this.cache.clear();
     console.log(`🗑️ Cleared ${size} cache entries`);
+  }
+
+  /**
+   * Ensure both camelCase and snake_case keys are exposed on block meta
+   * @param {Object} blocksMeta Blocks meta object
+   * @returns {Object} Normalized blocks meta
+   */
+  normalizeBlocksMeta(blocksMeta) {
+    if (!blocksMeta || typeof blocksMeta !== "object") {
+      return blocksMeta;
+    }
+
+    const normalized = { ...blocksMeta };
+
+    if (
+      normalized.selected_partials === undefined &&
+      normalized.selectedPartials !== undefined
+    ) {
+      normalized.selected_partials = normalized.selectedPartials;
+    }
+
+    if (
+      normalized.selectedPartials === undefined &&
+      normalized.selected_partials !== undefined
+    ) {
+      normalized.selectedPartials = normalized.selected_partials;
+    }
+
+    if (
+      normalized.editor_selected_partials === undefined &&
+      normalized.editorSelectedPartials !== undefined
+    ) {
+      normalized.editor_selected_partials =
+        normalized.editorSelectedPartials;
+    }
+
+    if (
+      normalized.editorSelectedPartials === undefined &&
+      normalized.editor_selected_partials !== undefined
+    ) {
+      normalized.editorSelectedPartials =
+        normalized.editor_selected_partials;
+    }
+
+    return normalized;
+  }
+
+  /**
+   * Normalize meta object to expose consistent key casing for consumers
+   * @param {Object} meta Post meta object
+   * @returns {Object} Normalized meta
+   */
+  normalizeMeta(meta) {
+    if (!meta || typeof meta !== "object") {
+      return meta;
+    }
+
+    if (!meta.blocks) {
+      return { ...meta };
+    }
+
+    return {
+      ...meta,
+      blocks: this.normalizeBlocksMeta(meta.blocks),
+    };
+  }
+
+  /**
+   * Normalize a single post object
+   * @param {Object} post Post object
+   * @returns {Object} Normalized post
+   */
+  normalizePost(post) {
+    if (!post || typeof post !== "object") {
+      return post;
+    }
+
+    if (!post.meta) {
+      return { ...post };
+    }
+
+    return {
+      ...post,
+      meta: this.normalizeMeta(post.meta),
+    };
+  }
+
+  /**
+   * Normalize a collection of posts
+   * @param {Array} posts Posts array
+   * @returns {Array} Normalized posts
+   */
+  normalizePostCollection(posts) {
+    if (!Array.isArray(posts)) {
+      return posts;
+    }
+
+    return posts.map((post) => this.normalizePost(post));
+  }
+
+  /**
+   * Normalize payloads that contain a `post` property with meta
+   * @param {Object} payload API payload
+   * @returns {Object} Normalized payload
+   */
+  normalizePostWithRelatedPayload(payload) {
+    if (!payload || typeof payload !== "object") {
+      return payload;
+    }
+
+    if (!payload.post) {
+      return payload;
+    }
+
+    return {
+      ...payload,
+      post: this.normalizePost(payload.post),
+    };
   }
 
   // ===========================================

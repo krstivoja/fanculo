@@ -19,7 +19,8 @@ class GlobalRegenerator
     }
 
     /**
-     * Detect if a post affects global files that would require regenerating other posts
+     * Detect if a post affects other files that would require regenerating dependent posts
+     * Returns true for ANY SCSS partial (global or non-global) that has blocks using it
      */
     public function detectGlobalImpact(int $postId, WP_Post $post): bool
     {
@@ -31,11 +32,8 @@ class GlobalRegenerator
 
         foreach ($terms as $term) {
             if ($term->slug === FunculoTypeTaxonomy::getTermScssPartials()) {
-                // Check if this is a global SCSS partial
-                $isGlobal = get_post_meta($postId, MetaKeysConstants::SCSS_IS_GLOBAL, true);
-                if ($isGlobal === '1' || $isGlobal === 1 || $isGlobal === true) {
-                    return true; // This affects all blocks that use global partials
-                }
+                // Any SCSS partial change affects blocks that use it
+                return true;
             }
         }
 
@@ -185,6 +183,37 @@ class GlobalRegenerator
         }
 
         return $posts;
+    }
+
+    /**
+     * Regenerate blocks that use a specific SCSS partial
+     * More efficient than regenerating all blocks - only affects blocks using this partial
+     */
+    public function regenerateBlocksUsingPartial(int $partialId): void
+    {
+        error_log("Fanculo Debug: Starting regeneration for blocks using partial ID: $partialId");
+
+        // Find all blocks that use this partial
+        $affectedPosts = $this->findPostsDependingOnPartial($partialId);
+
+        if (empty($affectedPosts)) {
+            error_log("Fanculo Debug: No blocks found using partial ID: $partialId");
+            return;
+        }
+
+        error_log("Fanculo Debug: Found " . count($affectedPosts) . " blocks using partial ID: $partialId");
+
+        // Regenerate each affected block
+        foreach ($affectedPosts as $post) {
+            try {
+                error_log("Fanculo Debug: Regenerating block ID: {$post->ID} (title: {$post->post_title})");
+                $this->contentTypeProcessor->processContentType($post->ID, $post, FunculoTypeTaxonomy::getTermBlocks());
+            } catch (\Exception $e) {
+                error_log("Fanculo Error: Failed to regenerate block ID: {$post->ID} - " . $e->getMessage());
+            }
+        }
+
+        error_log("Fanculo Debug: Completed regeneration for blocks using partial ID: $partialId");
     }
 
     /**

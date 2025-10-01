@@ -55,8 +55,12 @@ class PostsQueryApiController extends BaseApiController
         // Add content field (specific to this endpoint)
         $postData['content'] = $post->post_content;
 
+        // Debug logging for selected_partials
+        error_log("Fanculo Debug: PostsQueryApiController getPostWithRelated - Post ID: $postId, meta blocks: " . json_encode($postData['meta']['blocks'] ?? []));
+
         // Add related data based on post type
         $relatedData = [];
+        $postTerms = $postData['terms'] ?? [];
 
         foreach ($postTerms as $term) {
             switch ($term['slug']) {
@@ -99,6 +103,9 @@ class PostsQueryApiController extends BaseApiController
         $performanceData = [
             'duration_ms' => round((microtime(true) - $startTime) * 1000, 2),
         ];
+
+        // Final debug logging before sending response
+        error_log("Fanculo Debug: PostsQueryApiController getPostWithRelated - Final response post.meta.blocks: " . json_encode($postData['meta']['blocks'] ?? []));
 
         return $this->responseFormatter->success([
             'post' => $postData,
