@@ -367,7 +367,7 @@ class PostsOperationsApiController extends BaseApiController
         if (isset($metaData['scss_partials'])) {
             $scssPartials = $metaData['scss_partials'];
             if (isset($scssPartials['scss'])) {
-                update_post_meta($postId, MetaKeysConstants::SCSS_PARTIAL_CONTENT, $scssPartials['scss']);
+                update_post_meta($postId, MetaKeysConstants::SCSS_PARTIAL_SCSS, $scssPartials['scss']);
             }
 
             // Handle global settings - save to database table

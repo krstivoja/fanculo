@@ -580,7 +580,7 @@ class PostsApiController extends BaseApiController
                 'php' => MetaKeysConstants::SYMBOL_PHP,
             ],
             'scss_partials' => [
-                'scss' => MetaKeysConstants::SCSS_PARTIAL_CONTENT,
+                'scss' => MetaKeysConstants::SCSS_PARTIAL_SCSS,
                 'is_global' => MetaKeysConstants::SCSS_IS_GLOBAL,
                 'global_order' => MetaKeysConstants::SCSS_GLOBAL_ORDER,
             ]
