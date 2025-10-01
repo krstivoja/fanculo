@@ -332,7 +332,8 @@ class PostsOperationsApiController extends BaseApiController
             $selectedPartialsKey = isset($blocks['selectedPartials']) ? 'selectedPartials' : 'selected_partials';
             if (isset($blocks[$selectedPartialsKey])) {
                 $partialsData = json_decode($blocks[$selectedPartialsKey], true);
-                if ($partialsData) {
+                // Allow empty arrays - user may have removed all partials
+                if (is_array($partialsData)) {
                     $dbSettings['selected_partials'] = $partialsData;
                 }
             }
@@ -342,7 +343,8 @@ class PostsOperationsApiController extends BaseApiController
             $editorSelectedPartialsKey = isset($blocks['editorSelectedPartials']) ? 'editorSelectedPartials' : 'editor_selected_partials';
             if (isset($blocks[$editorSelectedPartialsKey])) {
                 $editorPartialsData = json_decode($blocks[$editorSelectedPartialsKey], true);
-                if ($editorPartialsData) {
+                // Allow empty arrays - user may have removed all partials
+                if (is_array($editorPartialsData)) {
                     $dbSettings['editor_selected_partials'] = $editorPartialsData;
                 }
             }
