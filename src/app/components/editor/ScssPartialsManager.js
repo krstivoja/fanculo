@@ -13,15 +13,8 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'sty
 
   // Memoize field name based on mode to prevent recalculation
   const fieldName = useMemo(() => {
-    return mode === 'editorStyle' ? 'editor_selected_partials' : 'selected_partials';
+    return mode === 'editorStyle' ? 'editorSelectedPartials' : 'selectedPartials';
   }, [mode]);
-
-  // Load selected partials when data is available
-  useEffect(() => {
-    if (selectedPost?.id && !loading && availablePartials.length >= 0) {
-      loadSelectedPartials();
-    }
-  }, [selectedPost?.id, loading, availablePartials, globalPartials]);
 
   // Memoize expensive selected partials processing
   const processSelectedPartials = useMemo(() => {
@@ -70,11 +63,13 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'sty
     return [];
   }, [metaData?.blocks, fieldName, availablePartials, globalPartials]);
 
-  const loadSelectedPartials = useCallback(() => {
-    // Load selected partials from metaData based on mode
-    console.log('Loading selected partials from metaData:', metaData, 'mode:', mode);
-    setSelectedPartials(processSelectedPartials);
-  }, [processSelectedPartials, metaData, mode]);
+  // Load selected partials when data is available - directly update state from processSelectedPartials
+  useEffect(() => {
+    if (selectedPost?.id && !loading && availablePartials.length >= 0) {
+      console.log('Loading selected partials from metaData:', metaData, 'mode:', mode);
+      setSelectedPartials(processSelectedPartials);
+    }
+  }, [selectedPost?.id, loading, availablePartials, processSelectedPartials, metaData, mode]);
 
   // Memoize expensive update function
   const updateSelectedPartials = useCallback((newSelected) => {
@@ -216,21 +211,6 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'sty
   );
 };
 
-// Memoize the component to prevent expensive SCSS partials list processing re-renders
-export default React.memo(ScssPartialsManager, (prevProps, nextProps) => {
-  // Custom comparison function for SCSS partials list processing
-  return (
-    // Check if selectedPost is the same
-    prevProps.selectedPost?.id === nextProps.selectedPost?.id &&
-    // Check if metaData reference is the same (most critical for expensive processing)
-    prevProps.metaData === nextProps.metaData &&
-    // Check if mode-specific fields have changed (the expensive parts)
-    prevProps.metaData?.blocks?.selected_partials === nextProps.metaData?.blocks?.selected_partials &&
-    prevProps.metaData?.blocks?.editor_selected_partials === nextProps.metaData?.blocks?.editor_selected_partials &&
-    // Check if callback function reference is the same
-    prevProps.onMetaChange === nextProps.onMetaChange &&
-    // Check if configuration props are the same
-    prevProps.mode === nextProps.mode &&
-    prevProps.hideGlobalPartials === nextProps.hideGlobalPartials
-  );
-});
+// Export without React.memo to ensure component updates when metaData changes
+// The internal useMemo hooks already optimize expensive computations
+export default ScssPartialsManager;
