@@ -341,17 +341,21 @@ class PostsOperationsApiController extends BaseApiController
             }
 
             // Parse selected partials JSON (already sanitized)
-            if (isset($blocks['selected_partials'])) {
-                $partialsData = json_decode($blocks['selected_partials'], true);
-                error_log("Fanculo Debug: Saving selected_partials - Raw: " . $blocks['selected_partials'] . ", Parsed: " . print_r($partialsData, true));
+            // Support both snake_case and camelCase keys
+            $selectedPartialsKey = isset($blocks['selectedPartials']) ? 'selectedPartials' : 'selected_partials';
+            if (isset($blocks[$selectedPartialsKey])) {
+                $partialsData = json_decode($blocks[$selectedPartialsKey], true);
+
                 if ($partialsData) {
                     $dbSettings['selected_partials'] = $partialsData;
                 }
             }
 
             // Parse editor selected partials JSON (already sanitized)
-            if (isset($blocks['editor_selected_partials'])) {
-                $editorPartialsData = json_decode($blocks['editor_selected_partials'], true);
+            // Support both snake_case and camelCase keys
+            $editorSelectedPartialsKey = isset($blocks['editorSelectedPartials']) ? 'editorSelectedPartials' : 'editor_selected_partials';
+            if (isset($blocks[$editorSelectedPartialsKey])) {
+                $editorPartialsData = json_decode($blocks[$editorSelectedPartialsKey], true);
                 if ($editorPartialsData) {
                     $dbSettings['editor_selected_partials'] = $editorPartialsData;
                 }
