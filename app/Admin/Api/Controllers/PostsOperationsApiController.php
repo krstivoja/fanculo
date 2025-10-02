@@ -284,6 +284,8 @@ class PostsOperationsApiController extends BaseApiController
     private function updatePostMeta($postId, $metaData)
     {
         // Meta data is already sanitized at the request level
+        error_log("🟢 [updatePostMeta] Post ID: $postId");
+        error_log("🟢 [updatePostMeta] Meta data received: " . print_r($metaData, true));
 
         // Update blocks meta
         if (isset($metaData['blocks'])) {
@@ -345,8 +347,10 @@ class PostsOperationsApiController extends BaseApiController
             $selectedPartialsKey = isset($blocks['selectedPartials']) ? 'selectedPartials' : 'selected_partials';
             if (isset($blocks[$selectedPartialsKey])) {
                 $partialsData = json_decode($blocks[$selectedPartialsKey], true);
+              
+                // Allow empty arrays - user may have removed all partials
+                if (is_array($partialsData)) {
 
-                if ($partialsData) {
                     $dbSettings['selected_partials'] = $partialsData;
                 }
             }
@@ -356,7 +360,8 @@ class PostsOperationsApiController extends BaseApiController
             $editorSelectedPartialsKey = isset($blocks['editorSelectedPartials']) ? 'editorSelectedPartials' : 'editor_selected_partials';
             if (isset($blocks[$editorSelectedPartialsKey])) {
                 $editorPartialsData = json_decode($blocks[$editorSelectedPartialsKey], true);
-                if ($editorPartialsData) {
+                // Allow empty arrays - user may have removed all partials
+                if (is_array($editorPartialsData)) {
                     $dbSettings['editor_selected_partials'] = $editorPartialsData;
                 }
             }
@@ -378,8 +383,17 @@ class PostsOperationsApiController extends BaseApiController
         // Update SCSS partials meta (already sanitized)
         if (isset($metaData['scss_partials'])) {
             $scssPartials = $metaData['scss_partials'];
+            error_log("🟢 [updatePostMeta] SCSS Partials data: " . print_r($scssPartials, true));
+
             if (isset($scssPartials['scss'])) {
+
+                error_log("🟢 [updatePostMeta] Updating SCSS content for post $postId");
+                error_log("🟢 [updatePostMeta] SCSS content length: " . strlen($scssPartials['scss']));
+                error_log("🟢 [updatePostMeta] SCSS content preview: " . substr($scssPartials['scss'], 0, 100));
                 update_post_meta($postId, MetaKeysConstants::SCSS_PARTIAL_SCSS, $scssPartials['scss']);
+                error_log("🟢 [updatePostMeta] SCSS content updated successfully");
+            } else {
+                error_log("🟢 [updatePostMeta] No 'scss' key found in scss_partials data");
             }
 
             // Handle global settings - save to database table

@@ -10,6 +10,31 @@ import centralizedApi from "../utils/api/CentralizedApiService";
 import { useHotReloadSave } from "../hooks/useHotReload";
 import "./style.css";
 
+/**
+ * Check if metadata changes affect the posts list display
+ * Only block icon is shown in the list (title is handled separately)
+ */
+const hasListVisibleChanges = (originalMeta = {}, newMeta = {}) => {
+  // Extract icon from blocks.settings for comparison
+  const getIcon = (meta) => {
+    try {
+      const settings = meta?.blocks?.settings;
+      if (typeof settings === 'string') {
+        return JSON.parse(settings)?.icon;
+      }
+      return settings?.icon;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const originalIcon = getIcon(originalMeta);
+  const newIcon = getIcon(newMeta);
+
+  // If icon changed, we need to invalidate the collection cache
+  return originalIcon !== newIcon;
+};
+
 const App = () => {
   // Core data state
   const [groupedPosts, setGroupedPosts] = useState({
@@ -54,6 +79,14 @@ const App = () => {
 
   // Fetch post with related data using optimized batch operation
   const handlePostSelect = useCallback(async (post) => {
+    // If switching from a different post with unsaved changes, warn user
+    if (selectedPost && selectedPost.id !== post.id && saveStatus === 'unsaved') {
+      const confirmSwitch = window.confirm('You have unsaved changes. Do you want to discard them?');
+      if (!confirmSwitch) {
+        return;
+      }
+    }
+
     // Always use batch operation to get complete post data with related info
     const postWithRelated = await centralizedApi.getPostWithRelated(post.id);
     const fullPost = postWithRelated.post;
@@ -70,7 +103,7 @@ const App = () => {
     // Store related data for potential use
     if (postWithRelated.related) {
     }
-  }, []);
+  }, [selectedPost, saveStatus]);
 
   // Handle meta field changes
   const handleMetaChange = useCallback((section, field, value) => {
@@ -99,6 +132,9 @@ const App = () => {
         ...prev,
         [section]: updatedSection,
       };
+
+      return newMetaData;
+
     });
     setSaveStatus("unsaved");
 
@@ -110,20 +146,36 @@ const App = () => {
   }, []);
 
   // Update post title
-  const handleTitleUpdate = useCallback(async (newTitle) => {
-    if (!selectedPost?.id) return;
+  const handleTitleUpdate = useCallback(
+    async (newTitle) => {
+      if (!selectedPost?.id) return;
 
-    try {
-      // Use centralized API client to update post title
-      const updatedPost = await apiClient.updatePost(selectedPost.id, {
-        title: newTitle,
-      });
-      setSelectedPost(updatedPost);
-    } catch (error) {
-      console.error("Error updating title:", error);
-      throw error;
-    }
-  }, [selectedPost?.id]);
+      try {
+        // Use centralized API client to update post title
+        const updatedPost = await apiClient.updatePost(selectedPost.id, {
+          title: newTitle,
+        });
+        setSelectedPost(updatedPost);
+
+        // Also update the title in groupedPosts for consistency
+        setGroupedPosts(prev => {
+          const updated = { ...prev };
+          Object.keys(updated).forEach(key => {
+            updated[key] = updated[key].map(post =>
+              post.id === selectedPost.id
+                ? { ...post, title: updatedPost.title }
+                : post
+            );
+          });
+          return updated;
+        });
+      } catch (error) {
+        console.error("Error updating title:", error);
+        throw error;
+      }
+    },
+    [selectedPost?.id]
+  );
 
   // Handle toast close
   const handleToastClose = useCallback(() => {
@@ -175,9 +227,11 @@ const App = () => {
         const availablePartials = partialsData.availablePartials || [];
 
         // Get selected partial IDs from current state
+        // Support both snake_case (from API) and camelCase (from unsaved state)
         let selectedPartialIds = [];
         const selectedPartialsString =
-          metaData.blocks?.selected_partials ??
+
+          metaData.blocks?.selected_partials ||
           metaData.blocks?.selectedPartials;
         if (selectedPartialsString) {
           try {
@@ -231,7 +285,9 @@ const App = () => {
         return { globalPartials: [], selectedPartials: [] };
       }
     };
-  }, [metaData.blocks?.selected_partials ?? metaData.blocks?.selectedPartials]);
+
+  }, [metaData.blocks?.selected_partials, metaData.blocks?.selectedPartials]);
+
 
   // Original save function without hot reload
   const originalHandleSave = async () => {
@@ -288,9 +344,10 @@ const App = () => {
               editorPartialsData.availablePartials || [];
 
             // Parse editor selected partials
+            // Support both snake_case (from API) and camelCase (from unsaved state)
             let editorSelectedPartialIds = [];
             const editorSelectedPartialsString =
-              metaData.blocks?.editor_selected_partials ??
+              metaData.blocks?.editor_selected_partials ||
               metaData.blocks?.editorSelectedPartials;
             if (editorSelectedPartialsString) {
               try {
@@ -300,7 +357,6 @@ const App = () => {
               } catch (e) {
                 console.warn("Failed to parse editor selected partials:", e);
               }
-            } else {
             }
 
             // Enrich editor selected partial IDs with their data
@@ -363,8 +419,39 @@ const App = () => {
           }
         }
 
+        // Check if list-visible metadata changed (only icon affects the list display)
+        const listMetadataChanged = hasListVisibleChanges(selectedPost.meta, metaData);
+
         // Use batch operation to save meta data and regenerate files in one request
-        await centralizedApi.savePostWithOperations(selectedPost.id, metaData, true);
+        await centralizedApi.savePostWithOperations(
+          selectedPost.id,
+          metaData,
+          true,
+          { invalidateCollectionCache: listMetadataChanged }
+        );
+
+        // Optimistically update local state with saved data
+        // This keeps Monaco and all UI in sync even if a re-render happens before cache refresh
+        setSelectedPost(prev => ({
+          ...prev,
+          meta: metaData
+        }));
+
+        // Also update the post in groupedPosts to reflect meta changes in the list
+        setGroupedPosts(prev => {
+          const updated = { ...prev };
+          Object.keys(updated).forEach(key => {
+            updated[key] = updated[key].map(post =>
+              post.id === selectedPost.id
+                ? { ...post, meta: metaData }
+                : post
+            );
+          });
+          return updated;
+        });
+
+        // Don't refetch after save - optimistic update keeps UI in sync
+        // The cache will be invalidated, so next time we select this post, we'll get fresh data
       } else {
         // Just regenerate files if no meta changes
         await centralizedApi.regenerateFiles();
@@ -390,89 +477,114 @@ const App = () => {
   const handleSave = saveWithHotReload;
 
   // Centralized data loading with cache warming and parallel fetching
-  const loadAllData = useCallback(async (showInitialLoading = true) => {
-    try {
-      if (showInitialLoading) setLoading(true);
+  const loadAllData = useCallback(
+    async (showInitialLoading = true) => {
+      try {
+        if (showInitialLoading) setLoading(true);
 
-      // Warm cache in background for instant subsequent access
-      centralizedApi.warmCache().catch(error => {
-        console.warn('Cache warming failed:', error);
-      });
+        // Warm cache in background for instant subsequent access
+        centralizedApi.warmCache().catch((error) => {
+          console.warn("Cache warming failed:", error);
+        });
 
-      // Load all shared data in parallel for maximum performance
-      const [postsResult, scssPartialsResult, registeredBlocksResult, blockCategoriesResult] = await Promise.allSettled([
-        centralizedApi.getPosts({ per_page: 100 }),
-        centralizedApi.getScssPartials(),
-        centralizedApi.getRegisteredBlocks(),
-        centralizedApi.getBlockCategories()
-      ]);
+        // Load all shared data in parallel for maximum performance
+        const [
+          postsResult,
+          scssPartialsResult,
+          registeredBlocksResult,
+          blockCategoriesResult,
+        ] = await Promise.allSettled([
+          centralizedApi.getPosts({ per_page: 100 }),
+          centralizedApi.getScssPartials(),
+          centralizedApi.getRegisteredBlocks(),
+          centralizedApi.getBlockCategories(),
+        ]);
 
-      // Process posts data
-      if (postsResult.status === 'fulfilled') {
-        const posts = postsResult.value.posts || [];
-        const grouped = { blocks: [], symbols: [], "scss-partials": [] };
+        // Process posts data
+        if (postsResult.status === "fulfilled") {
+          const posts = postsResult.value.posts || [];
+          const grouped = { blocks: [], symbols: [], "scss-partials": [] };
 
-        // Group posts by taxonomy terms
-        for (const post of posts) {
-          const terms = post.terms;
-          if (terms && terms.length > 0) {
-            const termSlug = terms[0].slug;
-            if (grouped[termSlug]) {
-              grouped[termSlug].push(post);
+          // Group posts by taxonomy terms
+          for (const post of posts) {
+            const terms = post.terms;
+            if (terms && terms.length > 0) {
+              const termSlug = terms[0].slug;
+              if (grouped[termSlug]) {
+                grouped[termSlug].push(post);
+              }
+            }
+          }
+          setGroupedPosts(grouped);
+
+          // Background preload commonly accessed posts
+          const allPosts = [
+            ...grouped.blocks,
+            ...grouped.symbols,
+            ...grouped["scss-partials"],
+          ];
+          if (allPosts.length > 1 && showInitialLoading) {
+            const preloadIds = allPosts.slice(1, 4).map((post) => post.id);
+            if (preloadIds.length > 0) {
+              centralizedApi
+                .getBatchPostsWithRelated(preloadIds)
+                .catch((error) => {
+                  console.warn("Background preloading failed:", error);
+                });
+            }
+          }
+
+          // Auto-select first post if none selected
+          if (!selectedPost && showInitialLoading) {
+            const firstPost =
+              grouped.blocks[0] ||
+              grouped.symbols[0] ||
+              grouped["scss-partials"][0];
+            if (firstPost) {
+              handlePostSelect(firstPost);
             }
           }
         }
-        setGroupedPosts(grouped);
 
-        // Background preload commonly accessed posts
-        const allPosts = [...grouped.blocks, ...grouped.symbols, ...grouped["scss-partials"]];
-        if (allPosts.length > 1 && showInitialLoading) {
-          const preloadIds = allPosts.slice(1, 4).map(post => post.id);
-          if (preloadIds.length > 0) {
-            centralizedApi.getBatchPostsWithRelated(preloadIds).catch(error => {
-              console.warn('Background preloading failed:', error);
-            });
-          }
-        }
+        // Update shared data state with results
+        setSharedData((prevData) => ({
+          ...prevData,
+          scssPartials:
+            scssPartialsResult.status === "fulfilled"
+              ? scssPartialsResult.value
+              : prevData.scssPartials,
+          registeredBlocks:
+            registeredBlocksResult.status === "fulfilled"
+              ? Array.isArray(registeredBlocksResult.value)
+                ? registeredBlocksResult.value
+                : registeredBlocksResult.value?.blocks ||
+                  registeredBlocksResult.value?.data ||
+                  []
+              : prevData.registeredBlocks,
+          blockCategories:
+            blockCategoriesResult.status === "fulfilled"
+              ? Array.isArray(blockCategoriesResult.value)
+                ? blockCategoriesResult.value
+                : []
+              : prevData.blockCategories,
+        }));
 
-        // Auto-select first post if none selected
-        if (!selectedPost && showInitialLoading) {
-          const firstPost = grouped.blocks[0] || grouped.symbols[0] || grouped["scss-partials"][0];
-          if (firstPost) {
-            handlePostSelect(firstPost);
-          }
-        }
+        // Update individual loading states for fine-grained control
+        setDataLoading({
+          posts: postsResult.status !== "fulfilled",
+          scssPartials: scssPartialsResult.status !== "fulfilled",
+          registeredBlocks: registeredBlocksResult.status !== "fulfilled",
+          blockCategories: blockCategoriesResult.status !== "fulfilled",
+        });
+      } catch (error) {
+        console.error("Error loading app data:", error);
+        setGroupedPosts({ blocks: [], symbols: [], "scss-partials": [] });
+      } finally {
+        if (showInitialLoading) setLoading(false);
       }
-
-      // Update shared data state with results
-      setSharedData(prevData => ({
-        ...prevData,
-        scssPartials: scssPartialsResult.status === 'fulfilled'
-          ? scssPartialsResult.value
-          : prevData.scssPartials,
-        registeredBlocks: registeredBlocksResult.status === 'fulfilled'
-          ? (Array.isArray(registeredBlocksResult.value) ? registeredBlocksResult.value : registeredBlocksResult.value?.blocks || registeredBlocksResult.value?.data || [])
-          : prevData.registeredBlocks,
-        blockCategories: blockCategoriesResult.status === 'fulfilled'
-          ? (Array.isArray(blockCategoriesResult.value) ? blockCategoriesResult.value : [])
-          : prevData.blockCategories
-      }));
-
-      // Update individual loading states for fine-grained control
-      setDataLoading({
-        posts: postsResult.status !== 'fulfilled',
-        scssPartials: scssPartialsResult.status !== 'fulfilled',
-        registeredBlocks: registeredBlocksResult.status !== 'fulfilled',
-        blockCategories: blockCategoriesResult.status !== 'fulfilled'
-      });
-
-    } catch (error) {
-      console.error('Error loading app data:', error);
-      setGroupedPosts({ blocks: [], symbols: [], "scss-partials": [] });
-    } finally {
-      if (showInitialLoading) setLoading(false);
-    }
-  }, [selectedPost, handlePostSelect]);
+    },
+    [selectedPost, handlePostSelect]
+  );
 
   // Function to refresh all data (can be called after creating new posts)
   const refreshData = useCallback(() => {
@@ -480,67 +592,75 @@ const App = () => {
   }, [loadAllData]);
 
   // Handle post deletion with optimistic updates
-  const handlePostDelete = useCallback((deletedPostId) => {
-    // Optimistically update the UI first for immediate feedback
-    setGroupedPosts(prevGrouped => {
-      const updated = { ...prevGrouped };
-
-      // Remove the deleted post from the appropriate group
-      Object.keys(updated).forEach(key => {
-        updated[key] = updated[key].filter(post => post.id !== deletedPostId);
-      });
-
-      return updated;
-    });
-
-    // Clear selected post if it was the one deleted
-    if (selectedPost && selectedPost.id === deletedPostId) {
-      setSelectedPost(null);
-      setMetaData({});
-      setSaveStatus("");
-    }
-
-    // No need to clear cache - deletion already handles cache invalidation
-    // The optimistic update provides immediate UI feedback
-  }, [selectedPost]);
-
-  // Handle post creation with optimistic updates
-  const handlePostCreate = useCallback(async (postData) => {
-    try {
-      // Create post via API
-      const newPost = await centralizedApi.createPost({
-        title: postData.title,
-        taxonomy_term: postData.type,
-        status: "publish",
-      });
-
-      // Optimistically add the new post to the UI
-      setGroupedPosts(prevGrouped => {
+  const handlePostDelete = useCallback(
+    (deletedPostId) => {
+      // Optimistically update the UI first for immediate feedback
+      setGroupedPosts((prevGrouped) => {
         const updated = { ...prevGrouped };
-        const termSlug = postData.type;
 
-        // Add to the appropriate group
-        if (updated[termSlug]) {
-          updated[termSlug] = [...updated[termSlug], newPost];
-        }
+        // Remove the deleted post from the appropriate group
+        Object.keys(updated).forEach((key) => {
+          updated[key] = updated[key].filter(
+            (post) => post.id !== deletedPostId
+          );
+        });
 
         return updated;
       });
 
-      // Auto-select the newly created post
-      setTimeout(() => {
-        handlePostSelect(newPost);
-      }, 100);
+      // Clear selected post if it was the one deleted
+      if (selectedPost && selectedPost.id === deletedPostId) {
+        setSelectedPost(null);
+        setMetaData({});
+        setSaveStatus("");
+      }
 
-      // Cache is already invalidated by createPost method
-      // Optimistic update provides immediate UI feedback
-    } catch (error) {
-      console.error("Error creating post:", error);
-      alert("Failed to create post: " + error.message);
-      // Refresh data to get the actual state on error
-      refreshData();
-    }
-  }, [handlePostSelect, refreshData]);
+      // No need to clear cache - deletion already handles cache invalidation
+      // The optimistic update provides immediate UI feedback
+    },
+    [selectedPost]
+  );
+
+  // Handle post creation with optimistic updates
+  const handlePostCreate = useCallback(
+    async (postData) => {
+      try {
+        // Create post via API
+        const newPost = await centralizedApi.createPost({
+          title: postData.title,
+          taxonomy_term: postData.type,
+          status: "publish",
+        });
+
+        // Optimistically add the new post to the UI
+        setGroupedPosts((prevGrouped) => {
+          const updated = { ...prevGrouped };
+          const termSlug = postData.type;
+
+          // Add to the appropriate group
+          if (updated[termSlug]) {
+            updated[termSlug] = [...updated[termSlug], newPost];
+          }
+
+          return updated;
+        });
+
+        // Auto-select the newly created post
+        setTimeout(() => {
+          handlePostSelect(newPost);
+        }, 100);
+
+        // Cache is already invalidated by createPost method
+        // Optimistic update provides immediate UI feedback
+      } catch (error) {
+        console.error("Error creating post:", error);
+        alert("Failed to create post: " + error.message);
+        // Refresh data to get the actual state on error
+        refreshData();
+      }
+    },
+    [handlePostSelect, refreshData]
+  );
 
   useEffect(() => {
     // Load all shared data with cache warming on app initialization
@@ -548,20 +668,25 @@ const App = () => {
   }, []);
 
   // Memoize computed values (must be before any early returns)
-  const totalPosts = useMemo(() =>
-    groupedPosts.blocks.length +
-    groupedPosts.symbols.length +
-    groupedPosts["scss-partials"].length,
-    [groupedPosts.blocks.length, groupedPosts.symbols.length, groupedPosts["scss-partials"].length]
+  const totalPosts = useMemo(
+    () =>
+      groupedPosts.blocks.length +
+      groupedPosts.symbols.length +
+      groupedPosts["scss-partials"].length,
+    [
+      groupedPosts.blocks.length,
+      groupedPosts.symbols.length,
+      groupedPosts["scss-partials"].length,
+    ]
   );
 
-  const toastIsVisible = useMemo(() =>
-    showToast && scssError,
+  const toastIsVisible = useMemo(
+    () => showToast && scssError,
     [showToast, scssError]
   );
 
-  const hasUnsavedChanges = useMemo(() =>
-    saveStatus === "unsaved",
+  const hasUnsavedChanges = useMemo(
+    () => saveStatus === "unsaved",
     [saveStatus]
   );
 

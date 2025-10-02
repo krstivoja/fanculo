@@ -23,6 +23,7 @@ const ScssPartialsMetaboxes = ({ metaData, onChange, titleComponent }) => {
           language="scss"
           className="absolute inset-0"
           placeholder="Enter SCSS partial code..."
+          enableEmmet={true}
         />
       </div>
     </>

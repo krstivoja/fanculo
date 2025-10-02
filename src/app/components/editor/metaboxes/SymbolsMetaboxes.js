@@ -1,7 +1,7 @@
 import React from 'react';
 import { MonacoEditor } from '../../ui';
 
-const SymbolsMetaboxes = ({ metaData, onChange, titleComponent }) => {
+const SymbolsMetaboxes = ({ metaData, onChange, titleComponent, selectedPost }) => {
   const handleMetaChange = (field, value) => {
     onChange('symbols', field, value);
   };

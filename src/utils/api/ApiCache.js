@@ -88,17 +88,42 @@ class ApiCache {
   invalidate(key) {
     this.cache.delete(key);
     this.pendingRequests.delete(key);
+
+    // Also remove from localStorage if persistent
+    const baseKey = key.split(':')[0];
+    if (this.persistentKeys.has(baseKey)) {
+      try {
+        const storageKey = this.storagePrefix + baseKey;
+        localStorage.removeItem(storageKey);
+      } catch (error) {
+        console.warn('Failed to remove from localStorage:', error);
+      }
+    }
   }
 
   /**
    * Invalidate cache entries matching pattern
    */
   invalidatePattern(pattern) {
+    // Clear in-memory cache and persistent storage
     for (const key of this.cache.keys()) {
       if (key.includes(pattern)) {
         this.cache.delete(key);
+
+        // Also remove from localStorage if persistent
+        const baseKey = key.split(':')[0];
+        if (this.persistentKeys.has(baseKey)) {
+          try {
+            const storageKey = this.storagePrefix + baseKey;
+            localStorage.removeItem(storageKey);
+          } catch (error) {
+            console.warn('Failed to remove from localStorage:', error);
+          }
+        }
       }
     }
+
+    // Clear pending requests
     for (const key of this.pendingRequests.keys()) {
       if (key.includes(pattern)) {
         this.pendingRequests.delete(key);

@@ -111,8 +111,8 @@ class CentralizedApiService {
     const result = await this.apiClient.createPost(postData);
 
     // Invalidate related caches
-    this.cache.invalidatePattern('posts');
-    this.cache.invalidatePattern('scss-partials');
+    this.invalidatePostsCollectionCaches();
+    this.invalidateScssPartialCaches();
 
     return result;
   }
@@ -124,9 +124,9 @@ class CentralizedApiService {
     const result = await this.apiClient.updatePost(postId, postData);
 
     // Invalidate related caches
-    this.cache.invalidate(this.cache.generateKey('post-with-related', { postId }));
-    this.cache.invalidatePattern('posts');
-    this.cache.invalidatePattern('scss-partials');
+    this.invalidatePostCaches(postId);
+    this.invalidatePostsCollectionCaches();
+    this.invalidateScssPartialCaches();
 
     return result;
   }
@@ -138,22 +138,36 @@ class CentralizedApiService {
     const result = await this.apiClient.deletePost(postId);
 
     // Invalidate only specific caches to avoid performance issues
-    this.cache.invalidate(this.cache.generateKey('post-with-related', { postId }));
-    this.cache.invalidate(this.cache.generateKey('post', { postId }));
-    this.cache.invalidatePattern('posts');
+    this.invalidatePostCaches(postId);
+    this.invalidatePostsCollectionCaches();
 
     return result;
   }
 
   /**
    * Save post with operations - invalidates relevant caches
+   * @param {number} postId - Post ID to save
+   * @param {Object} metaData - Meta data to save
+   * @param {boolean} generateFiles - Whether to regenerate files
+   * @param {Object} options - Additional options
+   * @param {boolean} options.invalidateCollectionCache - Whether to invalidate posts collection cache (default: true)
    */
-  async savePostWithOperations(postId, metaData, generateFiles = false) {
+  async savePostWithOperations(postId, metaData, generateFiles = false, options = {}) {
+    const { invalidateCollectionCache = true } = options;
+
     const result = await this.apiClient.savePostWithOperations(postId, metaData, generateFiles);
 
-    // Invalidate related caches
-    this.cache.invalidate(this.cache.generateKey('post-with-related', { postId }));
-    this.cache.invalidatePattern('posts');
+    // Always invalidate individual post caches (detail view must be fresh)
+    this.invalidatePostCaches(postId);
+
+    // Only invalidate collection cache if list-visible metadata changed
+    // This keeps the posts list cache hot when only editing content/meta that doesn't affect the list
+    if (invalidateCollectionCache) {
+      this.invalidatePostsCollectionCaches();
+    }
+
+    // Always invalidate SCSS partials cache (meta changes may affect partials)
+    this.invalidateScssPartialCaches();
 
     return result;
   }
@@ -166,6 +180,9 @@ class CentralizedApiService {
 
     // Clear all caches since regeneration affects many things
     this.cache.clear();
+    if (this.apiClient?.clearCache) {
+      this.apiClient.clearCache();
+    }
 
     return result;
   }
@@ -177,8 +194,8 @@ class CentralizedApiService {
     const result = await this.apiClient.saveScssContent(postId, scssData);
 
     // Invalidate SCSS-related caches
-    this.cache.invalidatePattern('scss-partials');
-    this.cache.invalidate(this.cache.generateKey('post-with-related', { postId }));
+    this.invalidateScssPartialCaches();
+    this.invalidatePostCaches(postId);
 
     return result;
   }
@@ -190,8 +207,8 @@ class CentralizedApiService {
     const result = await this.apiClient.saveEditorScssContent(postId, scssData);
 
     // Invalidate SCSS-related caches
-    this.cache.invalidatePattern('scss-partials');
-    this.cache.invalidate(this.cache.generateKey('post-with-related', { postId }));
+    this.invalidateScssPartialCaches();
+    this.invalidatePostCaches(postId);
 
     return result;
   }
@@ -204,6 +221,9 @@ class CentralizedApiService {
 
     // Clear relevant caches
     this.cache.clear();
+    if (this.apiClient?.clearCache) {
+      this.apiClient.clearCache();
+    }
 
     return result;
   }
@@ -234,6 +254,40 @@ class CentralizedApiService {
    */
   clearCache() {
     this.cache.clear();
+    if (this.apiClient?.clearCache) {
+      this.apiClient.clearCache();
+    }
+  }
+
+  invalidatePostCaches(postId) {
+    if (!postId) {
+      return;
+    }
+
+    const relatedKey = this.cache.generateKey('post-with-related', { postId });
+    const postKey = this.cache.generateKey('post', { postId });
+
+    this.cache.invalidate(relatedKey);
+    this.cache.invalidate(postKey);
+
+    if (this.apiClient?.invalidateCache) {
+      this.apiClient.invalidateCache(`/post/${postId}/with-related`);
+      this.apiClient.invalidateCache(`/post/${postId}`);
+    }
+  }
+
+  invalidatePostsCollectionCaches() {
+    this.cache.invalidatePattern('posts');
+    if (this.apiClient?.invalidateCache) {
+      this.apiClient.invalidateCache('/posts');
+    }
+  }
+
+  invalidateScssPartialCaches() {
+    this.cache.invalidatePattern('scss-partials');
+    if (this.apiClient?.invalidateCache) {
+      this.apiClient.invalidateCache('/scss-partials');
+    }
   }
 }
 

@@ -237,7 +237,17 @@ trait SanitizationTrait
             $sanitized[$sanitized_category] = [];
 
             foreach ($data as $key => $value) {
-                $sanitized_key = $service->sanitizeText($key, 'key');
+                // List of known safe keys that should preserve their case
+                $preserveKeysCase = [
+                    'php', 'scss', 'editorScss', 'js', 'settings', 'attributes',
+                    'inner_blocks_settings', 'innerBlocksSettings',
+                    'selected_partials', 'selectedPartials',
+                    'editor_selected_partials', 'editorSelectedPartials',
+                    'is_global', 'isGlobal', 'global_order', 'globalOrder'
+                ];
+
+                // Preserve case for known keys, sanitize others
+                $sanitized_key = in_array($key, $preserveKeysCase, true) ? $key : $service->sanitizeText($key, 'key');
 
                 // Context-specific sanitization
                 switch ($key) {
@@ -253,15 +263,20 @@ trait SanitizationTrait
                         break;
                     case 'settings':
                     case 'inner_blocks_settings':
+                    case 'innerBlocksSettings':
                     case 'attributes':
                     case 'selected_partials':
+                    case 'selectedPartials':
                     case 'editor_selected_partials':
+                    case 'editorSelectedPartials':
                         $sanitized[$sanitized_category][$sanitized_key] = $service->sanitizeJson($value);
                         break;
                     case 'is_global':
+                    case 'isGlobal':
                         $sanitized[$sanitized_category][$sanitized_key] = $service->sanitizeBoolean($value) ? '1' : '0';
                         break;
                     case 'global_order':
+                    case 'globalOrder':
                         $sanitized[$sanitized_category][$sanitized_key] = (string) $service->sanitizeInteger($value, 0);
                         break;
                     default:

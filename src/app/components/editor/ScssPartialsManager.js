@@ -78,10 +78,8 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'sty
 
   // Memoize expensive update function
   const updateSelectedPartials = useCallback((newSelected) => {
-    console.log('Updating selected partials:', newSelected, 'mode:', mode);
     // Extract just the IDs for database storage
     const partialIds = newSelected.map(p => p.id || p);
-    console.log('Calling onMetaChange with partial IDs:', partialIds, 'field:', fieldName);
     setSelectedPartials(newSelected);
     onMetaChange('blocks', fieldName, JSON.stringify(partialIds));
   }, [mode, fieldName, onMetaChange]);
