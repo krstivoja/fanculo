@@ -40,10 +40,14 @@ class ApiCache {
     if (this.cache.has(key)) {
       const cacheItem = this.cache.get(key);
       if (this.isValid(cacheItem)) {
+        console.log('🔶 [ApiCache] Cache HIT for key:', key);
         return cacheItem.data;
       }
       // Remove expired cache
+      console.log('🔶 [ApiCache] Cache EXPIRED for key:', key);
       this.cache.delete(key);
+    } else {
+      console.log('🔶 [ApiCache] Cache MISS for key:', key);
     }
 
     // Check if request is already in progress
@@ -86,8 +90,26 @@ class ApiCache {
    * Invalidate specific cache entry
    */
   invalidate(key) {
+    console.log('🔶 [ApiCache] Invalidating cache key:', key);
+    const hadCache = this.cache.has(key);
+    const hadPending = this.pendingRequests.has(key);
+
     this.cache.delete(key);
     this.pendingRequests.delete(key);
+
+    // Also remove from localStorage if persistent
+    const baseKey = key.split(':')[0];
+    if (this.persistentKeys.has(baseKey)) {
+      try {
+        const storageKey = this.storagePrefix + baseKey;
+        localStorage.removeItem(storageKey);
+        console.log('🔶 [ApiCache] Removed from localStorage:', storageKey);
+      } catch (error) {
+        console.warn('Failed to remove from localStorage:', error);
+      }
+    }
+
+    console.log('🔶 [ApiCache] Invalidation result:', { hadCache, hadPending, key });
   }
 
   /**

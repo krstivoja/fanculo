@@ -54,9 +54,26 @@ const App = () => {
 
   // Fetch post with related data using optimized batch operation
   const handlePostSelect = useCallback(async (post) => {
+    console.log('🔵 [handlePostSelect] Selecting post:', post.id, post.title);
+
+    // If switching from a different post with unsaved changes, warn user
+    if (selectedPost && selectedPost.id !== post.id && saveStatus === 'unsaved') {
+      const confirmSwitch = window.confirm('You have unsaved changes. Do you want to discard them?');
+      if (!confirmSwitch) {
+        return;
+      }
+    }
+
     // Always use batch operation to get complete post data with related info
     const postWithRelated = await centralizedApi.getPostWithRelated(post.id);
     const fullPost = postWithRelated.post;
+
+    console.log('🔵 [handlePostSelect] Fetched post data:', {
+      postId: fullPost.id,
+      title: fullPost.title,
+      meta: fullPost.meta,
+      scssContent: fullPost.meta?.scss_partials?.scss?.substring(0, 100) + '...'
+    });
 
     setSelectedPost(fullPost);
     setMetaData(fullPost.meta || {});
@@ -66,10 +83,17 @@ const App = () => {
     // Store related data for potential use
     if (postWithRelated.related) {
     }
-  }, []);
+  }, [selectedPost, saveStatus]);
 
   // Handle meta field changes
   const handleMetaChange = useCallback((section, field, value) => {
+    console.log('🟡 [handleMetaChange] Changing meta:', {
+      section,
+      field,
+      valuePreview: typeof value === 'string' ? value.substring(0, 100) + '...' : value,
+      valueLength: typeof value === 'string' ? value.length : 'N/A'
+    });
+
     setMetaData((prev) => {
       const newMetaData = {
         ...prev,
@@ -78,6 +102,13 @@ const App = () => {
           [field]: value,
         },
       };
+
+      console.log('🟡 [handleMetaChange] New metaData state:', {
+        section,
+        field,
+        newSectionData: newMetaData[section]
+      });
+
       return newMetaData;
     });
     setSaveStatus("unsaved");
@@ -219,6 +250,13 @@ const App = () => {
 
   // Original save function without hot reload
   const originalHandleSave = async () => {
+    console.log('🟢 [originalHandleSave] Starting save for post:', selectedPost?.id);
+    console.log('🟢 [originalHandleSave] Current metaData:', {
+      blocks: metaData.blocks,
+      symbols: metaData.symbols,
+      scss_partials: metaData.scss_partials
+    });
+
     setSaveStatus("saving");
 
     try {
@@ -385,11 +423,16 @@ const App = () => {
         }
 
         // Use batch operation to save meta data and regenerate files in one request
-        await centralizedApi.savePostWithOperations(
+        console.log('🟢 [originalHandleSave] Calling savePostWithOperations with metaData:', metaData);
+        const saveResult = await centralizedApi.savePostWithOperations(
           selectedPost.id,
           metaData,
           true
         );
+        console.log('🟢 [originalHandleSave] Save result:', saveResult);
+
+        // Don't refetch after save - keep local state as-is
+        // The cache will be invalidated, so next time we select this post, we'll get fresh data
       } else {
         // Just regenerate files if no meta changes
         await centralizedApi.regenerateFiles();
