@@ -1,27 +1,12 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { MonacoEditor } from '../../ui';
 
-const ScssPartialsMetaboxes = ({ metaData, onChange, titleComponent, selectedPost }) => {
+const ScssPartialsMetaboxes = ({ metaData, onChange, titleComponent }) => {
   const handleMetaChange = (field, value) => {
-    console.log('🟣 [ScssPartialsMetaboxes] handleMetaChange called:', {
-      field,
-      valueLength: value?.length,
-      valuePreview: value?.substring(0, 100) + '...'
-    });
     onChange('scss_partials', field, value);
   };
 
   const scssPartials = metaData?.scss_partials || {};
-
-  useEffect(() => {
-    console.log('🟣 [ScssPartialsMetaboxes] Component mounted/updated:', {
-      selectedPostId: selectedPost?.id,
-      selectedPostTitle: selectedPost?.title,
-      scssPartialsData: scssPartials,
-      scssContentLength: scssPartials.scss?.length,
-      scssContentPreview: scssPartials.scss?.substring(0, 100) + '...'
-    });
-  }, [selectedPost?.id, scssPartials.scss]);
 
   return (
     <>

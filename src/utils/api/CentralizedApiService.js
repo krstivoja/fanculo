@@ -77,17 +77,8 @@ class CentralizedApiService {
   async getPostWithRelated(postId) {
     const key = this.cache.generateKey('post-with-related', { postId });
 
-    console.log('🔷 [CentralizedApiService] getPostWithRelated called for postId:', postId);
-    console.log('🔷 [CentralizedApiService] Cache key:', key);
-
     return this.cache.get(key, async () => {
-      console.log('🔷 [CentralizedApiService] Cache MISS - fetching from API');
       const data = await this.apiClient.getPostWithRelated(postId);
-      console.log('🔷 [CentralizedApiService] API returned data:', {
-        postId: data.post?.id,
-        meta: data.post?.meta,
-        scssContent: data.post?.meta?.scss_partials?.scss?.substring(0, 100) + '...'
-      });
       return data;
     }, 2 * 60 * 1000); // Shorter TTL for post data (2 minutes)
   }
@@ -155,21 +146,27 @@ class CentralizedApiService {
 
   /**
    * Save post with operations - invalidates relevant caches
+   * @param {number} postId - Post ID to save
+   * @param {Object} metaData - Meta data to save
+   * @param {boolean} generateFiles - Whether to regenerate files
+   * @param {Object} options - Additional options
+   * @param {boolean} options.invalidateCollectionCache - Whether to invalidate posts collection cache (default: true)
    */
-  async savePostWithOperations(postId, metaData, generateFiles = false) {
-    console.log('🔷 [CentralizedApiService] savePostWithOperations called:', {
-      postId,
-      metaData,
-      generateFiles
-    });
+  async savePostWithOperations(postId, metaData, generateFiles = false, options = {}) {
+    const { invalidateCollectionCache = true } = options;
 
     const result = await this.apiClient.savePostWithOperations(postId, metaData, generateFiles);
 
-    console.log('🔷 [CentralizedApiService] Save result:', result);
-
-    // Invalidate related caches
+    // Always invalidate individual post caches (detail view must be fresh)
     this.invalidatePostCaches(postId);
-    this.invalidatePostsCollectionCaches();
+
+    // Only invalidate collection cache if list-visible metadata changed
+    // This keeps the posts list cache hot when only editing content/meta that doesn't affect the list
+    if (invalidateCollectionCache) {
+      this.invalidatePostsCollectionCaches();
+    }
+
+    // Always invalidate SCSS partials cache (meta changes may affect partials)
     this.invalidateScssPartialCaches();
 
     return result;

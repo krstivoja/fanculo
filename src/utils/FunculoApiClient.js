@@ -165,7 +165,6 @@ class FunculoApiClient {
 
       // Check for pending identical requests (deduplication)
       if (this.pendingRequests.has(cacheKey)) {
-        console.log(`🔄 Deduplicating request for ${endpoint}`);
         return this.pendingRequests.get(cacheKey);
       }
 
@@ -875,20 +874,13 @@ class FunculoApiClient {
         invalidated++;
       }
     }
-    if (invalidated > 0) {
-      console.log(
-        `🗑️ Invalidated ${invalidated} cache entries matching '${pattern}'`
-      );
-    }
   }
 
   /**
    * Clear all cache
    */
   clearCache() {
-    const size = this.cache.size;
     this.cache.clear();
-    console.log(`🗑️ Cleared ${size} cache entries`);
   }
 
   // ===========================================

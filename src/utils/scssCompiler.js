@@ -353,14 +353,9 @@ ${originalLine} │ (error line)
  */
 async function getPartialScssContent(partialId) {
   try {
-    console.log(`  🔍 Fetching SCSS content for partial ID: ${partialId}`);
     // Use centralized API client to get partial content
     const partialData = await centralizedApi.getPost(partialId);
     const scssContent = partialData.meta?.scss_partials?.scss || "";
-    console.log(
-      `  ✅ Fetched ${scssContent.length} characters for partial ${partialId}. Content:`,
-      scssContent?.substring(0, 150)
-    );
     return scssContent;
   } catch (error) {
     console.warn(
@@ -383,11 +378,6 @@ export async function buildFinalScss(
   globalPartials = [],
   selectedPartials = []
 ) {
-  console.log("📦 buildFinalScss called with:", {
-    hasUserScss: !!userScss,
-    globalPartialsCount: globalPartials.length,
-    selectedPartialsCount: selectedPartials.length,
-  });
   const scssBlocks = [];
   const lineMap = []; // Track which line belongs to which source
   let currentLine = 1;
@@ -395,10 +385,6 @@ export async function buildFinalScss(
   // Add global partials first (sorted by global_order)
   const sortedGlobalPartials = [...globalPartials].sort(
     (a, b) => a.global_order - b.global_order
-  );
-  console.log(
-    "🌍 Including global partials in compilation:",
-    sortedGlobalPartials
   );
   for (const partial of sortedGlobalPartials) {
     const content = await getPartialScssContent(partial.id);
@@ -413,9 +399,6 @@ export async function buildFinalScss(
 
       // Add content lines
       const contentLines = content.split("\n");
-      console.log(
-        `   📄 Adding ${contentLines.length} lines from global partial "${partial.title}"`
-      );
       for (let i = 0; i < contentLines.length; i++) {
         scssBlocks.push(contentLines[i]);
         lineMap.push({
@@ -437,16 +420,8 @@ export async function buildFinalScss(
   const sortedSelectedPartials = [...selectedPartials].sort(
     (a, b) => a.order - b.order
   );
-  console.log(
-    "🎯 Including selected partials in compilation:",
-    sortedSelectedPartials
-  );
   for (const partial of sortedSelectedPartials) {
     const content = await getPartialScssContent(partial.id);
-    console.log(
-      `📥 Selected partial ${partial.id} (${partial.title}) content:`,
-      content?.substring(0, 200) || "(empty)"
-    );
     if (content.trim()) {
       // Add comment line
       scssBlocks.push(`// Selected partial: ${partial.title}`);
@@ -458,9 +433,6 @@ export async function buildFinalScss(
 
       // Add content lines
       const contentLines = content.split("\n");
-      console.log(
-        `   📄 Adding ${contentLines.length} lines from selected partial "${partial.title}"`
-      );
       for (let i = 0; i < contentLines.length; i++) {
         scssBlocks.push(contentLines[i]);
         lineMap.push({
@@ -498,15 +470,6 @@ export async function buildFinalScss(
 
   const finalScss = scssBlocks.join("\n");
 
-  console.log("🏗️ Final SCSS Built:", {
-    totalLines: scssBlocks.length,
-    globalPartialsIncluded: globalPartials.length,
-    selectedPartialsIncluded: selectedPartials.length,
-    preview:
-      finalScss.substring(0, 500) + (finalScss.length > 500 ? "..." : ""),
-    fullContent: finalScss,
-  });
-
   return {
     finalScss: finalScss,
     lineMap: lineMap,
@@ -542,40 +505,18 @@ export async function compileScss(
       let globalPartials = [];
       let selectedPartials = [];
 
-      console.log("🔧 compileScss called with:", {
-        postId,
-        hasCurrentPartials: !!currentPartials,
-      });
-
       if (currentPartials) {
         // Use provided current partials data (for real-time compilation)
         globalPartials = currentPartials.globalPartials || [];
         selectedPartials = currentPartials.selectedPartials || [];
-        console.log("🔧 Using provided currentPartials:", {
-          globalCount: globalPartials.length,
-          selectedCount: selectedPartials.length,
-          globalPartials: globalPartials.map((p) => ({
-            id: p.id,
-            title: p.title,
-          })),
-          selectedPartials: selectedPartials.map((p) => ({
-            id: p.id,
-            title: p.title,
-          })),
-        });
       } else {
         // Fetch from API (for initial load or when no current data available)
         const partialsData = await getBlockPartials(postId);
         globalPartials = partialsData.globalPartials || [];
         selectedPartials = partialsData.selectedPartials || [];
-        console.log("🔧 Fetched partials from API:", {
-          globalCount: globalPartials.length,
-          selectedCount: selectedPartials.length,
-        });
       }
 
       if (globalPartials.length > 0 || selectedPartials.length > 0) {
-        console.log("🏗️ Building final SCSS with partials...");
         const buildResult = await buildFinalScss(
           scssCode,
           globalPartials,
@@ -583,14 +524,7 @@ export async function compileScss(
         );
         finalScss = buildResult.finalScss;
         window._scssLineMap = buildResult.lineMap; // Store for error analysis
-        console.log(
-          "🏗️ Final SCSS built. Length:",
-          finalScss.length,
-          "First 500 chars:",
-          finalScss.substring(0, 500)
-        );
       } else {
-        console.log("⚠️ No partials to include, using original SCSS");
         // Still create a line map for main block only
         const userLines = scssCode.split("\n");
         const lineMap = [];

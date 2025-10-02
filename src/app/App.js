@@ -10,6 +10,31 @@ import centralizedApi from "../utils/api/CentralizedApiService";
 import { useHotReloadSave } from "../hooks/useHotReload";
 import "./style.css";
 
+/**
+ * Check if metadata changes affect the posts list display
+ * Only block icon is shown in the list (title is handled separately)
+ */
+const hasListVisibleChanges = (originalMeta = {}, newMeta = {}) => {
+  // Extract icon from blocks.settings for comparison
+  const getIcon = (meta) => {
+    try {
+      const settings = meta?.blocks?.settings;
+      if (typeof settings === 'string') {
+        return JSON.parse(settings)?.icon;
+      }
+      return settings?.icon;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const originalIcon = getIcon(originalMeta);
+  const newIcon = getIcon(newMeta);
+
+  // If icon changed, we need to invalidate the collection cache
+  return originalIcon !== newIcon;
+};
+
 const App = () => {
   // Core data state
   const [groupedPosts, setGroupedPosts] = useState({
@@ -54,8 +79,6 @@ const App = () => {
 
   // Fetch post with related data using optimized batch operation
   const handlePostSelect = useCallback(async (post) => {
-    console.log('🔵 [handlePostSelect] Selecting post:', post.id, post.title);
-
     // If switching from a different post with unsaved changes, warn user
     if (selectedPost && selectedPost.id !== post.id && saveStatus === 'unsaved') {
       const confirmSwitch = window.confirm('You have unsaved changes. Do you want to discard them?');
@@ -67,13 +90,6 @@ const App = () => {
     // Always use batch operation to get complete post data with related info
     const postWithRelated = await centralizedApi.getPostWithRelated(post.id);
     const fullPost = postWithRelated.post;
-
-    console.log('🔵 [handlePostSelect] Fetched post data:', {
-      postId: fullPost.id,
-      title: fullPost.title,
-      meta: fullPost.meta,
-      scssContent: fullPost.meta?.scss_partials?.scss?.substring(0, 100) + '...'
-    });
 
     setSelectedPost(fullPost);
     setMetaData(fullPost.meta || {});
@@ -87,13 +103,6 @@ const App = () => {
 
   // Handle meta field changes
   const handleMetaChange = useCallback((section, field, value) => {
-    console.log('🟡 [handleMetaChange] Changing meta:', {
-      section,
-      field,
-      valuePreview: typeof value === 'string' ? value.substring(0, 100) + '...' : value,
-      valueLength: typeof value === 'string' ? value.length : 'N/A'
-    });
-
     setMetaData((prev) => {
       const newMetaData = {
         ...prev,
@@ -102,12 +111,6 @@ const App = () => {
           [field]: value,
         },
       };
-
-      console.log('🟡 [handleMetaChange] New metaData state:', {
-        section,
-        field,
-        newSectionData: newMetaData[section]
-      });
 
       return newMetaData;
     });
@@ -131,6 +134,19 @@ const App = () => {
           title: newTitle,
         });
         setSelectedPost(updatedPost);
+
+        // Also update the title in groupedPosts for consistency
+        setGroupedPosts(prev => {
+          const updated = { ...prev };
+          Object.keys(updated).forEach(key => {
+            updated[key] = updated[key].map(post =>
+              post.id === selectedPost.id
+                ? { ...post, title: updatedPost.title }
+                : post
+            );
+          });
+          return updated;
+        });
       } catch (error) {
         console.error("Error updating title:", error);
         throw error;
@@ -250,13 +266,6 @@ const App = () => {
 
   // Original save function without hot reload
   const originalHandleSave = async () => {
-    console.log('🟢 [originalHandleSave] Starting save for post:', selectedPost?.id);
-    console.log('🟢 [originalHandleSave] Current metaData:', {
-      blocks: metaData.blocks,
-      symbols: metaData.symbols,
-      scss_partials: metaData.scss_partials
-    });
-
     setSaveStatus("saving");
 
     try {
@@ -270,53 +279,16 @@ const App = () => {
 
         if (hasScssContent) {
           try {
-            console.log("🎨 === SCSS COMPILATION DEBUG ===");
-            console.log("📝 1. Current metaData.blocks:", metaData.blocks);
-            console.log(
-              "📝 2. selected_partials (snake_case):",
-              metaData.blocks?.selected_partials
-            );
-            console.log(
-              "📝 3. selectedPartials (camelCase):",
-              metaData.blocks?.selectedPartials
-            );
-
             // Get current partials data for real-time compilation
             const currentPartials = await getCurrentPartials();
 
-            console.log("📦 4. getCurrentPartials() returned:", {
-              globalPartials: currentPartials.globalPartials?.map((p) => ({
-                id: p.id,
-                title: p.title,
-              })),
-              selectedPartials: currentPartials.selectedPartials?.map((p) => ({
-                id: p.id,
-                title: p.title,
-              })),
-              globalCount: currentPartials.globalPartials?.length || 0,
-              selectedCount: currentPartials.selectedPartials?.length || 0,
-            });
-
             // Compile SCSS to CSS with current partials support
             const scssContent = metaData.blocks.scss;
-            console.log(
-              "📄 5. Block SCSS content:",
-              scssContent?.substring(0, 200) +
-                (scssContent?.length > 200 ? "..." : "")
-            );
-
             const cssContent = await compileScss(
               scssContent,
               selectedPost.id,
               currentPartials
             );
-
-            console.log(
-              "✅ 6. Compiled CSS result:",
-              cssContent?.substring(0, 300) +
-                (cssContent?.length > 300 ? "..." : "")
-            );
-            console.log("🎨 === END SCSS COMPILATION DEBUG ===");
 
             // Save both SCSS and compiled CSS
             await centralizedApi.saveScssContent(selectedPost.id, {
@@ -422,16 +394,38 @@ const App = () => {
           }
         }
 
+        // Check if list-visible metadata changed (only icon affects the list display)
+        const listMetadataChanged = hasListVisibleChanges(selectedPost.meta, metaData);
+
         // Use batch operation to save meta data and regenerate files in one request
-        console.log('🟢 [originalHandleSave] Calling savePostWithOperations with metaData:', metaData);
-        const saveResult = await centralizedApi.savePostWithOperations(
+        await centralizedApi.savePostWithOperations(
           selectedPost.id,
           metaData,
-          true
+          true,
+          { invalidateCollectionCache: listMetadataChanged }
         );
-        console.log('🟢 [originalHandleSave] Save result:', saveResult);
 
-        // Don't refetch after save - keep local state as-is
+        // Optimistically update local state with saved data
+        // This keeps Monaco and all UI in sync even if a re-render happens before cache refresh
+        setSelectedPost(prev => ({
+          ...prev,
+          meta: metaData
+        }));
+
+        // Also update the post in groupedPosts to reflect meta changes in the list
+        setGroupedPosts(prev => {
+          const updated = { ...prev };
+          Object.keys(updated).forEach(key => {
+            updated[key] = updated[key].map(post =>
+              post.id === selectedPost.id
+                ? { ...post, meta: metaData }
+                : post
+            );
+          });
+          return updated;
+        });
+
+        // Don't refetch after save - optimistic update keeps UI in sync
         // The cache will be invalidated, so next time we select this post, we'll get fresh data
       } else {
         // Just regenerate files if no meta changes
