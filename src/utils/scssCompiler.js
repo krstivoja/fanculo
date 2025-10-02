@@ -147,8 +147,10 @@ export async function getBlockPartials(postId) {
   const blockData = postWithRelated.post;
   const partialsData = postWithRelated.related?.scssPartials;
 
+
   let selectedPartials = [];
   const selectedPartialsString = blockData.meta?.blocks?.selected_partials;
+
 
   if (selectedPartialsString) {
     try {
@@ -352,6 +354,7 @@ ${originalLine} │ (error line)
  * @returns {Promise<string>} - The SCSS content
  */
 async function getPartialScssContent(partialId) {
+
   try {
     // Use centralized API client to get partial content
     const partialData = await centralizedApi.getPost(partialId);
@@ -364,6 +367,7 @@ async function getPartialScssContent(partialId) {
     );
   }
   return "";
+
 }
 
 /**
@@ -563,6 +567,8 @@ export async function compileScss(
 }
 
 export default {
+
   compileScss,
   initScssCompiler,
+
 };

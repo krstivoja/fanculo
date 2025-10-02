@@ -16,13 +16,18 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'sty
     return mode === 'editorStyle' ? 'editorSelectedPartials' : 'selectedPartials';
   }, [mode]);
 
+
   // Memoize expensive selected partials processing
   const processSelectedPartials = useMemo(() => {
-    const blockSelectedPartials = metaData?.blocks?.[fieldName];
-    console.log('Block selected partials raw:', blockSelectedPartials);
+    console.log('🔍 ScssPartialsManager processSelectedPartials - metaData:', metaData);
+    console.log('🔍 ScssPartialsManager processSelectedPartials - metaData.blocks:', metaData?.blocks);
+    console.log('🔍 ScssPartialsManager processSelectedPartials - fieldName:', fieldName);
+    const blockSelectedPartials =
+      metaData?.blocks?.[fieldName] ?? metaData?.blocks?.[camelFieldName];
+    console.log('🔍 ScssPartialsManager processSelectedPartials - blockSelectedPartials:', blockSelectedPartials);
 
     if (!blockSelectedPartials) {
-      console.log('No selected partials found in metaData');
+      console.log('❌ No selected partials found in metaData');
       return [];
     }
 
@@ -61,7 +66,7 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'sty
     }
 
     return [];
-  }, [metaData?.blocks, fieldName, availablePartials, globalPartials]);
+  }, [metaData?.blocks, fieldName, camelFieldName, availablePartials, globalPartials]);
 
   // Load selected partials when data is available - directly update state from processSelectedPartials
   useEffect(() => {
@@ -209,6 +214,8 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'sty
   );
 };
 
+
 // Export without React.memo to ensure component updates when metaData changes
 // The internal useMemo hooks already optimize expensive computations
 export default ScssPartialsManager;
+

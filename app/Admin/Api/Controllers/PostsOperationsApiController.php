@@ -133,38 +133,51 @@ class PostsOperationsApiController extends BaseApiController
 
     public function executeBulkOperations($request)
     {
+        error_log("Fanculo Debug: executeBulkOperations called");
         $startTime = microtime(true);
-        // Operations are already sanitized by route args
-        $operations = $request->get_param('operations');
-        $results = [
-            'successful' => [],
-            'failed' => [],
-            'total' => count($operations),
-        ];
 
-        foreach ($operations as $index => $operation) {
-            if (!isset($operation['type']) || !isset($operation['data'])) {
-                $results['failed'][] = [
-                    'index' => $index,
-                    'error' => 'Operation must have type and data',
-                ];
-                continue;
-            }
+        try {
+            // Operations are already sanitized by route args
+            $operations = $request->get_param('operations');
+            error_log("Fanculo Debug: Received " . count($operations) . " operations");
 
-            try {
-                $result = $this->executeOperation($operation['type'], $operation['data']);
-                $results['successful'][] = [
-                    'index' => $index,
-                    'type' => $operation['type'],
-                    'result' => $result,
-                ];
-            } catch (\Exception $e) {
-                $results['failed'][] = [
-                    'index' => $index,
-                    'type' => $operation['type'],
-                    'error' => $e->getMessage(),
-                ];
+            $results = [
+                'successful' => [],
+                'failed' => [],
+                'total' => count($operations),
+            ];
+
+            foreach ($operations as $index => $operation) {
+                if (!isset($operation['type']) || !isset($operation['data'])) {
+                    $results['failed'][] = [
+                        'index' => $index,
+                        'error' => 'Operation must have type and data',
+                    ];
+                    continue;
+                }
+
+                try {
+                    error_log("Fanculo Debug: Executing operation type: {$operation['type']} (index: $index)");
+                    $result = $this->executeOperation($operation['type'], $operation['data']);
+                    $results['successful'][] = [
+                        'index' => $index,
+                        'type' => $operation['type'],
+                        'result' => $result,
+                    ];
+                    error_log("Fanculo Debug: Operation {$operation['type']} succeeded");
+                } catch (\Exception $e) {
+                    error_log("Fanculo Error: Operation {$operation['type']} failed - " . $e->getMessage());
+                    $results['failed'][] = [
+                        'index' => $index,
+                        'type' => $operation['type'],
+                        'error' => $e->getMessage(),
+                    ];
+                }
             }
+        } catch (\Exception $e) {
+            error_log("Fanculo Fatal Error in executeBulkOperations: " . $e->getMessage());
+            error_log("Fanculo Stack trace: " . $e->getTraceAsString());
+            return $this->responseFormatter->serverError('Bulk operations failed: ' . $e->getMessage());
         }
 
         // Log performance
@@ -334,8 +347,10 @@ class PostsOperationsApiController extends BaseApiController
             $selectedPartialsKey = isset($blocks['selectedPartials']) ? 'selectedPartials' : 'selected_partials';
             if (isset($blocks[$selectedPartialsKey])) {
                 $partialsData = json_decode($blocks[$selectedPartialsKey], true);
+              
                 // Allow empty arrays - user may have removed all partials
                 if (is_array($partialsData)) {
+
                     $dbSettings['selected_partials'] = $partialsData;
                 }
             }
@@ -371,6 +386,7 @@ class PostsOperationsApiController extends BaseApiController
             error_log("🟢 [updatePostMeta] SCSS Partials data: " . print_r($scssPartials, true));
 
             if (isset($scssPartials['scss'])) {
+
                 error_log("🟢 [updatePostMeta] Updating SCSS content for post $postId");
                 error_log("🟢 [updatePostMeta] SCSS content length: " . strlen($scssPartials['scss']));
                 error_log("🟢 [updatePostMeta] SCSS content preview: " . substr($scssPartials['scss'], 0, 100));
@@ -403,11 +419,18 @@ class PostsOperationsApiController extends BaseApiController
         error_log("Fanculo Debug: Triggering file generation after meta update for post ID: $postId");
         $post = get_post($postId);
         if ($post) {
-            $filesManagerService = new FilesManagerService();
-            $result = $filesManagerService->generateFilesOnPostSave($postId, $post, true);
-            error_log("Fanculo Debug: File generation result: " . print_r($result, true));
+            try {
+                error_log("Fanculo Debug: Post found - starting file generation");
+                $filesManagerService = new FilesManagerService();
+                $result = $filesManagerService->generateFilesOnPostSave($postId, $post, true);
+                error_log("Fanculo Debug: File generation completed successfully");
+            } catch (\Exception $e) {
+                error_log("Fanculo Error: File generation failed - " . $e->getMessage());
+                error_log("Fanculo Error: Stack trace - " . $e->getTraceAsString());
+                throw $e; // Re-throw to be caught by outer handler
+            }
         } else {
-            error_log("Fanculo Debug: Could not find post with ID: $postId");
+            error_log("Fanculo Error: Could not find post with ID: $postId");
         }
     }
 }

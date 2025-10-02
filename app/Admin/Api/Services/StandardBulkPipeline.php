@@ -253,8 +253,15 @@ class StandardBulkPipeline
             }
             $formattedMeta['blocks']['settings'] = json_encode($blockSettings);
             $formattedMeta['blocks']['inner_blocks_settings'] = json_encode($innerBlocksSettings);
-            $formattedMeta['blocks']['selected_partials'] = json_encode($dbSettings['selected_partials'] ?? []);
-            $formattedMeta['blocks']['editor_selected_partials'] = json_encode($dbSettings['editor_selected_partials'] ?? []);
+
+            $selectedPartials = $dbSettings['selected_partials'] ?? [];
+            $editorSelectedPartials = $dbSettings['editor_selected_partials'] ?? [];
+            error_log("Fanculo Debug: StandardBulkPipeline formatPostData - Post ID: $postId, selected_partials from DB: " . json_encode($selectedPartials) . ", editor_selected_partials: " . json_encode($editorSelectedPartials));
+
+            $formattedMeta['blocks']['selected_partials'] = json_encode($selectedPartials);
+            $formattedMeta['blocks']['editor_selected_partials'] = json_encode($editorSelectedPartials);
+
+            error_log("Fanculo Debug: StandardBulkPipeline formatPostData - Final meta blocks: " . json_encode($formattedMeta['blocks']));
         }
 
         // Add SCSS partial settings if this is a SCSS partial

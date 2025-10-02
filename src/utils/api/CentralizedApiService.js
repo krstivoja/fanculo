@@ -80,7 +80,7 @@ class CentralizedApiService {
     return this.cache.get(key, async () => {
       const data = await this.apiClient.getPostWithRelated(postId);
       return data;
-    }, 2 * 60 * 1000); // Shorter TTL for post data (2 minutes)
+    }, 5 * 1000); // Very short TTL (5 seconds) to ensure fresh data after saves
   }
 
   /**

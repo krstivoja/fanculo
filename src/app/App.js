@@ -91,6 +91,10 @@ const App = () => {
     const postWithRelated = await centralizedApi.getPostWithRelated(post.id);
     const fullPost = postWithRelated.post;
 
+    console.log('🔍 App.js handlePostSelect - fullPost.meta.blocks:', fullPost.meta?.blocks);
+    console.log('🔍 App.js handlePostSelect - selected_partials:', fullPost.meta?.blocks?.selected_partials, 'selectedPartials:', fullPost.meta?.blocks?.selectedPartials);
+    console.log('🔍 App.js handlePostSelect - editor_selected_partials:', fullPost.meta?.blocks?.editor_selected_partials, 'editorSelectedPartials:', fullPost.meta?.blocks?.editorSelectedPartials);
+
     setSelectedPost(fullPost);
     setMetaData(fullPost.meta || {});
     setSaveStatus("");
@@ -104,15 +108,33 @@ const App = () => {
   // Handle meta field changes
   const handleMetaChange = useCallback((section, field, value) => {
     setMetaData((prev) => {
-      const newMetaData = {
+      const previousSection = prev[section] || {};
+      const updatedSection = {
+        ...previousSection,
+        [field]: value,
+      };
+
+      if (section === "blocks") {
+        if (field === "selected_partials") {
+          updatedSection.selectedPartials = value;
+        } else if (field === "selectedPartials") {
+          updatedSection.selected_partials = value;
+        }
+
+        if (field === "editor_selected_partials") {
+          updatedSection.editorSelectedPartials = value;
+        } else if (field === "editorSelectedPartials") {
+          updatedSection.editor_selected_partials = value;
+        }
+      }
+
+      return {
         ...prev,
-        [section]: {
-          ...prev[section],
-          [field]: value,
-        },
+        [section]: updatedSection,
       };
 
       return newMetaData;
+
     });
     setSaveStatus("unsaved");
 
@@ -208,6 +230,7 @@ const App = () => {
         // Support both snake_case (from API) and camelCase (from unsaved state)
         let selectedPartialIds = [];
         const selectedPartialsString =
+
           metaData.blocks?.selected_partials ||
           metaData.blocks?.selectedPartials;
         if (selectedPartialsString) {
@@ -262,7 +285,9 @@ const App = () => {
         return { globalPartials: [], selectedPartials: [] };
       }
     };
+
   }, [metaData.blocks?.selected_partials, metaData.blocks?.selectedPartials]);
+
 
   // Original save function without hot reload
   const originalHandleSave = async () => {
