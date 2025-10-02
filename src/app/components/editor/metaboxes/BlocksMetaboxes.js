@@ -58,7 +58,6 @@ const BlocksMetaboxes = ({ metaData, onChange, titleComponent, selectedPost }) =
               </div>
             ) : (
               <MonacoEditor
-                  key={`block-${selectedPost?.id}-${tab.id}`}
                   value={blocks[tab.id] || ''}
                   onChange={(e) => handleMetaChange(tab.id, e.target.value)}
                   language={tab.language || 'plaintext'}

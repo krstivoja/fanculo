@@ -33,12 +33,12 @@ const ScssPartialsMetaboxes = ({ metaData, onChange, titleComponent, selectedPos
       {/* Content */}
       <div className="relative flex-1 min-h-0 [&>section]:!h-full">
         <MonacoEditor
-          key={`scss-partial-${selectedPost?.id}`}
           value={scssPartials.scss || ''}
           onChange={(e) => handleMetaChange('scss', e.target.value)}
           language="scss"
           className="absolute inset-0"
           placeholder="Enter SCSS partial code..."
+          enableEmmet={true}
         />
       </div>
     </>

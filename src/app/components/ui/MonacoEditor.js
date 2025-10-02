@@ -19,6 +19,23 @@ const MonacoEditor = ({
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
   const [currentLanguage, setCurrentLanguage] = useState(language);
+  const isInternalChangeRef = useRef(false);
+
+  // Sync external value changes to editor without remounting
+  useEffect(() => {
+    if (editorRef.current && !isInternalChangeRef.current) {
+      const currentValue = editorRef.current.getValue();
+      if (currentValue !== value) {
+        const position = editorRef.current.getPosition();
+        editorRef.current.setValue(value || '');
+        // Restore cursor position if still valid
+        if (position) {
+          editorRef.current.setPosition(position);
+        }
+      }
+    }
+    isInternalChangeRef.current = false;
+  }, [value]);
 
   // Initialize Emmet when Monaco is ready
   const handleEditorDidMount = (editor, monaco) => {
@@ -86,6 +103,7 @@ const MonacoEditor = ({
   };
 
   const handleEditorChange = (value) => {
+    isInternalChangeRef.current = true;
     if (onChange) {
       onChange({ target: { value } }); // Mimic textarea event structure
     }

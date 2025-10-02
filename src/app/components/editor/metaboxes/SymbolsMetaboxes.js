@@ -18,7 +18,6 @@ const SymbolsMetaboxes = ({ metaData, onChange, titleComponent, selectedPost }) 
       {/* Content */}
       <div className="relative flex-1 min-h-0 [&>section]:!h-full">
         <MonacoEditor
-          key={`symbol-${selectedPost?.id}`}
           value={symbols.php || ''}
           onChange={(e) => handleMetaChange('php', e.target.value)}
           language="php"
