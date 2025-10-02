@@ -4,11 +4,12 @@ namespace Fanculo\Database;
 
 class DatabaseInstaller
 {
-    const TABLE_VERSION = '4.3.0';
+    const TABLE_VERSION = '4.4.0';
     const VERSION_OPTION = 'fanculo_db_version';
     const TABLE_NAME = 'fanculo_blocks_settings';
     const SCSS_TABLE_NAME = 'fanculo_scsspartials_settings';
     const ATTRIBUTES_TABLE_NAME = 'fanculo_blocks_attributes';
+    const PARTIALS_USAGE_TABLE_NAME = 'fanculo_partials_usage';
 
     /**
      * Install the database tables
@@ -30,8 +31,9 @@ class DatabaseInstaller
         $blocks_created = self::createBlocksTableIfMissing();
         $scss_created = self::createScssTableIfMissing();
         $attributes_created = self::createAttributesTableIfMissing();
+        $partials_usage_created = self::createPartialsUsageTableIfMissing();
 
-        if ($blocks_created || $scss_created || $attributes_created) {
+        if ($blocks_created || $scss_created || $attributes_created || $partials_usage_created) {
             error_log('Fanculo Plugin: Missing tables were created');
         }
     }
@@ -178,6 +180,48 @@ class DatabaseInstaller
     }
 
     /**
+     * Create partials usage junction table if it doesn't exist
+     */
+    public static function createPartialsUsageTableIfMissing(): bool
+    {
+        global $wpdb;
+
+        $usage_table = self::getPartialsUsageTableName();
+
+        // Check if table already exists
+        if (self::specificTableExists($usage_table)) {
+            return false;
+        }
+
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $sql_usage = "CREATE TABLE $usage_table (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            partial_id bigint(20) UNSIGNED NOT NULL,
+            block_id bigint(20) UNSIGNED NOT NULL,
+            usage_type varchar(20) NOT NULL DEFAULT 'frontend',
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY partial_block_type (partial_id, block_id, usage_type),
+            KEY partial_id (partial_id),
+            KEY block_id (block_id),
+            KEY usage_type (usage_type)
+        ) $charset_collate;";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        $result = dbDelta($sql_usage);
+
+        if (!empty($wpdb->last_error)) {
+            error_log('Fanculo Plugin: Failed to create partials usage table - ' . $wpdb->last_error);
+            return false;
+        }
+
+        error_log('Fanculo Plugin: Partials usage table created successfully');
+        return true;
+    }
+
+    /**
      * Uninstall the database tables
      */
     public static function uninstall(): void
@@ -196,7 +240,11 @@ class DatabaseInstaller
         $attributes_table = self::getAttributesTableName();
         $result3 = $wpdb->query("DROP TABLE IF EXISTS $attributes_table");
 
-        if ($result1 === false || $result2 === false || $result3 === false) {
+        // Drop partials usage table
+        $usage_table = self::getPartialsUsageTableName();
+        $result4 = $wpdb->query("DROP TABLE IF EXISTS $usage_table");
+
+        if ($result1 === false || $result2 === false || $result3 === false || $result4 === false) {
             error_log('Fanculo Plugin: Failed to drop tables - ' . $wpdb->last_error);
         } else {
             error_log('Fanculo Plugin: Database tables uninstalled successfully');
@@ -262,6 +310,17 @@ class DatabaseInstaller
             }
         }
 
+        // Migration for version 4.4.0 - Add partials usage table and populate from existing data
+        if (version_compare($from_version, '4.4.0', '<')) {
+            // The table should already be created by ensureTablesExist()
+            // Now populate it from existing selected_partials data
+            $repository = new \Fanculo\Database\PartialsUsageRepository();
+            $migrated = $repository::migrateFromBlockSettings();
+            if ($migrated > 0) {
+                error_log("Fanculo Plugin: Migrated $migrated partial usage relationships to new table");
+            }
+        }
+
         // Update version after successful migration
         update_option(self::VERSION_OPTION, $to_version);
     }
@@ -294,6 +353,15 @@ class DatabaseInstaller
     }
 
     /**
+     * Get partials usage table name with prefix
+     */
+    public static function getPartialsUsageTableName(): string
+    {
+        global $wpdb;
+        return $wpdb->prefix . self::PARTIALS_USAGE_TABLE_NAME;
+    }
+
+    /**
      * Check if tables exist
      */
     public static function tableExists(): bool
@@ -301,14 +369,15 @@ class DatabaseInstaller
         global $wpdb;
         $blocks_table = self::getTableName();
         $scss_table = self::getScssPartialsTableName();
-
         $attributes_table = self::getAttributesTableName();
+        $usage_table = self::getPartialsUsageTableName();
 
         $blocks_exists = $wpdb->get_var("SHOW TABLES LIKE '$blocks_table'") === $blocks_table;
         $scss_exists = $wpdb->get_var("SHOW TABLES LIKE '$scss_table'") === $scss_table;
         $attributes_exists = $wpdb->get_var("SHOW TABLES LIKE '$attributes_table'") === $attributes_table;
+        $usage_exists = $wpdb->get_var("SHOW TABLES LIKE '$usage_table'") === $usage_table;
 
-        return $blocks_exists && $scss_exists && $attributes_exists;
+        return $blocks_exists && $scss_exists && $attributes_exists && $usage_exists;
     }
 
     /**
@@ -328,6 +397,7 @@ class DatabaseInstaller
         $blocks_table = self::getTableName();
         $scss_table = self::getScssPartialsTableName();
         $attributes_table = self::getAttributesTableName();
+        $usage_table = self::getPartialsUsageTableName();
 
         return [
             'blocks_table' => [
@@ -341,6 +411,10 @@ class DatabaseInstaller
             'attributes_table' => [
                 'name' => $attributes_table,
                 'exists' => self::specificTableExists($attributes_table)
+            ],
+            'usage_table' => [
+                'name' => $usage_table,
+                'exists' => self::specificTableExists($usage_table)
             ],
             'all_exist' => self::tableExists(),
             'version' => get_option(self::VERSION_OPTION, 'not_set')

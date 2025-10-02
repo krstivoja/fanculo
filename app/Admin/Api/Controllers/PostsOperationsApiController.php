@@ -369,6 +369,15 @@ class PostsOperationsApiController extends BaseApiController
             // Save to database if we have settings to save
             if (!empty($dbSettings)) {
                 BlockSettingsRepository::save($postId, $dbSettings);
+
+                // Sync partial usage to junction table for fast lookups
+                $frontendPartials = $dbSettings['selected_partials'] ?? [];
+                $editorPartials = $dbSettings['editor_selected_partials'] ?? [];
+                \Fanculo\Database\PartialsUsageRepository::syncBlockPartials(
+                    $postId,
+                    $frontendPartials,
+                    $editorPartials
+                );
             }
         }
 

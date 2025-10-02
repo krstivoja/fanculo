@@ -12,6 +12,7 @@ export const usePostOperations = ({
   setSaveStatus,
   setScssError,
   setShowToast,
+  saveStatus,
 }) => {
   /**
    * Fetch post with related data using optimized batch operation
@@ -19,8 +20,7 @@ export const usePostOperations = ({
   const handlePostSelect = useCallback(
     async (post) => {
       // If switching from a different post with unsaved changes, warn user
-      if (selectedPost && selectedPost.id !== post.id) {
-        // Check saveStatus through function parameter instead
+      if (selectedPost && selectedPost.id !== post.id && saveStatus === 'unsaved') {
         const confirmSwitch = window.confirm(
           "You have unsaved changes. Do you want to discard them?"
         );
@@ -59,7 +59,7 @@ export const usePostOperations = ({
       if (postWithRelated.related) {
       }
     },
-    [selectedPost, setSelectedPost, setMetaData, setSaveStatus, setScssError]
+    [selectedPost, saveStatus, setSelectedPost, setMetaData, setSaveStatus, setScssError]
   );
 
   /**

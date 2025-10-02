@@ -46,6 +46,7 @@ const App = () => {
     setSaveStatus,
     setScssError,
     setShowToast,
+    saveStatus,
   });
 
   // Data loading hook
