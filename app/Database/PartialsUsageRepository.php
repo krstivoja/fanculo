@@ -31,14 +31,14 @@ class PartialsUsageRepository
         return $post_id;
     }
     /**
-     * Sync a block's partial usage (frontend and editor separately)
+     * Sync a block's partial usage (style and editorStyle separately)
      *
      * @param int $block_id The block post ID
-     * @param array $frontend_partials Array of partial IDs for frontend SCSS
-     * @param array $editor_partials Array of partial IDs for editor SCSS
+     * @param array $style_partials Array of partial IDs for style SCSS
+     * @param array $editorStyle_partials Array of partial IDs for editorStyle SCSS
      * @return bool Success status
      */
-    public static function syncBlockPartials(int $block_id, array $frontend_partials = [], array $editor_partials = []): bool
+    public static function syncBlockPartials(int $block_id, array $style_partials = [], array $editorStyle_partials = []): bool
     {
         global $wpdb;
         $table_name = DatabaseInstaller::getPartialsUsageTableName();
@@ -54,8 +54,8 @@ class PartialsUsageRepository
                 throw new \Exception("Failed to delete existing usage for block {$block_id}");
             }
 
-            // Insert frontend partials
-            foreach ($frontend_partials as $partial_id) {
+            // Insert style partials
+            foreach ($style_partials as $partial_id) {
                 $partial_id = (int) $partial_id;
                 if ($partial_id <= 0) continue;
 
@@ -64,18 +64,18 @@ class PartialsUsageRepository
                     [
                         'partial_id' => $partial_id,
                         'block_id' => $block_id,
-                        'usage_type' => 'frontend'
+                        'usage_type' => 'style'
                     ],
                     ['%d', '%d', '%s']
                 );
 
                 if ($inserted === false) {
-                    throw new \Exception("Failed to insert frontend partial {$partial_id} for block {$block_id}");
+                    throw new \Exception("Failed to insert style partial {$partial_id} for block {$block_id}");
                 }
             }
 
-            // Insert editor partials
-            foreach ($editor_partials as $partial_id) {
+            // Insert editorStyle partials
+            foreach ($editorStyle_partials as $partial_id) {
                 $partial_id = (int) $partial_id;
                 if ($partial_id <= 0) continue;
 
@@ -84,13 +84,13 @@ class PartialsUsageRepository
                     [
                         'partial_id' => $partial_id,
                         'block_id' => $block_id,
-                        'usage_type' => 'editor'
+                        'usage_type' => 'editorStyle'
                     ],
                     ['%d', '%d', '%s']
                 );
 
                 if ($inserted === false) {
-                    throw new \Exception("Failed to insert editor partial {$partial_id} for block {$block_id}");
+                    throw new \Exception("Failed to insert editorStyle partial {$partial_id} for block {$block_id}");
                 }
             }
 
@@ -105,10 +105,10 @@ class PartialsUsageRepository
     }
 
     /**
-     * Get all blocks using a specific partial (frontend, editor, or both)
+     * Get all blocks using a specific partial (style, editorStyle, or both)
      *
      * @param int $partial_id The partial post ID
-     * @param string $usage_type Optional filter: 'frontend', 'editor', or null for both
+     * @param string $usage_type Optional filter: 'style', 'editorStyle', or null for both
      * @return array Array of block IDs
      */
     public static function getBlocksUsingPartial(int $partial_id, ?string $usage_type = null): array
@@ -117,7 +117,7 @@ class PartialsUsageRepository
         $table_name = DatabaseInstaller::getPartialsUsageTableName();
         $partial_id = self::validatePostId($partial_id);
 
-        if ($usage_type !== null && !in_array($usage_type, ['frontend', 'editor'])) {
+        if ($usage_type !== null && !in_array($usage_type, ['style', 'editorStyle'])) {
             error_log("Invalid usage_type: {$usage_type}");
             return [];
         }
@@ -149,7 +149,7 @@ class PartialsUsageRepository
      * Get all partials used by a specific block
      *
      * @param int $block_id The block post ID
-     * @return array Associative array with 'frontend' and 'editor' keys containing partial IDs
+     * @return array Associative array with 'style' and 'editorStyle' keys containing partial IDs
      */
     public static function getPartialsUsedByBlock(int $block_id): array
     {
@@ -166,10 +166,10 @@ class PartialsUsageRepository
 
         if ($wpdb->last_error) {
             error_log("Fanculo PartialsUsageRepository getPartialsUsedByBlock error: " . $wpdb->last_error);
-            return ['frontend' => [], 'editor' => []];
+            return ['style' => [], 'editorStyle' => []];
         }
 
-        $partials = ['frontend' => [], 'editor' => []];
+        $partials = ['style' => [], 'editorStyle' => []];
 
         foreach ($results as $row) {
             $usage_type = $row['usage_type'];
@@ -251,16 +251,16 @@ class PartialsUsageRepository
 
         if ($wpdb->last_error) {
             error_log("Fanculo PartialsUsageRepository getPartialUsageStats error: " . $wpdb->last_error);
-            return ['frontend' => 0, 'editor' => 0, 'total' => 0];
+            return ['style' => 0, 'editorStyle' => 0, 'total' => 0];
         }
 
-        $stats = ['frontend' => 0, 'editor' => 0, 'total' => 0];
+        $stats = ['style' => 0, 'editorStyle' => 0, 'total' => 0];
 
         foreach ($results as $row) {
             $stats[$row['usage_type']] = (int) $row['block_count'];
         }
 
-        $stats['total'] = $stats['frontend'] + $stats['editor'];
+        $stats['total'] = $stats['style'] + $stats['editorStyle'];
 
         return $stats;
     }
@@ -290,30 +290,30 @@ class PartialsUsageRepository
 
         foreach ($blocks as $block) {
             $block_id = (int) $block['post_id'];
-            $frontend_partials = [];
-            $editor_partials = [];
+            $style_partials = [];
+            $editorStyle_partials = [];
 
-            // Parse frontend partials
+            // Parse style partials
             if (!empty($block['selected_partials'])) {
                 $decoded = json_decode($block['selected_partials'], true);
                 if (is_array($decoded)) {
-                    $frontend_partials = array_map('intval', $decoded);
+                    $style_partials = array_map('intval', $decoded);
                 }
             }
 
-            // Parse editor partials
+            // Parse editorStyle partials
             if (!empty($block['editor_selected_partials'])) {
                 $decoded = json_decode($block['editor_selected_partials'], true);
                 if (is_array($decoded)) {
-                    $editor_partials = array_map('intval', $decoded);
+                    $editorStyle_partials = array_map('intval', $decoded);
                 }
             }
 
             // Sync to new table
-            if (!empty($frontend_partials) || !empty($editor_partials)) {
-                $success = self::syncBlockPartials($block_id, $frontend_partials, $editor_partials);
+            if (!empty($style_partials) || !empty($editorStyle_partials)) {
+                $success = self::syncBlockPartials($block_id, $style_partials, $editorStyle_partials);
                 if ($success) {
-                    $migrated_count += count($frontend_partials) + count($editor_partials);
+                    $migrated_count += count($style_partials) + count($editorStyle_partials);
                 }
             }
         }

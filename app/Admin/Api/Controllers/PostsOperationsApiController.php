@@ -371,12 +371,12 @@ class PostsOperationsApiController extends BaseApiController
                 BlockSettingsRepository::save($postId, $dbSettings);
 
                 // Sync partial usage to junction table for fast lookups
-                $frontendPartials = $dbSettings['selected_partials'] ?? [];
-                $editorPartials = $dbSettings['editor_selected_partials'] ?? [];
+                $stylePartials = $dbSettings['selected_partials'] ?? [];
+                $editorStylePartials = $dbSettings['editor_selected_partials'] ?? [];
                 \Fanculo\Database\PartialsUsageRepository::syncBlockPartials(
                     $postId,
-                    $frontendPartials,
-                    $editorPartials
+                    $stylePartials,
+                    $editorStylePartials
                 );
             }
         }

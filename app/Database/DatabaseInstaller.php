@@ -199,7 +199,7 @@ class DatabaseInstaller
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             partial_id bigint(20) UNSIGNED NOT NULL,
             block_id bigint(20) UNSIGNED NOT NULL,
-            usage_type varchar(20) NOT NULL DEFAULT 'frontend',
+            usage_type varchar(20) NOT NULL DEFAULT 'style',
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),

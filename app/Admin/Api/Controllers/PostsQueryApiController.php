@@ -140,8 +140,8 @@ class PostsQueryApiController extends BaseApiController
         }
 
         // Fast lookup using indexed junction table
-        $frontendBlocks = PartialsUsageRepository::getBlocksUsingPartial($partialId, 'frontend');
-        $editorBlocks = PartialsUsageRepository::getBlocksUsingPartial($partialId, 'editor');
+        $frontendBlocks = PartialsUsageRepository::getBlocksUsingPartial($partialId, 'style');
+        $editorBlocks = PartialsUsageRepository::getBlocksUsingPartial($partialId, 'editorStyle');
         $allBlocks = PartialsUsageRepository::getBlocksUsingPartial($partialId);
 
         // Get usage stats
