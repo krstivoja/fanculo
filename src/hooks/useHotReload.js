@@ -132,18 +132,30 @@ export const useHotReloadSave = (postId, originalSaveFunction, postType) => {
       const result = await originalSaveFunction(...args);
       console.log('💾 Save result:', result);
 
+      const hotReloadPayload =
+        result && typeof result === 'object' ? result.hotReloadPayload : null;
+      const saveSucceeded = result !== false;
+
       // Trigger hot reload after successful save
-      if (result !== false && window.fanculoSimpleHotReload) {
+      if (
+        saveSucceeded &&
+        window.fanculoSimpleHotReload &&
+        postId &&
+        postType !== 'scss-partials'
+      ) {
         console.log('🚀 Triggering hot reload...');
-        // Pass null to auto-detect changes
-        await window.fanculoSimpleHotReload.onStudioSave(postId, null);
+        await window.fanculoSimpleHotReload.onStudioSave(
+          postId,
+          null,
+          hotReloadPayload || undefined
+        );
         console.log('✅ Hot reload triggered successfully');
       } else {
         console.log('❌ Hot reload not triggered. Result:', result, 'HotReload available:', !!window.fanculoSimpleHotReload);
       }
 
       // If this is an SCSS partial save, recompile all blocks using this partial
-      if (postType === 'scss-partials' && result !== false) {
+      if (postType === 'scss-partials' && saveSucceeded) {
         console.log('🔄 [useHotReload] SCSS partial saved - finding affected blocks...');
 
         // First, get the saved partial content to verify it was saved
@@ -169,8 +181,8 @@ export const useHotReloadSave = (postId, originalSaveFunction, postType) => {
           if (affectedBlocks.length > 0) {
             console.log(`📦 [useHotReload] Found ${affectedBlocks.length} blocks using this partial:`, affectedBlocks);
 
-            // Compile each affected block
-            for (const blockId of affectedBlocks) {
+            const regenerationOperations = [];
+            const blockTasks = affectedBlocks.map((blockId) => (async () => {
               console.log(`⚙️ [useHotReload] Compiling block ${blockId}...`);
 
               try {
@@ -179,14 +191,12 @@ export const useHotReloadSave = (postId, originalSaveFunction, postType) => {
                 console.log(`🔍 [useHotReload] Block ${blockId} data structure:`, blockData);
 
                 const block = blockData.post;
-
-                // Log the full related structure to see what's actually there
-                console.log(`🔍 [useHotReload] Block ${blockId} related structure:`, blockData.related);
+                const blockMeta = block.meta?.blocks || {};
+                const blockSymbolsMeta = block.meta?.symbols || {};
 
                 const { globalPartials, availablePartials } = extractScssPartialsPayload(blockData.related);
                 const allPartials = [...globalPartials, ...availablePartials];
 
-                const blockMeta = block.meta?.blocks || {};
                 const selectedPartials = normalizeSelectedPartials(
                   blockMeta.selected_partials ?? blockMeta.selectedPartials,
                   allPartials
@@ -196,80 +206,107 @@ export const useHotReloadSave = (postId, originalSaveFunction, postType) => {
                   allPartials
                 );
 
-                console.log(`📋 [useHotReload] Block ${blockId} global partial count: ${globalPartials.length}`);
-                console.log(`📋 [useHotReload] Block ${blockId} available partial count: ${availablePartials.length}`);
-                console.log(`📋 [useHotReload] Block ${blockId} selected partial count: ${selectedPartials.length}`);
-                console.log(`📋 [useHotReload] Block ${blockId} editor selected partial count: ${editorSelectedPartials.length}`);
+                let compiledCss = null;
+                let compiledEditorCss = null;
 
-                if (selectedPartials.length > 0) {
-                  console.log(`📋 [useHotReload] Block ${blockId} selected partials detail:`, selectedPartials);
-                }
-
-                // Compile style.css if block has SCSS
-                if (block.meta?.blocks?.scss) {
-                  const scssCode = block.meta.blocks.scss;
-                  console.log(`📝 [useHotReload] Block ${blockId} SCSS:`, scssCode);
-
-                  const compiledCss = await compileScss(scssCode, blockId, {
+                if (blockMeta.scss) {
+                  const scssCode = blockMeta.scss;
+                  compiledCss = await compileScss(scssCode, blockId, {
                     globalPartials,
                     selectedPartials,
                   });
-                  console.log(`🎨 [useHotReload] Block ${blockId} compiled style.css:`, compiledCss);
 
                   await centralizedApi.saveScssContent(blockId, {
                     scss_content: scssCode,
                     css_content: compiledCss,
                   });
-
                   console.log(`✅ [useHotReload] Compiled and saved style.css for block ${blockId}`);
                 }
 
-                // Compile editor.css if block has editor SCSS
-                if (block.meta?.blocks?.editorScss) {
-                  const editorScssCode = block.meta.blocks.editorScss;
-                  console.log(`📝 [useHotReload] Block ${blockId} editor SCSS:`, editorScssCode);
-
-                  const compiledEditorCss = await compileScss(editorScssCode, blockId, {
+                if (blockMeta.editorScss) {
+                  const editorScssCode = blockMeta.editorScss;
+                  compiledEditorCss = await compileScss(editorScssCode, blockId, {
                     globalPartials,
                     selectedPartials: editorSelectedPartials,
                   });
-                  console.log(`🎨 [useHotReload] Block ${blockId} compiled editor.css:`, compiledEditorCss);
 
                   await centralizedApi.saveEditorScssContent(blockId, {
                     editor_scss_content: editorScssCode,
                     editor_css_content: compiledEditorCss,
                   });
-
                   console.log(`✅ [useHotReload] Compiled and saved editor.css for block ${blockId}`);
                 }
 
-                // Always trigger file regeneration so physical CSS files stay in sync
-                console.log(`🔁 [useHotReload] Regenerating files for block ${blockId}`);
-                await apiClient.request('/operations/bulk', {
-                  method: 'POST',
-                  body: JSON.stringify({
-                    operations: [
-                      {
-                        type: 'regenerate_files',
-                        data: { post_id: blockId },
-                      },
-                    ],
-                  }),
+                regenerationOperations.push({
+                  type: 'regenerate_files',
+                  data: { post_id: blockId },
                 });
-                console.log(`✅ [useHotReload] File regeneration triggered for block ${blockId}`);
 
-                // Trigger hot reload for this affected block
                 if (window.fanculoSimpleHotReload) {
-                  console.log(`🔥 [useHotReload] Triggering hot reload for affected block ${blockId}`);
-                  await window.fanculoSimpleHotReload.onStudioSave(blockId, ['css', 'editorCss']);
-                  console.log(`✅ [useHotReload] Hot reload triggered for block ${blockId}`);
+                  const changeSet = [];
+                  if (compiledCss !== null) {
+                    changeSet.push('css');
+                  }
+                  if (compiledEditorCss !== null) {
+                    changeSet.push('editorCss');
+                  }
+
+                  const payload = {
+                    blockSlug: block.slug,
+                    blockName: block.title?.rendered || block.title || `Block ${blockId}`,
+                    content: {
+                      css:
+                        compiledCss ??
+                        blockMeta.cssContent ??
+                        blockMeta.scss ??
+                        '',
+                      editorCss:
+                        compiledEditorCss ??
+                        blockMeta.editorCssContent ??
+                        blockMeta.editorScss ??
+                        '',
+                      php:
+                        blockMeta.php ??
+                        blockSymbolsMeta.php ??
+                        '',
+                      js: blockMeta.js ?? '',
+                    },
+                    changes: changeSet,
+                  };
+
+                  if (changeSet.length > 0) {
+                    console.log(`🔥 [useHotReload] Triggering hot reload for affected block ${blockId}`);
+                    await window.fanculoSimpleHotReload.onStudioSave(
+                      blockId,
+                      changeSet,
+                      payload
+                    );
+                    console.log(`✅ [useHotReload] Hot reload triggered for block ${blockId}`);
+                  }
                 }
               } catch (compileError) {
                 console.error(`❌ [useHotReload] Failed to compile block ${blockId}:`, compileError);
+                throw compileError;
               }
+            })());
+
+            const results = await Promise.allSettled(blockTasks);
+            const failedBlocks = results.filter((item) => item.status === 'rejected').length;
+
+            if (failedBlocks === 0) {
+              console.log('✅ [useHotReload] All affected blocks recompiled');
+            } else {
+              console.warn(`⚠️ [useHotReload] ${failedBlocks} block recompilations failed`);
             }
 
-            console.log('✅ [useHotReload] All affected blocks recompiled');
+            if (regenerationOperations.length > 0) {
+              console.log('🔁 [useHotReload] Regenerating files for affected blocks');
+              await apiClient.request('/operations/bulk', {
+                method: 'POST',
+                body: JSON.stringify({ operations: regenerationOperations }),
+              });
+              console.log('✅ [useHotReload] File regeneration triggered for affected blocks');
+            }
           } else {
             console.log('ℹ️ [useHotReload] No blocks use this partial');
           }

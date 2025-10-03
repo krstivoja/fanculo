@@ -506,20 +506,90 @@ class FanculoSimpleHotReload {
   /**
    * Studio save handler - call this when saving in studio
    */
-  async onStudioSave(postId, changes = null) {
-    // Wait a moment for SCSS compilation to complete
-    await new Promise((resolve) => setTimeout(resolve, 500));
+  async onStudioSave(postId, changes = null, payload = {}) {
+    const providedContent = payload?.content;
+    let blockData = null;
 
-    // Get current block data
-    const blockData = await this.fetchBlockData(postId);
-
-    if (blockData) {
-      // Auto-detect changes if not explicitly provided
-      blockData.changes = changes || this.detectChanges(postId, blockData.content);
-      this.triggerHotReload(blockData);
-    } else {
-      console.error("❌ Fanculo: No block data received for post", postId);
+    if (providedContent) {
+      const previousContent = this.lastSavedContent[postId] || {};
+      blockData = {
+        postId,
+        blockSlug:
+          payload.blockSlug ||
+          payload.slug ||
+          payload?.post?.slug ||
+          null,
+        blockName:
+          payload.blockName ||
+          payload.title ||
+          payload?.post?.title?.rendered ||
+          payload?.post?.title ||
+          null,
+        content: {
+          css:
+            providedContent.css !== undefined
+              ? providedContent.css
+              : previousContent.css ?? "",
+          editorCss:
+            providedContent.editorCss !== undefined
+              ? providedContent.editorCss
+              : previousContent.editorCss ?? "",
+          php:
+            providedContent.php !== undefined
+              ? providedContent.php
+              : previousContent.php ?? "",
+          js:
+            providedContent.js !== undefined
+              ? providedContent.js
+              : previousContent.js ?? "",
+        },
+      };
     }
+
+    const needsFetch =
+      !blockData ||
+      !blockData.blockSlug ||
+      !blockData.blockName ||
+      !blockData.content;
+
+    if (needsFetch) {
+      const fetchedData = await this.fetchBlockData(postId);
+      if (fetchedData) {
+        blockData = {
+          ...fetchedData,
+          content: {
+            ...fetchedData.content,
+            ...(blockData?.content || providedContent || {}),
+          },
+        };
+
+        if (!blockData.blockSlug && payload.blockSlug) {
+          blockData.blockSlug = payload.blockSlug;
+        }
+        if (!blockData.blockName && payload.blockName) {
+          blockData.blockName = payload.blockName;
+        }
+      }
+    }
+
+    if (!blockData) {
+      console.error("❌ Fanculo: No block data received for post", postId);
+      return;
+    }
+
+    let effectiveChanges = changes || payload?.changes;
+
+    if (!effectiveChanges || effectiveChanges.length === 0) {
+      effectiveChanges = this.detectChanges(postId, blockData.content);
+    } else if (!Array.isArray(effectiveChanges)) {
+      effectiveChanges = [effectiveChanges];
+    } else {
+      // Sync internal cache when caller supplies explicit changes
+      this.lastSavedContent[postId] = { ...blockData.content };
+    }
+
+    blockData.changes = effectiveChanges.length ? effectiveChanges : ["all"];
+    this.triggerHotReload(blockData);
   }
 
   /**

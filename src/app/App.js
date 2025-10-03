@@ -87,9 +87,11 @@ const App = () => {
     setSaveStatus("saving");
 
     try {
+      let hotReloadPayload = null;
+
       if (selectedPost?.id) {
         // Compile SCSS (both frontend and editor) if needed
-        await compileAllScss();
+        const scssCompilation = await compileAllScss();
 
         // Check if list-visible metadata changed (only icon affects the list display)
         const listMetadataChanged = hasListVisibleChanges(
@@ -123,8 +125,57 @@ const App = () => {
           return updated;
         });
 
-        // Don't refetch after save - optimistic update keeps UI in sync
-        // The cache will be invalidated, so next time we select this post, we'll get fresh data
+        const blockMeta = metaData.blocks || {};
+        const originalBlockMeta = selectedPost.meta?.blocks || {};
+        const originalSymbolMeta = selectedPost.meta?.symbols || {};
+        const frontendCompilation = scssCompilation?.frontend;
+        const editorCompilation = scssCompilation?.editor;
+        const changeSet = [];
+
+        if (frontendCompilation) {
+          changeSet.push('css');
+        }
+        if (editorCompilation) {
+          changeSet.push('editorCss');
+        }
+
+        hotReloadPayload = {
+          blockSlug: selectedPost.slug,
+          blockName:
+            selectedPost.title?.rendered ||
+            selectedPost.title ||
+            blockMeta?.title ||
+            "",
+          content: {
+            css:
+              frontendCompilation?.cssContent ??
+              blockMeta?.cssContent ??
+              originalBlockMeta?.cssContent ??
+              blockMeta?.scss ??
+              originalBlockMeta?.scss ??
+              "",
+            editorCss:
+              editorCompilation?.cssContent ??
+              blockMeta?.editorCssContent ??
+              originalBlockMeta?.editorCssContent ??
+              blockMeta?.editorScss ??
+              originalBlockMeta?.editorScss ??
+              "",
+            php:
+              blockMeta?.php ??
+              originalBlockMeta?.php ??
+              originalSymbolMeta?.php ??
+              "",
+            js:
+              blockMeta?.js ??
+              originalBlockMeta?.js ??
+              "",
+          },
+        };
+
+        if (changeSet.length > 0) {
+          hotReloadPayload.changes = changeSet;
+        }
       } else {
         // Just regenerate files if no meta changes
         await centralizedApi.regenerateFiles();
@@ -132,7 +183,7 @@ const App = () => {
 
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus(""), 3000);
-      return true; // Return success for hot reload
+      return { success: true, hotReloadPayload };
     } catch (error) {
       console.error("Error saving/generating:", error);
       setSaveStatus("error");

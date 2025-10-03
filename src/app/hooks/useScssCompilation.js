@@ -84,7 +84,9 @@ export const useScssCompilation = (selectedPost, metaData, setScssError, setShow
       selectedPost?.terms?.some((term) => term.slug === "blocks") &&
       metaData.blocks?.scss;
 
-    if (!hasScssContent) return;
+    if (!hasScssContent) {
+      return null;
+    }
 
     try {
       // Get current partials data for real-time compilation
@@ -103,6 +105,11 @@ export const useScssCompilation = (selectedPost, metaData, setScssError, setShow
         scss_content: scssContent,
         css_content: cssContent,
       });
+
+      return {
+        scssContent,
+        cssContent,
+      };
     } catch (compilationError) {
       console.error("❌ SCSS compilation failed:", compilationError);
       const errorMessage =
@@ -110,6 +117,7 @@ export const useScssCompilation = (selectedPost, metaData, setScssError, setShow
       setScssError(errorMessage);
       setShowToast(true);
       // Continue with normal save even if SCSS compilation fails
+      return null;
     }
   }, [selectedPost, metaData.blocks?.scss, getCurrentPartials, setScssError, setShowToast]);
 
@@ -121,7 +129,9 @@ export const useScssCompilation = (selectedPost, metaData, setScssError, setShow
       selectedPost?.terms?.some((term) => term.slug === "blocks") &&
       metaData.blocks?.editorScss;
 
-    if (!hasEditorScssContent) return;
+    if (!hasEditorScssContent) {
+      return null;
+    }
 
     try {
       // Get editor partials for compilation
@@ -193,6 +203,11 @@ export const useScssCompilation = (selectedPost, metaData, setScssError, setShow
         editor_scss_content: editorScssContent,
         editor_css_content: editorCssContent,
       });
+
+      return {
+        scssContent: editorScssContent,
+        cssContent: editorCssContent,
+      };
     } catch (compilationError) {
       console.error(
         "❌ Editor SCSS compilation failed:",
@@ -203,6 +218,7 @@ export const useScssCompilation = (selectedPost, metaData, setScssError, setShow
       setScssError(errorMessage);
       setShowToast(true);
       // Continue with normal save even if editor SCSS compilation fails
+      return null;
     }
   }, [selectedPost, metaData.blocks?.editorScss, metaData.blocks?.editor_selected_partials, metaData.blocks?.editorSelectedPartials, setScssError, setShowToast]);
 
@@ -210,10 +226,15 @@ export const useScssCompilation = (selectedPost, metaData, setScssError, setShow
    * Compile both frontend and editor SCSS
    */
   const compileAllScss = useCallback(async () => {
-    await Promise.all([
+    const [frontend, editor] = await Promise.all([
       compileFrontendScss(),
       compileEditorScss()
     ]);
+
+    return {
+      frontend,
+      editor,
+    };
   }, [compileFrontendScss, compileEditorScss]);
 
   return {
