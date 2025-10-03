@@ -1,12 +1,11 @@
 import React, { useState, useEffect, Suspense, lazy } from "react";
-import { Button, Toast, SaveButton, AdminButton } from "../ui";
-import { apiClient } from "../../../utils";
+import { Button, Toast, SaveButton, AdminButton, DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from "../ui";
 import centralizedApi from "../../../utils/api/CentralizedApiService";
 
 // Lazy load AddPostModal - only loads when needed
 const AddPostModal = lazy(() => import("./AddPostModal"));
 
-const Header = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh }) => {
+const Header = ({ onSave, saveStatus, onPostsRefresh }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [toast, setToast] = useState({
@@ -95,10 +94,6 @@ const Header = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh }) => {
     }
   };
 
-  const showToast = (message, type = "info") => {
-    setToast({ show: true, message, type });
-  };
-
   const hideToast = () => {
     setToast({ show: false, message: "", type: "info" });
   };
@@ -116,15 +111,30 @@ const Header = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh }) => {
         </div>
         <div id="nav-right" className="flex gap-2 justify-end">
           <SaveButton saveStatus={saveStatus} onSave={onSave} />
-          <Button
-            variant="secondary"
-            onClick={handleRegenerateAll}
-            disabled={isRegenerating}
-            className="!bg-orange-600 !text-white hover:!bg-orange-700"
-            title="Force regenerate all files (use if files are out of sync)"
+          <DropdownMenu
+            trigger={
+              <Button variant="ghost" className="px-3">
+                ⋮
+              </Button>
+            }
           >
-            {isRegenerating ? "Regenerating..." : "Regenerate All"}
-          </Button>
+            <DropdownMenuItem href="/wp-admin/edit.php?post_type=funculo">
+              Editor
+            </DropdownMenuItem>
+            <DropdownMenuItem href="/wp-admin/admin.php?page=funculo-settings">
+              Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem href="/wp-admin/admin.php?page=funculo-licence">
+              Licence
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleRegenerateAll}
+              className={isRegenerating ? "opacity-50 cursor-not-allowed" : ""}
+            >
+              {isRegenerating ? "Regenerating..." : "Regenerate All"}
+            </DropdownMenuItem>
+          </DropdownMenu>
         </div>
       </nav>
 

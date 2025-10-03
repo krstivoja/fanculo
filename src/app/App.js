@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import EditorList from "./components/editor/EditorList";
 import Header from "./components/editor/Header";
 import MainContent from "./components/editor/MainContent";
@@ -189,21 +189,10 @@ const App = () => {
     }
   };
 
-  // Hot reload-enabled save function
   // Determine post type from selected post's terms
   const postType = selectedPost?.terms?.find((term) =>
     ["blocks", "symbols", "scss-partials"].includes(term.slug)
   )?.slug;
-
-  if (selectedPost?.terms) {
-    console.log("🔍 [App] Selected post terms:", selectedPost.terms);
-    console.log("🔍 [App] First term:", selectedPost.terms[0]);
-    console.log(
-      "🔍 [App] First term keys:",
-      Object.keys(selectedPost.terms[0] || {})
-    );
-  }
-  console.log("🔍 [App] Determined post type:", postType);
 
   const { saveWithHotReload } = useHotReloadSave(
     selectedPost?.id,
@@ -223,66 +212,33 @@ const App = () => {
   useEffect(() => {
     const autoRecompilePostId = window._funculo_auto_recompile_post_id;
 
-    console.log("🔔 [App useEffect] Auto-recompile check:", {
-      autoRecompilePostId,
-      selectedPostId: selectedPost?.id,
-      shouldTrigger:
-        autoRecompilePostId && selectedPost?.id === autoRecompilePostId,
-    });
-
     if (autoRecompilePostId && selectedPost?.id === autoRecompilePostId) {
-      console.log(
-        "🚀 [App] Auto-triggering SCSS recompilation for block",
-        autoRecompilePostId
-      );
-
       // Clear the flag
       delete window._funculo_auto_recompile_post_id;
 
-      // Clear the recompile meta flag via API
+      // Clear the recompile meta flag and trigger compilation
       (async () => {
         try {
-          console.log("🧹 [App] Clearing recompile flag...");
           await apiClient.updatePost(selectedPost.id, {
             post_id: selectedPost.id,
             meta: {
               _funculo_scss_needs_recompile: "0",
             },
           });
-
-          console.log("⚙️ [App] Triggering SCSS compilation...");
-          // Trigger recompilation
           await compileAllScss();
-          console.log("✅ [App] Auto-recompilation completed successfully");
         } catch (error) {
-          console.error("❌ [App] Auto-recompilation failed:", error);
+          console.error("Auto-recompilation failed:", error);
         }
       })();
     }
   }, [selectedPost, compileAllScss]);
 
-  // Memoize computed values (must be before any early returns)
-  const totalPosts = useMemo(
-    () =>
-      groupedPosts.blocks.length +
-      groupedPosts.symbols.length +
-      groupedPosts["scss-partials"].length,
-    [
-      groupedPosts.blocks.length,
-      groupedPosts.symbols.length,
-      groupedPosts["scss-partials"].length,
-    ]
-  );
+  const totalPosts =
+    groupedPosts.blocks.length +
+    groupedPosts.symbols.length +
+    groupedPosts["scss-partials"].length;
 
-  const toastIsVisible = useMemo(
-    () => showToast && scssError,
-    [showToast, scssError]
-  );
-
-  const hasUnsavedChanges = useMemo(
-    () => saveStatus === "unsaved",
-    [saveStatus]
-  );
+  const toastIsVisible = showToast && scssError;
 
   if (loading) return <div>Loading...</div>;
 
@@ -294,7 +250,6 @@ const App = () => {
           <Header
             onSave={handleSave}
             saveStatus={saveStatus}
-            hasUnsavedChanges={hasUnsavedChanges}
             onPostsRefresh={refreshData}
           />
           <EditorNoPosts
@@ -324,7 +279,6 @@ const App = () => {
         <Header
           onSave={handleSave}
           saveStatus={saveStatus}
-          hasUnsavedChanges={hasUnsavedChanges}
           onPostsRefresh={refreshData}
         />
 
@@ -333,7 +287,6 @@ const App = () => {
             groupedPosts={groupedPosts}
             selectedPost={selectedPost}
             onPostSelect={postOperations.handlePostSelect}
-            onPostsRefresh={refreshData}
           />
           <MainContent
             selectedPost={selectedPost}

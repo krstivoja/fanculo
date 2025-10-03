@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import ScssPartialsManager from './ScssPartialsManager';
-import { apiClient } from '../../../utils';
-import centralizedApi from '../../../utils/api/CentralizedApiService';
 
 const ScssPartialsCombined = ({ selectedPost, metaData, onMetaChange, sharedData, dataLoading }) => {
   // Get partials data from shared data (no API call needed)

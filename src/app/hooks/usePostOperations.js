@@ -33,56 +33,17 @@ export const usePostOperations = ({
       const postWithRelated = await centralizedApi.getPostWithRelated(post.id);
       const fullPost = postWithRelated.post;
 
-      console.log(
-        "🔍 App.js handlePostSelect - fullPost.meta.blocks:",
-        fullPost.meta?.blocks
-      );
-      console.log(
-        "🔍 App.js handlePostSelect - selected_partials:",
-        fullPost.meta?.blocks?.selected_partials,
-        "selectedPartials:",
-        fullPost.meta?.blocks?.selectedPartials
-      );
-      console.log(
-        "🔍 App.js handlePostSelect - editor_selected_partials:",
-        fullPost.meta?.blocks?.editor_selected_partials,
-        "editorSelectedPartials:",
-        fullPost.meta?.blocks?.editorSelectedPartials
-      );
-
-      console.log("📥 [usePostOperations] Post loaded:", {
-        postId: fullPost.id,
-        title: fullPost.title,
-        meta_keys: Object.keys(fullPost.meta || {}),
-        _funculo_scss_needs_recompile: fullPost.meta?._funculo_scss_needs_recompile
-      });
-
       setSelectedPost(fullPost);
       setMetaData(fullPost.meta || {});
       setSaveStatus("");
       setScssError(null);
 
-      // Store related data for potential use
-      if (postWithRelated.related) {
-      }
-
       // Check if SCSS needs recompilation (set by backend when partial changes)
       const needsRecompile = fullPost.meta?._funculo_scss_needs_recompile === '1';
-      console.log("🔍 [usePostOperations] Checking recompile flag:", {
-        needsRecompile,
-        flagValue: fullPost.meta?._funculo_scss_needs_recompile,
-        flagType: typeof fullPost.meta?._funculo_scss_needs_recompile
-      });
 
-      if (needsRecompile) {
-        console.log("🔄 [usePostOperations] Block needs SCSS recompilation due to partial update");
-        // Trigger auto-recompilation in the background
-        // This will be handled by the parent component via a callback
-        if (typeof window !== 'undefined') {
-          // Set a flag for the app to detect and trigger recompilation
-          window._funculo_auto_recompile_post_id = post.id;
-          console.log("✅ [usePostOperations] Set window flag for auto-recompilation");
-        }
+      if (needsRecompile && typeof window !== 'undefined') {
+        // Set a flag for the app to detect and trigger recompilation
+        window._funculo_auto_recompile_post_id = post.id;
       }
     },
     [selectedPost, saveStatus, setSelectedPost, setMetaData, setSaveStatus, setScssError]
