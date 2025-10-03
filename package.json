@@ -24,6 +24,7 @@
     "immutable": "^5.1.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-router-dom": "^7.9.3",
     "react-tag-autocomplete": "^7.5.1",
     "sass": "1.92.1",
     "tailwindcss": "^4.1.13"
