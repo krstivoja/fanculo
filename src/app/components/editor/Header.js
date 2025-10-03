@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button, Toast, SaveButton, AdminButton, DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from "../ui";
 import centralizedApi from "../../../utils/api/CentralizedApiService";
 
@@ -6,6 +7,8 @@ import centralizedApi from "../../../utils/api/CentralizedApiService";
 const AddPostModal = lazy(() => import("./AddPostModal"));
 
 const Header = ({ onSave, saveStatus, onPostsRefresh }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [toast, setToast] = useState({
@@ -13,6 +16,10 @@ const Header = ({ onSave, saveStatus, onPostsRefresh }) => {
     message: "",
     type: "info",
   });
+
+  const isEditorPage = location.pathname === "/";
+  const isSettingsPage = location.pathname === "/settings";
+  const isLicencePage = location.pathname === "/licence";
 
   // Handle Ctrl+S / Cmd+S keyboard shortcut
   useEffect(() => {
@@ -118,14 +125,23 @@ const Header = ({ onSave, saveStatus, onPostsRefresh }) => {
               </Button>
             }
           >
-            <DropdownMenuItem href="/wp-admin/edit.php?post_type=funculo">
-              Editor
+            <DropdownMenuItem
+              onClick={() => navigate("/")}
+              className={isEditorPage ? "bg-action/10" : ""}
+            >
+              📝 Editor
             </DropdownMenuItem>
-            <DropdownMenuItem href="/wp-admin/admin.php?page=funculo-settings">
-              Settings
+            <DropdownMenuItem
+              onClick={() => navigate("/settings")}
+              className={isSettingsPage ? "bg-action/10" : ""}
+            >
+              ⚙️ Settings
             </DropdownMenuItem>
-            <DropdownMenuItem href="/wp-admin/admin.php?page=funculo-licence">
-              Licence
+            <DropdownMenuItem
+              onClick={() => navigate("/licence")}
+              className={isLicencePage ? "bg-action/10" : ""}
+            >
+              📜 Licence
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem

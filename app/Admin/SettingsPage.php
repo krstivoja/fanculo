@@ -3,6 +3,7 @@
 namespace Fanculo\Admin;
 
 use Fanculo\Helpers\AdminAssets;
+use Fanculo\EDDUpdater\LicenseManager;
 
 class SettingsPage
 {
@@ -15,7 +16,22 @@ class SettingsPage
         if (function_exists('add_action')) {
             add_action('admin_menu', [$this, 'add_admin_menu']);
             add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
+            add_action('admin_init', [$this, 'process_license_submission']);
         }
+    }
+
+    public function process_license_submission(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return;
+        }
+
+        if (!isset($_GET['page']) || $_GET['page'] !== 'fanculo-app') {
+            return;
+        }
+
+        $license_manager = new LicenseManager();
+        $license_manager->handle_license_activation();
     }
 
     public function add_admin_menu()
@@ -31,17 +47,56 @@ class SettingsPage
 
     public function enqueue_scripts($hook)
     {
-        if ($hook === 'toplevel_page_fanculo-app') {
+        if ($hook !== 'toplevel_page_fanculo-app') {
+            return;
+        }
+
+        if (LicenseManager::is_license_valid()) {
             $this->adminAssets->enqueueAssets();
+        } else {
+            $this->adminAssets->enqueueLicenseStyles();
         }
     }
 
     public function render_settings_page()
     {
-        ?>
-        <div class="wrap">
-            <div id="fanculo-app"></div>
-        </div>
-        <?php
+        try {
+            $license_manager = new LicenseManager();
+            $license_status = LicenseManager::get_license_status();
+            $license_key = LicenseManager::get_license_key();
+            $license_is_valid = ($license_status === 'valid' && !empty($license_key));
+
+            echo '<div class="wrap">';
+            echo '<h1>' . esc_html__('Fanculo', 'fanculo') . '</h1>';
+
+            $notice = get_transient('fanculo_license_notice');
+            if ($notice) {
+                delete_transient('fanculo_license_notice');
+                $type = isset($notice['type']) ? sanitize_html_class($notice['type']) : 'success';
+                $message = isset($notice['message']) ? wp_kses_post($notice['message']) : '';
+                if ($message) {
+                    $class = $type === 'success' ? 'notice-success' : 'notice-info';
+                    echo '<div class="notice ' . esc_attr($class) . ' is-dismissible"><p>' . $message . '</p></div>';
+                }
+            }
+
+            if ($license_is_valid) {
+                echo '<div id="fanculo-app"></div>';
+            } else {
+                $license_manager->render_license_page(false);
+            }
+
+            echo '</div>';
+        } catch (\Throwable $e) {
+            // Show error message if something goes wrong
+            ?>
+            <div class="wrap">
+                <div class="notice notice-error">
+                    <p><strong>Error:</strong> <?php echo esc_html($e->getMessage()); ?></p>
+                </div>
+            </div>
+            <?php
+            error_log('Fanculo settings page error: ' . $e->getMessage());
+        }
     }
 }

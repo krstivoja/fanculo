@@ -82,6 +82,28 @@ class AdminAssets
         }
     }
 
+    public function enqueueLicenseStyles(): void
+    {
+        $this->initializePaths();
+
+        if (!$this->initialized || !function_exists('wp_enqueue_style')) {
+            return;
+        }
+
+        $cssFile = $this->buildPath . 'index.css';
+
+        wp_enqueue_style('dashicons');
+
+        if (file_exists($cssFile)) {
+            wp_enqueue_style(
+                'fanculo-license',
+                $this->buildUrl . 'index.css',
+                array('dashicons'),
+                filemtime($cssFile)
+            );
+        }
+    }
+
     private function getPostsData()
     {
         // Only get posts if WordPress functions are available
