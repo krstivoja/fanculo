@@ -15,3 +15,4 @@ export { default as ReactTags } from './ReactTags';
 export { default as SaveButton } from './SaveButton';
 export { default as AdminButton } from './AdminButton';
 export { default as IconGallery } from './IconGallery';
+export { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel } from './DropdownMenu';
