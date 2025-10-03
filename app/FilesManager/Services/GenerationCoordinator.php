@@ -31,32 +31,38 @@ class GenerationCoordinator
             return;
         }
 
-        // Guard: Skip if regeneration is not needed
-        if ($this->shouldSkipRegeneration($postId, $post)) {
-            error_log("Fanculo Debug: Skipping - regeneration not needed");
-            return;
+        // Check if this is an SCSS partial
+        $terms = wp_get_post_terms($postId, FunculoTypeTaxonomy::getTaxonomy());
+        $isScssPartial = false;
+
+        if (!empty($terms) && !is_wp_error($terms)) {
+            foreach ($terms as $term) {
+                if ($term->slug === FunculoTypeTaxonomy::getTermScssPartials()) {
+                    $isScssPartial = true;
+                    break;
+                }
+            }
         }
 
-        // Smart save: just regenerate
-        error_log("Fanculo Debug: Generating files for post ID: $postId");
-        $this->generateFilesForSinglePost($postId, $post);
+        // Skip file generation for SCSS partials - they're compiled in browser
+        if ($isScssPartial) {
+            error_log("Fanculo Debug: Skipping file generation for SCSS partial (browser compilation)");
+            // Don't generate files, but still handle global impact below
+        } else {
+            // Guard: Skip if regeneration is not needed
+            if ($this->shouldSkipRegeneration($postId, $post)) {
+                error_log("Fanculo Debug: Skipping - regeneration not needed");
+                return;
+            }
+
+            // Smart save: just regenerate
+            error_log("Fanculo Debug: Generating files for post ID: $postId");
+            $this->generateFilesForSinglePost($postId, $post);
+        }
 
         // Check if this post affects other posts (SCSS partials)
         if ($this->globalRegenerator->detectGlobalImpact($postId, $post)) {
             try {
-                // For SCSS partials: regenerate only the blocks that use this specific partial
-                $terms = wp_get_post_terms($postId, FunculoTypeTaxonomy::getTaxonomy());
-                $isScssPartial = false;
-
-                if (!empty($terms) && !is_wp_error($terms)) {
-                    foreach ($terms as $term) {
-                        if ($term->slug === FunculoTypeTaxonomy::getTermScssPartials()) {
-                            $isScssPartial = true;
-                            break;
-                        }
-                    }
-                }
-
                 if ($isScssPartial) {
                     // Targeted regeneration: only blocks using this specific partial
                     $this->globalRegenerator->regenerateBlocksUsingPartial($postId);
@@ -122,6 +128,24 @@ class GenerationCoordinator
         $this->directoryManager->ensureBaseDirectoryExists();
 
         foreach ($posts as $post) {
+            // Skip SCSS partials - they don't need file generation
+            // Their content is stored in database and compiled in browser
+            $terms = wp_get_post_terms($post->ID, FunculoTypeTaxonomy::getTaxonomy());
+            $isScssPartial = false;
+
+            if (!empty($terms) && !is_wp_error($terms)) {
+                foreach ($terms as $term) {
+                    if ($term->slug === FunculoTypeTaxonomy::getTermScssPartials()) {
+                        $isScssPartial = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($isScssPartial) {
+                continue; // Skip SCSS partials
+            }
+
             $this->generateFilesForSinglePost($post->ID, $post);
         }
 

@@ -5,7 +5,7 @@ import EditorMain from "./components/editor/EditorMain";
 import EditorSettings from "./components/editor/EditorSettings";
 import EditorNoPosts from "./components/editor/EditorNoPosts";
 import { Toast } from "./components/ui";
-import { errorHandler } from "../utils";
+import { errorHandler, apiClient } from "../utils";
 import centralizedApi from "../utils/api/CentralizedApiService";
 import {
   useMetadata,
@@ -46,6 +46,7 @@ const App = () => {
     setSaveStatus,
     setScssError,
     setShowToast,
+    saveStatus,
   });
 
   // Data loading hook
@@ -140,9 +141,22 @@ const App = () => {
   };
 
   // Hot reload-enabled save function
+  // Determine post type from selected post's terms
+  const postType = selectedPost?.terms?.find(term =>
+    ['blocks', 'symbols', 'scss-partials'].includes(term.slug)
+  )?.slug;
+
+  if (selectedPost?.terms) {
+    console.log('🔍 [App] Selected post terms:', selectedPost.terms);
+    console.log('🔍 [App] First term:', selectedPost.terms[0]);
+    console.log('🔍 [App] First term keys:', Object.keys(selectedPost.terms[0] || {}));
+  }
+  console.log('🔍 [App] Determined post type:', postType);
+
   const { saveWithHotReload } = useHotReloadSave(
     selectedPost?.id,
-    originalHandleSave
+    originalHandleSave,
+    postType
   );
 
   // Use the wrapped save function
@@ -152,6 +166,44 @@ const App = () => {
     // Load all shared data with cache warming on app initialization
     loadAllData();
   }, []);
+
+  // Auto-recompile SCSS when block is marked for recompilation (e.g., when partial changes)
+  useEffect(() => {
+    const autoRecompilePostId = window._funculo_auto_recompile_post_id;
+
+    console.log("🔔 [App useEffect] Auto-recompile check:", {
+      autoRecompilePostId,
+      selectedPostId: selectedPost?.id,
+      shouldTrigger: autoRecompilePostId && selectedPost?.id === autoRecompilePostId
+    });
+
+    if (autoRecompilePostId && selectedPost?.id === autoRecompilePostId) {
+      console.log("🚀 [App] Auto-triggering SCSS recompilation for block", autoRecompilePostId);
+
+      // Clear the flag
+      delete window._funculo_auto_recompile_post_id;
+
+      // Clear the recompile meta flag via API
+      (async () => {
+        try {
+          console.log("🧹 [App] Clearing recompile flag...");
+          await apiClient.updatePost(selectedPost.id, {
+            post_id: selectedPost.id,
+            meta: {
+              _funculo_scss_needs_recompile: '0'
+            }
+          });
+
+          console.log("⚙️ [App] Triggering SCSS compilation...");
+          // Trigger recompilation
+          await compileAllScss();
+          console.log("✅ [App] Auto-recompilation completed successfully");
+        } catch (error) {
+          console.error("❌ [App] Auto-recompilation failed:", error);
+        }
+      })();
+    }
+  }, [selectedPost, compileAllScss]);
 
   // Memoize computed values (must be before any early returns)
   const totalPosts = useMemo(

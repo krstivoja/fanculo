@@ -7,6 +7,7 @@ use Fanculo\Content\FunculoTypeTaxonomy;
 use Fanculo\Admin\Api\Services\MetaKeysConstants;
 use Fanculo\Database\ScssPartialsSettingsRepository;
 use Fanculo\Database\BlockSettingsRepository;
+use Fanculo\Database\PartialsUsageRepository;
 use WP_Post;
 
 class GlobalRegenerator
@@ -41,11 +42,50 @@ class GlobalRegenerator
     }
 
     /**
+     * Regenerate blocks affected by a specific partial (FAST - uses junction table)
+     *
+     * @param int $partial_id The partial post ID that was modified
+     * @return int Number of blocks regenerated
+     */
+    public function regenerateBlocksUsingPartial(int $partial_id): int
+    {
+        // Fast O(1) lookup using indexed junction table
+        $block_ids = PartialsUsageRepository::getBlocksUsingPartial($partial_id);
+
+        if (empty($block_ids)) {
+            return 0;
+        }
+
+        error_log(sprintf(
+            'Fanculo: Regenerating %d blocks affected by partial #%d',
+            count($block_ids),
+            $partial_id
+        ));
+
+        // Get full post objects for regeneration
+        $posts = get_posts([
+            'post_type' => FunculoPostType::getPostType(),
+            'post_status' => 'publish',
+            'post__in' => $block_ids,
+            'numberposts' => -1
+        ]);
+
+        foreach ($posts as $post) {
+            $this->contentTypeProcessor->processContentType(
+                $post->ID,
+                $post,
+                FunculoTypeTaxonomy::getTermBlocks()
+            );
+        }
+
+        return count($posts);
+    }
+
+    /**
      * Regenerate only files affected by global dependencies
      */
     public function regenerateGlobalDependencies(): void
     {
-
         // Get all posts that might need their files updated due to global changes
         $affectedPosts = $this->findPostsUsingGlobalPartials();
 
@@ -53,11 +93,9 @@ class GlobalRegenerator
             return;
         }
 
-
         foreach ($affectedPosts as $post) {
             $this->contentTypeProcessor->processContentType($post->ID, $post, FunculoTypeTaxonomy::getTermBlocks());
         }
-
     }
 
     /**
@@ -152,68 +190,6 @@ class GlobalRegenerator
         }
 
         return $partials;
-    }
-
-    /**
-     * Find posts that depend on a specific global partial
-     */
-    public function findPostsDependingOnPartial(int $partialId): array
-    {
-        $cacheKey = 'fanculo_partial_deps_' . $partialId;
-        $posts = wp_cache_get($cacheKey, 'fanculo_dependencies');
-
-        if (false === $posts) {
-            // Get blocks that use this partial from database
-            $blockSettings = BlockSettingsRepository::getBlocksUsingPartial($partialId);
-            $postIds = array_column($blockSettings, 'post_id');
-
-            if (empty($postIds)) {
-                $posts = [];
-            } else {
-                $posts = get_posts([
-                    'post_type' => FunculoPostType::getPostType(),
-                    'post_status' => 'publish',
-                    'post__in' => $postIds,
-                    'numberposts' => -1
-                ]);
-            }
-
-            // Cache for 5 minutes since dependencies can change
-            wp_cache_set($cacheKey, $posts, 'fanculo_dependencies', 300);
-        }
-
-        return $posts;
-    }
-
-    /**
-     * Regenerate blocks that use a specific SCSS partial
-     * More efficient than regenerating all blocks - only affects blocks using this partial
-     */
-    public function regenerateBlocksUsingPartial(int $partialId): void
-    {
-        error_log("Fanculo Debug: Starting regeneration for blocks using partial ID: $partialId");
-
-        // Find all blocks that use this partial
-        $affectedPosts = $this->findPostsDependingOnPartial($partialId);
-
-        if (empty($affectedPosts)) {
-            error_log("Fanculo Debug: No blocks found using partial ID: $partialId");
-            return;
-        }
-
-        error_log("Fanculo Debug: Found " . count($affectedPosts) . " blocks using partial ID: $partialId");
-
-        // Regenerate each affected block
-        foreach ($affectedPosts as $post) {
-            try {
-                error_log("Fanculo Debug: Regenerating block ID: {$post->ID} (title: {$post->post_title})");
-                $this->contentTypeProcessor->processContentType($post->ID, $post, FunculoTypeTaxonomy::getTermBlocks());
-            } catch (\Exception $e) {
-                error_log("Fanculo Error: Failed to regenerate block ID: {$post->ID} - " . $e->getMessage());
-            }
-        }
-
-        error_log("Fanculo Debug: Completed regeneration for blocks using partial ID: $partialId");
     }
 
     /**

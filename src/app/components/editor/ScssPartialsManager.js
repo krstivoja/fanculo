@@ -22,8 +22,7 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'sty
     console.log('🔍 ScssPartialsManager processSelectedPartials - metaData:', metaData);
     console.log('🔍 ScssPartialsManager processSelectedPartials - metaData.blocks:', metaData?.blocks);
     console.log('🔍 ScssPartialsManager processSelectedPartials - fieldName:', fieldName);
-    const blockSelectedPartials =
-      metaData?.blocks?.[fieldName] ?? metaData?.blocks?.[camelFieldName];
+    const blockSelectedPartials = metaData?.blocks?.[fieldName];
     console.log('🔍 ScssPartialsManager processSelectedPartials - blockSelectedPartials:', blockSelectedPartials);
 
     if (!blockSelectedPartials) {
@@ -66,7 +65,7 @@ const ScssPartialsManager = ({ selectedPost, metaData, onMetaChange, mode = 'sty
     }
 
     return [];
-  }, [metaData?.blocks, fieldName, camelFieldName, availablePartials, globalPartials]);
+  }, [metaData?.blocks, fieldName, availablePartials, globalPartials]);
 
   // Load selected partials when data is available - directly update state from processSelectedPartials
   useEffect(() => {

@@ -90,9 +90,18 @@ class PostsOperationsApiController extends BaseApiController
 
         switch ($operation_type) {
             case 'get_post':
-            case 'regenerate_files':
-                if (isset($data['id'])) {
+                if (isset($data['post_id'])) {
+                    $sanitized['id'] = $service->sanitizeInteger($data['post_id'], 1);
+                } elseif (isset($data['id'])) {
                     $sanitized['id'] = $service->sanitizeInteger($data['id'], 1);
+                }
+                break;
+
+            case 'regenerate_files':
+                if (isset($data['post_id'])) {
+                    $sanitized['post_id'] = $service->sanitizeInteger($data['post_id'], 1);
+                } elseif (isset($data['id'])) {
+                    $sanitized['post_id'] = $service->sanitizeInteger($data['id'], 1);
                 }
                 break;
 
@@ -369,6 +378,15 @@ class PostsOperationsApiController extends BaseApiController
             // Save to database if we have settings to save
             if (!empty($dbSettings)) {
                 BlockSettingsRepository::save($postId, $dbSettings);
+
+                // Sync partial usage to junction table for fast lookups
+                $stylePartials = $dbSettings['selected_partials'] ?? [];
+                $editorStylePartials = $dbSettings['editor_selected_partials'] ?? [];
+                \Fanculo\Database\PartialsUsageRepository::syncBlockPartials(
+                    $postId,
+                    $stylePartials,
+                    $editorStylePartials
+                );
             }
         }
 
@@ -380,18 +398,38 @@ class PostsOperationsApiController extends BaseApiController
             }
         }
 
+        // Track if this is an SCSS partial save (to skip file generation)
+        $isScssPartialSave = false;
+
         // Update SCSS partials meta (already sanitized)
         if (isset($metaData['scss_partials'])) {
             $scssPartials = $metaData['scss_partials'];
             error_log("🟢 [updatePostMeta] SCSS Partials data: " . print_r($scssPartials, true));
 
             if (isset($scssPartials['scss'])) {
+                $isScssPartialSave = true; // Mark as SCSS partial save
 
-                error_log("🟢 [updatePostMeta] Updating SCSS content for post $postId");
+                error_log("🟢 [updatePostMeta] ========================================");
+                error_log("🟢 [updatePostMeta] Updating SCSS PARTIAL content for post $postId");
+                $post = get_post($postId);
+                error_log("🟢 [updatePostMeta] Partial title: " . ($post ? $post->post_title : 'Unknown'));
                 error_log("🟢 [updatePostMeta] SCSS content length: " . strlen($scssPartials['scss']));
                 error_log("🟢 [updatePostMeta] SCSS content preview: " . substr($scssPartials['scss'], 0, 100));
                 update_post_meta($postId, MetaKeysConstants::SCSS_PARTIAL_SCSS, $scssPartials['scss']);
-                error_log("🟢 [updatePostMeta] SCSS content updated successfully");
+                error_log("🟢 [updatePostMeta] SCSS content updated successfully in wp_postmeta");
+
+                // Trigger bidirectional compilation - recompile all blocks using this partial
+                error_log("🔄 [updatePostMeta] Starting bidirectional recompilation...");
+                try {
+                    $recompileResult = \Fanculo\Services\ScssRecompilationService::recompileBlocksUsingPartial($postId);
+                    error_log("✅ [updatePostMeta] Bidirectional recompilation result:");
+                    error_log(print_r($recompileResult, true));
+                } catch (\Exception $e) {
+                    error_log("❌ [updatePostMeta] Failed to recompile blocks using partial $postId: " . $e->getMessage());
+                    error_log("❌ [updatePostMeta] Stack trace: " . $e->getTraceAsString());
+                    // Don't fail the save operation if recompilation fails
+                }
+                error_log("🟢 [updatePostMeta] ========================================");
             } else {
                 error_log("🟢 [updatePostMeta] No 'scss' key found in scss_partials data");
             }
@@ -415,7 +453,15 @@ class PostsOperationsApiController extends BaseApiController
             }
         }
 
-        // Trigger file generation after meta data update
+        // Skip file generation for SCSS partials
+        // They don't have block files to generate, and their dependent blocks
+        // will be recompiled on the frontend when the _funculo_scss_needs_recompile flag is detected
+        if ($isScssPartialSave) {
+            error_log("🔵 [updatePostMeta] Skipping file generation for SCSS partial (blocks will recompile on frontend)");
+            return; // Exit early for SCSS partials
+        }
+
+        // Trigger file generation after meta data update (for blocks and symbols only)
         error_log("Fanculo Debug: Triggering file generation after meta update for post ID: $postId");
         $post = get_post($postId);
         if ($post) {
