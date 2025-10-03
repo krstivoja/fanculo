@@ -58,7 +58,7 @@ const ScssPartialsManager = ({
   };
 
   useEffect(() => {
-    if (selectedPost?.id && !loading && availablePartials.length >= 0) {
+    if (selectedPost?.id && !loading) {
       setSelectedPartials(processSelectedPartials());
     }
   }, [selectedPost?.id, loading, availablePartials, metaData, mode]);

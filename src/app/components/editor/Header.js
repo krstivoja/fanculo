@@ -1,12 +1,11 @@
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { Button, Toast, SaveButton, AdminButton, DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from "../ui";
-import { apiClient } from "../../../utils";
 import centralizedApi from "../../../utils/api/CentralizedApiService";
 
 // Lazy load AddPostModal - only loads when needed
 const AddPostModal = lazy(() => import("./AddPostModal"));
 
-const Header = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh }) => {
+const Header = ({ onSave, saveStatus, onPostsRefresh }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [toast, setToast] = useState({
@@ -93,10 +92,6 @@ const Header = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh }) => {
     } finally {
       setIsRegenerating(false);
     }
-  };
-
-  const showToast = (message, type = "info") => {
-    setToast({ show: true, message, type });
   };
 
   const hideToast = () => {

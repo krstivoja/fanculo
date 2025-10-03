@@ -16,34 +16,29 @@ const EditorSettings = ({
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState("settings");
-
-  const parseSettings = () => {
-    try {
-      const settingsString = metaData?.blocks?.settings || "{}";
-      return JSON.parse(settingsString);
-    } catch (e) {
-      return {};
-    }
-  };
-
-  const settings = parseSettings();
-
-  const [description, setDescription] = useState(settings.description || "");
-  const [category, setCategory] = useState(settings.category || "");
-  const [icon, setIcon] = useState(settings.icon || "search");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [icon, setIcon] = useState("search");
 
   const blockCategories = sharedData?.blockCategories || [];
   const loadingCategories = dataLoading?.blockCategories || false;
 
   useEffect(() => {
-    setDescription(settings.description || "");
-    setCategory(settings.category || "");
-    setIcon(settings.icon || "search");
-  }, [settings]);
+    try {
+      const settingsString = metaData?.blocks?.settings || "{}";
+      const settings = JSON.parse(settingsString);
+      setDescription(settings.description || "");
+      setCategory(settings.category || "");
+      setIcon(settings.icon || "search");
+    } catch (e) {
+      setDescription("");
+      setCategory("");
+      setIcon("search");
+    }
+  }, [metaData?.blocks?.settings]);
 
   const updateSettings = (newDescription, newCategory, newIcon) => {
     const updatedSettings = {
-      ...settings,
       description: newDescription,
       category: newCategory,
       icon: newIcon,

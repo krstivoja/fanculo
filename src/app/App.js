@@ -239,7 +239,6 @@ const App = () => {
     groupedPosts["scss-partials"].length;
 
   const toastIsVisible = showToast && scssError;
-  const hasUnsavedChanges = saveStatus === "unsaved";
 
   if (loading) return <div>Loading...</div>;
 
@@ -251,7 +250,6 @@ const App = () => {
           <Header
             onSave={handleSave}
             saveStatus={saveStatus}
-            hasUnsavedChanges={hasUnsavedChanges}
             onPostsRefresh={refreshData}
           />
           <EditorNoPosts
@@ -281,7 +279,6 @@ const App = () => {
         <Header
           onSave={handleSave}
           saveStatus={saveStatus}
-          hasUnsavedChanges={hasUnsavedChanges}
           onPostsRefresh={refreshData}
         />
 
@@ -290,7 +287,6 @@ const App = () => {
             groupedPosts={groupedPosts}
             selectedPost={selectedPost}
             onPostSelect={postOperations.handlePostSelect}
-            onPostsRefresh={refreshData}
           />
           <MainContent
             selectedPost={selectedPost}

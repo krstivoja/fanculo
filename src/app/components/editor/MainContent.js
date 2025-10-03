@@ -7,17 +7,16 @@ import ScssPartialsMetaboxes from "./metaboxes/ScssPartialsMetaboxes";
 // Lazy load EditTitleModal - only loads when title is clicked
 const EditTitleModal = lazy(() => import("./EditTitleModal"));
 
-const getTypeIcon = (termSlug) => {
-  switch (termSlug) {
-    case "blocks":
-      return <BlockIcon size={48} />;
-    case "symbols":
-      return <SymbolIcon size={48} />;
-    case "scss-partials":
-      return <StyleIcon size={48} />;
-    default:
-      return null;
-  }
+const TYPE_ICONS = {
+  blocks: <BlockIcon size={48} />,
+  symbols: <SymbolIcon size={48} />,
+  "scss-partials": <StyleIcon size={48} />,
+};
+
+const TYPE_COMPONENTS = {
+  blocks: BlocksMetaboxes,
+  symbols: SymbolsMetaboxes,
+  "scss-partials": ScssPartialsMetaboxes,
 };
 
 const MainContent = ({
@@ -37,7 +36,8 @@ const MainContent = ({
 
   const postType = selectedPost?.terms?.[0]?.slug || null;
   const postTitle = selectedPost?.title?.rendered || selectedPost?.title || "Untitled Post";
-  const typeIcon = postType ? getTypeIcon(postType) : null;
+  const typeIcon = postType ? TYPE_ICONS[postType] : null;
+  const MetaboxComponent = postType ? TYPE_COMPONENTS[postType] : null;
 
   const titleComponent = (
     <h1
@@ -64,34 +64,14 @@ const MainContent = ({
         </div>
       ) : selectedPost ? (
         <>
-          {postType === "blocks" && (
-            <BlocksMetaboxes
+          {MetaboxComponent ? (
+            <MetaboxComponent
               metaData={metaData}
               onChange={onMetaChange}
               titleComponent={titleComponent}
               selectedPost={selectedPost}
             />
-          )}
-
-          {postType === "symbols" && (
-            <SymbolsMetaboxes
-              metaData={metaData}
-              onChange={onMetaChange}
-              titleComponent={titleComponent}
-              selectedPost={selectedPost}
-            />
-          )}
-
-          {postType === "scss-partials" && (
-            <ScssPartialsMetaboxes
-              metaData={metaData}
-              onChange={onMetaChange}
-              titleComponent={titleComponent}
-              selectedPost={selectedPost}
-            />
-          )}
-
-          {!postType && (
+          ) : (
             <div className="text-center text-contrast py-8">
               <p>No metaboxes available for this post type</p>
             </div>
