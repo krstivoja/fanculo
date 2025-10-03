@@ -47,8 +47,14 @@ class SettingsPage
 
     public function enqueue_scripts($hook)
     {
-        if ($hook === 'toplevel_page_fanculo-app' && LicenseManager::is_license_valid()) {
+        if ($hook !== 'toplevel_page_fanculo-app') {
+            return;
+        }
+
+        if (LicenseManager::is_license_valid()) {
             $this->adminAssets->enqueueAssets();
+        } else {
+            $this->adminAssets->enqueueLicenseStyles();
         }
     }
 

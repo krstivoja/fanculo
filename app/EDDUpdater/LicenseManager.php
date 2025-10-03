@@ -55,88 +55,77 @@ class LicenseManager
         <?php endif; ?>
             <?php if ($is_license_required_mode): ?>
                 <!-- License Required Mode - Prominent activation interface -->
-                <div class="max-w-xl mx-auto my-12 text-center">
-                    <div class="bg-white p-10 rounded-lg shadow-lg">
-                        <h1 class="mb-5 !text-4xl !font-bold">
-                            <?php esc_html_e('Fancoolo WP', 'fanculo'); ?>
-                            <br>
-                            <span class="!text-lg"><?php esc_html_e('License Required', 'fanculo'); ?></span>
+                <div class="fanculo-license max-w-xl mx-auto my-12 text-center text-highlight">
+                    <div class="rounded-2xl border border-outline bg-base-2 p-10 shadow-2xl shadow-black/40">
+                        <h1 class="mb-6 text-4xl font-semibold text-highlight">
+                            <?php esc_html_e('FanCoolo WP', 'fanculo'); ?>
                         </h1>
-                        
-                        
-                        <form method="post" action="" class="m-8">
+                        <p class="mb-10 text-base text-contrast">
+                            <?php esc_html_e('Enter your license key to unlock the full Fanculo experience.', 'fanculo'); ?>
+                        </p>
+
+                        <form method="post" action="" class="mx-auto flex max-w-sm flex-col gap-5">
                             <?php wp_nonce_field('fanculo_nonce', 'fanculo_nonce'); ?>
-                            
-                            <div class="mb-5">
-                                <input 
-                                    type="text" 
-                                    id="fanculo_license_key" 
-                                    name="fanculo_license_key" 
-                                    value="<?php echo esc_attr($display_license); ?>" 
-                                    placeholder="<?php esc_attr_e('Enter your license key here...', 'fanculo'); ?>"
-                                    class="w-full !p-3 text-base border-2 border-gray-300 rounded text-center focus:border-blue-500 focus:outline-none"
-                                />
-                            </div>
-                            
-                            <div>
-                                <input 
-                                    type="submit" 
-                                    name="fanculo_license_activate" 
-                                    value="<?php esc_attr_e('Activate License', 'fanculo'); ?>" 
-                                    class="button-primary px-8 py-3 text-base font-medium bg-blue-600 hover:bg-blue-700 text-white rounded cursor-pointer"
-                                />
-                            </div>
+
+                            <input
+                                type="text"
+                                id="fanculo_license_key"
+                                name="fanculo_license_key"
+                                value="<?php echo esc_attr($display_license); ?>"
+                                placeholder="<?php esc_attr_e('Enter your license key...', 'fanculo'); ?>"
+                                class="w-full rounded-xl border border-outline !bg-base-1 px-4 py-3 text-center text-highlight placeholder:text-contrast focus:border-action focus:outline-none focus:ring-2 focus:ring-action"
+                            />
+
+                            <button
+                                type="submit"
+                                name="fanculo_license_activate"
+                                value="1"
+                                class="inline-flex items-center justify-center rounded-xl bg-action px-8 py-3 text-base font-semibold text-highlight shadow-md transition hover:bg-action/80 focus:outline-none focus:ring-2 focus:ring-action"
+                            >
+                                <?php esc_html_e('Activate License', 'fanculo'); ?>
+                            </button>
                         </form>
 
-                        <div class="p-5 bg-green-50 rounded border-l-4 border-[#198f19]">
-                            <h3 class="mt-0 mb-3 text-blue-600 font-semibold"><?php esc_html_e('What you get with a license:', 'fanculo'); ?></h3>
-                            <ul class="text-left inline-block m-0 space-y-1">
-                                <li class="text-gray-700"><?php esc_html_e('✓ Access to all premium blocks and templates', 'fanculo'); ?></li>
-                                <li class="text-gray-700"><?php esc_html_e('✓ Automatic plugin updates', 'fanculo'); ?></li>
-                                <li class="text-gray-700"><?php esc_html_e('✓ Premium support access', 'fanculo'); ?></li>
-                                <li class="text-gray-700"><?php esc_html_e('✓ Advanced block creation tools', 'fanculo'); ?></li>
-                            </ul>
-                        </div>
-                        
-                        <p class="!mt-12">
-                            <?php 
+                        <p class="mt-10 text-sm text-contrast">
+                            <?php
                             printf(
-                                __('Need a license? <a href="%s" target="_blank" class=" no-underline font-semibold hover:text-blue-800">Purchase one here →</a>', 'fanculo'),
+                                __('Need a license? <a href="%s" target="_blank" class="font-semibold text-highlight transition hover:text-action">Purchase one here →</a>', 'fanculo'),
                                 'https://dplugins.com/fanculo/'
-                            ); 
+                            );
                             ?>
                         </p>
                     </div>
                 </div>
             <?php else: ?>
                 <!-- Standard License Management Mode -->
-                <h1><?php esc_html_e('Fancoolo WP License', 'fanculo'); ?></h1>
-                
-                <div class="my-5 p-5 bg-gray-50 border-l-4 border-blue-500 rounded">
-                    <?php if ($status === 'valid'): ?>
-                        <p class="text-green-600 font-bold">
-                            <?php esc_html_e('✓ License is active and valid', 'fanculo'); ?>
-                        </p>
-                        <p class="text-gray-600 text-sm mt-2">
-                            <?php esc_html_e('Your license key is secured and masked for security purposes.', 'fanculo'); ?>
-                        </p>
-                    <?php elseif ($status === 'expired'): ?>
-                        <p class="text-red-600 font-bold">
-                            <?php esc_html_e('⚠ License has expired', 'fanculo'); ?>
-                        </p>
-                    <?php elseif ($status === 'invalid'): ?>
-                        <p class="text-red-600 font-bold">
-                            <?php esc_html_e('✗ License is invalid', 'fanculo'); ?>
-                        </p>
-                    <?php else: ?>
-                        <p class="text-gray-600 font-bold">
-                            <?php esc_html_e('No license key entered', 'fanculo'); ?>
-                        </p>
-                    <?php endif; ?>
-                </div>
+                <div class="fanculo-license mx-auto my-10 max-w-3xl space-y-8 text-highlight">
+                    <h1 class="text-3xl font-semibold text-highlight"><?php esc_html_e('FanCoolo WP License', 'fanculo'); ?></h1>
 
-                <form method="post" action="">
-                    <?php wp_nonce_field('fanculo_nonce', 'fanculo_nonce'); ?>
+                    <div class="rounded-2xl border border-outline bg-base-2/70 p-6">
+                        <?php if ($status === 'valid'): ?>
+                            <p class="text-lg font-medium text-highlight">
+                                <?php esc_html_e('✓ License is active and valid', 'fanculo'); ?>
+                            </p>
+                            <p class="mt-2 text-sm text-contrast">
+                                <?php esc_html_e('Your license key is secured and masked for security purposes.', 'fanculo'); ?>
+                            </p>
+                        <?php elseif ($status === 'expired'): ?>
+                            <p class="text-lg font-medium text-warning">
+                                <?php esc_html_e('⚠ License has expired', 'fanculo'); ?>
+                            </p>
+                        <?php elseif ($status === 'invalid'): ?>
+                            <p class="text-lg font-medium text-error">
+                                <?php esc_html_e('✗ License is invalid', 'fanculo'); ?>
+                            </p>
+                        <?php else: ?>
+                            <p class="text-lg font-medium text-contrast">
+                                <?php esc_html_e('No license key entered', 'fanculo'); ?>
+                            </p>
+                        <?php endif; ?>
+                    </div>
+
+                    <form method="post" action="" class="rounded-2xl border border-outline bg-base-2/70 p-6 shadow-lg shadow-black/30">
+                        <?php wp_nonce_field('fanculo_nonce', 'fanculo_nonce'); ?>
                     
                     <!-- Hidden field to preserve the actual license key when it's masked -->
                     <?php if ($status === 'valid' && !empty($license)): ?>
@@ -152,26 +141,28 @@ class LicenseManager
                                     </label>
                                 </th>
                                 <td>
-                                    <input 
-                                        type="text" 
-                                        id="fanculo_license_key" 
-                                        name="fanculo_license_key" 
-                                        value="<?php echo esc_attr($display_license); ?>" 
-                                        class="regular-text w-96 <?php echo ($status === 'valid') ? 'font-mono tracking-wide' : ''; ?>"
-                                        placeholder="<?php esc_attr_e('Enter your license key here...', 'fanculo'); ?>"
-                                        <?php echo ($status === 'valid') ? 'readonly' : ''; ?>
-                                    />
-                                    
-                                    <?php if ($status === 'valid'): ?>
-                                        <button type="button" id="edit-license-key" class="button button-secondary ml-2">
-                                            <?php esc_html_e('Edit', 'fanculo'); ?>
-                                        </button>
-                                        <button type="button" id="cancel-edit-license" class="button button-secondary ml-1 hidden">
-                                            <?php esc_html_e('Cancel', 'fanculo'); ?>
-                                        </button>
-                                    <?php endif; ?>
-                                    
-                                    <p class="description">
+                                    <div class="flex flex-wrap items-center gap-3">
+                                        <input
+                                            type="text"
+                                            id="fanculo_license_key"
+                                            name="fanculo_license_key"
+                                            value="<?php echo esc_attr($display_license); ?>"
+                                            class="regular-text w-full max-w-lg rounded-xl border border-outline bg-base-1 px-4 py-2.5 text-base text-highlight placeholder:text-contrast focus:border-action focus:outline-none focus:ring-2 focus:ring-action <?php echo ($status === 'valid') ? 'font-mono tracking-wide' : ''; ?>"
+                                            placeholder="<?php esc_attr_e('Enter your license key here...', 'fanculo'); ?>"
+                                            <?php echo ($status === 'valid') ? 'readonly' : ''; ?>
+                                        />
+
+                                        <?php if ($status === 'valid'): ?>
+                                            <button type="button" id="edit-license-key" class="button button-secondary rounded-lg bg-base-3/40 px-4 py-2 text-sm font-medium text-highlight hover:bg-base-3/60 focus:outline-none focus:ring-2 focus:ring-action">
+                                                <?php esc_html_e('Edit', 'fanculo'); ?>
+                                            </button>
+                                            <button type="button" id="cancel-edit-license" class="button button-secondary hidden rounded-lg bg-base-3/40 px-4 py-2 text-sm font-medium text-highlight hover:bg-base-3/60 focus:outline-none focus:ring-2 focus:ring-action">
+                                                <?php esc_html_e('Cancel', 'fanculo'); ?>
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <p class="description mt-2 text-sm text-contrast">
                                         <?php if ($status === 'valid'): ?>
                                             <?php esc_html_e('Your license is active. Click "Edit" to update your license key and reactivate.', 'fanculo'); ?>
                                         <?php else: ?>
@@ -183,19 +174,19 @@ class LicenseManager
                         </tbody>
                     </table>
 
-                    <p class="submit">
+                    <p class="submit mt-6 flex items-center gap-3">
                         <?php if ($status === 'valid'): ?>
                             <input 
                                 type="submit" 
                                 name="fanculo_license_deactivate" 
                                 value="<?php esc_attr_e('Deactivate License', 'fanculo'); ?>" 
-                                class="button-secondary"
+                                class="button-secondary rounded-lg bg-base-3/50 px-5 py-2 font-medium text-highlight hover:bg-base-3/70 focus:outline-none focus:ring-2 focus:ring-action"
                             />
                             <input 
                                 type="submit" 
                                 name="fanculo_license_activate" 
                                 value="<?php esc_attr_e('Update & Reactivate', 'fanculo'); ?>" 
-                                class="button-primary hidden"
+                                class="button-primary hidden rounded-lg bg-action px-5 py-2 font-semibold text-highlight focus:outline-none focus:ring-2 focus:ring-action"
                                 id="reactivate-license-button"
                             />
                         <?php else: ?>
@@ -203,29 +194,29 @@ class LicenseManager
                                 type="submit" 
                                 name="fanculo_license_activate" 
                                 value="<?php esc_attr_e('Activate License', 'fanculo'); ?>" 
-                                class="button-primary"
+                                class="button-primary rounded-lg bg-action px-5 py-2 font-semibold text-highlight hover:bg-action/80 focus:outline-none focus:ring-2 focus:ring-action"
                             />
                         <?php endif; ?>
                     </p>
                 </form>
+                    <div class="rounded-2xl border border-outline bg-base-2/70 p-6">
+                        <h2 class="mt-0 text-xl font-semibold text-highlight"><?php esc_html_e('License Information', 'fanculo'); ?></h2>
+                        <p class="text-sm text-contrast"><?php esc_html_e('Your license key provides:', 'fanculo'); ?></p>
+                        <ul class="mt-4 list-disc space-y-1 pl-5 text-sm text-contrast">
+                            <li><?php esc_html_e('Automatic plugin updates', 'fanculo'); ?></li>
+                            <li><?php esc_html_e('Premium support access', 'fanculo'); ?></li>
+                            <li><?php esc_html_e('Access to pro features and templates', 'fanculo'); ?></li>
+                        </ul>
 
-                <div class="mt-10 p-5 bg-white border border-gray-300 rounded">
-                    <h2 class="mt-0 text-xl font-semibold"><?php esc_html_e('License Information', 'fanculo'); ?></h2>
-                    <p><?php esc_html_e('Your license key provides:', 'fanculo'); ?></p>
-                    <ul class="list-disc ml-5 space-y-1">
-                        <li><?php esc_html_e('Automatic plugin updates', 'fanculo'); ?></li>
-                        <li><?php esc_html_e('Premium support access', 'fanculo'); ?></li>
-                        <li><?php esc_html_e('Access to pro features and templates', 'fanculo'); ?></li>
-                    </ul>
-                    
-                    <p class="mt-5">
-                        <?php 
-                        printf(
-                            __('Need a license? <a href="%s" target="_blank" class="text-blue-600 hover:text-blue-800">Purchase one here</a>', 'fanculo'),
-                            'https://dplugins.com/fanculo/'
-                        ); 
-                        ?>
-                    </p>
+                        <p class="mt-5 text-sm text-contrast">
+                            <?php
+                            printf(
+                                __('Need a license? <a href="%s" target="_blank" class="font-semibold text-highlight transition hover:text-action">Purchase one here</a>', 'fanculo'),
+                                'https://dplugins.com/fanculo/'
+                            );
+                            ?>
+                        </p>
+                    </div>
                 </div>
             <?php endif; ?>
         <?php if ($with_wrapper): ?>

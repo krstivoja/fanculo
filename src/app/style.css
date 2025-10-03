@@ -1,58 +1,58 @@
 @import "tailwindcss";
-@import './styles/reset-wp.css';
-@import './styles/form.css'; 
+@source "./src/app/**/*.{js,jsx,ts,tsx}";
+@source "../app/**/*.php";
+
+@import "./styles/reset-wp.css";
+@import "./styles/form.css";
 
 :root {
-    --sidebar: 350px;
+  --sidebar: 350px;
 }
 
 @theme {
-    --color-*: initial;
-    --color-base-1: #191c22;
-    --color-base-2: #272c35;
-    --color-base-3: #5a606d;
-    --color-contrast: #aab2c0;
-    --color-highlight: white;
-    --color-action: #5858eb;
-    --color-action: #0499FF;
-    --color-outline: #393e46;
-    --color-error: red;
-    --color-warning: #ffdd00;
+  --color-*: initial;
+  --color-base-1: #191c22;
+  --color-base-2: #272c35;
+  --color-base-3: #5a606d;
+  --color-contrast: #aab2c0;
+  --color-highlight: white;
+  --color-action: #5858eb;
+  --color-action: #0499ff;
+  --color-outline: #393e46;
+  --color-error: red;
+  --color-warning: #ffdd00;
 
-    --font-xs: 11px;
+  --font-xs: 11px;
 }
 
 #fanculo-app {
-    @apply fixed h-full w-full z-[99999] top-0 left-0 bg-base-1;
+  @apply fixed h-full w-full z-[99999] top-0 left-0 bg-base-1;
 }
 
 #editor {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 
-    /* border: 5px solid red; */
+  /* border: 5px solid red; */
 }
 
 #editor-header {
-    width: 100%;
+  width: 100%;
 }
 
 #editor-content {
-    flex-grow: 1;
-    /* border: 5px solid lime; */
+  flex-grow: 1;
+  /* border: 5px solid lime; */
 }
-
-
-
-
-
 
 .monaco-editor .view-overlays .current-line-exact {
-    border: 2px solid #5a606d5c !important;
+  border: 2px solid #5a606d5c !important;
 }
 
-.monaco-editor, .monaco-diff-editor, .monaco-component {
-    --vscode-editor-background: #272c35 !important;
-    --vscode-editorGutter-background: #272c35 !important;
+.monaco-editor,
+.monaco-diff-editor,
+.monaco-component {
+  --vscode-editor-background: #272c35 !important;
+  --vscode-editorGutter-background: #272c35 !important;
 }
