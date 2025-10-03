@@ -98,14 +98,20 @@ const extractScssPartialsPayload = (related = {}) => {
     return { globalPartials: [], availablePartials: [] };
   }
 
-  const payload = related.scss_partials?.data || related.scss_partials;
+  // The API response is wrapped: { success, data: { global_partials, available_partials }, meta }
+  // So we need to access .data first, then the partials
+  const responseData = related.scss_partials?.data || related.scss_partials;
 
   return {
     globalPartials: normalizePartialCollection(
-      payload?.globalPartials || payload?.global_partials
+      responseData?.globalPartials ||
+      responseData?.global_partials ||
+      []
     ),
     availablePartials: normalizePartialCollection(
-      payload?.availablePartials || payload?.available_partials
+      responseData?.availablePartials ||
+      responseData?.available_partials ||
+      []
     ),
   };
 };
