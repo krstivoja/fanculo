@@ -6,6 +6,7 @@ use FanCoolo\Admin\Api\Controllers\PostsApiController;
 use FanCoolo\Admin\Api\Controllers\PostsBatchApiController;
 use FanCoolo\Admin\Api\Controllers\PostsQueryApiController;
 use FanCoolo\Admin\Api\Controllers\PostsOperationsApiController;
+use FanCoolo\Admin\Api\Controllers\LicenseApiController;
 use FanCoolo\Admin\Api\TaxonomyApiController;
 use FanCoolo\Admin\Api\BlockCategoriesApiController;
 use FanCoolo\Admin\Api\FileGenerationApiController;
@@ -20,6 +21,7 @@ class Api
     private $postsBatchController;
     private $postsQueryController;
     private $postsOperationsController;
+    private $licenseController;
     private $taxonomyController;
     private $blockCategoriesController;
     private $fileGenerationController;
@@ -36,6 +38,7 @@ class Api
         $this->postsOperationsController = new PostsOperationsApiController();
 
         // Initialize other controllers
+        $this->licenseController = new LicenseApiController();
         $this->taxonomyController = new TaxonomyApiController();
         $this->blockCategoriesController = new BlockCategoriesApiController();
         $this->fileGenerationController = new FileGenerationApiController();
