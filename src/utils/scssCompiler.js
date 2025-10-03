@@ -17,28 +17,18 @@ function getPluginBaseUrl() {
     return window.funculoSettings.pluginUrl;
   }
 
-  // Try to find the plugin URL from script tags
+  // Try to find the plugin URL from script tags (looking for dist/app/index.js)
   const scripts = document.getElementsByTagName("script");
   for (let script of scripts) {
-    if (script.src && script.src.includes("/fancoolo/")) {
-      const pluginUrl =
-        script.src.substring(0, script.src.indexOf("/fancoolo/")) +
-        "/fancoolo/";
+    if (script.src && script.src.includes("/dist/app/index.js")) {
+      const pluginUrl = script.src.substring(0, script.src.indexOf("/dist/app/index.js") + 1);
       return pluginUrl;
     }
   }
 
-  // Fallback: try to construct from current location
-  const currentUrl = window.location.origin + window.location.pathname;
-  if (currentUrl.includes("/wp-admin/")) {
-    const baseUrl =
-      currentUrl.substring(0, currentUrl.indexOf("/wp-admin/")) +
-      "/wp-content/plugins/fancoolo/";
-    return baseUrl;
-  }
-
-  // Last resort fallback
-  return "/wp-content/plugins/fancoolo/";
+  // Fallback: could not determine plugin URL
+  console.error("Could not determine plugin URL. Please ensure window.funculoSettings.pluginUrl is set.");
+  return null;
 }
 
 /**

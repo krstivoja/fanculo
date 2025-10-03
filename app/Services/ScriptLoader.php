@@ -22,7 +22,7 @@ class ScriptLoader
 
     public function __construct()
     {
-        $this->pluginFile = dirname(__DIR__, 2) . '/fancoolo.php';
+        $this->pluginFile = defined('FANCOOLO_PLUGIN_FILE') ? FANCOOLO_PLUGIN_FILE : dirname(__DIR__, 2) . '/fanculo.php';
     }
 
     public function enqueueHotReload(): void

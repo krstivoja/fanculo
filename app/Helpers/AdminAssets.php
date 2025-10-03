@@ -74,6 +74,11 @@ class AdminAssets
                 'posts' => $posts_data,
             ]), 'after');
 
+            // Output plugin URL for SCSS compiler and other assets
+            wp_add_inline_script('jquery', 'window.funculoSettings = ' . json_encode([
+                'pluginUrl' => defined('FANCOOLO_URL') ? FANCOOLO_URL : plugin_dir_url(dirname(dirname(__FILE__))),
+            ]), 'after');
+
             // Add the module script manually in footer
             add_action('admin_print_footer_scripts', [$this, 'outputModuleScript']);
 
