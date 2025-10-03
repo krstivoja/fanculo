@@ -1,10 +1,10 @@
 <?php
 
-namespace Fanculo\FilesManager\Files;
+namespace FanCoolo\FilesManager\Files;
 
-use Fanculo\FilesManager\Interfaces\FileGeneratorInterface;
-use Fanculo\Content\FunculoTypeTaxonomy;
-use Fanculo\Admin\Api\Services\MetaKeysConstants;
+use FanCoolo\FilesManager\Interfaces\FileGeneratorInterface;
+use FanCoolo\Content\FunculoTypeTaxonomy;
+use FanCoolo\Admin\Api\Services\MetaKeysConstants;
 use WP_Post;
 
 class EditorStyle implements FileGeneratorInterface

@@ -1,5 +1,5 @@
 /**
- * Fanculo Block Renderer
+ * FanCoolo Block Renderer
  * Properly renders server-side content without adding extra wrapper divs
  * Includes security hardening and React key stability
  */
@@ -304,8 +304,8 @@
     return props;
   }
 
-  // Expose improved renderer globally for Fanculo blocks
-  window.FanculoBlockRenderer = {
+  // Expose improved renderer globally for FanCoolo blocks
+  window.FanCooloBlockRenderer = {
     /**
      * Legacy method: Create a React component that replaces inserter placeholders with InnerBlocks
      * @deprecated Use renderServerContent instead for better performance and security
@@ -336,7 +336,7 @@
       // Replace blockProps placeholder with a temporary marker
       const processedHtml = htmlString.replace(
         /blockProps/g,
-        'data-fanculo-block-props="true"'
+        'data-fancoolo-block-props="true"'
       );
 
       const container = document.createElement("div");
@@ -377,14 +377,14 @@
             return createElement(InnerBlocks, filteredProps);
           }
 
-          // Handle <div class="fanculo-block-inserter"> elements
+          // Handle <div class="fancoolo-block-inserter"> elements
           if (
             tagName === "div" &&
             domNode.classList &&
-            domNode.classList.contains("fanculo-block-inserter")
+            domNode.classList.contains("fancoolo-block-inserter")
           ) {
             const innerBlocksProps = {
-              key: generateStableKey("fanculo-inserter", path),
+              key: generateStableKey("fancoolo-inserter", path),
               allowedBlocks: options.allowedBlocks || null,
               template: options.template || [],
               templateLock: options.templateLock || false,
@@ -421,13 +421,13 @@
 
           // Check if this element should receive blockProps
           const shouldApplyBlockProps = domNode.hasAttribute(
-            "data-fanculo-block-props"
+            "data-fancoolo-block-props"
           );
           if (shouldApplyBlockProps) {
             // Remove the marker attribute
-            delete props["data-fanculo-block-props"];
+            delete props["data-fancoolo-block-props"];
             // Mark this element to receive blockProps during rendering
-            props["data-fanculo-needs-block-props"] = true;
+            props["data-fancoolo-needs-block-props"] = true;
           }
 
           // Add stable key for this element
@@ -481,14 +481,14 @@
         if (typeof element === "object" && element && element.type) {
           // Check if this element needs blockProps applied
           const needsBlockProps =
-            element.props && element.props["data-fanculo-needs-block-props"];
+            element.props && element.props["data-fancoolo-needs-block-props"];
 
           if (needsBlockProps) {
             // Apply blockProps to this specific element
             const mergedProps = { ...element.props, ...blockProps };
 
             // Remove the marker
-            delete mergedProps["data-fanculo-needs-block-props"];
+            delete mergedProps["data-fancoolo-needs-block-props"];
 
             // Merge classNames properly
             if (element.props.className && blockProps.className) {
@@ -558,7 +558,7 @@
     },
 
     /**
-     * Apply blockProps to elements that are marked with data-fanculo-needs-block-props
+     * Apply blockProps to elements that are marked with data-fancoolo-needs-block-props
      * @param {Array} elements - Array of React elements
      * @param {Object} blockProps - WordPress block props
      * @returns {Array} Elements with blockProps applied
@@ -572,14 +572,14 @@
           element.props
         ) {
           const needsBlockProps =
-            element.props["data-fanculo-needs-block-props"];
+            element.props["data-fancoolo-needs-block-props"];
 
           if (needsBlockProps) {
             // Apply blockProps to this specific element
             const mergedProps = { ...element.props, ...blockProps };
 
             // Remove the marker and add completion marker
-            delete mergedProps["data-fanculo-needs-block-props"];
+            delete mergedProps["data-fancoolo-needs-block-props"];
             mergedProps["data-had-block-props"] = true;
 
             // Merge classNames properly
@@ -604,7 +604,7 @@
 
     /**
      * Create a server-side render component for a block
-     * @param {string} blockName - Block name (e.g., 'fanculo/my-block')
+     * @param {string} blockName - Block name (e.g., 'fancoolo/my-block')
      * @param {Object} parserOptions - Options for InnerBlocks parsing
      * @returns {Function} React component function
      */
@@ -684,7 +684,7 @@
         const parsedContent = useMemo(() => {
           if (!serverContent) return null;
 
-          return window.FanculoBlockRenderer.parseServerContent(
+          return window.FanCooloBlockRenderer.parseServerContent(
             serverContent,
             parserOptions
           );
@@ -694,7 +694,7 @@
         const renderedContent = useMemo(() => {
           if (!parsedContent) return null;
 
-          return window.FanculoBlockRenderer.renderServerContent(
+          return window.FanCooloBlockRenderer.renderServerContent(
             null, // We already have parsed content
             blockProps,
             {},
@@ -712,9 +712,9 @@
   };
 
   // Legacy compatibility aliases (remove these in future versions)
-  window.FanculoInnerBlocksParser = {
+  window.FanCooloInnerBlocksParser = {
     createServerContentRenderer: function (serverContent, blockProps, options) {
-      return window.FanculoBlockRenderer.createServerContentRenderer(
+      return window.FanCooloBlockRenderer.createServerContentRenderer(
         serverContent,
         blockProps,
         options
@@ -723,5 +723,5 @@
   };
 
   // For backward compatibility
-  window.NativeBlocksParser = window.FanculoInnerBlocksParser;
+  window.NativeBlocksParser = window.FanCooloInnerBlocksParser;
 })();

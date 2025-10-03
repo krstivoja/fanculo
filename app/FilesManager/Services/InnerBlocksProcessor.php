@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\FilesManager\Services;
+namespace FanCoolo\FilesManager\Services;
 
 /**
  * InnerBlocks processor service
@@ -82,7 +82,7 @@ class InnerBlocksProcessor
             // In editor: replace any InnerBlocks variation with standardized placeholder for JavaScript
             return preg_replace(
                 self::INNERBLOCKS_PATTERN,
-                '<div class="fanculo-block-inserter"></div>',
+                '<div class="fancoolo-block-inserter"></div>',
                 $renderedContent
             );
         } else {
@@ -115,11 +115,11 @@ class InnerBlocksProcessor
      */
     public static function hasInnerBlocksInTemplates(): bool
     {
-        if (!defined('FANCULO_BLOCKS_DIR')) {
+        if (!defined('FANCOOLO_BLOCKS_DIR')) {
             return false;
         }
 
-        $renderFiles = glob(FANCULO_BLOCKS_DIR . '/*/render.php');
+        $renderFiles = glob(FANCOOLO_BLOCKS_DIR . '/*/render.php');
 
         foreach ($renderFiles as $renderFile) {
             if (self::fileHasInnerBlocks($renderFile)) {
@@ -138,10 +138,10 @@ class InnerBlocksProcessor
         // Only load the parser if we actually have <InnerBlocks /> in templates
         if (self::hasInnerBlocksInTemplates()) {
             wp_enqueue_script(
-                'fanculo-block-renderer',
-                FANCULO_URL . 'assets/js/block-renderer.js',
+                'fancoolo-block-renderer',
+                FANCOOLO_URL . 'assets/js/block-renderer.js',
                 ['wp-element', 'wp-block-editor'],
-                FANCULO_VERSION,
+                FANCOOLO_VERSION,
                 true
             );
         }

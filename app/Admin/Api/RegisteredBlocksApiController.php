@@ -1,8 +1,8 @@
 <?php
 
-namespace Fanculo\Admin\Api;
+namespace FanCoolo\Admin\Api;
 
-use Fanculo\Admin\Api\Services\ApiResponseFormatter;
+use FanCoolo\Admin\Api\Services\ApiResponseFormatter;
 
 class RegisteredBlocksApiController
 {

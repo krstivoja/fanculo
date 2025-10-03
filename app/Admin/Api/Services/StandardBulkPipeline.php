@@ -1,11 +1,11 @@
 <?php
 
-namespace Fanculo\Admin\Api\Services;
+namespace FanCoolo\Admin\Api\Services;
 
-use Fanculo\Content\FunculoTypeTaxonomy;
-use Fanculo\Database\BlockSettingsRepository;
-use Fanculo\Database\ScssPartialsSettingsRepository;
-use Fanculo\Database\BlockAttributesRepository;
+use FanCoolo\Content\FunculoTypeTaxonomy;
+use FanCoolo\Database\BlockSettingsRepository;
+use FanCoolo\Database\ScssPartialsSettingsRepository;
+use FanCoolo\Database\BlockAttributesRepository;
 
 /**
  * Standardized Bulk Operations Pipeline
@@ -256,12 +256,12 @@ class StandardBulkPipeline
 
             $selectedPartials = $dbSettings['selected_partials'] ?? [];
             $editorSelectedPartials = $dbSettings['editor_selected_partials'] ?? [];
-            error_log("Fanculo Debug: StandardBulkPipeline formatPostData - Post ID: $postId, selected_partials from DB: " . json_encode($selectedPartials) . ", editor_selected_partials: " . json_encode($editorSelectedPartials));
+            error_log("FanCoolo Debug: StandardBulkPipeline formatPostData - Post ID: $postId, selected_partials from DB: " . json_encode($selectedPartials) . ", editor_selected_partials: " . json_encode($editorSelectedPartials));
 
             $formattedMeta['blocks']['selected_partials'] = json_encode($selectedPartials);
             $formattedMeta['blocks']['editor_selected_partials'] = json_encode($editorSelectedPartials);
 
-            error_log("Fanculo Debug: StandardBulkPipeline formatPostData - Final meta blocks: " . json_encode($formattedMeta['blocks']));
+            error_log("FanCoolo Debug: StandardBulkPipeline formatPostData - Final meta blocks: " . json_encode($formattedMeta['blocks']));
         }
 
         // Add SCSS partial settings if this is a SCSS partial

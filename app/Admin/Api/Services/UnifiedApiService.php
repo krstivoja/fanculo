@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\Admin\Api\Services;
+namespace FanCoolo\Admin\Api\Services;
 
 use WP_REST_Response;
 use WP_Error;
@@ -129,7 +129,7 @@ class UnifiedApiService
     public function fetchWithCache(string $cacheKey, callable $dataFetcher, int $cacheDuration = self::DEFAULT_CACHE_DURATION)
     {
         // Try to get from cache
-        $cachedData = wp_cache_get($cacheKey, 'fanculo_api');
+        $cachedData = wp_cache_get($cacheKey, 'fancoolo_api');
 
         if (false !== $cachedData) {
             $this->performanceData['cache_hit'] = true;
@@ -142,7 +142,7 @@ class UnifiedApiService
 
         // Store in cache
         if ($data !== null) {
-            wp_cache_set($cacheKey, $data, 'fanculo_api', $cacheDuration);
+            wp_cache_set($cacheKey, $data, 'fancoolo_api', $cacheDuration);
         }
 
         return $data;
@@ -161,7 +161,7 @@ class UnifiedApiService
         $startTime = microtime(true);
 
         // Generate cache key
-        $cacheKey = 'fanculo_bulk_' . $type . '_' . md5(serialize($ids) . serialize($options));
+        $cacheKey = 'fancoolo_bulk_' . $type . '_' . md5(serialize($ids) . serialize($options));
 
         // Use cache if enabled
         if (!empty($options['cache'])) {
@@ -290,10 +290,10 @@ class UnifiedApiService
     {
         if ($pattern) {
             // Clear specific pattern
-            wp_cache_delete($pattern, 'fanculo_api');
+            wp_cache_delete($pattern, 'fancoolo_api');
         } else {
             // Clear all API cache
-            wp_cache_flush_group('fanculo_api');
+            wp_cache_flush_group('fancoolo_api');
         }
     }
 

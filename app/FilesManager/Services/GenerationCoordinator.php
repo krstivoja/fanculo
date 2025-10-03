@@ -1,9 +1,9 @@
 <?php
 
-namespace Fanculo\FilesManager\Services;
+namespace FanCoolo\FilesManager\Services;
 
-use Fanculo\Content\FunculoPostType;
-use Fanculo\Content\FunculoTypeTaxonomy;
+use FanCoolo\Content\FunculoPostType;
+use FanCoolo\Content\FunculoTypeTaxonomy;
 use WP_Post;
 
 class GenerationCoordinator
@@ -24,10 +24,10 @@ class GenerationCoordinator
      */
     public function handlePostSave(int $postId, WP_Post $post, bool $update): void
     {
-        error_log("Fanculo Debug: handlePostSave called for post ID: $postId, title: {$post->post_title}");
+        error_log("FanCoolo Debug: handlePostSave called for post ID: $postId, title: {$post->post_title}");
 
         if ($post->post_type !== FunculoPostType::getPostType()) {
-            error_log("Fanculo Debug: Skipping - wrong post type: {$post->post_type}");
+            error_log("FanCoolo Debug: Skipping - wrong post type: {$post->post_type}");
             return;
         }
 
@@ -46,17 +46,17 @@ class GenerationCoordinator
 
         // Skip file generation for SCSS partials - they're compiled in browser
         if ($isScssPartial) {
-            error_log("Fanculo Debug: Skipping file generation for SCSS partial (browser compilation)");
+            error_log("FanCoolo Debug: Skipping file generation for SCSS partial (browser compilation)");
             // Don't generate files, but still handle global impact below
         } else {
             // Guard: Skip if regeneration is not needed
             if ($this->shouldSkipRegeneration($postId, $post)) {
-                error_log("Fanculo Debug: Skipping - regeneration not needed");
+                error_log("FanCoolo Debug: Skipping - regeneration not needed");
                 return;
             }
 
             // Smart save: just regenerate
-            error_log("Fanculo Debug: Generating files for post ID: $postId");
+            error_log("FanCoolo Debug: Generating files for post ID: $postId");
             $this->generateFilesForSinglePost($postId, $post);
         }
 
@@ -71,7 +71,7 @@ class GenerationCoordinator
                     $this->globalRegenerator->regenerateGlobalDependencies();
                 }
             } catch (\Exception $e) {
-                error_log("Fanculo Error: Failed to regenerate dependent blocks - " . $e->getMessage());
+                error_log("FanCoolo Error: Failed to regenerate dependent blocks - " . $e->getMessage());
                 // Continue execution - don't block the save operation
             }
         }

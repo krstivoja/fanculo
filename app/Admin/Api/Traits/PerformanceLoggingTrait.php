@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\Admin\Api\Traits;
+namespace FanCoolo\Admin\Api\Traits;
 
 /**
  * Performance Logging Trait
@@ -300,7 +300,7 @@ trait PerformanceLoggingTrait
             $metrics['operation'],
             $metrics['duration_ms']
         );
-        error_log("Fanculo Performance Warning: {$message}");
+        error_log("FanCoolo Performance Warning: {$message}");
     }
 
     /**
@@ -316,7 +316,7 @@ trait PerformanceLoggingTrait
             $metrics['item_count'],
             $metrics['items_per_second']
         );
-        error_log("Fanculo Performance Warning: {$message}");
+        error_log("FanCoolo Performance Warning: {$message}");
     }
 
     /**
@@ -331,7 +331,7 @@ trait PerformanceLoggingTrait
             $metrics['operation'],
             $metrics['peak_memory_mb']
         );
-        error_log("Fanculo Performance Warning: {$message}");
+        error_log("FanCoolo Performance Warning: {$message}");
     }
 
     /**
@@ -348,7 +348,7 @@ trait PerformanceLoggingTrait
             $metrics['duration_ms'],
             $metrics['operation_context']
         );
-        error_log("Fanculo Performance Warning: {$message}");
+        error_log("FanCoolo Performance Warning: {$message}");
     }
 
     // Performance threshold getters (can be overridden in implementing classes)

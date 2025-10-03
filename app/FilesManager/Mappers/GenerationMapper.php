@@ -1,17 +1,17 @@
 <?php
 
-namespace Fanculo\FilesManager\Mappers;
+namespace FanCoolo\FilesManager\Mappers;
 
-use Fanculo\FilesManager\Interfaces\FileGeneratorInterface;
-use Fanculo\FilesManager\Files\Render;
-use Fanculo\FilesManager\Files\ViewJS;
-use Fanculo\FilesManager\Files\Style;
-use Fanculo\FilesManager\Files\EditorStyle;
-use Fanculo\FilesManager\Files\BlockJson;
-use Fanculo\FilesManager\Files\Index;
-use Fanculo\FilesManager\Files\Symbol;
-use Fanculo\FilesManager\Files\ScssPartial;
-use Fanculo\Content\FunculoTypeTaxonomy;
+use FanCoolo\FilesManager\Interfaces\FileGeneratorInterface;
+use FanCoolo\FilesManager\Files\Render;
+use FanCoolo\FilesManager\Files\ViewJS;
+use FanCoolo\FilesManager\Files\Style;
+use FanCoolo\FilesManager\Files\EditorStyle;
+use FanCoolo\FilesManager\Files\BlockJson;
+use FanCoolo\FilesManager\Files\Index;
+use FanCoolo\FilesManager\Files\Symbol;
+use FanCoolo\FilesManager\Files\ScssPartial;
+use FanCoolo\Content\FunculoTypeTaxonomy;
 
 class GenerationMapper
 {

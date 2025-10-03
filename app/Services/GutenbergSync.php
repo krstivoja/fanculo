@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\Services;
+namespace FanCoolo\Services;
 
 use function add_action;
 

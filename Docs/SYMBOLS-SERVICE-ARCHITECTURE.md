@@ -7,6 +7,7 @@ The React-like symbol system now works **exactly like `<InnerBlocks />`** - clea
 ## 🏗️ **Architecture Overview**
 
 ### **Clean render.php Files**
+
 ```php
 <div <?php echo get_block_wrapper_attributes(); ?>>
     <h1>BBBBaaB</h1>
@@ -17,12 +18,15 @@ The React-like symbol system now works **exactly like `<InnerBlocks />`** - clea
 ```
 
 ### **Service-Based Processing**
+
 1. **SymbolProcessor Service** (`app/FilesManager/Services/SymbolProcessor.php`)
+
    - Handles React-like symbol conversion at runtime
    - Preserves WordPress native components
    - Works seamlessly with InnerBlocksProcessor
 
 2. **BlockLoader Integration** (`app/FilesManager/Services/BlockLoader.php`)
+
    - Uses `SymbolProcessor::createRenderCallback()` for all blocks
    - Processes both InnerBlocks and Symbols automatically
    - No code changes needed in render.php files
@@ -45,6 +49,7 @@ The React-like symbol system now works **exactly like `<InnerBlocks />`** - clea
 ## 🎯 **Symbol Processing Logic**
 
 ### **WordPress Component Preservation**
+
 ```php
 // These stay unchanged:
 <InnerBlocks />      → <InnerBlocks />
@@ -53,6 +58,7 @@ The React-like symbol system now works **exactly like `<InnerBlocks />`** - clea
 ```
 
 ### **Custom Symbol Processing**
+
 ```php
 // These get processed:
 <Button />                    → include 'symbols/button.php'
@@ -63,8 +69,9 @@ The React-like symbol system now works **exactly like `<InnerBlocks />`** - clea
 ## 📁 **File Structure**
 
 ### **Generated Files (Clean!)**
+
 ```
-fanculo-blocks/
+fancoolo-blocks/
 ├── bbb/
 │   └── render.php           ← Clean React-like syntax
 ├── symbols/
@@ -73,6 +80,7 @@ fanculo-blocks/
 ```
 
 ### **Service Files**
+
 ```
 app/FilesManager/Services/
 ├── SymbolProcessor.php      ← New symbol service
@@ -92,11 +100,13 @@ app/FilesManager/Services/
 ## 🚀 **Usage Examples**
 
 ### **Before (Manual Includes)**
+
 ```php
 <?php include '../symbols/button.php'; ?>  // ❌ Broken paths
 ```
 
 ### **After (Service-Based)**
+
 ```php
 <Button />                                 // ✅ Works perfectly!
 <Button type="primary" text="Click me" /> // ✅ With attributes!

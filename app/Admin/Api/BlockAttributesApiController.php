@@ -1,9 +1,9 @@
 <?php
 
-namespace Fanculo\Admin\Api;
+namespace FanCoolo\Admin\Api;
 
-use Fanculo\Database\BlockAttributesRepository;
-use Fanculo\Admin\Api\Services\ApiResponseFormatter;
+use FanCoolo\Database\BlockAttributesRepository;
+use FanCoolo\Admin\Api\Services\ApiResponseFormatter;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
@@ -26,7 +26,7 @@ class BlockAttributesApiController
     public function registerRoutes(): void
     {
         // Use simpler route pattern that works
-        register_rest_route('fanculo/v1', '/block-attributes/(?P<post_id>\d+)', [
+        register_rest_route('fancoolo/v1', '/block-attributes/(?P<post_id>\d+)', [
             [
                 'methods' => 'GET',
                 'callback' => [$this, 'getAttributes'],
@@ -66,7 +66,7 @@ class BlockAttributesApiController
         ]);
 
         // Keep the other route for compatibility
-        register_rest_route('fanculo/v1', '/blocks/(?P<post_id>\d+)/attributes', [
+        register_rest_route('fancoolo/v1', '/blocks/(?P<post_id>\d+)/attributes', [
             [
                 'methods' => 'GET',
                 'callback' => [$this, 'getAttributes'],
@@ -106,7 +106,7 @@ class BlockAttributesApiController
         ]);
 
         // Single attribute operations
-        register_rest_route('fanculo/v1', '/blocks/(?P<post_id>\d+)/attributes/(?P<attr_id>\d+)', [
+        register_rest_route('fancoolo/v1', '/blocks/(?P<post_id>\d+)/attributes/(?P<attr_id>\d+)', [
             [
                 'methods' => 'PUT',
                 'callback' => [$this, 'updateAttribute'],
@@ -144,7 +144,7 @@ class BlockAttributesApiController
         ]);
 
         // Bulk operations
-        register_rest_route('fanculo/v1', '/blocks/attributes/bulk', [
+        register_rest_route('fancoolo/v1', '/blocks/attributes/bulk', [
             [
                 'methods' => 'POST',
                 'callback' => [$this, 'getAttributesBulk'],
@@ -153,7 +153,7 @@ class BlockAttributesApiController
         ]);
 
         // Migration endpoint
-        register_rest_route('fanculo/v1', '/blocks/attributes/migrate', [
+        register_rest_route('fancoolo/v1', '/blocks/attributes/migrate', [
             [
                 'methods' => 'POST',
                 'callback' => [$this, 'migrateAttributes'],

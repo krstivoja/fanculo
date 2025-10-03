@@ -1,5 +1,5 @@
 <?php
-namespace Fanculo\FilesManager\Files\Fields;
+namespace FanCoolo\FilesManager\Files\Fields;
 
 class Range {
     public static function generate($attr) {

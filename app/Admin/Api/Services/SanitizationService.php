@@ -1,12 +1,12 @@
 <?php
 
-namespace Fanculo\Admin\Api\Services;
+namespace FanCoolo\Admin\Api\Services;
 
 /**
  * Centralized Sanitization Service
  *
  * Provides standardized sanitization and validation methods for all data types
- * used throughout the Fanculo plugin. Ensures consistent security practices
+ * used throughout the FanCoolo plugin. Ensures consistent security practices
  * and reduces code duplication across API controllers and data layers.
  */
 class SanitizationService

@@ -1,9 +1,9 @@
 <?php
 
-namespace Fanculo\Admin\Api\Services;
+namespace FanCoolo\Admin\Api\Services;
 
 /**
- * Meta Keys Constants for Fanculo Plugin
+ * Meta Keys Constants for FanCoolo Plugin
  *
  * Standardizes all meta key names with consistent '_funculo_' prefix.
  * This ensures data integrity and prevents access issues.

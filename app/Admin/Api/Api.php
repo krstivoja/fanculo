@@ -1,18 +1,18 @@
 <?php
 
-namespace Fanculo\Admin\Api;
+namespace FanCoolo\Admin\Api;
 
-use Fanculo\Admin\Api\Controllers\PostsApiController;
-use Fanculo\Admin\Api\Controllers\PostsBatchApiController;
-use Fanculo\Admin\Api\Controllers\PostsQueryApiController;
-use Fanculo\Admin\Api\Controllers\PostsOperationsApiController;
-use Fanculo\Admin\Api\TaxonomyApiController;
-use Fanculo\Admin\Api\BlockCategoriesApiController;
-use Fanculo\Admin\Api\FileGenerationApiController;
-use Fanculo\Admin\Api\ScssCompilerApiController;
-use Fanculo\Admin\Api\RegisteredBlocksApiController;
-use Fanculo\Admin\Api\BlockAttributesApiController;
-use Fanculo\Content\FunculoTypeTaxonomy;
+use FanCoolo\Admin\Api\Controllers\PostsApiController;
+use FanCoolo\Admin\Api\Controllers\PostsBatchApiController;
+use FanCoolo\Admin\Api\Controllers\PostsQueryApiController;
+use FanCoolo\Admin\Api\Controllers\PostsOperationsApiController;
+use FanCoolo\Admin\Api\TaxonomyApiController;
+use FanCoolo\Admin\Api\BlockCategoriesApiController;
+use FanCoolo\Admin\Api\FileGenerationApiController;
+use FanCoolo\Admin\Api\ScssCompilerApiController;
+use FanCoolo\Admin\Api\RegisteredBlocksApiController;
+use FanCoolo\Admin\Api\BlockAttributesApiController;
+use FanCoolo\Content\FunculoTypeTaxonomy;
 
 class Api
 {

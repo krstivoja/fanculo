@@ -1,6 +1,6 @@
 /**
  * ===========================================
- * ATTRIBUTE CONSTANTS FOR FANCULO
+ * ATTRIBUTE CONSTANTS FOR FANCOOLO
  * ===========================================
  */
 

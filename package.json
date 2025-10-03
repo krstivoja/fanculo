@@ -1,5 +1,5 @@
 {
-  "name": "fanculo",
+  "name": "fancoolo",
   "version": "1.0.0",
   "description": "A WordPress plugin with React frontend built using esbuild.",
   "main": "index.js",
@@ -7,7 +7,7 @@
     "build": "node build.js --production",
     "dev": "node build.js --watch",
     "build:scss": "node build-scss.js",
-    "build:zip": "zip -r fanculo.zip . -x@.distignore -x '*.zip'",
+    "build:zip": "zip -r fancoolo.zip . -x@.distignore -x '*.zip'",
     "update:sass": "npm update sass && npm run build",
     "version-check": "npm list sass immutable"
   },

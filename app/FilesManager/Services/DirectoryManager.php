@@ -1,8 +1,8 @@
 <?php
 
-namespace Fanculo\FilesManager\Services;
+namespace FanCoolo\FilesManager\Services;
 
-use Fanculo\FilesManager\Files\IndexAssets;
+use FanCoolo\FilesManager\Files\IndexAssets;
 
 class DirectoryManager
 {
@@ -10,7 +10,7 @@ class DirectoryManager
 
     public function __construct()
     {
-        $this->baseDir = WP_CONTENT_DIR . '/plugins/fanculo-blocks';
+        $this->baseDir = WP_CONTENT_DIR . '/plugins/fancoolo-blocks';
     }
 
     public function ensureBaseDirectoryExists(): bool

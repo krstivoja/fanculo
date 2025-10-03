@@ -1,19 +1,19 @@
 <?php
 
-namespace Fanculo\Admin\Api;
+namespace FanCoolo\Admin\Api;
 
-use Fanculo\Content\FunculoPostType;
-use Fanculo\Content\FunculoTypeTaxonomy;
-use Fanculo\FilesManager\FilesManagerService;
-use Fanculo\FilesManager\Services\DirectoryManager;
-use Fanculo\Admin\Api\Services\MetaKeysConstants;
-use Fanculo\Admin\Api\Services\BulkQueryService;
-use Fanculo\Admin\Api\Services\ApiResponseFormatter;
-use Fanculo\Admin\Api\Services\UnifiedApiService;
-use Fanculo\Admin\Api\ScssCompilerApiController;
-use Fanculo\Admin\Api\BlockCategoriesApiController;
-use Fanculo\Database\BlockSettingsRepository;
-use Fanculo\Database\ScssPartialsSettingsRepository;
+use FanCoolo\Content\FunculoPostType;
+use FanCoolo\Content\FunculoTypeTaxonomy;
+use FanCoolo\FilesManager\FilesManagerService;
+use FanCoolo\FilesManager\Services\DirectoryManager;
+use FanCoolo\Admin\Api\Services\MetaKeysConstants;
+use FanCoolo\Admin\Api\Services\BulkQueryService;
+use FanCoolo\Admin\Api\Services\ApiResponseFormatter;
+use FanCoolo\Admin\Api\Services\UnifiedApiService;
+use FanCoolo\Admin\Api\ScssCompilerApiController;
+use FanCoolo\Admin\Api\BlockCategoriesApiController;
+use FanCoolo\Database\BlockSettingsRepository;
+use FanCoolo\Database\ScssPartialsSettingsRepository;
 
 class PostsApiController
 {
@@ -502,7 +502,7 @@ class PostsApiController
 
             // Set default SCSS content for blocks
             $blockSlug = sanitize_title($title);
-            $defaultScssContent = '.wp-block-fanculo-' . $blockSlug . ' {
+            $defaultScssContent = '.wp-block-fancoolo-' . $blockSlug . ' {
 
 }';
             update_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, $defaultScssContent);
@@ -731,7 +731,7 @@ class PostsApiController
                 // Also save to database table
                 $attributesData = json_decode($attributesJson, true);
                 if (json_last_error() === JSON_ERROR_NONE && is_array($attributesData)) {
-                    \Fanculo\Database\BlockAttributesRepository::save($postId, $attributesData);
+                    \FanCoolo\Database\BlockAttributesRepository::save($postId, $attributesData);
                 }
             }
             // Save block settings to database table
@@ -856,7 +856,7 @@ class PostsApiController
         foreach ($terms as $term) {
             switch ($term->slug) {
                 case FunculoTypeTaxonomy::getTermBlocks():
-                    // Delete block folder in fanculo-blocks directory
+                    // Delete block folder in fancoolo-blocks directory
                     $directoryManager->deleteBlockDirectory($post->post_name);
                     break;
 

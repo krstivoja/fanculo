@@ -1,4 +1,4 @@
-=== Fanculo ===
+=== FanCoolo ===
 Contributors: markokrstic
 Tags: gutenberg, blocks, builder, custom-blocks, react
 Requires at least: 5.0
@@ -12,7 +12,7 @@ Build Gutenberg blocks without screaming at the screen. A powerful block builder
 
 == Description ==
 
-Fanculo is a comprehensive WordPress plugin that allows you to build custom Gutenberg blocks with ease. It features a React-based admin interface and a sophisticated file generation system that automatically creates all necessary block files.
+FanCoolo is a comprehensive WordPress plugin that allows you to build custom Gutenberg blocks with ease. It features a React-based admin interface and a sophisticated file generation system that automatically creates all necessary block files.
 
 **Key Features:**
 
@@ -41,15 +41,15 @@ Fanculo is a comprehensive WordPress plugin that allows you to build custom Gute
 
 == Installation ==
 
-1. Upload the plugin files to the `/wp-content/plugins/fanculo` directory, or install the plugin through the WordPress plugins screen directly.
+1. Upload the plugin files to the `/wp-content/plugins/fancoolo` directory, or install the plugin through the WordPress plugins screen directly.
 2. Activate the plugin through the 'Plugins' screen in WordPress.
-3. Navigate to 'Fanculo' in your WordPress admin menu to start building blocks.
+3. Navigate to 'FanCoolo' in your WordPress admin menu to start building blocks.
 
 == Frequently Asked Questions ==
 
-= What is Fanculo? =
+= What is FanCoolo? =
 
-Fanculo is a Gutenberg block builder that helps you create custom blocks without dealing with complex setup and configuration.
+FanCoolo is a Gutenberg block builder that helps you create custom blocks without dealing with complex setup and configuration.
 
 = Do I need coding knowledge? =
 
@@ -61,11 +61,11 @@ Yes! You can create symbols (PHP components) and SCSS partials that can be reuse
 
 = Does it work with any theme? =
 
-Yes, Fanculo works with any WordPress theme that supports Gutenberg blocks.
+Yes, FanCoolo works with any WordPress theme that supports Gutenberg blocks.
 
 = Is it compatible with WordPress multisite? =
 
-Yes, Fanculo is fully compatible with WordPress multisite installations.
+Yes, FanCoolo is fully compatible with WordPress multisite installations.
 
 == Screenshots ==
 
@@ -89,7 +89,7 @@ Yes, Fanculo is fully compatible with WordPress multisite installations.
 == Upgrade Notice ==
 
 = 0.0.1 =
-Initial release of Fanculo block builder plugin.
+Initial release of FanCoolo block builder plugin.
 
 == Developer Information ==
 

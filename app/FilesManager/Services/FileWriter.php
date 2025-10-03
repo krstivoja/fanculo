@@ -1,8 +1,8 @@
 <?php
 
-namespace Fanculo\FilesManager\Services;
+namespace FanCoolo\FilesManager\Services;
 
-use Fanculo\FilesManager\Interfaces\FileWriterInterface;
+use FanCoolo\FilesManager\Interfaces\FileWriterInterface;
 
 class FileWriter implements FileWriterInterface
 {
@@ -45,7 +45,7 @@ class FileWriter implements FileWriterInterface
     {
         // Basic validation to ensure the path is safe
         $realPath = realpath(dirname($filepath));
-        $basePath = realpath(WP_CONTENT_DIR . '/plugins/fanculo-blocks');
+        $basePath = realpath(WP_CONTENT_DIR . '/plugins/fancoolo-blocks');
 
         // Ensure the file is within our allowed directory
         return $realPath !== false && $basePath !== false && strpos($realPath, $basePath) === 0;

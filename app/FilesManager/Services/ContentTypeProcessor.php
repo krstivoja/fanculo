@@ -1,9 +1,9 @@
 <?php
 
-namespace Fanculo\FilesManager\Services;
+namespace FanCoolo\FilesManager\Services;
 
-use Fanculo\Content\FunculoTypeTaxonomy;
-use Fanculo\FilesManager\Mappers\GenerationMapper;
+use FanCoolo\Content\FunculoTypeTaxonomy;
+use FanCoolo\FilesManager\Mappers\GenerationMapper;
 use WP_Post;
 
 class ContentTypeProcessor
@@ -49,7 +49,7 @@ class ContentTypeProcessor
 
             // Trigger hot reload event if file changed
             if ($fileChanged) {
-                do_action('fanculo_file_generated', $postId, $generator->getGeneratedFileName($post), $filePath, $fileChanged);
+                do_action('fancoolo_file_generated', $postId, $generator->getGeneratedFileName($post), $filePath, $fileChanged);
             }
         }
     }

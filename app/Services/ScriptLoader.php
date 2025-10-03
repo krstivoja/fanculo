@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\Services;
+namespace FanCoolo\Services;
 
 use function admin_url;
 use function file_exists;
@@ -13,16 +13,16 @@ use function wp_localize_script;
 
 class ScriptLoader
 {
-    public const HOT_RELOAD_HANDLE = 'fanculo-hot-reload';
+    public const HOT_RELOAD_HANDLE = 'fancoolo-hot-reload';
     public const HOT_RELOAD_FILE = 'assets/js/hot-reload.js';
-    public const BLOCK_RENDERER_HANDLE = 'fanculo-block-renderer';
+    public const BLOCK_RENDERER_HANDLE = 'fancoolo-block-renderer';
     public const BLOCK_RENDERER_FILE = 'assets/js/block-renderer.js';
 
     private $pluginFile;
 
     public function __construct()
     {
-        $this->pluginFile = dirname(__DIR__, 2) . '/fanculo.php';
+        $this->pluginFile = dirname(__DIR__, 2) . '/fancoolo.php';
     }
 
     public function enqueueHotReload(): void
@@ -40,10 +40,10 @@ class ScriptLoader
             true
         );
 
-        wp_localize_script(self::HOT_RELOAD_HANDLE, 'fanculoHotReload', [
-            'nonce' => wp_create_nonce('fanculo_hot_reload'),
+        wp_localize_script(self::HOT_RELOAD_HANDLE, 'fancooloHotReload', [
+            'nonce' => wp_create_nonce('fancoolo_hot_reload'),
             'ajaxUrl' => admin_url('admin-ajax.php'),
-            'restUrl' => rest_url('fanculo/v1/'),
+            'restUrl' => rest_url('fancoolo/v1/'),
         ]);
     }
 

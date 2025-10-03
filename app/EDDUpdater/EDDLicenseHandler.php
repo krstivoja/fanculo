@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\EDDUpdater;
+namespace FanCoolo\EDDUpdater;
 
 class EDDLicenseHandler
 {
@@ -15,7 +15,7 @@ class EDDLicenseHandler
         $this->store_url = 'https://dplugins.com/';
         $this->item_id = 101042;
         $this->item_name = 'Fancoolo WP';
-        $this->license_page = 'fanculo-app';
+        $this->license_page = 'fancoolo-app';
 
         // Include EDD updater class
         $this->include_edd_updater();
@@ -60,10 +60,10 @@ class EDDLicenseHandler
         }
 
         // retrieve our license key from the DB
-        $license_key = trim(get_option('fanculo_license_key'));
+        $license_key = trim(get_option('fancoolo_license_key'));
 
         // Get plugin version from main plugin file
-        $plugin_file = FANCULO_PLUGIN_FILE;
+        $plugin_file = FANCOOLO_PLUGIN_FILE;
         $plugin_data = get_file_data($plugin_file, array('Version' => 'Version'));
         $version = $plugin_data['Version'] ?? '0.0.1';
 
@@ -89,12 +89,12 @@ class EDDLicenseHandler
     public function activate_license()
     {
         // listen for our activate button to be clicked
-        if (!isset($_POST['fanculo_license_activate'])) {
+        if (!isset($_POST['fancoolo_license_activate'])) {
             return;
         }
 
         // run a quick security check
-        if (!check_admin_referer('fanculo_nonce', 'fanculo_nonce')) {
+        if (!check_admin_referer('fancoolo_nonce', 'fancoolo_nonce')) {
             return;
         }
 
@@ -107,7 +107,7 @@ class EDDLicenseHandler
         }
 
         // Save the license key before attempting activation
-        update_option('fanculo_license_key', $license);
+        update_option('fancoolo_license_key', $license);
 
         // Make API call to activate license
         $response = $this->make_api_call('activate_license', $license);
@@ -126,12 +126,12 @@ class EDDLicenseHandler
         }
 
         // Success - update the license status
-        update_option('fanculo_license_status', $license_data->license);
+        update_option('fancoolo_license_status', $license_data->license);
         set_transient(
-            'fanculo_license_notice',
+            'fancoolo_license_notice',
             [
                 'type'    => 'success',
-                'message' => '<strong>' . esc_html__('Success!', 'fanculo') . '</strong> ' . esc_html__('License activated successfully.', 'fanculo'),
+                'message' => '<strong>' . esc_html__('Success!', 'fancoolo') . '</strong> ' . esc_html__('License activated successfully.', 'fancoolo'),
             ],
             30
         );
@@ -146,21 +146,21 @@ class EDDLicenseHandler
     public function deactivate_license()
     {
         // listen for our deactivate button to be clicked
-        if (!isset($_POST['fanculo_license_deactivate'])) {
+        if (!isset($_POST['fancoolo_license_deactivate'])) {
             return;
         }
 
         // run a quick security check
-        if (!check_admin_referer('fanculo_nonce', 'fanculo_nonce')) {
+        if (!check_admin_referer('fancoolo_nonce', 'fancoolo_nonce')) {
             return;
         }
 
         // retrieve the license from the database
-        $license = trim(get_option('fanculo_license_key'));
+        $license = trim(get_option('fancoolo_license_key'));
 
         // Always clear local license data first (in case remote API fails)
-        delete_option('fanculo_license_status');
-        delete_option('fanculo_license_key'); // Also clear the license key
+        delete_option('fancoolo_license_status');
+        delete_option('fancoolo_license_key'); // Also clear the license key
 
         $success_message = __('License deactivated successfully.', 'gutenberg-studio');
         $warning_message = __('License deactivated locally. Remote deactivation failed - this may be normal if the license was already removed from the store.', 'gutenberg-studio');
@@ -194,7 +194,7 @@ class EDDLicenseHandler
      */
     public function register_option()
     {
-        register_setting('fanculo_license', 'fanculo_license_key', [$this, 'sanitize_license']);
+        register_setting('fancoolo_license', 'fancoolo_license_key', [$this, 'sanitize_license']);
     }
 
     /**
@@ -202,9 +202,9 @@ class EDDLicenseHandler
      */
     public function sanitize_license($new)
     {
-        $old = get_option('fanculo_license_key');
+        $old = get_option('fancoolo_license_key');
         if ($old && $old !== $new) {
-            delete_option('fanculo_license_status'); // new license has been entered, so must reactivate
+            delete_option('fancoolo_license_status'); // new license has been entered, so must reactivate
         }
 
         return sanitize_text_field($new);
@@ -217,13 +217,13 @@ class EDDLicenseHandler
     {
         $license = '';
         
-        if (isset($_POST['fanculo_license_key_actual']) && !empty($_POST['fanculo_license_key_actual'])) {
+        if (isset($_POST['fancoolo_license_key_actual']) && !empty($_POST['fancoolo_license_key_actual'])) {
             // Use the actual key from hidden field if it exists (for valid licenses being edited)
-            $submitted_key = sanitize_text_field($_POST['fanculo_license_key']);
-            $actual_key = sanitize_text_field($_POST['fanculo_license_key_actual']);
+            $submitted_key = sanitize_text_field($_POST['fancoolo_license_key']);
+            $actual_key = sanitize_text_field($_POST['fancoolo_license_key_actual']);
 
             // If the submitted key is different from the masked version, use the submitted key
-            $current_license = get_option('fanculo_license_key', '');
+            $current_license = get_option('fancoolo_license_key', '');
             $masked_license = '';
             if (!empty($current_license)) {
                 $masked_license = substr($current_license, 0, 6) . str_repeat('*', max(0, strlen($current_license) - 6));
@@ -238,12 +238,12 @@ class EDDLicenseHandler
             }
         } else {
             // Normal case - new license key
-            $license = !empty($_POST['fanculo_license_key']) ? sanitize_text_field($_POST['fanculo_license_key']) : '';
+            $license = !empty($_POST['fancoolo_license_key']) ? sanitize_text_field($_POST['fancoolo_license_key']) : '';
         }
 
         // If no license provided, try to get from database as fallback
         if (!$license) {
-            $license = trim(get_option('fanculo_license_key'));
+            $license = trim(get_option('fancoolo_license_key'));
         }
 
         return $license;
@@ -334,7 +334,7 @@ class EDDLicenseHandler
      */
     public static function is_license_valid()
     {
-        return get_option('fanculo_license_status', '') === 'valid';
+        return get_option('fancoolo_license_status', '') === 'valid';
     }
 
     /**
@@ -342,7 +342,7 @@ class EDDLicenseHandler
      */
     public static function get_license_status()
     {
-        return get_option('fanculo_license_status', '');
+        return get_option('fancoolo_license_status', '');
     }
 
     /**
@@ -350,6 +350,6 @@ class EDDLicenseHandler
      */
     public static function get_license_key()
     {
-        return get_option('fanculo_license_key', '');
+        return get_option('fancoolo_license_key', '');
     }
 } 

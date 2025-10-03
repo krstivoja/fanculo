@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\Helpers;
+namespace FanCoolo\Helpers;
 
 /**
  * Case Transformer Utility

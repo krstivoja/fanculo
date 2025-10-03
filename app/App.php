@@ -1,20 +1,20 @@
 <?php
 
-namespace Fanculo;
+namespace FanCoolo;
 
-use Fanculo\Admin\SettingsPage;
-use Fanculo\Admin\Api\Api;
+use FanCoolo\Admin\SettingsPage;
+use FanCoolo\Admin\Api\Api;
 // Removed complex hot reload API controllers
-use Fanculo\Content\FunculoPostType;
-use Fanculo\Content\FunculoTypeTaxonomy;
-use Fanculo\Content\MetaBoxes\MetaBoxHelper;
-use Fanculo\Services\BlockRegistrationService;
-use Fanculo\Services\InnerBlocksService;
+use FanCoolo\Content\FunculoPostType;
+use FanCoolo\Content\FunculoTypeTaxonomy;
+use FanCoolo\Content\MetaBoxes\MetaBoxHelper;
+use FanCoolo\Services\BlockRegistrationService;
+use FanCoolo\Services\InnerBlocksService;
 // Removed HotReloadService - using simple browser communication
-use Fanculo\Services\GutenbergSync;
-use Fanculo\Helpers\PluginHelper;
-use Fanculo\Database\DatabaseInstaller;
-use Fanculo\EDDUpdater\EDDLicenseHandler;
+use FanCoolo\Services\GutenbergSync;
+use FanCoolo\Helpers\PluginHelper;
+use FanCoolo\Database\DatabaseInstaller;
+use FanCoolo\EDDUpdater\EDDLicenseHandler;
 
 /**
  * Simple license checking without EDD dependency
@@ -23,18 +23,18 @@ class SimpleLicenseChecker
 {
     public static function is_license_valid(): bool
     {
-        $status = get_option('fanculo_license_status', '');
+        $status = get_option('fancoolo_license_status', '');
         return $status === 'valid';
     }
     
     public static function get_license_key(): string
     {
-        return get_option('fanculo_license_key', '');
+        return get_option('fancoolo_license_key', '');
     }
     
     public static function get_license_status(): string
     {
-        return get_option('fanculo_license_status', '');
+        return get_option('fancoolo_license_status', '');
     }
 }
 
@@ -157,16 +157,16 @@ class App
         try {
             // For now, just set a flag that we tried to initialize
             // Don't actually instantiate the EDDLicenseHandler to avoid white screen
-            error_log('Fanculo: EDD Updater initialization attempted (disabled for stability)');
+            error_log('FanCoolo: EDD Updater initialization attempted (disabled for stability)');
             
             // TODO: Fix EDDLicenseHandler initialization issues
-            // if (class_exists('Fanculo\EDDUpdater\EDDLicenseHandler')) {
+            // if (class_exists('FanCoolo\EDDUpdater\EDDLicenseHandler')) {
             //     $this->edd_license_handler = new EDDLicenseHandler();
             // }
         } catch (\Throwable $e) {
             // Log error but don't break the plugin
-            error_log('Fanculo EDD Updater initialization failed: ' . $e->getMessage());
-            error_log('Fanculo EDD Updater error trace: ' . $e->getTraceAsString());
+            error_log('FanCoolo EDD Updater initialization failed: ' . $e->getMessage());
+            error_log('FanCoolo EDD Updater error trace: ' . $e->getTraceAsString());
         }
     }
 
@@ -182,7 +182,7 @@ class App
             }
         } catch (\Throwable $e) {
             // Log error but don't break the plugin
-            error_log('Fanculo services initialization failed: ' . $e->getMessage());
+            error_log('FanCoolo services initialization failed: ' . $e->getMessage());
             // Initialize services anyway to prevent complete failure
             $this->initializeServices();
         }
@@ -194,7 +194,7 @@ class App
     public function check_license_access(): void
     {
         try {
-            if (!isset($_GET['page']) || $_GET['page'] !== 'fanculo-app') {
+            if (!isset($_GET['page']) || $_GET['page'] !== 'fancoolo-app') {
                 return;
             }
 
@@ -203,7 +203,7 @@ class App
             }
         } catch (\Throwable $e) {
             // Log error but don't break the plugin
-            error_log('Fanculo license access check failed: ' . $e->getMessage());
+            error_log('FanCoolo license access check failed: ' . $e->getMessage());
         }
     }
 

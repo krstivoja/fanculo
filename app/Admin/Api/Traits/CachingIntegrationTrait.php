@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\Admin\Api\Traits;
+namespace FanCoolo\Admin\Api\Traits;
 
 /**
  * Caching Integration Trait
@@ -14,7 +14,7 @@ trait CachingIntegrationTrait
     /** @var array Cache configuration */
     private array $cacheConfig = [
         'default_ttl' => 300, // 5 minutes
-        'key_prefix' => 'fanculo_api_',
+        'key_prefix' => 'fancoolo_api_',
         'use_object_cache' => true,
         'use_transients' => true,
     ];
@@ -256,7 +256,7 @@ trait CachingIntegrationTrait
     {
         // Try object cache first if available
         if ($this->cacheConfig['use_object_cache'] && function_exists('wp_cache_get')) {
-            $group = $options['cache_group'] ?? 'fanculo_api';
+            $group = $options['cache_group'] ?? 'fancoolo_api';
             $data = wp_cache_get($key, $group);
             if ($data !== false) {
                 return $data;
@@ -288,7 +288,7 @@ trait CachingIntegrationTrait
 
         // Try object cache first if available
         if ($this->cacheConfig['use_object_cache'] && function_exists('wp_cache_set')) {
-            $group = $options['cache_group'] ?? 'fanculo_api';
+            $group = $options['cache_group'] ?? 'fancoolo_api';
             $success = wp_cache_set($key, $data, $group, $ttl);
         }
 
@@ -314,7 +314,7 @@ trait CachingIntegrationTrait
 
         // Delete from object cache
         if ($this->cacheConfig['use_object_cache'] && function_exists('wp_cache_delete')) {
-            $success = wp_cache_delete($key, 'fanculo_api');
+            $success = wp_cache_delete($key, 'fancoolo_api');
         }
 
         // Delete from transients
@@ -441,7 +441,7 @@ trait CachingIntegrationTrait
     private function getCacheVersion(): string
     {
         // You might get this from a database setting or configuration
-        return get_option('fanculo_cache_version', '1.0');
+        return get_option('fancoolo_cache_version', '1.0');
     }
 
     /**
@@ -462,11 +462,11 @@ trait CachingIntegrationTrait
     protected function clearAllCache(): bool
     {
         // Increment cache version to invalidate all cached data
-        $current_version = get_option('fanculo_cache_version', '1.0');
+        $current_version = get_option('fancoolo_cache_version', '1.0');
         $new_version = version_compare($current_version, '99.0', '<')
             ? $current_version + 0.1
             : '1.0';
 
-        return update_option('fanculo_cache_version', (string)$new_version);
+        return update_option('fancoolo_cache_version', (string)$new_version);
     }
 }

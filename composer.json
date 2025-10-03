@@ -1,15 +1,15 @@
 {
-    "name": "marko/fanculo",
-    "autoload": {
-        "psr-4": {
-            "Fanculo\\": "app/"
-        }
-    },
-    "authors": [
-        {
-            "name": "Marko Krstic",
-            "email": "mailme@markokrstic.com"
-        }
-    ],
-    "require": {}
+  "name": "marko/fancoolo",
+  "autoload": {
+    "psr-4": {
+      "FanCoolo\\": "app/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Marko Krstic",
+      "email": "mailme@markokrstic.com"
+    }
+  ],
+  "require": {}
 }

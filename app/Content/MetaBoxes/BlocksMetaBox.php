@@ -1,8 +1,8 @@
 <?php
 
-namespace Fanculo\Content\MetaBoxes;
+namespace FanCoolo\Content\MetaBoxes;
 
-use Fanculo\Database\BlockAttributesRepository;
+use FanCoolo\Database\BlockAttributesRepository;
 
 class BlocksMetaBox extends AbstractMetaBox
 {

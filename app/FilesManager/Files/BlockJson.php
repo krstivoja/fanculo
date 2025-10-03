@@ -1,12 +1,12 @@
 <?php
 
-namespace Fanculo\FilesManager\Files;
+namespace FanCoolo\FilesManager\Files;
 
-use Fanculo\FilesManager\Interfaces\FileGeneratorInterface;
-use Fanculo\Content\FunculoTypeTaxonomy;
-use Fanculo\Admin\Api\Services\MetaKeysConstants;
-use Fanculo\FilesManager\Services\AttributeMapper;
-use Fanculo\Database\BlockSettingsRepository;
+use FanCoolo\FilesManager\Interfaces\FileGeneratorInterface;
+use FanCoolo\Content\FunculoTypeTaxonomy;
+use FanCoolo\Admin\Api\Services\MetaKeysConstants;
+use FanCoolo\FilesManager\Services\AttributeMapper;
+use FanCoolo\Database\BlockSettingsRepository;
 use WP_Post;
 
 class BlockJson implements FileGeneratorInterface
@@ -102,7 +102,7 @@ class BlockJson implements FileGeneratorInterface
         $blockJson = [
             '$schema' => 'https://schemas.wp.org/trunk/block.json',
             'apiVersion' => 3,
-            'name' => 'fanculo/' . $post->post_name,
+            'name' => 'fancoolo/' . $post->post_name,
             'version' => '1.0.0',
             'title' => $post->post_title,
         ];
@@ -147,7 +147,7 @@ class BlockJson implements FileGeneratorInterface
             }
         }
 
-        $blockJson['textdomain'] = 'fanculo';
+        $blockJson['textdomain'] = 'fancoolo';
 
         // Conditionally add asset files only if they exist
         $this->addConditionalAssets($blockJson, $outputPath, $post->ID);

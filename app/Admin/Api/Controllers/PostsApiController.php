@@ -1,15 +1,15 @@
 <?php
 
-namespace Fanculo\Admin\Api\Controllers;
+namespace FanCoolo\Admin\Api\Controllers;
 
-use Fanculo\Content\FunculoPostType;
-use Fanculo\Content\FunculoTypeTaxonomy;
-use Fanculo\Admin\Api\Services\MetaKeysConstants;
-use Fanculo\Database\BlockSettingsRepository;
-use Fanculo\Database\ScssPartialsSettingsRepository;
-use Fanculo\FilesManager\FilesManagerService;
-use Fanculo\FilesManager\Services\DirectoryManager;
-use Fanculo\Admin\Api\Services\BulkQueryService;
+use FanCoolo\Content\FunculoPostType;
+use FanCoolo\Content\FunculoTypeTaxonomy;
+use FanCoolo\Admin\Api\Services\MetaKeysConstants;
+use FanCoolo\Database\BlockSettingsRepository;
+use FanCoolo\Database\ScssPartialsSettingsRepository;
+use FanCoolo\FilesManager\FilesManagerService;
+use FanCoolo\FilesManager\Services\DirectoryManager;
+use FanCoolo\Admin\Api\Services\BulkQueryService;
 
 /**
  * Posts API Controller - Basic CRUD Operations
@@ -280,9 +280,9 @@ class PostsApiController extends BaseApiController
                 $formattedMeta['blocks']['settings'] = json_encode($blockSettings);
                 $formattedMeta['blocks']['inner_blocks_settings'] = json_encode($innerBlocksSettings);
                 $selectedPartials = $dbSettings['selected_partials'] ?? [];
-                error_log("Fanculo Debug: PostsApiController getPost - selected_partials type: " . gettype($selectedPartials) . ", is_array: " . (is_array($selectedPartials) ? 'YES' : 'NO') . ", count: " . (is_array($selectedPartials) ? count($selectedPartials) : 'N/A') . ", content: " . json_encode($selectedPartials));
+                error_log("FanCoolo Debug: PostsApiController getPost - selected_partials type: " . gettype($selectedPartials) . ", is_array: " . (is_array($selectedPartials) ? 'YES' : 'NO') . ", count: " . (is_array($selectedPartials) ? count($selectedPartials) : 'N/A') . ", content: " . json_encode($selectedPartials));
                 $formattedMeta['blocks']['selected_partials'] = json_encode($selectedPartials);
-                error_log("Fanculo Debug: PostsApiController getPost - final JSON to send: " . $formattedMeta['blocks']['selected_partials']);
+                error_log("FanCoolo Debug: PostsApiController getPost - final JSON to send: " . $formattedMeta['blocks']['selected_partials']);
                 $formattedMeta['blocks']['editor_selected_partials'] = json_encode($dbSettings['editor_selected_partials'] ?? []);
             }
         }
@@ -366,7 +366,7 @@ class PostsApiController extends BaseApiController
 
             // Set default SCSS content for blocks
             $blockSlug = sanitize_title($title);
-            $defaultScssContent = '.wp-block-fanculo-' . $blockSlug . ' {
+            $defaultScssContent = '.wp-block-fancoolo-' . $blockSlug . ' {
 
 }';
             update_post_meta($postId, MetaKeysConstants::BLOCK_SCSS, $defaultScssContent);
@@ -468,13 +468,13 @@ class PostsApiController extends BaseApiController
 
             // Trigger file generation if meta was updated
             if (!empty($meta)) {
-                error_log("Fanculo Debug: Starting file generation for post ID: $postId");
-                error_log("Fanculo Debug: Meta data: " . print_r($meta, true));
+                error_log("FanCoolo Debug: Starting file generation for post ID: $postId");
+                error_log("FanCoolo Debug: Meta data: " . print_r($meta, true));
 
                 $filesManagerService = new FilesManagerService();
                 $result = $filesManagerService->generateFilesOnPostSave($postId, $post, true);
 
-                error_log("Fanculo Debug: File generation result: " . print_r($result, true));
+                error_log("FanCoolo Debug: File generation result: " . print_r($result, true));
             }
 
             // Get updated post data using bulk operations for consistency
@@ -612,7 +612,7 @@ class PostsApiController extends BaseApiController
 
             // Clean up repository data - with error handling
             try {
-                if (class_exists('Fanculo\Database\BlockSettingsRepository')) {
+                if (class_exists('FanCoolo\Database\BlockSettingsRepository')) {
                     BlockSettingsRepository::delete($postId);
                 }
             } catch (\Exception $e) {
@@ -620,7 +620,7 @@ class PostsApiController extends BaseApiController
             }
 
             try {
-                if (class_exists('Fanculo\Database\ScssPartialsSettingsRepository')) {
+                if (class_exists('FanCoolo\Database\ScssPartialsSettingsRepository')) {
                     ScssPartialsSettingsRepository::delete($postId);
                 }
             } catch (\Exception $e) {

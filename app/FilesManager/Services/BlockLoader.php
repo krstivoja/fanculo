@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\FilesManager\Services;
+namespace FanCoolo\FilesManager\Services;
 
 use function glob;
 use function file_exists;
@@ -14,18 +14,18 @@ use function ob_start;
 use function ob_get_clean;
 use function preg_replace;
 
-use Fanculo\FilesManager\Services\InnerBlocksProcessor;
-use Fanculo\FilesManager\Services\SymbolProcessor;
+use FanCoolo\FilesManager\Services\InnerBlocksProcessor;
+use FanCoolo\FilesManager\Services\SymbolProcessor;
 
 class BlockLoader
 {
     public function loadBlocks(): void
     {
-        if (!defined('FANCULO_BLOCKS_DIR')) {
+        if (!defined('FANCOOLO_BLOCKS_DIR')) {
             return;
         }
 
-        $folders = glob(FANCULO_BLOCKS_DIR . '/*', GLOB_ONLYDIR);
+        $folders = glob(FANCOOLO_BLOCKS_DIR . '/*', GLOB_ONLYDIR);
 
         if (empty($folders)) {
             return;

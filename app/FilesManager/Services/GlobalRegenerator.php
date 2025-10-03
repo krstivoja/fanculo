@@ -1,13 +1,13 @@
 <?php
 
-namespace Fanculo\FilesManager\Services;
+namespace FanCoolo\FilesManager\Services;
 
-use Fanculo\Content\FunculoPostType;
-use Fanculo\Content\FunculoTypeTaxonomy;
-use Fanculo\Admin\Api\Services\MetaKeysConstants;
-use Fanculo\Database\ScssPartialsSettingsRepository;
-use Fanculo\Database\BlockSettingsRepository;
-use Fanculo\Database\PartialsUsageRepository;
+use FanCoolo\Content\FunculoPostType;
+use FanCoolo\Content\FunculoTypeTaxonomy;
+use FanCoolo\Admin\Api\Services\MetaKeysConstants;
+use FanCoolo\Database\ScssPartialsSettingsRepository;
+use FanCoolo\Database\BlockSettingsRepository;
+use FanCoolo\Database\PartialsUsageRepository;
 use WP_Post;
 
 class GlobalRegenerator
@@ -57,7 +57,7 @@ class GlobalRegenerator
         }
 
         error_log(sprintf(
-            'Fanculo: Regenerating %d blocks affected by partial #%d',
+            'FanCoolo: Regenerating %d blocks affected by partial #%d',
             count($block_ids),
             $partial_id
         ));
@@ -164,8 +164,8 @@ class GlobalRegenerator
      */
     public function getGlobalPartials(): array
     {
-        $cacheKey = 'fanculo_global_partials';
-        $partials = wp_cache_get($cacheKey, 'fanculo_global_data');
+        $cacheKey = 'fancoolo_global_partials';
+        $partials = wp_cache_get($cacheKey, 'fancoolo_global_data');
 
         if (false === $partials) {
             // Get global partials from database
@@ -186,7 +186,7 @@ class GlobalRegenerator
             }
 
             // Cache for 10 minutes
-            wp_cache_set($cacheKey, $partials, 'fanculo_global_data', 600);
+            wp_cache_set($cacheKey, $partials, 'fancoolo_global_data', 600);
         }
 
         return $partials;

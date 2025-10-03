@@ -1,9 +1,9 @@
 <?php
 
-namespace Fanculo\Admin\Api\Controllers;
+namespace FanCoolo\Admin\Api\Controllers;
 
-use Fanculo\Content\FunculoPostType;
-use Fanculo\Admin\Api\Services\MetaKeysConstants;
+use FanCoolo\Content\FunculoPostType;
+use FanCoolo\Admin\Api\Services\MetaKeysConstants;
 
 /**
  * Posts Batch API Controller - Batch Operations

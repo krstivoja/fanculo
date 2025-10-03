@@ -7,8 +7,13 @@ class ApiCache {
     this.cache = new Map();
     this.pendingRequests = new Map();
     this.defaultTTL = 5 * 60 * 1000; // 5 minutes
-    this.persistentKeys = new Set(['posts', 'scss-partials', 'block-categories', 'registered-blocks']);
-    this.storagePrefix = 'fanculo_cache_';
+    this.persistentKeys = new Set([
+      "posts",
+      "scss-partials",
+      "block-categories",
+      "registered-blocks",
+    ]);
+    this.storagePrefix = "fancoolo_cache_";
 
     // Load persistent cache from localStorage on initialization
     this.loadPersistentCache();
@@ -53,12 +58,12 @@ class ApiCache {
 
     // Execute new request
     const requestPromise = requestFn()
-      .then(data => {
+      .then((data) => {
         // Cache the result
         const cacheItem = {
           data,
           timestamp: Date.now(),
-          ttl
+          ttl,
         };
         this.cache.set(key, cacheItem);
 
@@ -70,7 +75,7 @@ class ApiCache {
 
         return data;
       })
-      .catch(error => {
+      .catch((error) => {
         // Remove from pending requests on error
         this.pendingRequests.delete(key);
         throw error;
@@ -90,13 +95,13 @@ class ApiCache {
     this.pendingRequests.delete(key);
 
     // Also remove from localStorage if persistent
-    const baseKey = key.split(':')[0];
+    const baseKey = key.split(":")[0];
     if (this.persistentKeys.has(baseKey)) {
       try {
         const storageKey = this.storagePrefix + baseKey;
         localStorage.removeItem(storageKey);
       } catch (error) {
-        console.warn('Failed to remove from localStorage:', error);
+        console.warn("Failed to remove from localStorage:", error);
       }
     }
   }
@@ -111,13 +116,13 @@ class ApiCache {
         this.cache.delete(key);
 
         // Also remove from localStorage if persistent
-        const baseKey = key.split(':')[0];
+        const baseKey = key.split(":")[0];
         if (this.persistentKeys.has(baseKey)) {
           try {
             const storageKey = this.storagePrefix + baseKey;
             localStorage.removeItem(storageKey);
           } catch (error) {
-            console.warn('Failed to remove from localStorage:', error);
+            console.warn("Failed to remove from localStorage:", error);
           }
         }
       }
@@ -143,7 +148,7 @@ class ApiCache {
    * Load persistent cache from localStorage
    */
   loadPersistentCache() {
-    if (typeof window === 'undefined' || !window.localStorage) return;
+    if (typeof window === "undefined" || !window.localStorage) return;
 
     try {
       for (const key of this.persistentKeys) {
@@ -163,7 +168,7 @@ class ApiCache {
         }
       }
     } catch (error) {
-      console.warn('Failed to load persistent cache:', error);
+      console.warn("Failed to load persistent cache:", error);
     }
   }
 
@@ -171,15 +176,15 @@ class ApiCache {
    * Save to persistent storage if key is persistent
    */
   saveToPersistentStorage(key, cacheItem) {
-    if (typeof window === 'undefined' || !window.localStorage) return;
+    if (typeof window === "undefined" || !window.localStorage) return;
 
-    const baseKey = key.split(':')[0];
+    const baseKey = key.split(":")[0];
     if (this.persistentKeys.has(baseKey)) {
       try {
         const storageKey = this.storagePrefix + baseKey;
         localStorage.setItem(storageKey, JSON.stringify(cacheItem));
       } catch (error) {
-        console.warn('Failed to save to persistent storage:', error);
+        console.warn("Failed to save to persistent storage:", error);
       }
     }
   }
@@ -188,12 +193,15 @@ class ApiCache {
    * Set up automatic cache cleanup
    */
   setupCleanupInterval() {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     // Clean expired cache entries every 10 minutes
-    setInterval(() => {
-      this.cleanExpiredEntries();
-    }, 10 * 60 * 1000);
+    setInterval(
+      () => {
+        this.cleanExpiredEntries();
+      },
+      10 * 60 * 1000
+    );
   }
 
   /**
@@ -205,12 +213,12 @@ class ApiCache {
         this.cache.delete(key);
 
         // Also remove from localStorage if persistent
-        const baseKey = key.split(':')[0];
+        const baseKey = key.split(":")[0];
         if (this.persistentKeys.has(baseKey)) {
           try {
             localStorage.removeItem(this.storagePrefix + baseKey);
           } catch (error) {
-            console.warn('Failed to remove expired persistent cache:', error);
+            console.warn("Failed to remove expired persistent cache:", error);
           }
         }
       }
@@ -223,7 +231,7 @@ class ApiCache {
   async warmCache(warmingFunctions) {
     const promises = Object.entries(warmingFunctions).map(([key, fn]) => {
       if (!this.cache.has(key)) {
-        return this.get(key, fn).catch(error => {
+        return this.get(key, fn).catch((error) => {
           console.warn(`Cache warming failed for ${key}:`, error);
         });
       }
@@ -236,15 +244,16 @@ class ApiCache {
    * Get cache statistics with persistent data info
    */
   getStats() {
-    const persistentCount = Array.from(this.cache.keys())
-      .filter(key => this.persistentKeys.has(key.split(':')[0])).length;
+    const persistentCount = Array.from(this.cache.keys()).filter((key) =>
+      this.persistentKeys.has(key.split(":")[0])
+    ).length;
 
     return {
       cacheSize: this.cache.size,
       pendingRequests: this.pendingRequests.size,
       persistentEntries: persistentCount,
       keys: Array.from(this.cache.keys()),
-      persistentKeys: Array.from(this.persistentKeys)
+      persistentKeys: Array.from(this.persistentKeys),
     };
   }
 }

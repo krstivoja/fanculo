@@ -1,8 +1,8 @@
 <?php
 
-namespace Fanculo\Database;
+namespace FanCoolo\Database;
 
-use Fanculo\Admin\Api\Services\MetaKeysConstants;
+use FanCoolo\Admin\Api\Services\MetaKeysConstants;
 
 /**
  * Repository for managing block attributes in the database
@@ -324,7 +324,7 @@ class BlockAttributesRepository extends AbstractBulkRepository
     {
         global $wpdb;
 
-        // Get all fanculo posts with block attributes
+        // Get all fancoolo posts with block attributes
         $posts = $wpdb->get_col(
             "SELECT DISTINCT p.ID
             FROM {$wpdb->posts} p

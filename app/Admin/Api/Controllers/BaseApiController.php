@@ -1,21 +1,21 @@
 <?php
 
-namespace Fanculo\Admin\Api\Controllers;
+namespace FanCoolo\Admin\Api\Controllers;
 
-use Fanculo\Admin\Api\Services\BulkQueryService;
-use Fanculo\Admin\Api\Services\ApiResponseFormatter;
-use Fanculo\Admin\Api\Services\UnifiedApiService;
-use Fanculo\Admin\Api\Services\StandardBulkPipeline;
-use Fanculo\Admin\Api\Traits\BulkOperationTrait;
-use Fanculo\Admin\Api\Traits\PerformanceLoggingTrait;
-use Fanculo\Admin\Api\Traits\CachingIntegrationTrait;
-use Fanculo\Admin\Api\Traits\SanitizationTrait;
+use FanCoolo\Admin\Api\Services\BulkQueryService;
+use FanCoolo\Admin\Api\Services\ApiResponseFormatter;
+use FanCoolo\Admin\Api\Services\UnifiedApiService;
+use FanCoolo\Admin\Api\Services\StandardBulkPipeline;
+use FanCoolo\Admin\Api\Traits\BulkOperationTrait;
+use FanCoolo\Admin\Api\Traits\PerformanceLoggingTrait;
+use FanCoolo\Admin\Api\Traits\CachingIntegrationTrait;
+use FanCoolo\Admin\Api\Traits\SanitizationTrait;
 
 /**
  * Base API Controller with shared functionality
  *
  * Provides common services, permission checking, and utilities
- * for all Fanculo API controllers. Includes standardized bulk operations,
+ * for all FanCoolo API controllers. Includes standardized bulk operations,
  * performance logging, and caching integration.
  */
 abstract class BaseApiController
@@ -82,10 +82,10 @@ abstract class BaseApiController
             $message = sprintf('%s: %s', $context, $message);
         }
 
-        error_log("Fanculo API Error in {$context}: " . $error->getMessage());
+        error_log("FanCoolo API Error in {$context}: " . $error->getMessage());
 
         return new \WP_Error(
-            'fanculo_api_error',
+            'fancoolo_api_error',
             $message,
             ['status' => 500]
         );

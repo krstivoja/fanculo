@@ -1,8 +1,8 @@
 <?php
 
-namespace Fanculo\Admin\Api\Services;
+namespace FanCoolo\Admin\Api\Services;
 
-use Fanculo\Content\FunculoTypeTaxonomy;
+use FanCoolo\Content\FunculoTypeTaxonomy;
 
 /**
  * Bulk Query Service for eliminating N+1 database queries
@@ -98,8 +98,8 @@ class BulkQueryService
         );
 
         // Create cache key for this query
-        $cacheKey = 'fanculo_bulk_meta_' . md5(serialize($postIds) . serialize($metaKeys));
-        $results = wp_cache_get($cacheKey, 'fanculo_bulk_queries');
+        $cacheKey = 'fancoolo_bulk_meta_' . md5(serialize($postIds) . serialize($metaKeys));
+        $results = wp_cache_get($cacheKey, 'fancoolo_bulk_queries');
 
         if (false === $results) {
             // Execute prepared query directly
@@ -108,7 +108,7 @@ class BulkQueryService
             $results = $wpdb->get_results($sql);
 
             // Cache for 5 minutes (300 seconds)
-            wp_cache_set($cacheKey, $results, 'fanculo_bulk_queries', 300);
+            wp_cache_set($cacheKey, $results, 'fancoolo_bulk_queries', 300);
         }
 
         // Group meta by post ID and key

@@ -8,8 +8,8 @@ The new simplified hot reload system uses direct browser-to-browser communicatio
 
 ### 1. **Studio Side (Save Detection)**
 
-- When user saves in Fanculo studio, the `useHotReloadSave` hook triggers
-- Calls `window.fanculoSimpleHotReload.onStudioSave(postId, ["all"])`
+- When user saves in FanCoolo studio, the `useHotReloadSave` hook triggers
+- Calls `window.fancooloSimpleHotReload.onStudioSave(postId, ["all"])`
 - Fetches current block data from `/wp-json/funculo/v1/post/{postId}` API
 - Sends hot reload signal via BroadcastChannel or localStorage fallback
 
@@ -87,7 +87,7 @@ The new simplified hot reload system uses direct browser-to-browser communicatio
 
 1. **Setup**:
 
-   - Open Fanculo studio (admin.php?page=fanculo) and Gutenberg editor in separate tabs
+   - Open FanCoolo studio (admin.php?page=fancoolo) and Gutenberg editor in separate tabs
    - Make sure you're logged into WordPress in both tabs
    - Select a block to edit in studio (e.g., "sss" block)
 
@@ -122,7 +122,7 @@ Enable console logs to see the communication flow:
 
 ```js
 // In browser console
-window.fanculoSimpleHotReload.debugMode = true;
+window.fancooloSimpleHotReload.debugMode = true;
 ```
 
 Console logs will show:

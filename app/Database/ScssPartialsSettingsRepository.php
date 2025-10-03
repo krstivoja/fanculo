@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\Database;
+namespace FanCoolo\Database;
 
 /**
  * Repository for managing SCSS partials settings in the database
@@ -216,11 +216,11 @@ class ScssPartialsSettingsRepository extends AbstractBulkRepository
 
         // Get all posts that are SCSS partials
         $query = new \WP_Query([
-            'post_type' => 'fanculo',
+            'post_type' => 'fancoolo',
             'posts_per_page' => -1,
             'tax_query' => [
                 [
-                    'taxonomy' => 'fanculo-type',
+                    'taxonomy' => 'fancoolo-type',
                     'field' => 'slug',
                     'terms' => 'scss-partials',
                 ],

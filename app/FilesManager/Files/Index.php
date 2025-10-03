@@ -1,12 +1,12 @@
 <?php
 
-namespace Fanculo\FilesManager\Files;
+namespace FanCoolo\FilesManager\Files;
 
-use Fanculo\FilesManager\Interfaces\FileGeneratorInterface;
-use Fanculo\Content\FunculoTypeTaxonomy;
-use Fanculo\Admin\Api\Services\MetaKeysConstants;
-use Fanculo\FilesManager\Services\AttributeMapper;
-use Fanculo\Database\BlockSettingsRepository;
+use FanCoolo\FilesManager\Interfaces\FileGeneratorInterface;
+use FanCoolo\Content\FunculoTypeTaxonomy;
+use FanCoolo\Admin\Api\Services\MetaKeysConstants;
+use FanCoolo\FilesManager\Services\AttributeMapper;
+use FanCoolo\Database\BlockSettingsRepository;
 use WP_Post;
 
 class Index implements FileGeneratorInterface
@@ -139,15 +139,15 @@ class Index implements FileGeneratorInterface
 
     // Use wp.domReady for proper dependency loading
     wp.domReady(function() {
-        // Ensure FanculoBlockRenderer is available
-        if (!window.FanculoBlockRenderer?.createServerRenderComponent) {
-            console.error("FanculoBlockRenderer not available for block: fanculo/BLOCK_SLUG_PLACEHOLDER");
+        // Ensure FanCooloBlockRenderer is available
+        if (!window.FanCooloBlockRenderer?.createServerRenderComponent) {
+            console.error("FanCooloBlockRenderer not available for block: fancoolo/BLOCK_SLUG_PLACEHOLDER");
             return;
         }
 
         // Create enhanced edit component with sidebar controls
-        const BaseEdit = window.FanculoBlockRenderer.createServerRenderComponent(
-            "fanculo/BLOCK_SLUG_PLACEHOLDER",
+        const BaseEdit = window.FanCooloBlockRenderer.createServerRenderComponent(
+            "fancoolo/BLOCK_SLUG_PLACEHOLDER",
             PARSER_OPTIONS
         );
 
@@ -169,7 +169,7 @@ class Index implements FileGeneratorInterface
         };
 
         // Register block with metadata from generated block.json
-        registerBlockType("fanculo/BLOCK_SLUG_PLACEHOLDER", {
+        registerBlockType("fancoolo/BLOCK_SLUG_PLACEHOLDER", {
             edit: Edit,
             save: function() {
                 ' . $saveFunction . '
@@ -182,15 +182,15 @@ class Index implements FileGeneratorInterface
         $content = str_replace('BLOCK_SLUG_PLACEHOLDER', $blockSlug, $content);
 
         // Write the file with error handling and logging
-        error_log("Fanculo Index Generator: Writing to {$indexJsPath}");
+        error_log("FanCoolo Index Generator: Writing to {$indexJsPath}");
         $result = file_put_contents($indexJsPath, $content);
 
         if ($result === false) {
-            error_log('Fanculo Index Generator: Failed to write index.js file: ' . $indexJsPath);
+            error_log('FanCoolo Index Generator: Failed to write index.js file: ' . $indexJsPath);
             return false;
         }
 
-        error_log("Fanculo Index Generator: Successfully wrote {$result} bytes to {$indexJsPath}");
+        error_log("FanCoolo Index Generator: Successfully wrote {$result} bytes to {$indexJsPath}");
         return true;
     }
 

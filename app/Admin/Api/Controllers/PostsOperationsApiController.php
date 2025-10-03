@@ -1,13 +1,13 @@
 <?php
 
-namespace Fanculo\Admin\Api\Controllers;
+namespace FanCoolo\Admin\Api\Controllers;
 
-use Fanculo\Content\FunculoPostType;
-use Fanculo\FilesManager\FilesManagerService;
-use Fanculo\Admin\Api\Services\MetaKeysConstants;
-use Fanculo\Database\BlockAttributesRepository;
-use Fanculo\Database\BlockSettingsRepository;
-use Fanculo\Database\ScssPartialsSettingsRepository;
+use FanCoolo\Content\FunculoPostType;
+use FanCoolo\FilesManager\FilesManagerService;
+use FanCoolo\Admin\Api\Services\MetaKeysConstants;
+use FanCoolo\Database\BlockAttributesRepository;
+use FanCoolo\Database\BlockSettingsRepository;
+use FanCoolo\Database\ScssPartialsSettingsRepository;
 
 /**
  * Posts Operations API Controller - Bulk Operations
@@ -142,13 +142,13 @@ class PostsOperationsApiController extends BaseApiController
 
     public function executeBulkOperations($request)
     {
-        error_log("Fanculo Debug: executeBulkOperations called");
+        error_log("FanCoolo Debug: executeBulkOperations called");
         $startTime = microtime(true);
 
         try {
             // Operations are already sanitized by route args
             $operations = $request->get_param('operations');
-            error_log("Fanculo Debug: Received " . count($operations) . " operations");
+            error_log("FanCoolo Debug: Received " . count($operations) . " operations");
 
             $results = [
                 'successful' => [],
@@ -166,16 +166,16 @@ class PostsOperationsApiController extends BaseApiController
                 }
 
                 try {
-                    error_log("Fanculo Debug: Executing operation type: {$operation['type']} (index: $index)");
+                    error_log("FanCoolo Debug: Executing operation type: {$operation['type']} (index: $index)");
                     $result = $this->executeOperation($operation['type'], $operation['data']);
                     $results['successful'][] = [
                         'index' => $index,
                         'type' => $operation['type'],
                         'result' => $result,
                     ];
-                    error_log("Fanculo Debug: Operation {$operation['type']} succeeded");
+                    error_log("FanCoolo Debug: Operation {$operation['type']} succeeded");
                 } catch (\Exception $e) {
-                    error_log("Fanculo Error: Operation {$operation['type']} failed - " . $e->getMessage());
+                    error_log("FanCoolo Error: Operation {$operation['type']} failed - " . $e->getMessage());
                     $results['failed'][] = [
                         'index' => $index,
                         'type' => $operation['type'],
@@ -184,8 +184,8 @@ class PostsOperationsApiController extends BaseApiController
                 }
             }
         } catch (\Exception $e) {
-            error_log("Fanculo Fatal Error in executeBulkOperations: " . $e->getMessage());
-            error_log("Fanculo Stack trace: " . $e->getTraceAsString());
+            error_log("FanCoolo Fatal Error in executeBulkOperations: " . $e->getMessage());
+            error_log("FanCoolo Stack trace: " . $e->getTraceAsString());
             return $this->responseFormatter->serverError('Bulk operations failed: ' . $e->getMessage());
         }
 
@@ -382,7 +382,7 @@ class PostsOperationsApiController extends BaseApiController
                 // Sync partial usage to junction table for fast lookups
                 $stylePartials = $dbSettings['selected_partials'] ?? [];
                 $editorStylePartials = $dbSettings['editor_selected_partials'] ?? [];
-                \Fanculo\Database\PartialsUsageRepository::syncBlockPartials(
+                \FanCoolo\Database\PartialsUsageRepository::syncBlockPartials(
                     $postId,
                     $stylePartials,
                     $editorStylePartials
@@ -421,7 +421,7 @@ class PostsOperationsApiController extends BaseApiController
                 // Trigger bidirectional compilation - recompile all blocks using this partial
                 error_log("🔄 [updatePostMeta] Starting bidirectional recompilation...");
                 try {
-                    $recompileResult = \Fanculo\Services\ScssRecompilationService::recompileBlocksUsingPartial($postId);
+                    $recompileResult = \FanCoolo\Services\ScssRecompilationService::recompileBlocksUsingPartial($postId);
                     error_log("✅ [updatePostMeta] Bidirectional recompilation result:");
                     error_log(print_r($recompileResult, true));
                 } catch (\Exception $e) {
@@ -462,21 +462,21 @@ class PostsOperationsApiController extends BaseApiController
         }
 
         // Trigger file generation after meta data update (for blocks and symbols only)
-        error_log("Fanculo Debug: Triggering file generation after meta update for post ID: $postId");
+        error_log("FanCoolo Debug: Triggering file generation after meta update for post ID: $postId");
         $post = get_post($postId);
         if ($post) {
             try {
-                error_log("Fanculo Debug: Post found - starting file generation");
+                error_log("FanCoolo Debug: Post found - starting file generation");
                 $filesManagerService = new FilesManagerService();
                 $result = $filesManagerService->generateFilesOnPostSave($postId, $post, true);
-                error_log("Fanculo Debug: File generation completed successfully");
+                error_log("FanCoolo Debug: File generation completed successfully");
             } catch (\Exception $e) {
-                error_log("Fanculo Error: File generation failed - " . $e->getMessage());
-                error_log("Fanculo Error: Stack trace - " . $e->getTraceAsString());
+                error_log("FanCoolo Error: File generation failed - " . $e->getMessage());
+                error_log("FanCoolo Error: Stack trace - " . $e->getTraceAsString());
                 throw $e; // Re-throw to be caught by outer handler
             }
         } else {
-            error_log("Fanculo Error: Could not find post with ID: $postId");
+            error_log("FanCoolo Error: Could not find post with ID: $postId");
         }
     }
 }

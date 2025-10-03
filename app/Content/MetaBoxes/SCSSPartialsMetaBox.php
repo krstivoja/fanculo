@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\Content\MetaBoxes;
+namespace FanCoolo\Content\MetaBoxes;
 
 class SCSSPartialsMetaBox extends AbstractMetaBox
 {

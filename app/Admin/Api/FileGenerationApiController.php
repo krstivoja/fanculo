@@ -1,10 +1,10 @@
 <?php
 
-namespace Fanculo\Admin\Api;
+namespace FanCoolo\Admin\Api;
 
-use Fanculo\FilesManager\FilesManagerService;
-use Fanculo\Admin\Api\Controllers\BaseApiController;
-use Fanculo\Content\FunculoPostType;
+use FanCoolo\FilesManager\FilesManagerService;
+use FanCoolo\Admin\Api\Controllers\BaseApiController;
+use FanCoolo\Content\FunculoPostType;
 
 class FileGenerationApiController extends BaseApiController
 {
