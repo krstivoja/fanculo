@@ -257,6 +257,13 @@ export const useHotReloadSave = (postId, originalSaveFunction, postType) => {
                   }),
                 });
                 console.log(`✅ [useHotReload] File regeneration triggered for block ${blockId}`);
+
+                // Trigger hot reload for this affected block
+                if (window.fanculoSimpleHotReload) {
+                  console.log(`🔥 [useHotReload] Triggering hot reload for affected block ${blockId}`);
+                  await window.fanculoSimpleHotReload.onStudioSave(blockId, ['css', 'editorCss']);
+                  console.log(`✅ [useHotReload] Hot reload triggered for block ${blockId}`);
+                }
               } catch (compileError) {
                 console.error(`❌ [useHotReload] Failed to compile block ${blockId}:`, compileError);
               }

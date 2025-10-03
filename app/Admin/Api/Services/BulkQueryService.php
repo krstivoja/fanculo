@@ -156,6 +156,9 @@ class BulkQueryService
                         'settings' => $postMeta[MetaKeysConstants::BLOCK_SETTINGS] ?? '',
                         // Note: selected_partials now loaded from database table in PostsApiController
                         'inner_blocks_settings' => $postMeta[MetaKeysConstants::BLOCK_INNER_BLOCKS_SETTINGS] ?? '',
+                        // Compiled CSS for hot reload
+                        'cssContent' => $postMeta[MetaKeysConstants::CSS_CONTENT] ?? '',
+                        'editorCssContent' => $postMeta[MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT] ?? '',
                     ];
                     break;
 
@@ -251,6 +254,9 @@ class BulkQueryService
                 MetaKeysConstants::BLOCK_SETTINGS,
                 // Note: BLOCK_SELECTED_PARTIALS now in database table
                 MetaKeysConstants::BLOCK_INNER_BLOCKS_SETTINGS,
+                // Compiled CSS for hot reload
+                MetaKeysConstants::CSS_CONTENT,
+                MetaKeysConstants::BLOCK_EDITOR_CSS_CONTENT,
             ]);
         }
 
