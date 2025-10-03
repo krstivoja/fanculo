@@ -87,6 +87,13 @@ class ScssCompilerApiController extends BaseApiController
             ],
         ]);
 
+        // Get blocks that use a specific SCSS partial
+        register_rest_route('funculo/v1', '/scss-partial/(?P<id>\d+)/usage', [
+            'methods' => 'GET',
+            'callback' => [$this, 'getPartialUsage'],
+            'permission_callback' => [$this, 'checkPermissions'],
+        ]);
+
         // Batch SCSS compilation
         register_rest_route('funculo/v1', '/scss/compile-batch', [
             'methods' => 'POST',
@@ -514,5 +521,45 @@ class ScssCompilerApiController extends BaseApiController
         ];
 
         return $this->responseFormatter->batch($results, $performanceData);
+    }
+
+    /**
+     * Get blocks that use a specific SCSS partial
+     *
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response|WP_Error
+     */
+    public function getPartialUsage(WP_REST_Request $request)
+    {
+        $partialId = absint($request->get_param('id'));
+
+        if (!$partialId) {
+            return $this->responseFormatter->validationError(['id' => 'Partial ID is required']);
+        }
+
+        // Verify the partial exists
+        $partial = get_post($partialId);
+        if (!$partial) {
+            return $this->responseFormatter->notFound('partial', $partialId);
+        }
+
+        try {
+            // Get blocks using this partial
+            $styleBlocks = \Fanculo\Database\PartialsUsageRepository::getBlocksUsingPartial($partialId, 'style');
+            $editorStyleBlocks = \Fanculo\Database\PartialsUsageRepository::getBlocksUsingPartial($partialId, 'editorStyle');
+
+            // Merge and get unique block IDs
+            $allBlocks = array_unique(array_merge($styleBlocks, $editorStyleBlocks));
+
+            return $this->responseFormatter->success([
+                'partial_id' => $partialId,
+                'blocks' => $allBlocks,
+                'style_blocks' => $styleBlocks,
+                'editor_style_blocks' => $editorStyleBlocks,
+                'total_blocks' => count($allBlocks)
+            ]);
+        } catch (\Exception $e) {
+            return $this->responseFormatter->serverError('Failed to get partial usage: ' . $e->getMessage());
+        }
     }
 }

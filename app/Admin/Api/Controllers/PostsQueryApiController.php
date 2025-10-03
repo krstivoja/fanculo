@@ -63,6 +63,13 @@ class PostsQueryApiController extends BaseApiController
         // Add content field (specific to this endpoint)
         $postData['content'] = $post->post_content;
 
+        // Add recompile flag (private meta not returned by default)
+        $needsRecompile = get_post_meta($post->ID, '_funculo_scss_needs_recompile', true);
+        if ($needsRecompile) {
+            $postData['meta']['_funculo_scss_needs_recompile'] = $needsRecompile;
+            error_log("🔔 [PostsQueryApiController] Added recompile flag to response for post $postId: $needsRecompile");
+        }
+
         // Debug logging for selected_partials
         error_log("Fanculo Debug: PostsQueryApiController getPostWithRelated - Post ID: $postId, meta blocks: " . json_encode($postData['meta']['blocks'] ?? []));
 
