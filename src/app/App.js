@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import EditorList from "./components/editor/EditorList";
-import EditorHeader from "./components/editor/EditorHeader";
-import EditorMain from "./components/editor/EditorMain";
+import Header from "./components/editor/Header";
+import MainContent from "./components/editor/MainContent";
 import EditorSettings from "./components/editor/EditorSettings";
 import EditorNoPosts from "./components/editor/EditorNoPosts";
 import { Toast } from "./components/ui";
 import { errorHandler, apiClient } from "../utils";
 import centralizedApi from "../utils/api/CentralizedApiService";
+
 import {
   useMetadata,
   hasListVisibleChanges,
@@ -133,10 +134,10 @@ const App = () => {
         const changeSet = [];
 
         if (frontendCompilation) {
-          changeSet.push('css');
+          changeSet.push("css");
         }
         if (editorCompilation) {
-          changeSet.push('editorCss');
+          changeSet.push("editorCss");
         }
 
         hotReloadPayload = {
@@ -166,10 +167,7 @@ const App = () => {
               originalBlockMeta?.php ??
               originalSymbolMeta?.php ??
               "",
-            js:
-              blockMeta?.js ??
-              originalBlockMeta?.js ??
-              "",
+            js: blockMeta?.js ?? originalBlockMeta?.js ?? "",
           },
         };
 
@@ -193,16 +191,19 @@ const App = () => {
 
   // Hot reload-enabled save function
   // Determine post type from selected post's terms
-  const postType = selectedPost?.terms?.find(term =>
-    ['blocks', 'symbols', 'scss-partials'].includes(term.slug)
+  const postType = selectedPost?.terms?.find((term) =>
+    ["blocks", "symbols", "scss-partials"].includes(term.slug)
   )?.slug;
 
   if (selectedPost?.terms) {
-    console.log('🔍 [App] Selected post terms:', selectedPost.terms);
-    console.log('🔍 [App] First term:', selectedPost.terms[0]);
-    console.log('🔍 [App] First term keys:', Object.keys(selectedPost.terms[0] || {}));
+    console.log("🔍 [App] Selected post terms:", selectedPost.terms);
+    console.log("🔍 [App] First term:", selectedPost.terms[0]);
+    console.log(
+      "🔍 [App] First term keys:",
+      Object.keys(selectedPost.terms[0] || {})
+    );
   }
-  console.log('🔍 [App] Determined post type:', postType);
+  console.log("🔍 [App] Determined post type:", postType);
 
   const { saveWithHotReload } = useHotReloadSave(
     selectedPost?.id,
@@ -225,11 +226,15 @@ const App = () => {
     console.log("🔔 [App useEffect] Auto-recompile check:", {
       autoRecompilePostId,
       selectedPostId: selectedPost?.id,
-      shouldTrigger: autoRecompilePostId && selectedPost?.id === autoRecompilePostId
+      shouldTrigger:
+        autoRecompilePostId && selectedPost?.id === autoRecompilePostId,
     });
 
     if (autoRecompilePostId && selectedPost?.id === autoRecompilePostId) {
-      console.log("🚀 [App] Auto-triggering SCSS recompilation for block", autoRecompilePostId);
+      console.log(
+        "🚀 [App] Auto-triggering SCSS recompilation for block",
+        autoRecompilePostId
+      );
 
       // Clear the flag
       delete window._funculo_auto_recompile_post_id;
@@ -241,8 +246,8 @@ const App = () => {
           await apiClient.updatePost(selectedPost.id, {
             post_id: selectedPost.id,
             meta: {
-              _funculo_scss_needs_recompile: '0'
-            }
+              _funculo_scss_needs_recompile: "0",
+            },
           });
 
           console.log("⚙️ [App] Triggering SCSS compilation...");
@@ -286,7 +291,7 @@ const App = () => {
     return (
       <>
         <div id="editor">
-          <EditorHeader
+          <Header
             onSave={handleSave}
             saveStatus={saveStatus}
             hasUnsavedChanges={hasUnsavedChanges}
@@ -316,7 +321,7 @@ const App = () => {
   return (
     <>
       <div id="editor">
-        <EditorHeader
+        <Header
           onSave={handleSave}
           saveStatus={saveStatus}
           hasUnsavedChanges={hasUnsavedChanges}
@@ -330,7 +335,7 @@ const App = () => {
             onPostSelect={postOperations.handlePostSelect}
             onPostsRefresh={refreshData}
           />
-          <EditorMain
+          <MainContent
             selectedPost={selectedPost}
             metaData={metaData}
             onMetaChange={handleMetaChangeWithStatus}
