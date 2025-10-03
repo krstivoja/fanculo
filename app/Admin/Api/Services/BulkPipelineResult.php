@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\Admin\Api\Services;
+namespace FanCoolo\Admin\Api\Services;
 
 /**
  * Bulk Pipeline Result Container

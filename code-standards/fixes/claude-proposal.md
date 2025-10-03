@@ -10,6 +10,7 @@ After scanning the `@app/` (PHP backend) and `@src/app/` (React frontend) direct
 ## Current API Architecture
 
 ### Backend Structure (`@app/Admin/Api/`)
+
 - **Central Router:** `Api.php` - Registers all REST routes
 - **Controllers:** Individual controllers for different domains
   - `PostsApiController.php` - CRUD operations for posts
@@ -19,6 +20,7 @@ After scanning the `@app/` (PHP backend) and `@src/app/` (React frontend) direct
   - `FileGenerationApiController.php` - File generation operations
 
 ### Frontend Structure (`@src/`)
+
 - **Direct API Calls:** Components make direct `fetch()` calls
 - **SCSS Compiler:** Utility module with integrated API calls
 - **No Centralized Client:** Each component handles its own API communication
@@ -30,6 +32,7 @@ After scanning the `@app/` (PHP backend) and `@src/app/` (React frontend) direct
 **Issue:** Mixed meta key naming conventions across controllers
 
 **Examples:**
+
 ```php
 // ScssCompilerApiController.php:38
 update_post_meta($post_id, 'funculo_scss_content', $scss_content);
@@ -39,6 +42,7 @@ update_post_meta($post_id, 'funculo_scss_content', $scss_content);
 ```
 
 **Impact:**
+
 - Data integrity issues
 - Potential bugs when accessing meta fields
 - Confusion for developers
@@ -50,6 +54,7 @@ update_post_meta($post_id, 'funculo_scss_content', $scss_content);
 **Location:** `PostsApiController.php:44-65`
 
 **Issue:** Individual queries executed for each post in loop
+
 ```php
 foreach ($query->posts as $post) {
     $terms = wp_get_post_terms($post->ID, FunculoTypeTaxonomy::getTaxonomy()); // N+1 query
@@ -58,6 +63,7 @@ foreach ($query->posts as $post) {
 ```
 
 **Impact:**
+
 - Poor performance with large datasets
 - Increased database load
 - Slower response times
@@ -67,6 +73,7 @@ foreach ($query->posts as $post) {
 ### 3. Duplicate Meta Handling Logic 🟡 MEDIUM PRIORITY
 
 **Location:** `PostsApiController.php`
+
 - Lines 224-256: `getPostMeta()` method
 - Lines 258-298: `updatePostMeta()` method
 
@@ -79,6 +86,7 @@ foreach ($query->posts as $post) {
 **Issue:** Different controllers return varying response structures
 
 **Examples:**
+
 ```php
 // PostsApiController - Detailed structured response
 return new \WP_REST_Response(['posts' => $posts, 'total' => $query->found_posts], 200);
@@ -97,15 +105,21 @@ return rest_ensure_response($test_categories);
 **Location:** `scssCompiler.js:152-186`
 
 **Issue:** Multiple API calls to fetch related data
+
 ```javascript
 // First call - get partials
-const partialsResponse = await fetch(`${window.wpApiSettings.root}funculo/v1/scss-partials`);
+const partialsResponse = await fetch(
+  `${window.wpApiSettings.root}funculo/v1/scss-partials`
+);
 
 // Second call - get block data
-const blockResponse = await fetch(`${window.wpApiSettings.root}funculo/v1/post/${postId}`);
+const blockResponse = await fetch(
+  `${window.wpApiSettings.root}funculo/v1/post/${postId}`
+);
 ```
 
 **Impact:**
+
 - Network overhead
 - Slower user experience
 - Increased server load
@@ -117,6 +131,7 @@ const blockResponse = await fetch(`${window.wpApiSettings.root}funculo/v1/post/$
 **Location:** `BlockCategoriesApiController.php:10-17`
 
 **Issue:** Categories are hardcoded instead of dynamically fetched
+
 ```php
 $test_categories = [
     ['value' => 'text', 'label' => 'Text'],
@@ -130,6 +145,7 @@ $test_categories = [
 ### 7. Error Handling Inconsistencies 🟢 LOW PRIORITY
 
 **Issue:** Mixed error response patterns
+
 - Some use `WP_Error` objects
 - Others use custom error arrays
 - Inconsistent HTTP status codes
@@ -142,7 +158,7 @@ $test_categories = [
 
 ```php
 <?php
-namespace Fanculo\Admin\Api\Services;
+namespace FanCoolo\Admin\Api\Services;
 
 class MetaKeysConstants
 {
@@ -173,7 +189,7 @@ class MetaKeysConstants
 
 ```php
 <?php
-namespace Fanculo\Admin\Api\Services;
+namespace FanCoolo\Admin\Api\Services;
 
 class ApiResponseHandler
 {
@@ -202,7 +218,7 @@ class ApiResponseHandler
 
 ```php
 <?php
-namespace Fanculo\Admin\Api\Services;
+namespace FanCoolo\Admin\Api\Services;
 
 class MetaFieldsService
 {
@@ -308,67 +324,67 @@ public function getPosts($request)
 ```javascript
 // src/utils/apiClient.js
 class FunculoApiClient {
-    constructor() {
-        this.baseUrl = `${window.wpApiSettings.root}funculo/v1`;
-        this.nonce = window.wpApiSettings.nonce;
+  constructor() {
+    this.baseUrl = `${window.wpApiSettings.root}funculo/v1`;
+    this.nonce = window.wpApiSettings.nonce;
+  }
+
+  async request(endpoint, options = {}) {
+    const url = `${this.baseUrl}${endpoint}`;
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        "X-WP-Nonce": this.nonce,
+        ...options.headers,
+      },
+      ...options,
+    };
+
+    const response = await fetch(url, config);
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
     }
 
-    async request(endpoint, options = {}) {
-        const url = `${this.baseUrl}${endpoint}`;
-        const config = {
-            headers: {
-                'Content-Type': 'application/json',
-                'X-WP-Nonce': this.nonce,
-                ...options.headers
-            },
-            ...options
-        };
+    return response.json();
+  }
 
-        const response = await fetch(url, config);
+  // Posts endpoints
+  async getPosts(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/posts${query ? `?${query}` : ""}`);
+  }
 
-        if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
-        }
+  async getPost(id) {
+    return this.request(`/post/${id}`);
+  }
 
-        return response.json();
-    }
+  async updatePost(id, data) {
+    return this.request(`/post/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
 
-    // Posts endpoints
-    async getPosts(params = {}) {
-        const query = new URLSearchParams(params).toString();
-        return this.request(`/posts${query ? `?${query}` : ''}`);
-    }
+  // Batch operations
+  async getPostWithPartials(id) {
+    return this.request(`/post/${id}/with-partials`);
+  }
 
-    async getPost(id) {
-        return this.request(`/post/${id}`);
-    }
+  // SCSS operations
+  async getScssContent(id) {
+    return this.request(`/post/${id}/scss`);
+  }
 
-    async updatePost(id, data) {
-        return this.request(`/post/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(data)
-        });
-    }
-
-    // Batch operations
-    async getPostWithPartials(id) {
-        return this.request(`/post/${id}/with-partials`);
-    }
-
-    // SCSS operations
-    async getScssContent(id) {
-        return this.request(`/post/${id}/scss`);
-    }
-
-    async saveScssAndCss(id, scssContent, cssContent) {
-        return this.request(`/post/${id}/scss`, {
-            method: 'POST',
-            body: JSON.stringify({
-                scss_content: scssContent,
-                css_content: cssContent
-            })
-        });
-    }
+  async saveScssAndCss(id, scssContent, cssContent) {
+    return this.request(`/post/${id}/scss`, {
+      method: "POST",
+      body: JSON.stringify({
+        scss_content: scssContent,
+        css_content: cssContent,
+      }),
+    });
+  }
 }
 
 export const apiClient = new FunculoApiClient();
@@ -394,16 +410,19 @@ register_rest_route('funculo/v1', '/posts/bulk-update', [
 ## Implementation Priority
 
 ### Phase 1 (Critical) 🔴
+
 1. **Meta Key Standardization** - Fix data integrity issues
 2. **N+1 Query Optimization** - Improve performance immediately
 3. **Unified Response Format** - Standardize API responses
 
 ### Phase 2 (Important) 🟡
+
 4. **Meta Fields Service** - Reduce code duplication
 5. **Frontend API Client** - Centralize API communication
 6. **Batch Endpoints** - Reduce network overhead
 
 ### Phase 3 (Enhancement) 🟢
+
 7. **Caching Layer** - Add performance optimizations
 8. **Error Handling Standardization** - Improve robustness
 9. **API Validation Middleware** - Add request validation
@@ -411,16 +430,19 @@ register_rest_route('funculo/v1', '/posts/bulk-update', [
 ## Expected Impact
 
 ### Performance Improvements
+
 - **Database Queries:** 60-80% reduction in query count for post listings
 - **Network Requests:** 50% reduction in frontend API calls
 - **Response Time:** 40-60% faster API responses for complex operations
 
 ### Maintainability Improvements
+
 - **Code Duplication:** 70% reduction in duplicate meta handling logic
 - **Consistency:** 100% standardized response formats
 - **Developer Experience:** Centralized API client reduces frontend complexity
 
 ### Reliability Improvements
+
 - **Data Integrity:** Consistent meta key naming prevents data access issues
 - **Error Handling:** Standardized error responses improve debugging
 - **Validation:** Centralized validation reduces invalid data issues
@@ -441,4 +463,4 @@ register_rest_route('funculo/v1', '/posts/bulk-update', [
 
 ---
 
-*This analysis was conducted to improve code quality, performance, and maintainability of the Fanculo plugin's API layer.*
+_This analysis was conducted to improve code quality, performance, and maintainability of the FanCoolo plugin's API layer._

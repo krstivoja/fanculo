@@ -3,13 +3,15 @@
 ## ⚡ Quick Start
 
 ### 1. Create a Symbol
-1. Go to **Fanculo Items** → **Add New**
+
+1. Go to **FanCoolo Items** → **Add New**
 2. Set **Type** to **Symbol**
 3. Name it (e.g., "Button")
 4. Add PHP code in **Symbol PHP** field
 5. **Publish**
 
 ### 2. Use in Blocks
+
 ```php
 <!-- Instead of this -->
 <?php include '../symbols/button.php'; ?>
@@ -21,6 +23,7 @@
 ## 📋 Cheat Sheet
 
 ### Basic Syntax
+
 ```php
 <!-- Self-closing -->
 <Button />
@@ -36,6 +39,7 @@
 ```
 
 ### Symbol PHP Template
+
 ```php
 <?php
 // Get attributes (always available as $symbol_attrs array)
@@ -54,6 +58,7 @@ if ($disabled) $classes[] = 'btn-disabled';
 ```
 
 ### Common Attribute Patterns
+
 ```php
 <?php
 // String attributes
@@ -77,6 +82,7 @@ $config = json_decode($symbol_attrs['config'] ?? '{}', true);
 ## 🎯 Common Examples
 
 ### Button Symbol
+
 ```php
 <?php
 $type = in_array($symbol_attrs['type'] ?? 'default', ['primary', 'secondary', 'default'])
@@ -94,12 +100,14 @@ $target = $symbol_attrs['target'] === '_blank' ? '_blank' : '_self';
 ```
 
 ### Usage in Block:
+
 ```php
 <Button type="primary" text="Get Started" url="/signup" />
 <Button type="secondary" text="Learn More" url="/about" target="_blank" />
 ```
 
 ### Card Symbol
+
 ```php
 <?php
 $title = $symbol_attrs['title'] ?? '';
@@ -131,6 +139,7 @@ if ($featured) $classes[] = 'card--featured';
 ```
 
 ### Usage in Block:
+
 ```php
 <div class="cards-grid">
     <Card title="Feature 1" content="Amazing feature" image="123" />
@@ -141,6 +150,7 @@ if ($featured) $classes[] = 'card--featured';
 ## 🔧 Debugging
 
 ### Check if Symbol Exists
+
 ```php
 <!-- Add this to debug -->
 <?php
@@ -154,6 +164,7 @@ if (is_dir($symbols_dir)) {
 ```
 
 ### Debug Attributes
+
 ```php
 <!-- Add this to your symbol to see all passed attributes -->
 <?php
@@ -164,6 +175,7 @@ echo ' -->';
 ```
 
 ### Test Symbol Directly
+
 ```php
 <!-- Test a symbol with manual attributes -->
 <?php
@@ -179,6 +191,7 @@ include '../symbols/button.php';
 ## 📝 Best Practices
 
 ### ✅ Do This
+
 ```php
 <!-- Good: Descriptive attributes -->
 <Button type="primary" text="Subscribe Now" size="large" />
@@ -198,6 +211,7 @@ $show_icon = ($symbol_attrs['show_icon'] ?? 'true') === 'true';
 ```
 
 ### ❌ Avoid This
+
 ```php
 <!-- Bad: No validation -->
 <?php $type = $symbol_attrs['type']; ?>
@@ -218,18 +232,21 @@ $posts = get_posts(['numberposts' => 100]);
 ## 🚀 Migration from Manual Includes
 
 ### Before (Manual)
+
 ```php
 <?php include '../symbols/button.php'; ?>
 <?php include '../symbols/card.php'; ?>
 ```
 
 ### After (React-like)
+
 ```php
 <Button />
 <Card />
 ```
 
 ### With Parameters - Before
+
 ```php
 <?php
 $button_type = 'primary';
@@ -239,6 +256,7 @@ include '../symbols/button.php';
 ```
 
 ### With Parameters - After
+
 ```php
 <Button type="primary" text="Click me" />
 ```
@@ -246,6 +264,7 @@ include '../symbols/button.php';
 ## 🎨 Advanced Patterns
 
 ### Conditional Symbols
+
 ```php
 <?php $user_level = 'premium'; ?>
 
@@ -257,6 +276,7 @@ include '../symbols/button.php';
 ```
 
 ### Dynamic Attributes
+
 ```php
 <?php
 $product_id = get_post_meta(get_the_ID(), 'featured_product', true);
@@ -267,6 +287,7 @@ $button_text = get_option('cta_text', 'Shop Now');
 ```
 
 ### Symbol with JSON Data
+
 ```php
 <?php
 $menu_items = [

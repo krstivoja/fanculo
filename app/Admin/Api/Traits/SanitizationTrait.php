@@ -1,8 +1,8 @@
 <?php
 
-namespace Fanculo\Admin\Api\Traits;
+namespace FanCoolo\Admin\Api\Traits;
 
-use Fanculo\Admin\Api\Services\SanitizationService;
+use FanCoolo\Admin\Api\Services\SanitizationService;
 
 /**
  * Sanitization Trait
@@ -160,7 +160,7 @@ trait SanitizationTrait
             'meta' => [
                 'type' => 'array',
                 'sanitize_callback' => function($value) use ($callbacks) {
-                    $service = new \Fanculo\Admin\Api\Services\SanitizationService();
+                    $service = new \FanCoolo\Admin\Api\Services\SanitizationService();
                     return $service->sanitizeArray($value, 'text', ['max_elements' => 50]);
                 },
                 'validate_callback' => function($param) {
@@ -171,7 +171,7 @@ trait SanitizationTrait
                 'type' => 'array',
                 'required' => true,
                 'sanitize_callback' => function($value) use ($callbacks) {
-                    $service = new \Fanculo\Admin\Api\Services\SanitizationService();
+                    $service = new \FanCoolo\Admin\Api\Services\SanitizationService();
                     return $service->sanitizeArray($value, 'array', ['max_elements' => 50]);
                 },
                 'validate_callback' => function($param) {

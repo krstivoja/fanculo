@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\Database;
+namespace FanCoolo\Database;
 
 /**
  * Repository for managing block settings in the database
@@ -79,11 +79,11 @@ class BlockSettingsRepository extends AbstractBulkRepository
         // Convert selected_partials from JSON to array
         if (!empty($row['selected_partials'])) {
             $decoded = json_decode($row['selected_partials'], true);
-            error_log("Fanculo Debug: BlockSettingsRepository retrieving selected_partials - Raw from DB: " . $row['selected_partials'] . ", Decoded type: " . gettype($decoded) . ", Count: " . (is_array($decoded) ? count($decoded) : 'N/A') . ", Content: " . json_encode($decoded));
+            error_log("FanCoolo Debug: BlockSettingsRepository retrieving selected_partials - Raw from DB: " . $row['selected_partials'] . ", Decoded type: " . gettype($decoded) . ", Count: " . (is_array($decoded) ? count($decoded) : 'N/A') . ", Content: " . json_encode($decoded));
             $row['selected_partials'] = $decoded ?: [];
         } else {
             $row['selected_partials'] = [];
-            error_log("Fanculo Debug: BlockSettingsRepository retrieving selected_partials - Empty field, returning empty array");
+            error_log("FanCoolo Debug: BlockSettingsRepository retrieving selected_partials - Empty field, returning empty array");
         }
 
         // Convert editor_selected_partials from JSON to array
@@ -189,23 +189,23 @@ class BlockSettingsRepository extends AbstractBulkRepository
 
         // Handle selected_partials - convert array to JSON string
         if (array_key_exists('selected_partials', $settings)) {
-            error_log("Fanculo Debug: BlockSettingsRepository saving selected_partials - Input: " . print_r($settings['selected_partials'], true));
+            error_log("FanCoolo Debug: BlockSettingsRepository saving selected_partials - Input: " . print_r($settings['selected_partials'], true));
             if (is_array($settings['selected_partials'])) {
                 $data['selected_partials'] = json_encode(array_values(array_filter($settings['selected_partials'])));
-                error_log("Fanculo Debug: BlockSettingsRepository - Array converted to JSON: " . $data['selected_partials']);
+                error_log("FanCoolo Debug: BlockSettingsRepository - Array converted to JSON: " . $data['selected_partials']);
             } else if (is_string($settings['selected_partials'])) {
                 // If it's already a JSON string, validate and store it
                 $decoded = json_decode($settings['selected_partials'], true);
                 if (json_last_error() === JSON_ERROR_NONE) {
                     $data['selected_partials'] = $settings['selected_partials'];
-                    error_log("Fanculo Debug: BlockSettingsRepository - Valid JSON string stored: " . $data['selected_partials']);
+                    error_log("FanCoolo Debug: BlockSettingsRepository - Valid JSON string stored: " . $data['selected_partials']);
                 } else {
                     $data['selected_partials'] = '[]';
-                    error_log("Fanculo Debug: BlockSettingsRepository - Invalid JSON, stored empty array");
+                    error_log("FanCoolo Debug: BlockSettingsRepository - Invalid JSON, stored empty array");
                 }
             } else {
                 $data['selected_partials'] = '[]';
-                error_log("Fanculo Debug: BlockSettingsRepository - Non-array/non-string, stored empty array");
+                error_log("FanCoolo Debug: BlockSettingsRepository - Non-array/non-string, stored empty array");
             }
         } elseif ($exists && isset($existingData['selected_partials'])) {
             if (is_array($existingData['selected_partials'])) {
@@ -213,7 +213,7 @@ class BlockSettingsRepository extends AbstractBulkRepository
             } else {
                 $data['selected_partials'] = '[]';
             }
-            error_log("Fanculo Debug: BlockSettingsRepository - Using existing data: " . $data['selected_partials']);
+            error_log("FanCoolo Debug: BlockSettingsRepository - Using existing data: " . $data['selected_partials']);
         }
 
         // Handle editor_selected_partials - convert array to JSON string
@@ -325,7 +325,7 @@ class BlockSettingsRepository extends AbstractBulkRepository
 
             // Check for database errors
             if ($wpdb->last_error) {
-                error_log("Fanculo DB Error in getBlocksUsingPartial: " . $wpdb->last_error);
+                error_log("FanCoolo DB Error in getBlocksUsingPartial: " . $wpdb->last_error);
                 // Fallback to LIKE search if JSON_CONTAINS fails
                 return self::getBlocksUsingPartialFallback($partial_id);
             }
@@ -341,7 +341,7 @@ class BlockSettingsRepository extends AbstractBulkRepository
 
             return $rows;
         } catch (\Exception $e) {
-            error_log("Fanculo Exception in getBlocksUsingPartial: " . $e->getMessage());
+            error_log("FanCoolo Exception in getBlocksUsingPartial: " . $e->getMessage());
             // Fallback to safe search method
             return self::getBlocksUsingPartialFallback($partial_id);
         }

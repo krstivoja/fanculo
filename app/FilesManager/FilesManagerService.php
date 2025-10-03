@@ -1,16 +1,16 @@
 <?php
 
-namespace Fanculo\FilesManager;
+namespace FanCoolo\FilesManager;
 
-use Fanculo\FilesManager\Services\DirectoryManager;
-use Fanculo\FilesManager\Services\FileWriter;
-use Fanculo\FilesManager\Services\GenerationCoordinator;
-use Fanculo\FilesManager\Services\ContentTypeProcessor;
-use Fanculo\FilesManager\Services\GlobalRegenerator;
-use Fanculo\FilesManager\Mappers\GenerationMapper;
-use Fanculo\Content\FunculoPostType;
-use Fanculo\Content\FunculoTypeTaxonomy;
-use Fanculo\Admin\Api\Services\MetaKeysConstants;
+use FanCoolo\FilesManager\Services\DirectoryManager;
+use FanCoolo\FilesManager\Services\FileWriter;
+use FanCoolo\FilesManager\Services\GenerationCoordinator;
+use FanCoolo\FilesManager\Services\ContentTypeProcessor;
+use FanCoolo\FilesManager\Services\GlobalRegenerator;
+use FanCoolo\FilesManager\Mappers\GenerationMapper;
+use FanCoolo\Content\FunculoPostType;
+use FanCoolo\Content\FunculoTypeTaxonomy;
+use FanCoolo\Admin\Api\Services\MetaKeysConstants;
 use WP_Post;
 
 class FilesManagerService

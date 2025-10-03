@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\Content;
+namespace FanCoolo\Content;
 
 class FunculoPostType
 {

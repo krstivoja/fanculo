@@ -1,8 +1,8 @@
 <?php
 
-namespace Fanculo\Services;
+namespace FanCoolo\Services;
 
-use Fanculo\FilesManager\Services\BlockLoader;
+use FanCoolo\FilesManager\Services\BlockLoader;
 
 class BlockRegistrationService
 {

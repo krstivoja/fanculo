@@ -1,15 +1,15 @@
 <?php
 
-namespace Fanculo\Admin\Api;
+namespace FanCoolo\Admin\Api;
 
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
-use Fanculo\Content\FunculoPostType;
-use Fanculo\Content\FunculoTypeTaxonomy;
-use Fanculo\Admin\Api\Services\MetaKeysConstants;
-use Fanculo\Admin\Api\Controllers\BaseApiController;
-use Fanculo\Database\ScssPartialsSettingsRepository;
+use FanCoolo\Content\FunculoPostType;
+use FanCoolo\Content\FunculoTypeTaxonomy;
+use FanCoolo\Admin\Api\Services\MetaKeysConstants;
+use FanCoolo\Admin\Api\Controllers\BaseApiController;
+use FanCoolo\Database\ScssPartialsSettingsRepository;
 
 class ScssCompilerApiController extends BaseApiController
 {
@@ -545,8 +545,8 @@ class ScssCompilerApiController extends BaseApiController
 
         try {
             // Get blocks using this partial
-            $styleBlocks = \Fanculo\Database\PartialsUsageRepository::getBlocksUsingPartial($partialId, 'style');
-            $editorStyleBlocks = \Fanculo\Database\PartialsUsageRepository::getBlocksUsingPartial($partialId, 'editorStyle');
+            $styleBlocks = \FanCoolo\Database\PartialsUsageRepository::getBlocksUsingPartial($partialId, 'style');
+            $editorStyleBlocks = \FanCoolo\Database\PartialsUsageRepository::getBlocksUsingPartial($partialId, 'editorStyle');
 
             // Merge and get unique block IDs
             $allBlocks = array_unique(array_merge($styleBlocks, $editorStyleBlocks));

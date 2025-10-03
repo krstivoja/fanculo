@@ -1,5 +1,5 @@
 /**
- * SCSS Compiler for Fanculo Plugin
+ * SCSS Compiler for FanCoolo Plugin
  * Uses the built SCSS compiler from dist/scss-compiler/
  */
 
@@ -17,31 +17,22 @@ function getPluginBaseUrl() {
     return window.funculoSettings.pluginUrl;
   }
 
-  // Try to find the plugin URL from script tags
+  // Try to find the plugin URL from script tags (looking for dist/app/index.js)
   const scripts = document.getElementsByTagName("script");
   for (let script of scripts) {
-    if (script.src && script.src.includes("/fanculo/")) {
-      const pluginUrl =
-        script.src.substring(0, script.src.indexOf("/fanculo/")) + "/fanculo/";
+    if (script.src && script.src.includes("/dist/app/index.js")) {
+      const pluginUrl = script.src.substring(0, script.src.indexOf("/dist/app/index.js") + 1);
       return pluginUrl;
     }
   }
 
-  // Fallback: try to construct from current location
-  const currentUrl = window.location.origin + window.location.pathname;
-  if (currentUrl.includes("/wp-admin/")) {
-    const baseUrl =
-      currentUrl.substring(0, currentUrl.indexOf("/wp-admin/")) +
-      "/wp-content/plugins/fanculo/";
-    return baseUrl;
-  }
-
-  // Last resort fallback
-  return "/wp-content/plugins/fanculo/";
+  // Fallback: could not determine plugin URL
+  console.error("Could not determine plugin URL. Please ensure window.funculoSettings.pluginUrl is set.");
+  return null;
 }
 
 /**
- * SCSS Compiler class that works with the Fanculo plugin
+ * SCSS Compiler class that works with the FanCoolo plugin
  */
 class FunculoSassCompiler {
   constructor() {
@@ -130,7 +121,7 @@ async function initScssCompiler() {
     await sassCompiler.initialize();
     return sassCompiler;
   } catch (error) {
-    console.error("❌ Failed to initialize Fanculo SCSS compiler:", error);
+    console.error("❌ Failed to initialize FanCoolo SCSS compiler:", error);
     throw error;
   }
 }
@@ -147,10 +138,8 @@ export async function getBlockPartials(postId) {
   const blockData = postWithRelated.post;
   const partialsData = postWithRelated.related?.scssPartials;
 
-
   let selectedPartials = [];
   const selectedPartialsString = blockData.meta?.blocks?.selected_partials;
-
 
   if (selectedPartialsString) {
     try {
@@ -354,7 +343,6 @@ ${originalLine} │ (error line)
  * @returns {Promise<string>} - The SCSS content
  */
 async function getPartialScssContent(partialId) {
-
   try {
     // Use centralized API client to get partial content
     const partialData = await centralizedApi.getPost(partialId);
@@ -367,7 +355,6 @@ async function getPartialScssContent(partialId) {
     );
   }
   return "";
-
 }
 
 /**
@@ -567,8 +554,6 @@ export async function compileScss(
 }
 
 export default {
-
   compileScss,
   initScssCompiler,
-
 };

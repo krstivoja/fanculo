@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\Database;
+namespace FanCoolo\Database;
 
 /**
  * Bulk Repository Interface

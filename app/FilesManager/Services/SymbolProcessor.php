@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\FilesManager\Services;
+namespace FanCoolo\FilesManager\Services;
 
 /**
  * Symbol processor service
@@ -207,11 +207,11 @@ class SymbolProcessor
      */
     public static function hasSymbolsInTemplates(): bool
     {
-        if (!defined('FANCULO_BLOCKS_DIR')) {
+        if (!defined('FANCOOLO_BLOCKS_DIR')) {
             return false;
         }
 
-        $renderFiles = glob(FANCULO_BLOCKS_DIR . '/*/render.php');
+        $renderFiles = glob(FANCOOLO_BLOCKS_DIR . '/*/render.php');
 
         foreach ($renderFiles as $renderFile) {
             if (self::fileHasSymbols($renderFile)) {

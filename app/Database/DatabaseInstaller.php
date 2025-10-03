@@ -1,15 +1,15 @@
 <?php
 
-namespace Fanculo\Database;
+namespace FanCoolo\Database;
 
 class DatabaseInstaller
 {
-    const TABLE_VERSION = '4.4.0';
-    const VERSION_OPTION = 'fanculo_db_version';
-    const TABLE_NAME = 'fanculo_blocks_settings';
-    const SCSS_TABLE_NAME = 'fanculo_scsspartials_settings';
-    const ATTRIBUTES_TABLE_NAME = 'fanculo_blocks_attributes';
-    const PARTIALS_USAGE_TABLE_NAME = 'fanculo_partials_usage';
+    const TABLE_VERSION = '0.0.1';
+    const VERSION_OPTION = 'fancoolo_db_version';
+    const TABLE_NAME = 'fancoolo_blocks_settings';
+    const SCSS_TABLE_NAME = 'fancoolo_scsspartials_settings';
+    const ATTRIBUTES_TABLE_NAME = 'fancoolo_blocks_attributes';
+    const PARTIALS_USAGE_TABLE_NAME = 'fancoolo_partials_usage';
 
     /**
      * Install the database tables
@@ -34,7 +34,7 @@ class DatabaseInstaller
         $partials_usage_created = self::createPartialsUsageTableIfMissing();
 
         if ($blocks_created || $scss_created || $attributes_created || $partials_usage_created) {
-            error_log('Fanculo Plugin: Missing tables were created');
+            error_log('FanCoolo Plugin: Missing tables were created');
         }
     }
 
@@ -77,11 +77,11 @@ class DatabaseInstaller
         $result = dbDelta($sql_blocks);
 
         if (!empty($wpdb->last_error)) {
-            error_log('Fanculo Plugin: Failed to create blocks table - ' . $wpdb->last_error);
+            error_log('FanCoolo Plugin: Failed to create blocks table - ' . $wpdb->last_error);
             return false;
         }
 
-        error_log('Fanculo Plugin: Blocks table created successfully');
+        error_log('FanCoolo Plugin: Blocks table created successfully');
         return true;
     }
 
@@ -118,11 +118,11 @@ class DatabaseInstaller
         $result = dbDelta($sql_scss);
 
         if (!empty($wpdb->last_error)) {
-            error_log('Fanculo Plugin: Failed to create SCSS table - ' . $wpdb->last_error);
+            error_log('FanCoolo Plugin: Failed to create SCSS table - ' . $wpdb->last_error);
             return false;
         }
 
-        error_log('Fanculo Plugin: SCSS partials table created successfully');
+        error_log('FanCoolo Plugin: SCSS partials table created successfully');
         return true;
     }
 
@@ -171,11 +171,11 @@ class DatabaseInstaller
         $result = dbDelta($sql_attributes);
 
         if (!empty($wpdb->last_error)) {
-            error_log('Fanculo Plugin: Failed to create attributes table - ' . $wpdb->last_error);
+            error_log('FanCoolo Plugin: Failed to create attributes table - ' . $wpdb->last_error);
             return false;
         }
 
-        error_log('Fanculo Plugin: Block attributes table created successfully');
+        error_log('FanCoolo Plugin: Block attributes table created successfully');
         return true;
     }
 
@@ -213,11 +213,11 @@ class DatabaseInstaller
         $result = dbDelta($sql_usage);
 
         if (!empty($wpdb->last_error)) {
-            error_log('Fanculo Plugin: Failed to create partials usage table - ' . $wpdb->last_error);
+            error_log('FanCoolo Plugin: Failed to create partials usage table - ' . $wpdb->last_error);
             return false;
         }
 
-        error_log('Fanculo Plugin: Partials usage table created successfully');
+        error_log('FanCoolo Plugin: Partials usage table created successfully');
         return true;
     }
 
@@ -245,9 +245,9 @@ class DatabaseInstaller
         $result4 = $wpdb->query("DROP TABLE IF EXISTS $usage_table");
 
         if ($result1 === false || $result2 === false || $result3 === false || $result4 === false) {
-            error_log('Fanculo Plugin: Failed to drop tables - ' . $wpdb->last_error);
+            error_log('FanCoolo Plugin: Failed to drop tables - ' . $wpdb->last_error);
         } else {
-            error_log('Fanculo Plugin: Database tables uninstalled successfully');
+            error_log('FanCoolo Plugin: Database tables uninstalled successfully');
         }
 
         // Remove the version option
@@ -277,7 +277,7 @@ class DatabaseInstaller
     {
         global $wpdb;
 
-        error_log(sprintf('Fanculo Plugin: Upgrading database from %s to %s', $from_version, $to_version));
+        error_log(sprintf('FanCoolo Plugin: Upgrading database from %s to %s', $from_version, $to_version));
 
         // For initial installation or major changes, run full install
         if ($from_version === '0.0.0') {
@@ -292,10 +292,10 @@ class DatabaseInstaller
         if (version_compare($from_version, '4.0.0', '<')) {
             // The table should already be created by ensureTablesExist()
             // Now just migrate the data if needed
-            $repository = new \Fanculo\Database\ScssPartialsSettingsRepository();
+            $repository = new \FanCoolo\Database\ScssPartialsSettingsRepository();
             $migrated = $repository::migrateAll();
             if ($migrated > 0) {
-                error_log("Fanculo Plugin: Migrated $migrated SCSS partials to new table");
+                error_log("FanCoolo Plugin: Migrated $migrated SCSS partials to new table");
             }
         }
 
@@ -303,21 +303,21 @@ class DatabaseInstaller
         if (version_compare($from_version, '4.3.0', '<')) {
             // The table should already be created by ensureTablesExist()
             // Now just migrate the data if needed
-            $repository = new \Fanculo\Database\BlockAttributesRepository();
+            $repository = new \FanCoolo\Database\BlockAttributesRepository();
             $migrated = $repository::migrateAll();
             if ($migrated > 0) {
-                error_log("Fanculo Plugin: Migrated $migrated blocks' attributes to new table");
+                error_log("FanCoolo Plugin: Migrated $migrated blocks' attributes to new table");
             }
         }
 
-        // Migration for version 4.4.0 - Add partials usage table and populate from existing data
-        if (version_compare($from_version, '4.4.0', '<')) {
+        // Migration for version 0.0.1 - Add partials usage table and populate from existing data
+        if (version_compare($from_version, '0.0.1', '<')) {
             // The table should already be created by ensureTablesExist()
             // Now populate it from existing selected_partials data
-            $repository = new \Fanculo\Database\PartialsUsageRepository();
+            $repository = new \FanCoolo\Database\PartialsUsageRepository();
             $migrated = $repository::migrateFromBlockSettings();
             if ($migrated > 0) {
-                error_log("Fanculo Plugin: Migrated $migrated partial usage relationships to new table");
+                error_log("FanCoolo Plugin: Migrated $migrated partial usage relationships to new table");
             }
         }
 

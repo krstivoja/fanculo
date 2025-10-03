@@ -1,15 +1,15 @@
 <?php
 
-namespace Fanculo\Admin\Api\Controllers;
+namespace FanCoolo\Admin\Api\Controllers;
 
-use Fanculo\Content\FunculoPostType;
-use Fanculo\Content\FunculoTypeTaxonomy;
-use Fanculo\Admin\Api\Services\MetaKeysConstants;
-use Fanculo\Database\BlockSettingsRepository;
-use Fanculo\Database\ScssPartialsSettingsRepository;
-use Fanculo\Database\PartialsUsageRepository;
-use Fanculo\Admin\Api\ScssCompilerApiController;
-use Fanculo\Admin\Api\BlockCategoriesApiController;
+use FanCoolo\Content\FunculoPostType;
+use FanCoolo\Content\FunculoTypeTaxonomy;
+use FanCoolo\Admin\Api\Services\MetaKeysConstants;
+use FanCoolo\Database\BlockSettingsRepository;
+use FanCoolo\Database\ScssPartialsSettingsRepository;
+use FanCoolo\Database\PartialsUsageRepository;
+use FanCoolo\Admin\Api\ScssCompilerApiController;
+use FanCoolo\Admin\Api\BlockCategoriesApiController;
 
 /**
  * Posts Query API Controller - Advanced Queries
@@ -71,7 +71,7 @@ class PostsQueryApiController extends BaseApiController
         }
 
         // Debug logging for selected_partials
-        error_log("Fanculo Debug: PostsQueryApiController getPostWithRelated - Post ID: $postId, meta blocks: " . json_encode($postData['meta']['blocks'] ?? []));
+        error_log("FanCoolo Debug: PostsQueryApiController getPostWithRelated - Post ID: $postId, meta blocks: " . json_encode($postData['meta']['blocks'] ?? []));
 
         // Add related data based on post type
         $relatedData = [];
@@ -120,7 +120,7 @@ class PostsQueryApiController extends BaseApiController
         ];
 
         // Final debug logging before sending response
-        error_log("Fanculo Debug: PostsQueryApiController getPostWithRelated - Final response post.meta.blocks: " . json_encode($postData['meta']['blocks'] ?? []));
+        error_log("FanCoolo Debug: PostsQueryApiController getPostWithRelated - Final response post.meta.blocks: " . json_encode($postData['meta']['blocks'] ?? []));
 
         return $this->responseFormatter->success([
             'post' => $postData,

@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\Database;
+namespace FanCoolo\Database;
 
 /**
  * Repository for managing SCSS partial usage tracking
@@ -99,7 +99,7 @@ class PartialsUsageRepository
 
         } catch (\Exception $e) {
             $wpdb->query('ROLLBACK');
-            error_log("Fanculo PartialsUsageRepository syncBlockPartials error: " . $e->getMessage());
+            error_log("FanCoolo PartialsUsageRepository syncBlockPartials error: " . $e->getMessage());
             return false;
         }
     }
@@ -138,7 +138,7 @@ class PartialsUsageRepository
         $results = $wpdb->get_col($query);
 
         if ($wpdb->last_error) {
-            error_log("Fanculo PartialsUsageRepository getBlocksUsingPartial error: " . $wpdb->last_error);
+            error_log("FanCoolo PartialsUsageRepository getBlocksUsingPartial error: " . $wpdb->last_error);
             return [];
         }
 
@@ -165,7 +165,7 @@ class PartialsUsageRepository
         $results = $wpdb->get_results($query, ARRAY_A);
 
         if ($wpdb->last_error) {
-            error_log("Fanculo PartialsUsageRepository getPartialsUsedByBlock error: " . $wpdb->last_error);
+            error_log("FanCoolo PartialsUsageRepository getPartialsUsedByBlock error: " . $wpdb->last_error);
             return ['style' => [], 'editorStyle' => []];
         }
 
@@ -196,7 +196,7 @@ class PartialsUsageRepository
         $deleted = $wpdb->delete($table_name, ['block_id' => $block_id], ['%d']);
 
         if ($deleted === false) {
-            error_log("Fanculo PartialsUsageRepository deleteBlockUsage error for block {$block_id}: " . $wpdb->last_error);
+            error_log("FanCoolo PartialsUsageRepository deleteBlockUsage error for block {$block_id}: " . $wpdb->last_error);
             return false;
         }
 
@@ -218,7 +218,7 @@ class PartialsUsageRepository
         $deleted = $wpdb->delete($table_name, ['partial_id' => $partial_id], ['%d']);
 
         if ($deleted === false) {
-            error_log("Fanculo PartialsUsageRepository deletePartialUsage error for partial {$partial_id}: " . $wpdb->last_error);
+            error_log("FanCoolo PartialsUsageRepository deletePartialUsage error for partial {$partial_id}: " . $wpdb->last_error);
             return false;
         }
 
@@ -250,7 +250,7 @@ class PartialsUsageRepository
         $results = $wpdb->get_results($query, ARRAY_A);
 
         if ($wpdb->last_error) {
-            error_log("Fanculo PartialsUsageRepository getPartialUsageStats error: " . $wpdb->last_error);
+            error_log("FanCoolo PartialsUsageRepository getPartialUsageStats error: " . $wpdb->last_error);
             return ['style' => 0, 'editorStyle' => 0, 'total' => 0];
         }
 
@@ -267,7 +267,7 @@ class PartialsUsageRepository
 
     /**
      * Migrate existing data from BlockSettingsRepository to populate this table
-     * Should be called during database upgrade to version 4.4.0
+     * Should be called during database upgrade to version 0.0.1
      *
      * @return int Number of relationships migrated
      */

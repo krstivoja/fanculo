@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\FilesManager\Interfaces;
+namespace FanCoolo\FilesManager\Interfaces;
 
 use WP_Post;
 

@@ -1,9 +1,9 @@
 <?php
 
-namespace Fanculo\Admin\Api\Traits;
+namespace FanCoolo\Admin\Api\Traits;
 
-use Fanculo\Content\FunculoPostType;
-use Fanculo\Content\FunculoTypeTaxonomy;
+use FanCoolo\Content\FunculoPostType;
+use FanCoolo\Content\FunculoTypeTaxonomy;
 
 /**
  * Bulk Operation Trait

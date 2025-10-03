@@ -1,10 +1,10 @@
 <?php
 
-namespace Fanculo\FilesManager\Services;
+namespace FanCoolo\FilesManager\Services;
 
-use Fanculo\Admin\Api\Services\MetaKeysConstants;
-use Fanculo\Database\BlockAttributesRepository;
-use Fanculo\FilesManager\Files\Fields\FieldRegistry;
+use FanCoolo\Admin\Api\Services\MetaKeysConstants;
+use FanCoolo\Database\BlockAttributesRepository;
+use FanCoolo\FilesManager\Files\Fields\FieldRegistry;
 
 class AttributeMapper
 {

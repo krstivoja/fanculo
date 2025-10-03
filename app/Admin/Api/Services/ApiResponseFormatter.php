@@ -1,10 +1,10 @@
 <?php
 
-namespace Fanculo\Admin\Api\Services;
+namespace FanCoolo\Admin\Api\Services;
 
 use WP_REST_Response;
 use WP_Error;
-use Fanculo\Helpers\CaseTransformer;
+use FanCoolo\Helpers\CaseTransformer;
 
 /**
  * API Response Formatter for consistent response structure

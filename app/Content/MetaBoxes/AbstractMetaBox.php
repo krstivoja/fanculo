@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\Content\MetaBoxes;
+namespace FanCoolo\Content\MetaBoxes;
 
 abstract class AbstractMetaBox
 {
@@ -135,7 +135,7 @@ abstract class AbstractMetaBox
 
     protected function sanitizePhpCode($code)
     {
-        $sanitizationService = new \Fanculo\Admin\Api\Services\SanitizationService();
+        $sanitizationService = new \FanCoolo\Admin\Api\Services\SanitizationService();
         return $sanitizationService->sanitizePhpCode($code, ['validate_syntax' => false]);
     }
 

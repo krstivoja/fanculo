@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\Helpers;
+namespace FanCoolo\Helpers;
 
 class AdminAssets
 {
@@ -55,7 +55,7 @@ class AdminAssets
         // Enqueue CSS
         if (file_exists($cssFile)) {
             wp_enqueue_style(
-                'fanculo-app',
+                'fancoolo-app',
                 $this->buildUrl . 'index.css',
                 array('dashicons'),
                 filemtime($cssFile)
@@ -72,6 +72,11 @@ class AdminAssets
                 'root' => esc_url_raw(rest_url()),
                 'nonce' => wp_create_nonce('wp_rest'),
                 'posts' => $posts_data,
+            ]), 'after');
+
+            // Output plugin URL for SCSS compiler and other assets
+            wp_add_inline_script('jquery', 'window.funculoSettings = ' . json_encode([
+                'pluginUrl' => defined('FANCOOLO_URL') ? FANCOOLO_URL : plugin_dir_url(dirname(dirname(__FILE__))),
             ]), 'after');
 
             // Add the module script manually in footer
@@ -96,7 +101,7 @@ class AdminAssets
 
         if (file_exists($cssFile)) {
             wp_enqueue_style(
-                'fanculo-license',
+                'fancoolo-license',
                 $this->buildUrl . 'index.css',
                 array('dashicons'),
                 filemtime($cssFile)
@@ -112,8 +117,8 @@ class AdminAssets
         }
 
         // Cache the posts query for better performance
-        $cacheKey = 'fanculo_admin_posts_data';
-        $posts = wp_cache_get($cacheKey, 'fanculo_admin_data');
+        $cacheKey = 'fancoolo_admin_posts_data';
+        $posts = wp_cache_get($cacheKey, 'fancoolo_admin_data');
 
         if (false === $posts) {
             $posts = get_posts([
@@ -123,7 +128,7 @@ class AdminAssets
             ]);
 
             // Cache for 5 minutes
-            wp_cache_set($cacheKey, $posts, 'fanculo_admin_data', 300);
+            wp_cache_set($cacheKey, $posts, 'fancoolo_admin_data', 300);
         }
 
         $grouped = [

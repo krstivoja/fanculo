@@ -2,7 +2,7 @@
 
 ## Overview
 
-Migrate from JSON-based post meta storage to hybrid custom tables with strategic JSON usage for better performance, data integrity, and query capabilities in the Fanculo WordPress plugin.
+Migrate from JSON-based post meta storage to hybrid custom tables with strategic JSON usage for better performance, data integrity, and query capabilities in the FanCoolo WordPress plugin.
 
 ## Current Problems
 
@@ -83,11 +83,13 @@ CREATE TABLE funculo_block_partials (
 #### What Goes Where
 
 **Relational Columns**: Searchable/filterable data
+
 - Block category, icon, description
 - Attribute names, types, labels
 - SCSS partial relationships
 
 **JSON Storage**: Complex/variable structures
+
 - Attribute field options (select/radio/checkbox arrays)
 - Validation rules and constraints
 - Complex inner blocks configuration
@@ -95,6 +97,7 @@ CREATE TABLE funculo_block_partials (
 #### Symbols and SCSS Partials
 
 **Keep as WordPress Meta** (no custom tables needed):
+
 - **Symbols**: Only store `_funculo_symbol_php` (simple, no complex relationships)
 - **SCSS Partials**: Store `_funculo_scss_partial_scss`, `_funculo_scss_is_global`, `_funculo_scss_global_order` as structured meta with `register_post_meta()` validation
 
@@ -105,18 +108,21 @@ These content types don't have the performance/complexity issues that blocks hav
 ### Step 1: Database Infrastructure
 
 **Files to Create:**
+
 - `app/Database/DatabaseManager.php` - Handle dbDelta() and versioning
 - `app/Database/Schema/BlocksSchema.php` - Schema definitions
 
 **Tasks:**
+
 - Create database schema with `dbDelta()` in plugin activation hook
 - Add proper indexes for query performance (post_id, category, block_id, name, type)
-- Create database versioning system using `fanculo_db_version` option
+- Create database versioning system using `fancoolo_db_version` option
 - Build helper to reseed tables in development environment
 
 ### Step 2: Data Access Layer
 
 **Files to Create:**
+
 - `app/Repositories/BlockRepository.php` - Block CRUD operations
 - `app/Repositories/AttributeRepository.php` - Attribute management
 - `app/Services/BlockConfigurationService.php` - Complex compositional operations
@@ -124,6 +130,7 @@ These content types don't have the performance/complexity issues that blocks hav
 - `app/DTOs/AttributeData.php` - Attribute data structures
 
 **Tasks:**
+
 - Build repository pattern for clean data access
 - Implement type-hinted DTOs for data validation
 - Add transient-based caching with invalidation hooks
@@ -132,10 +139,12 @@ These content types don't have the performance/complexity issues that blocks hav
 ### Step 3: Development Fixtures (No Migration Needed)
 
 **Files to Create:**
+
 - `app/Database/Seeds/BlockFixtures.php` - Test data fixtures
 - `app/Commands/DevSeedCommand.php` - Development seeding helper
 
 **Tasks:**
+
 - Create realistic block examples with various attribute types (text, select, number, etc.)
 - Generate sample SCSS partial relationships for testing
 - Provide comprehensive test data for performance testing
@@ -146,12 +155,14 @@ These content types don't have the performance/complexity issues that blocks hav
 ### Step 4: Implement New Data Layer
 
 **Files to Modify:**
+
 - `app/Admin/Api/Services/BulkQueryService.php` - Replace JSON parsing with JOINs
 - All generators in `app/FilesManager/Generators/` - Use new data layer
 - API controllers in `app/Admin/Api/` - Work with new data structure
 - `app/Admin/Api/Services/MetaKeysConstants.php` - Remove deprecated constants
 
 **Tasks:**
+
 - Implement new repository calls (no old meta to replace)
 - Build bulk operations with proper JOIN queries
 - Create generators that work with new data structure from the start
@@ -160,11 +171,13 @@ These content types don't have the performance/complexity issues that blocks hav
 ### Step 5: Frontend Integration
 
 **Files to Modify:**
+
 - React components in `src/app/components/editor/` - Handle new API responses
 - Metabox components - Save to new tables instead of meta
 - API client in `src/utils/api/` - Updated endpoints
 
 **Tasks:**
+
 - Update React components to work with new API payloads
 - Modify editor metaboxes to save to new tables
 - Add comprehensive E2E smoke tests covering create/edit/delete operations
@@ -173,10 +186,12 @@ These content types don't have the performance/complexity issues that blocks hav
 ### Step 6: Performance Optimization & Monitoring
 
 **Files to Create:**
+
 - `app/Services/QueryMonitoringService.php` - Performance tracking
 - `app/Cache/BlockCacheManager.php` - Advanced caching strategies
 
 **Tasks:**
+
 - Add query result caching for complex attribute lookups
 - Optimize bulk operations for block generation
 - Instrument key queries with performance monitoring
@@ -187,16 +202,19 @@ These content types don't have the performance/complexity issues that blocks hav
 ### Step 7: Cleanup & Documentation
 
 **Files to Remove/Refactor:**
+
 - Block-related meta key constants in `MetaKeysConstants.php` (keep Symbol/SCSS meta keys)
 - JSON parsing logic in `AttributeMapper.php` (replace with repository calls)
 
 **Documentation to Create:**
+
 - `optimisation-plan/schema-documentation.md` - Database schema docs
 - `optimisation-plan/repository-usage-examples.md` - Code examples
 - `optimisation-plan/install-upgrade-steps.md` - Deployment guide
 - `optimisation-plan/testing-checklist.md` - QA procedures
 
 **Tasks:**
+
 - Remove block-related meta key constants (keep Symbol/SCSS as structured meta)
 - Replace JSON parsing with repository calls
 - Update all code comments and documentation
@@ -240,6 +258,7 @@ app/
 ## Risk Mitigation
 
 Since this plugin has no active users:
+
 - **No Migration Scripts Needed**: Implement new architecture directly
 - **No Backward Compatibility**: Clean slate implementation
 - **No Gradual Rollout**: Direct implementation of new architecture
@@ -262,4 +281,4 @@ Since this plugin has no active users:
 4. **Week 4**: Frontend integration and testing
 5. **Week 5**: Performance optimization and documentation
 
-This migration will provide a solid foundation for scaling the Fanculo plugin while maintaining clean, maintainable WordPress architecture.
+This migration will provide a solid foundation for scaling the FanCoolo plugin while maintaining clean, maintainable WordPress architecture.

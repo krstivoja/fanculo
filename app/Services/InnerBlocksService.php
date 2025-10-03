@@ -1,8 +1,8 @@
 <?php
 
-namespace Fanculo\Services;
+namespace FanCoolo\Services;
 
-use Fanculo\FilesManager\Services\InnerBlocksProcessor;
+use FanCoolo\FilesManager\Services\InnerBlocksProcessor;
 use function add_action;
 
 /**

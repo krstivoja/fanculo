@@ -1,9 +1,9 @@
 <?php
 
-namespace Fanculo\Admin;
+namespace FanCoolo\Admin;
 
-use Fanculo\Helpers\AdminAssets;
-use Fanculo\EDDUpdater\LicenseManager;
+use FanCoolo\Helpers\AdminAssets;
+use FanCoolo\EDDUpdater\LicenseManager;
 
 class SettingsPage
 {
@@ -26,7 +26,7 @@ class SettingsPage
             return;
         }
 
-        if (!isset($_GET['page']) || $_GET['page'] !== 'fanculo-app') {
+        if (!isset($_GET['page']) || $_GET['page'] !== 'fancoolo-app') {
             return;
         }
 
@@ -37,17 +37,17 @@ class SettingsPage
     public function add_admin_menu()
     {
         add_menu_page(
-            'Fanculo',
-            'Fanculo',
+            'FanCoolo WP',
+            'FanCoolo WP',
             'manage_options',
-            'fanculo-app',
+            'fancoolo-app',
             [$this, 'render_settings_page']
         );
     }
 
     public function enqueue_scripts($hook)
     {
-        if ($hook !== 'toplevel_page_fanculo-app') {
+        if ($hook !== 'toplevel_page_fancoolo-app') {
             return;
         }
 
@@ -67,11 +67,11 @@ class SettingsPage
             $license_is_valid = ($license_status === 'valid' && !empty($license_key));
 
             echo '<div class="wrap">';
-            echo '<h1>' . esc_html__('Fanculo', 'fanculo') . '</h1>';
+            echo '<h1>' . esc_html__('FanCoolo', 'fancoolo') . '</h1>';
 
-            $notice = get_transient('fanculo_license_notice');
+            $notice = get_transient('fancoolo_license_notice');
             if ($notice) {
-                delete_transient('fanculo_license_notice');
+                delete_transient('fancoolo_license_notice');
                 $type = isset($notice['type']) ? sanitize_html_class($notice['type']) : 'success';
                 $message = isset($notice['message']) ? wp_kses_post($notice['message']) : '';
                 if ($message) {
@@ -81,7 +81,7 @@ class SettingsPage
             }
 
             if ($license_is_valid) {
-                echo '<div id="fanculo-app"></div>';
+                echo '<div id="fancoolo-app"></div>';
             } else {
                 $license_manager->render_license_page(false);
             }
@@ -96,7 +96,7 @@ class SettingsPage
                 </div>
             </div>
             <?php
-            error_log('Fanculo settings page error: ' . $e->getMessage());
+            error_log('FanCoolo settings page error: ' . $e->getMessage());
         }
     }
 }

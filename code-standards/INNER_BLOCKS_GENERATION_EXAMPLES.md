@@ -14,36 +14,36 @@ When Inner Blocks toggle is **OFF**, the generated `index.js` will be:
 
 ```javascript
 (function () {
-    const { registerBlockType } = wp.blocks;
-    const { InnerBlocks } = wp.blockEditor;
+  const { registerBlockType } = wp.blocks;
+  const { InnerBlocks } = wp.blockEditor;
 
-    // No inner blocks - empty options
-    const PARSER_OPTIONS = {};
+  // No inner blocks - empty options
+  const PARSER_OPTIONS = {};
 
-    // Wait for FanculoBlockRenderer to be available
-    function waitForRenderer(callback) {
-        if (window.FanculoBlockRenderer?.createServerRenderComponent) {
-            callback();
-        } else {
-            setTimeout(() => waitForRenderer(callback), 50);
-        }
+  // Wait for FanCooloBlockRenderer to be available
+  function waitForRenderer(callback) {
+    if (window.FanCooloBlockRenderer?.createServerRenderComponent) {
+      callback();
+    } else {
+      setTimeout(() => waitForRenderer(callback), 50);
     }
+  }
 
-    waitForRenderer(() => {
-        // Use the shared FanculoBlockRenderer to create the edit component
-        const Edit = window.FanculoBlockRenderer.createServerRenderComponent(
-            "fanculo/my-block",
-            PARSER_OPTIONS
-        );
+  waitForRenderer(() => {
+    // Use the shared FanCooloBlockRenderer to create the edit component
+    const Edit = window.FanCooloBlockRenderer.createServerRenderComponent(
+      "fancoolo/my-block",
+      PARSER_OPTIONS
+    );
 
-        registerBlockType("fanculo/my-block", {
-            edit: Edit,
-            save: function() {
-                return null; // Server-side rendering
-            }
-        });
+    registerBlockType("fancoolo/my-block", {
+      edit: Edit,
+      save: function () {
+        return null; // Server-side rendering
+      },
     });
-})()
+  });
+})();
 ```
 
 ---
@@ -54,42 +54,40 @@ When Inner Blocks toggle is **ON** and user selects blocks like `["core/paragrap
 
 ```javascript
 (function () {
-    const { registerBlockType } = wp.blocks;
-    const { InnerBlocks } = wp.blockEditor;
+  const { registerBlockType } = wp.blocks;
+  const { InnerBlocks } = wp.blockEditor;
 
-    // InnerBlocks options
-    const PARSER_OPTIONS = {
-        allowedBlocks: ["core/paragraph","core/heading","core/image"],
-        template: [
-            ["core/paragraph", { placeholder: "Add some content here..." }]
-        ],
-        templateLock: false
-    };
+  // InnerBlocks options
+  const PARSER_OPTIONS = {
+    allowedBlocks: ["core/paragraph", "core/heading", "core/image"],
+    template: [["core/paragraph", { placeholder: "Add some content here..." }]],
+    templateLock: false,
+  };
 
-    // Wait for FanculoBlockRenderer to be available
-    function waitForRenderer(callback) {
-        if (window.FanculoBlockRenderer?.createServerRenderComponent) {
-            callback();
-        } else {
-            setTimeout(() => waitForRenderer(callback), 50);
-        }
+  // Wait for FanCooloBlockRenderer to be available
+  function waitForRenderer(callback) {
+    if (window.FanCooloBlockRenderer?.createServerRenderComponent) {
+      callback();
+    } else {
+      setTimeout(() => waitForRenderer(callback), 50);
     }
+  }
 
-    waitForRenderer(() => {
-        // Use the shared FanculoBlockRenderer to create the edit component
-        const Edit = window.FanculoBlockRenderer.createServerRenderComponent(
-            "fanculo/my-block",
-            PARSER_OPTIONS
-        );
+  waitForRenderer(() => {
+    // Use the shared FanCooloBlockRenderer to create the edit component
+    const Edit = window.FanCooloBlockRenderer.createServerRenderComponent(
+      "fancoolo/my-block",
+      PARSER_OPTIONS
+    );
 
-        registerBlockType("fanculo/my-block", {
-            edit: Edit,
-            save: function() {
-                return wp.element.createElement(InnerBlocks.Content);
-            }
-        });
+    registerBlockType("fancoolo/my-block", {
+      edit: Edit,
+      save: function () {
+        return wp.element.createElement(InnerBlocks.Content);
+      },
     });
-})()
+  });
+})();
 ```
 
 ---
@@ -100,41 +98,39 @@ When Inner Blocks toggle is **ON** but no specific blocks are selected (allow al
 
 ```javascript
 (function () {
-    const { registerBlockType } = wp.blocks;
-    const { InnerBlocks } = wp.blockEditor;
+  const { registerBlockType } = wp.blocks;
+  const { InnerBlocks } = wp.blockEditor;
 
-    // InnerBlocks options
-    const PARSER_OPTIONS = {
-        template: [
-            ["core/paragraph", { placeholder: "Add some content here..." }]
-        ],
-        templateLock: false
-    };
+  // InnerBlocks options
+  const PARSER_OPTIONS = {
+    template: [["core/paragraph", { placeholder: "Add some content here..." }]],
+    templateLock: false,
+  };
 
-    // Wait for FanculoBlockRenderer to be available
-    function waitForRenderer(callback) {
-        if (window.FanculoBlockRenderer?.createServerRenderComponent) {
-            callback();
-        } else {
-            setTimeout(() => waitForRenderer(callback), 50);
-        }
+  // Wait for FanCooloBlockRenderer to be available
+  function waitForRenderer(callback) {
+    if (window.FanCooloBlockRenderer?.createServerRenderComponent) {
+      callback();
+    } else {
+      setTimeout(() => waitForRenderer(callback), 50);
     }
+  }
 
-    waitForRenderer(() => {
-        // Use the shared FanculoBlockRenderer to create the edit component
-        const Edit = window.FanculoBlockRenderer.createServerRenderComponent(
-            "fanculo/my-block",
-            PARSER_OPTIONS
-        );
+  waitForRenderer(() => {
+    // Use the shared FanCooloBlockRenderer to create the edit component
+    const Edit = window.FanCooloBlockRenderer.createServerRenderComponent(
+      "fancoolo/my-block",
+      PARSER_OPTIONS
+    );
 
-        registerBlockType("fanculo/my-block", {
-            edit: Edit,
-            save: function() {
-                return wp.element.createElement(InnerBlocks.Content);
-            }
-        });
+    registerBlockType("fancoolo/my-block", {
+      edit: Edit,
+      save: function () {
+        return wp.element.createElement(InnerBlocks.Content);
+      },
     });
-})()
+  });
+})();
 ```
 
 ---
@@ -142,17 +138,20 @@ When Inner Blocks toggle is **ON** but no specific blocks are selected (allow al
 ## 🔄 How It Works
 
 ### 1. **User Interface**
+
 - User toggles "Enable Inner Blocks" in Block Settings
 - If enabled, user can select allowed block types using the tag input
 - Settings are saved to WordPress meta as JSON
 
 ### 2. **File Generation Process**
+
 - When block files are generated/regenerated
 - `Index.php` generator receives the post ID
 - Generator fetches inner blocks settings from post meta
 - JavaScript is dynamically generated based on settings
 
 ### 3. **WordPress Integration**
+
 - Generated `index.js` is loaded by WordPress
 - Block behaves according to inner blocks configuration
 - If inner blocks enabled: shows InnerBlocks interface in editor
@@ -163,6 +162,7 @@ When Inner Blocks toggle is **ON** but no specific blocks are selected (allow al
 ## 📊 Setting Options
 
 ### JSON Structure in WordPress Meta
+
 ```json
 {
   "enabled": true,
@@ -176,6 +176,7 @@ When Inner Blocks toggle is **ON** but no specific blocks are selected (allow al
 ```
 
 ### JavaScript Generation Logic
+
 - **`enabled: false`** → No allowedBlocks, `save: null`
 - **`enabled: true`** + **empty array** → No allowedBlocks restriction, `save: InnerBlocks.Content`
 - **`enabled: true`** + **with blocks** → Specific allowedBlocks array, `save: InnerBlocks.Content`
@@ -194,4 +195,4 @@ When Inner Blocks toggle is **ON** but no specific blocks are selected (allow al
 
 ## ✅ Ready for Production!
 
-The inner blocks integration is now complete and will automatically generate the appropriate JavaScript based on user settings in the Fanculo block builder interface.
+The inner blocks integration is now complete and will automatically generate the appropriate JavaScript based on user settings in the FanCoolo block builder interface.

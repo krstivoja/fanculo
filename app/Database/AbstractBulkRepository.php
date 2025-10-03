@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\Database;
+namespace FanCoolo\Database;
 
 /**
  * Abstract Bulk Repository
@@ -68,7 +68,7 @@ abstract class AbstractBulkRepository implements BulkRepositoryInterface
     protected static function handleDatabaseError(string $operation, string $error_message): void
     {
         $message = sprintf('Database operation failed: %s. Error: %s', $operation, $error_message);
-        error_log("Fanculo Repository Error: {$message}");
+        error_log("FanCoolo Repository Error: {$message}");
         throw new \RuntimeException($message);
     }
 

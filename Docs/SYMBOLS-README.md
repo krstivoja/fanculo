@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Fanculo plugin includes a powerful symbol system that allows you to create reusable PHP components and use them with React-like syntax in your blocks. Instead of manually writing `<?php include '../symbols/button.php'; ?>`, you can simply write `<Button />` and the system will automatically resolve and include the correct symbol file.
+The FanCoolo plugin includes a powerful symbol system that allows you to create reusable PHP components and use them with React-like syntax in your blocks. Instead of manually writing `<?php include '../symbols/button.php'; ?>`, you can simply write `<Button />` and the system will automatically resolve and include the correct symbol file.
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ The Fanculo plugin includes a powerful symbol system that allows you to create r
 
 ### Step 1: Create a New Symbol
 
-1. Navigate to **Fanculo Items** in your WordPress admin
+1. Navigate to **FanCoolo Items** in your WordPress admin
 2. Click **Add New**
 3. Set the **Type** to **Symbol**
 4. Give your symbol a meaningful name (e.g., "Button", "Card", "Hero Banner")
@@ -423,7 +423,7 @@ if ($is_featured) {
 
 If a symbol reference like `<Button />` doesn't work:
 
-1. **Check the symbol exists**: Verify the symbol is published in Fanculo Items
+1. **Check the symbol exists**: Verify the symbol is published in FanCoolo Items
 2. **Check the slug**: Ensure the symbol slug matches your reference (case-insensitive)
 3. **Regenerate the block**: Re-save your block to trigger file regeneration
 4. **Check file permissions**: Ensure the `symbols/` directory is writable

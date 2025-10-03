@@ -1,9 +1,9 @@
 <?php
 
-namespace Fanculo\Admin\Api;
+namespace FanCoolo\Admin\Api;
 
-use Fanculo\Content\FunculoTypeTaxonomy;
-use Fanculo\Admin\Api\Services\ApiResponseFormatter;
+use FanCoolo\Content\FunculoTypeTaxonomy;
+use FanCoolo\Admin\Api\Services\ApiResponseFormatter;
 
 class TaxonomyApiController
 {

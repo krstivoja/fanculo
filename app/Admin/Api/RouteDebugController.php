@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\Admin\Api;
+namespace FanCoolo\Admin\Api;
 
 /**
  * Debug all registered routes
@@ -14,7 +14,7 @@ class RouteDebugController
 
     public function registerDebugRoute(): void
     {
-        register_rest_route('fanculo/v1', '/debug/routes', [
+        register_rest_route('fancoolo/v1', '/debug/routes', [
             'methods' => 'GET',
             'callback' => [$this, 'listRoutes'],
             'permission_callback' => '__return_true'
@@ -26,23 +26,23 @@ class RouteDebugController
         $server = rest_get_server();
         $routes = $server->get_routes();
 
-        $fanculo_routes = [];
+        $fancoolo_routes = [];
         foreach ($routes as $route => $handlers) {
-            if (strpos($route, 'fanculo') !== false) {
+            if (strpos($route, 'fancoolo') !== false) {
                 $methods = [];
                 foreach ($handlers as $handler) {
                     if (isset($handler['methods'])) {
                         $methods = array_merge($methods, array_keys($handler['methods']));
                     }
                 }
-                $fanculo_routes[$route] = array_unique($methods);
+                $fancoolo_routes[$route] = array_unique($methods);
             }
         }
 
         return [
             'success' => true,
-            'routes' => $fanculo_routes,
-            'total' => count($fanculo_routes)
+            'routes' => $fancoolo_routes,
+            'total' => count($fancoolo_routes)
         ];
     }
 }

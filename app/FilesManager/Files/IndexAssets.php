@@ -1,6 +1,6 @@
 <?php
 
-namespace Fanculo\FilesManager\Files;
+namespace FanCoolo\FilesManager\Files;
 
 class IndexAssets
 {
@@ -30,7 +30,7 @@ class IndexAssets
             'wp-element',
             'wp-i18n',
             'wp-server-side-render',
-            'fanculo-block-renderer'
+            'fancoolo-block-renderer'
         ];
 
         // Build the asset file content

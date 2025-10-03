@@ -1,10 +1,10 @@
 <?php
 
-namespace Fanculo\Services;
+namespace FanCoolo\Services;
 
-use Fanculo\Database\PartialsUsageRepository;
-use Fanculo\Database\BlockSettingsRepository;
-use Fanculo\Admin\Api\Services\MetaKeysConstants;
+use FanCoolo\Database\PartialsUsageRepository;
+use FanCoolo\Database\BlockSettingsRepository;
+use FanCoolo\Admin\Api\Services\MetaKeysConstants;
 
 /**
  * SCSS Recompilation Service
@@ -265,7 +265,7 @@ class ScssRecompilationService
             'timestamp' => time(),
         ];
 
-        set_transient('fanculo_blocks_need_recompile', $payload, 5 * MINUTE_IN_SECONDS);
+        set_transient('fancoolo_blocks_need_recompile', $payload, 5 * MINUTE_IN_SECONDS);
 
         error_log("📬 [ScssRecompilationService] Stored blocks needing recompilation in transient: " . json_encode([
             'partial_id' => $partialId,
@@ -287,7 +287,7 @@ class ScssRecompilationService
         }
 
         // Clear transient-based cache (API cache)
-        $cachePrefix = 'fanculo_api_';
+        $cachePrefix = 'fancoolo_api_';
         $cachePatterns = [
             "{$cachePrefix}post_{$postId}_*",
             "{$cachePrefix}batch_*",

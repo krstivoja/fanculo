@@ -4,7 +4,7 @@ The React-like symbol system is now **fully implemented and working**! Here are 
 
 ## 🎉 Success! Your Symbol System is Live
 
-As you can see in your `fanculo-blocks/bbb/render.php` file, the system is automatically converting:
+As you can see in your `fancoolo-blocks/bbb/render.php` file, the system is automatically converting:
 
 ```php
 // ✅ This React-like syntax:
@@ -20,6 +20,7 @@ include '../symbols/button.php';
 ## 📋 Quick Test Results
 
 Your test showed:
+
 - ❌ **Manual include**: `<?php include '../symbols/button.php'; ?>` → Does not work
 - ✅ **React-like syntax**: `<Button />` → **Works perfectly!**
 - ✅ **Symbol content**: `<button class="marko">Test</button>` → **Renders correctly!**
@@ -29,11 +30,13 @@ Your test showed:
 ### 1. Simple Button (Currently Working)
 
 **Your Symbol** (`symbols/button.php`):
+
 ```php
 <button class="marko">Test</button>
 ```
 
 **Usage in Block**:
+
 ```php
 <div <?php echo get_block_wrapper_attributes(); ?>>
     <h2>Welcome</h2>
@@ -42,6 +45,7 @@ Your test showed:
 ```
 
 **Generated Output**:
+
 ```php
 <div <?php echo get_block_wrapper_attributes(); ?>>
     <h2>Welcome</h2>
@@ -55,6 +59,7 @@ Your test showed:
 ### 2. Enhanced Button with Attributes
 
 **Create Symbol** (`symbols/button.php`):
+
 ```php
 <?php
 $type = $symbol_attrs['type'] ?? 'default';
@@ -67,12 +72,14 @@ $class = 'btn btn-' . $type;
 ```
 
 **Usage in Block**:
+
 ```php
 <Button type="primary" text="Get Started" />
 <Button type="secondary" text="Learn More" />
 ```
 
 **Generated Output**:
+
 ```php
 <?php
 $symbol_attrs = array (
@@ -93,6 +100,7 @@ include '../symbols/button.php';
 ### 3. Card Component
 
 **Create Symbol** (`symbols/card.php`):
+
 ```php
 <?php
 $title = $symbol_attrs['title'] ?? 'Card Title';
@@ -107,6 +115,7 @@ $featured = ($symbol_attrs['featured'] ?? 'false') === 'true';
 ```
 
 **Usage in Block**:
+
 ```php
 <div class="cards-grid">
     <Card title="Feature 1" content="Amazing feature description" />
@@ -117,6 +126,7 @@ $featured = ($symbol_attrs['featured'] ?? 'false') === 'true';
 ### 4. Hero Section
 
 **Create Symbol** (`symbols/hero-section.php`):
+
 ```php
 <?php
 $title = $symbol_attrs['title'] ?? 'Welcome';
@@ -138,6 +148,7 @@ $cta_url = esc_url($symbol_attrs['cta_url'] ?? '#');
 ```
 
 **Usage in Block**:
+
 ```php
 <HeroSection
     title="Welcome to Our Site"
@@ -151,13 +162,15 @@ $cta_url = esc_url($symbol_attrs['cta_url'] ?? '#');
 ## 🔧 How to Create New Symbols
 
 ### Step 1: Create Symbol in WordPress Admin
-1. Go to **Fanculo Items** → **Add New**
+
+1. Go to **FanCoolo Items** → **Add New**
 2. Set **Type** to **Symbol**
 3. Name it (e.g., "Call To Action")
 4. Write your PHP code in **Symbol PHP** field
 5. **Publish**
 
 ### Step 2: Use in Your Blocks
+
 ```php
 <!-- Use PascalCase, it converts to kebab-case file names -->
 <CallToAction />  <!-- → symbols/call-to-action.php -->
@@ -170,6 +183,7 @@ $cta_url = esc_url($symbol_attrs['cta_url'] ?? '#');
 ### Image Gallery Symbol
 
 **Create Symbol** (`symbols/image-gallery.php`):
+
 ```php
 <?php
 $images = json_decode($symbol_attrs['images'] ?? '[]', true);
@@ -189,6 +203,7 @@ $gap = $symbol_attrs['gap'] ?? 'normal';
 ```
 
 **Usage**:
+
 ```php
 <ImageGallery
     images='[{"id":123},{"id":456},{"id":789}]'
@@ -200,6 +215,7 @@ $gap = $symbol_attrs['gap'] ?? 'normal';
 ### Dynamic Menu Symbol
 
 **Create Symbol** (`symbols/navigation-menu.php`):
+
 ```php
 <?php
 $menu_location = $symbol_attrs['location'] ?? 'primary';
@@ -219,6 +235,7 @@ $style = $symbol_attrs['style'] ?? 'horizontal';
 ```
 
 **Usage**:
+
 ```php
 <NavigationMenu location="header" style="horizontal" />
 <NavigationMenu location="footer" style="vertical" />
@@ -228,8 +245,8 @@ $style = $symbol_attrs['style'] ?? 'horizontal';
 
 ### If Symbol Doesn't Render
 
-1. **Check the symbol exists**: Go to Fanculo Items and verify it's published
-2. **Check the file**: Look in `fanculo-blocks/symbols/` for your file
+1. **Check the symbol exists**: Go to FanCoolo Items and verify it's published
+2. **Check the file**: Look in `fancoolo-blocks/symbols/` for your file
 3. **Regenerate the block**: Re-save your block to trigger processing
 4. **Check syntax**: Ensure you use `<ComponentName />` (capital first letter)
 
@@ -256,6 +273,7 @@ Your React-like symbol system is **fully operational**! You can now:
 - ✅ Use familiar React-like syntax in your WordPress blocks
 
 The system automatically handles:
+
 - 🔄 Converting PascalCase to kebab-case file names
 - 📁 Proper file path resolution (`../symbols/`)
 - 🔧 Attribute parsing and passing to symbols
