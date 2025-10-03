@@ -126,7 +126,7 @@ class FunculoApiClient {
       maxRetries: 3,
       retryDelay: 1000, // Start with 1 second
       retryMultiplier: 2, // Double delay each retry
-      retryableStatuses: [408, 429, 500, 502, 503, 504],
+      retryableStatuses: [403, 408, 429, 500, 502, 503, 504], // Added 403 for nonce failures
     };
 
     // Statistics tracking
@@ -219,6 +219,13 @@ class FunculoApiClient {
       } catch (error) {
         lastError = error;
 
+        // Special handling for nonce errors (403 with cookie check failure)
+        if (error.status === 403 && error.message?.includes("Cookie check failed")) {
+          console.warn("⚠️ Nonce expired. Retrying with fresh nonce...");
+          // Continue to retry - the makeRawRequest will use updated nonce
+          continue;
+        }
+
         // Don't retry on client errors (4xx) except specific ones
         if (
           error.status &&
@@ -252,6 +259,14 @@ class FunculoApiClient {
     };
 
     const response = await fetch(url, config);
+
+    // Check if nonce needs refresh
+    const newNonce = response.headers.get("X-WP-Nonce");
+    if (newNonce && newNonce !== this.nonce) {
+      console.log("🔄 Refreshing WordPress nonce");
+      this.nonce = newNonce;
+      window.wpApiSettings.nonce = newNonce;
+    }
 
     // Handle non-JSON responses
     const contentType = response.headers.get("content-type");
