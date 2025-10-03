@@ -1,18 +1,12 @@
 import React, { useState, useEffect, Suspense, lazy } from "react";
-import { Button, Toast } from "../ui";
-import { LogoIcon, WordPressIcon } from "../icons";
+import { Button, Toast, SaveButton, AdminButton } from "../ui";
 import { apiClient } from "../../../utils";
 import centralizedApi from "../../../utils/api/CentralizedApiService";
 
 // Lazy load AddPostModal - only loads when needed
 const AddPostModal = lazy(() => import("./AddPostModal"));
 
-const EditorHeader = ({
-  onSave,
-  saveStatus,
-  hasUnsavedChanges,
-  onPostsRefresh,
-}) => {
+const Header = ({ onSave, saveStatus, hasUnsavedChanges, onPostsRefresh }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [toast, setToast] = useState({
@@ -113,56 +107,26 @@ const EditorHeader = ({
       id="editor-header"
       className="h-fit border-b border-solid border-outline flex items-center justify-between"
     >
-      <div className="flex gap-4 items-center">
-        <div
-          className="bg-contrast hover:bg-action text-base-1 hover:text-highlight p-3 w-fit cursor-pointer transition-all duration-200 hover:bg-opacity-80 group relative"
-          onClick={() => (window.location.href = "/wp-admin/")}
-          title="Go to WordPress Admin"
-        >
-          <div className="group-hover:opacity-0 ">
-            <LogoIcon />
-          </div>
-          <div className="absolute inset-0 p-3 opacity-0 group-hover:opacity-100 ">
-            <WordPressIcon size={32} />
-          </div>
+      <AdminButton />
+      <nav className="flex gap-4 items-center w-full flex items-center justify-between px-2">
+        <div id="nav-left">
+          <Button variant="secondary" onClick={() => setIsAddModalOpen(true)}>
+            Add new
+          </Button>
         </div>
-
-        <Button variant="secondary" onClick={() => setIsAddModalOpen(true)}>
-          Add new
-        </Button>
-
-        <Button
-          variant="secondary"
-          onClick={handleRegenerateAll}
-          disabled={isRegenerating}
-          className="!bg-orange-600 !text-white hover:!bg-orange-700"
-          title="Force regenerate all files (use if files are out of sync)"
-        >
-          {isRegenerating ? "Regenerating..." : "Regenerate All"}
-        </Button>
-      </div>
-      <div className="flex gap-4 justify-center mr-4 items-center relative">
-        {/* Add dot inside button if we have unsaved changes */}
-        {saveStatus === "unsaved" && (
-          <span className="absolute bg-action w-2.5 h-2.5 flex top-0 right-0 rounded-full -translate-y-[50%] translate-x-[50%]"></span>
-        )}
-        <Button
-          variant="secondary"
-          className={`${
-            saveStatus === "error"
-              ? "!bg-red-600 !text-white hover:!bg-red-700"
-              : "!bg-base-2"
-          }`}
-          onClick={onSave}
-          disabled={saveStatus === "saving"}
-        >
-          {saveStatus === "saving"
-            ? "Saving..."
-            : saveStatus === "error"
-            ? "⚠︎ Error - Retry"
-            : "Save"}
-        </Button>
-      </div>
+        <div id="nav-right" className="flex gap-2 justify-end">
+          <SaveButton saveStatus={saveStatus} onSave={onSave} />
+          <Button
+            variant="secondary"
+            onClick={handleRegenerateAll}
+            disabled={isRegenerating}
+            className="!bg-orange-600 !text-white hover:!bg-orange-700"
+            title="Force regenerate all files (use if files are out of sync)"
+          >
+            {isRegenerating ? "Regenerating..." : "Regenerate All"}
+          </Button>
+        </div>
+      </nav>
 
       {isAddModalOpen && (
         <Suspense fallback={null}>
@@ -181,4 +145,4 @@ const EditorHeader = ({
   );
 };
 
-export default EditorHeader;
+export default Header;

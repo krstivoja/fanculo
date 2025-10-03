@@ -12,3 +12,6 @@ export { default as Toast } from './Toast';
 export { default as Toggle } from './Toggle';
 export { default as Hr } from './Hr';
 export { default as ReactTags } from './ReactTags';
+export { default as SaveButton } from './SaveButton';
+export { default as AdminButton } from './AdminButton';
+export { default as IconGallery } from './IconGallery';
