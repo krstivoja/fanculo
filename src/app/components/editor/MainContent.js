@@ -1,4 +1,4 @@
-import React, { useState, Suspense, lazy, useCallback, useMemo } from "react";
+import React, { useState, Suspense, lazy } from "react";
 import { BlockIcon, SymbolIcon, StyleIcon } from "../icons";
 import BlocksMetaboxes from "./metaboxes/BlocksMetaboxes";
 import SymbolsMetaboxes from "./metaboxes/SymbolsMetaboxes";
@@ -6,6 +6,19 @@ import ScssPartialsMetaboxes from "./metaboxes/ScssPartialsMetaboxes";
 
 // Lazy load EditTitleModal - only loads when title is clicked
 const EditTitleModal = lazy(() => import("./EditTitleModal"));
+
+const getTypeIcon = (termSlug) => {
+  switch (termSlug) {
+    case "blocks":
+      return <BlockIcon size={48} />;
+    case "symbols":
+      return <SymbolIcon size={48} />;
+    case "scss-partials":
+      return <StyleIcon size={48} />;
+    default:
+      return null;
+  }
+};
 
 const MainContent = ({
   selectedPost,
@@ -16,72 +29,26 @@ const MainContent = ({
 }) => {
   const [isEditTitleModalOpen, setIsEditTitleModalOpen] = useState(false);
 
-  // Memoize the type icon to prevent re-creation on every render
-  const typeIcon = useMemo(() => {
-    if (!selectedPost?.terms || !selectedPost.terms.length) {
-      return null;
+  const handleTitleSave = async (newTitle) => {
+    if (onTitleUpdate) {
+      await onTitleUpdate(newTitle);
     }
+  };
 
-    const termSlug = selectedPost.terms[0].slug;
-    switch (termSlug) {
-      case "blocks":
-        return <BlockIcon size={48} />;
-      case "symbols":
-        return <SymbolIcon size={48} />;
-      case "scss-partials":
-        return <StyleIcon size={48} />;
-      default:
-        return null;
-    }
-  }, [selectedPost?.terms]);
+  const postType = selectedPost?.terms?.[0]?.slug || null;
+  const postTitle = selectedPost?.title?.rendered || selectedPost?.title || "Untitled Post";
+  const typeIcon = postType ? getTypeIcon(postType) : null;
 
-  // Memoize the post title to prevent re-computation
-  const postTitle = useMemo(() => {
-    return (
-      selectedPost?.title?.rendered || selectedPost?.title || "Untitled Post"
-    );
-  }, [selectedPost?.title]);
-
-  // Memoize event handlers to prevent child component re-renders
-  const handleTitleClick = useCallback(() => {
-    setIsEditTitleModalOpen(true);
-  }, []);
-
-  const handleTitleModalClose = useCallback(() => {
-    setIsEditTitleModalOpen(false);
-  }, []);
-
-  const handleTitleSave = useCallback(
-    async (newTitle) => {
-      if (onTitleUpdate) {
-        await onTitleUpdate(newTitle);
-      }
-    },
-    [onTitleUpdate]
+  const titleComponent = (
+    <h1
+      className="!text-5xl font-semibold cursor-pointer hover:!text-highlight hover:underline !flex items-center gap-3 !p-8 !pb-4"
+      onClick={() => setIsEditTitleModalOpen(true)}
+      title="Click to edit title"
+    >
+      <span className="bg-base-2 p-2 rounded-full">{typeIcon}</span>
+      {postTitle}
+    </h1>
   );
-
-  // Memoize the title component to prevent recreation when props haven't changed
-  const titleComponent = useMemo(
-    () => (
-      <h1
-        className="!text-5xl font-semibold cursor-pointer hover:!text-highlight hover:underline !flex items-center gap-3 !p-8 !pb-4"
-        onClick={handleTitleClick}
-        title="Click to edit title"
-      >
-        <span className="bg-base-2 p-2 rounded-full">{typeIcon}</span>
-        {postTitle}
-      </h1>
-    ),
-    [typeIcon, postTitle, handleTitleClick]
-  );
-
-  // Determine post type from terms
-  const postType = useMemo(() => {
-    if (!selectedPost?.terms || !selectedPost.terms.length) {
-      return null;
-    }
-    return selectedPost.terms[0].slug;
-  }, [selectedPost?.terms]);
 
   return (
     <main
@@ -134,7 +101,7 @@ const MainContent = ({
             <Suspense fallback={null}>
               <EditTitleModal
                 isOpen={isEditTitleModalOpen}
-                onClose={handleTitleModalClose}
+                onClose={() => setIsEditTitleModalOpen(false)}
                 currentTitle={postTitle}
                 onSave={handleTitleSave}
               />
@@ -153,20 +120,4 @@ const MainContent = ({
   );
 };
 
-// Memoize the component to prevent unnecessary re-renders when metaData hasn't changed
-export default React.memo(MainContent, (prevProps, nextProps) => {
-  // Custom comparison function focusing on expensive props
-  return (
-    // Check if selectedPost is the same object or has same essential properties
-    prevProps.selectedPost?.id === nextProps.selectedPost?.id &&
-    prevProps.selectedPost?.title === nextProps.selectedPost?.title &&
-    // Deep comparison of terms (only first level needed for type icon)
-    JSON.stringify(prevProps.selectedPost?.terms) ===
-      JSON.stringify(nextProps.selectedPost?.terms) &&
-    // Check if metaData reference is the same (shallow comparison for performance)
-    prevProps.metaData === nextProps.metaData &&
-    // Check if callback functions are the same reference
-    prevProps.onMetaChange === nextProps.onMetaChange &&
-    prevProps.onTitleUpdate === nextProps.onTitleUpdate
-  );
-});
+export default MainContent;

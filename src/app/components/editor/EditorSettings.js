@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Textarea, Select, DashiconButton, Button } from "../ui";
 import { TrashIcon } from "../icons";
 import ScssPartialsCombined from "./ScssPartialsCombined";
 import InnerBlocksSettings from "./InnerBlocksSettings";
 import ScssPartialSettings from "./ScssPartialSettings";
-import { apiClient } from "../../../utils";
 import centralizedApi from "../../../utils/api/CentralizedApiService";
 
 const EditorSettings = ({
@@ -18,97 +17,61 @@ const EditorSettings = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState("settings");
 
-  // Memoize expensive settings parsing
-  const settings = useMemo(() => {
+  const parseSettings = () => {
     try {
       const settingsString = metaData?.blocks?.settings || "{}";
       return JSON.parse(settingsString);
     } catch (e) {
       return {};
     }
-  }, [metaData?.blocks?.settings]);
-  // Memoize expensive post type checks
-  const postTypeInfo = useMemo(
-    () => ({
-      isBlockType:
-        selectedPost?.terms?.some((term) => term.slug === "blocks") || false,
-      isScssPartial:
-        selectedPost?.terms?.some((term) => term.slug === "scss-partials") ||
-        false,
-      postInfo: {
-        id: selectedPost?.id,
-        type: selectedPost?.terms?.[0]?.name || "N/A",
-        slug: selectedPost?.slug || "N/A",
-      },
-    }),
-    [selectedPost?.terms, selectedPost?.id, selectedPost?.slug]
-  );
+  };
+
+  const settings = parseSettings();
 
   const [description, setDescription] = useState(settings.description || "");
   const [category, setCategory] = useState(settings.category || "");
   const [icon, setIcon] = useState(settings.icon || "search");
 
-  // Get block categories from shared data (no API call needed)
   const blockCategories = sharedData?.blockCategories || [];
   const loadingCategories = dataLoading?.blockCategories || false;
 
-  // Update local state when selectedPost or metaData changes
   useEffect(() => {
     setDescription(settings.description || "");
     setCategory(settings.category || "");
     setIcon(settings.icon || "search");
   }, [settings]);
 
-  // Memoize expensive settings update function
-  const updateSettings = useCallback(
-    (newDescription, newCategory, newIcon) => {
-      const updatedSettings = {
-        ...settings,
-        description: newDescription,
-        category: newCategory,
-        icon: newIcon,
-      };
+  const updateSettings = (newDescription, newCategory, newIcon) => {
+    const updatedSettings = {
+      ...settings,
+      description: newDescription,
+      category: newCategory,
+      icon: newIcon,
+    };
 
-      if (onMetaChange) {
-        onMetaChange("blocks", "settings", JSON.stringify(updatedSettings));
-      }
-    },
-    [settings, onMetaChange]
-  );
+    if (onMetaChange) {
+      onMetaChange("blocks", "settings", JSON.stringify(updatedSettings));
+    }
+  };
 
-  // Memoize event handlers
-  const handleDescriptionChange = useCallback(
-    (e) => {
-      const newDescription = e.target.value;
-      setDescription(newDescription);
-      updateSettings(newDescription, category, icon);
-    },
-    [updateSettings, category, icon]
-  );
+  const handleDescriptionChange = (e) => {
+    const newDescription = e.target.value;
+    setDescription(newDescription);
+    updateSettings(newDescription, category, icon);
+  };
 
-  const handleCategoryChange = useCallback(
-    (e) => {
-      const newCategory = e.target.value;
-      setCategory(newCategory);
-      updateSettings(description, newCategory, icon);
-    },
-    [updateSettings, description, icon]
-  );
+  const handleCategoryChange = (e) => {
+    const newCategory = e.target.value;
+    setCategory(newCategory);
+    updateSettings(description, newCategory, icon);
+  };
 
-  const handleIconChange = useCallback(
-    (newIcon) => {
-      setIcon(newIcon);
-      updateSettings(description, category, newIcon);
-    },
-    [updateSettings, description, category]
-  );
+  const handleIconChange = (newIcon) => {
+    setIcon(newIcon);
+    updateSettings(description, category, newIcon);
+  };
 
-  // Memoize tab switching
-  const handleTabClick = useCallback((tab) => {
-    setActiveTab(tab);
-  }, []);
-
-  const handleDelete = useCallback(async () => {
+  const handleDelete = async () => {
     if (!selectedPost) return;
 
     const confirmed = window.confirm(
@@ -120,40 +83,35 @@ const EditorSettings = ({
     setIsDeleting(true);
 
     try {
-      // First, attempt the actual deletion BEFORE optimistic update
-      console.log("🗑️ Attempting to delete post:", selectedPost.id);
-      const result = await centralizedApi.deletePost(selectedPost.id);
-      console.log("✅ Delete result:", result);
-
-      // Only update UI after successful deletion
+      await centralizedApi.deletePost(selectedPost.id);
       if (onPostDelete) {
         onPostDelete(selectedPost.id);
       }
     } catch (error) {
-      console.error("❌ Error deleting post:", error);
+      console.error("Error deleting post:", error);
       alert("Failed to delete post: " + (error.message || "Unknown error"));
-      // Don't call onPostDelete if deletion failed
     } finally {
       setIsDeleting(false);
     }
-  }, [selectedPost, onPostDelete]);
+  };
 
   if (!selectedPost) {
     return null;
   }
 
-  const { isBlockType, isScssPartial, postInfo } = postTypeInfo;
+  const isBlockType = selectedPost?.terms?.some((term) => term.slug === "blocks") || false;
+  const isScssPartial = selectedPost?.terms?.some((term) => term.slug === "scss-partials") || false;
+  const postInfo = {
+    id: selectedPost?.id,
+    type: selectedPost?.terms?.[0]?.name || "N/A",
+    slug: selectedPost?.slug || "N/A",
+  };
 
   return (
     <aside
       id="editor-settings"
       className="grow max-w-[var(--sidebar)] border-l border-solid border-outline flex flex-col"
     >
-      {/* Header */}
-      {/* <div className="flex items-center justify-between border-b border-outline p-4">
-        <h3 className="text-lg font-semibold">Settings</h3>
-      </div> */}
-
       {/* Tab Navigation for Blocks */}
       {isBlockType && (
         <div className="p-3">
@@ -161,14 +119,14 @@ const EditorSettings = ({
             <Button
               variant={activeTab === "settings" ? "primary" : "ghost"}
               className="grow px-3 py-2 text-xs font-medium border-b-2 transition-colors"
-              onClick={() => handleTabClick("settings")}
+              onClick={() => setActiveTab("settings")}
             >
               Settings
             </Button>
             <Button
               variant={activeTab === "partials" ? "primary" : "ghost"}
               className="grow px-3 py-2 text-xs font-medium border-b-2 transition-colors"
-              onClick={() => handleTabClick("partials")}
+              onClick={() => setActiveTab("partials")}
             >
               SCSS Partials
             </Button>
@@ -292,23 +250,4 @@ const EditorSettings = ({
   );
 };
 
-// Memoize the component to prevent unnecessary re-renders of expensive settings panels
-export default React.memo(EditorSettings, (prevProps, nextProps) => {
-  // Custom comparison function for expensive settings panels
-  return (
-    // Check if selectedPost is the same
-    prevProps.selectedPost?.id === nextProps.selectedPost?.id &&
-    prevProps.selectedPost?.title === nextProps.selectedPost?.title &&
-    // Deep comparison of terms for post type determination
-    JSON.stringify(prevProps.selectedPost?.terms) ===
-      JSON.stringify(nextProps.selectedPost?.terms) &&
-    // Check if metaData reference is the same (most critical for preventing expensive re-renders)
-    prevProps.metaData === nextProps.metaData &&
-    // Check if metaData.blocks.settings specifically changed (the expensive part)
-    prevProps.metaData?.blocks?.settings ===
-      nextProps.metaData?.blocks?.settings &&
-    // Check if callback functions are the same reference
-    prevProps.onMetaChange === nextProps.onMetaChange &&
-    prevProps.onPostDelete === nextProps.onPostDelete
-  );
-});
+export default EditorSettings;
