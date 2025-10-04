@@ -100,14 +100,21 @@ class PostsQueryApiController extends BaseApiController
                     break;
 
                 case FunculoTypeTaxonomy::getTermScssPartials():
-                    // For SCSS partials, include global settings
-                    $globalSetting = get_post_meta($post->ID, MetaKeysConstants::SCSS_IS_GLOBAL, true);
-                    $globalOrder = get_post_meta($post->ID, MetaKeysConstants::SCSS_GLOBAL_ORDER, true);
+                    // For SCSS partials, include global settings from database table
+                    $scssSettings = ScssPartialsSettingsRepository::get($post->ID);
 
-                    $relatedData['global_settings'] = [
-                        'is_global' => $globalSetting === '1',
-                        'global_order' => $globalOrder ? (int)$globalOrder : 1,
-                    ];
+                    if ($scssSettings) {
+                        $relatedData['global_settings'] = [
+                            'is_global' => $scssSettings['is_global'],
+                            'global_order' => $scssSettings['global_order'],
+                        ];
+                    } else {
+                        // Default values if no settings found
+                        $relatedData['global_settings'] = [
+                            'is_global' => false,
+                            'global_order' => 1,
+                        ];
+                    }
                     break;
             }
         }

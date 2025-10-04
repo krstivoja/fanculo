@@ -677,19 +677,15 @@ class FunculoApiClient {
     try {
       const response = await this.request(`/post/${id}/with-related`);
 
-      console.log('🔍 FunculoApiClient getPostWithRelated - response:', response);
-
       // Handle new unified API response format
       if (response.success !== undefined && response.data !== undefined) {
         const normalized = this.normalizePostWithRelatedPayload(response.data);
-        console.log('✅ FunculoApiClient - returning normalized data with selected_partials:', normalized?.post?.meta?.blocks?.selected_partials);
         return normalized;
       }
 
-      console.log('⚠️ FunculoApiClient - response format unexpected, returning raw:', response);
       return response;
     } catch (error) {
-      console.error('❌ FunculoApiClient getPostWithRelated - ERROR:', error);
+      console.error('FunculoApiClient getPostWithRelated error:', error);
       throw error;
     }
   }
@@ -1023,9 +1019,32 @@ class FunculoApiClient {
       return payload;
     }
 
+    const normalizedPost = this.normalizePost(payload.post);
+
+    // Merge global_settings from related data into post.meta.scss_partials
+    // Note: API response keys are transformed to camelCase (is_global → isGlobal)
+    const globalSettings = payload.related?.globalSettings || payload.related?.global_settings;
+
+    if (globalSettings) {
+      if (!normalizedPost.meta) {
+        normalizedPost.meta = {};
+      }
+      if (!normalizedPost.meta.scss_partials) {
+        normalizedPost.meta.scss_partials = {};
+      }
+
+      // Handle both camelCase (from API transformation) and snake_case (if transformation disabled)
+      const isGlobal = globalSettings.isGlobal !== undefined ? globalSettings.isGlobal : globalSettings.is_global;
+      const globalOrder = globalSettings.globalOrder !== undefined ? globalSettings.globalOrder : globalSettings.global_order;
+
+      // Convert to strings that React component expects
+      normalizedPost.meta.scss_partials.is_global = (isGlobal === true || isGlobal === '1' || isGlobal === 1) ? '1' : '0';
+      normalizedPost.meta.scss_partials.global_order = String(globalOrder || 1);
+    }
+
     return {
       ...payload,
-      post: this.normalizePost(payload.post),
+      post: normalizedPost,
     };
   }
 

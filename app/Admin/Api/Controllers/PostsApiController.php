@@ -456,11 +456,36 @@ class PostsApiController extends BaseApiController
                 foreach ($meta as $category => $data) {
                     if (!is_array($data)) continue;
 
-                    foreach ($data as $key => $value) {
-                        // Construct proper meta key
-                        $meta_key = $this->buildMetaKey($category, $key);
-                        if ($meta_key) {
-                            update_post_meta($postId, $meta_key, $value);
+                    // Handle SCSS partial settings separately (save to database table)
+                    if ($category === 'scss_partials') {
+                        $scssSettings = [];
+
+                        foreach ($data as $key => $value) {
+                            if ($key === 'is_global') {
+                                $scssSettings['is_global'] = ($value === '1' || $value === 1 || $value === true);
+                            } elseif ($key === 'global_order') {
+                                $scssSettings['global_order'] = (int) $value;
+                            } elseif ($key === 'scss') {
+                                // SCSS content goes to post meta
+                                $meta_key = $this->buildMetaKey($category, $key);
+                                if ($meta_key) {
+                                    update_post_meta($postId, $meta_key, $value);
+                                }
+                            }
+                        }
+
+                        // Save SCSS settings to database table if we have any
+                        if (!empty($scssSettings)) {
+                            ScssPartialsSettingsRepository::save($postId, $scssSettings);
+                        }
+                    } else {
+                        // Handle other meta normally
+                        foreach ($data as $key => $value) {
+                            // Construct proper meta key
+                            $meta_key = $this->buildMetaKey($category, $key);
+                            if ($meta_key) {
+                                update_post_meta($postId, $meta_key, $value);
+                            }
                         }
                     }
                 }
@@ -485,6 +510,19 @@ class PostsApiController extends BaseApiController
             $allMeta = $this->bulkQueryService->getBulkPostMeta([$post->ID], $optimizedMetaKeys);
             $postMeta = $allMeta[$post->ID] ?? [];
             $formattedMeta = $this->bulkQueryService->formatPostMeta($postMeta, $postTerms);
+
+            // Check if this is an SCSS partial and add settings from database
+            $isScssPartial = !empty($postTerms) && in_array('scss-partials', array_column($postTerms, 'slug'));
+            if ($isScssPartial) {
+                $scssSettings = ScssPartialsSettingsRepository::get($post->ID);
+                if ($scssSettings) {
+                    if (!isset($formattedMeta['scss_partials'])) {
+                        $formattedMeta['scss_partials'] = [];
+                    }
+                    $formattedMeta['scss_partials']['is_global'] = $scssSettings['is_global'] ? '1' : '0';
+                    $formattedMeta['scss_partials']['global_order'] = (string) $scssSettings['global_order'];
+                }
+            }
 
             $postData = [
                 'id' => $post->ID,

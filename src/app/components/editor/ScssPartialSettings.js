@@ -10,13 +10,24 @@ const ScssPartialSettings = ({ selectedPost, metaData, onMetaChange }) => {
   // Load global settings from metaData
   useEffect(() => {
     if (scssPartials.is_global !== undefined) {
-      setIsGlobal(scssPartials.is_global === '1' || scssPartials.is_global === 1);
+      // Handle string '1'/'0', number 1/0, or boolean true/false
+      const isGlobalValue = scssPartials.is_global === '1' ||
+                           scssPartials.is_global === 1 ||
+                           scssPartials.is_global === true;
+      setIsGlobal(isGlobalValue);
+    } else {
+      // Default to false if not set
+      setIsGlobal(false);
     }
+
     if (scssPartials.global_order !== undefined) {
       const order = parseInt(scssPartials.global_order) || 1;
       setGlobalOrder(order);
+    } else {
+      // Default to 1 if not set
+      setGlobalOrder(1);
     }
-  }, [scssPartials.is_global, scssPartials.global_order]);
+  }, [scssPartials.is_global, scssPartials.global_order, selectedPost?.id]);
 
   // Update metaData when settings change (requires save button - no immediate API call)
   const updateGlobalSettings = (newIsGlobal, newGlobalOrder) => {
