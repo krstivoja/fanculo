@@ -1,6 +1,14 @@
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button, Toast, SaveButton, AdminButton, DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from "../ui";
+import {
+  Button,
+  Toast,
+  SaveButton,
+  AdminButton,
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "../ui";
 import centralizedApi from "../../../utils/api/CentralizedApiService";
 
 // DEV MODE - Set to false for production (matches App.js)
@@ -133,26 +141,26 @@ const Header = ({ onSave, saveStatus, onPostsRefresh }) => {
               onClick={() => navigate("/")}
               className={isEditorPage ? "bg-action/10" : ""}
             >
-              📝 Editor
+              Editor
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => navigate("/settings")}
               className={isSettingsPage ? "bg-action/10" : ""}
             >
-              ⚙️ Settings
+              Settings
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => navigate("/licence")}
               className={isLicencePage ? "bg-action/10" : ""}
             >
-              📜 Licence
+              Licence
             </DropdownMenuItem>
             {ENABLE_DESIGN_SYSTEM && (
               <DropdownMenuItem
                 onClick={() => navigate("/design-system")}
                 className={isDesignSystemPage ? "bg-action/10" : ""}
               >
-                🎨 Design System
+                Design System
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />

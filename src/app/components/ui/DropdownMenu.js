@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 
-const DropdownMenu = ({ trigger, children, align = 'end' }) => {
+const DropdownMenu = ({ trigger, children, align = "end" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -12,41 +12,39 @@ const DropdownMenu = ({ trigger, children, align = 'end' }) => {
     };
 
     const handleEscape = (event) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEscape);
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscape);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, [isOpen]);
 
-  const alignmentClasses = align === 'start' ? 'left-0' : 'right-0';
+  const alignmentClasses = align === "start" ? "left-0" : "right-0";
 
   return (
     <div className="relative inline-block" ref={dropdownRef}>
-      <div onClick={() => setIsOpen(!isOpen)}>
-        {trigger}
-      </div>
+      <div onClick={() => setIsOpen(!isOpen)}>{trigger}</div>
 
       {isOpen && (
         <div
-          className={`absolute ${alignmentClasses} mt-2 w-56 z-50 rounded border border-outline bg-base-2 shadow-lg opacity-100 scale-100 transition-all duration-100`}
+          className={`absolute ${alignmentClasses} mt-2 w-56 z-50 p-1 rounded border border-outline bg-base-2 shadow-lg opacity-100 scale-100 transition-all duration-100`}
         >
-          <div className="py-1">
-            {React.Children.map(children, child =>
+          <div className="">
+            {React.Children.map(children, (child) =>
               React.cloneElement(child, {
                 onClick: (e) => {
                   child.props.onClick?.(e);
                   setIsOpen(false);
-                }
+                },
               })
             )}
           </div>
@@ -56,14 +54,11 @@ const DropdownMenu = ({ trigger, children, align = 'end' }) => {
   );
 };
 
-const DropdownMenuItem = ({ children, onClick, href, className = '' }) => {
-  const content = (
-    <>
-      {children}
-    </>
-  );
+const DropdownMenuItem = ({ children, onClick, href, className = "" }) => {
+  const content = <>{children}</>;
 
-  const baseClasses = 'relative flex cursor-pointer select-none items-center px-4 py-2 text-sm text-contrast hover:bg-outline hover:text-highlight transition-colors outline-none';
+  const baseClasses =
+    "relative flex cursor-pointer select-none items-center px-4 py-2 text-sm text-contrast rounded hover:bg-base-3 hover:text-highlight transition-colors outline-none";
 
   if (href) {
     return (
@@ -84,7 +79,7 @@ const DropdownMenuItem = ({ children, onClick, href, className = '' }) => {
       role="menuitem"
       tabIndex={0}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           onClick?.(e);
         }
@@ -95,14 +90,17 @@ const DropdownMenuItem = ({ children, onClick, href, className = '' }) => {
   );
 };
 
-const DropdownMenuSeparator = () => (
-  <div className="my-1 h-px bg-outline" />
-);
+const DropdownMenuSeparator = () => <div className="my-1 h-px bg-outline" />;
 
-const DropdownMenuLabel = ({ children, className = '' }) => (
+const DropdownMenuLabel = ({ children, className = "" }) => (
   <div className={`px-4 py-2 text-xs font-semibold text-base-3 ${className}`}>
     {children}
   </div>
 );
 
-export { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel };
+export {
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+};
