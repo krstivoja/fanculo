@@ -35,16 +35,20 @@ const EditorList = ({ groupedPosts, selectedPost, onPostSelect }) => {
       {/* Tab Navigation */}
       <div className='p-3'>
         <div className="flex p-1 border border-solid border-outline rounded-md bg-base-2">
-          {TAXONOMY_TERMS.map(term => (
-            <Button
-              key={term.slug}
-              variant={activeTab === term.slug ? 'primary' : 'ghost'}
-              className="grow"
-              onClick={() => setActiveTab(term.slug)}
-            >
-              {term.name}
-            </Button>
-          ))}
+          {TAXONOMY_TERMS.map(term => {
+            const IconComponent = term.icon;
+            return (
+              <Button
+                key={term.slug}
+                variant={activeTab === term.slug ? 'primary' : 'ghost'}
+                className="grow flex items-center justify-center gap-2"
+                onClick={() => setActiveTab(term.slug)}
+              >
+                {IconComponent && <IconComponent size={16} />}
+                {term.name}
+              </Button>
+            );
+          })}
         </div>
       </div>
 

@@ -94,8 +94,10 @@ const EditorSettings = ({
     return null;
   }
 
-  const isBlockType = selectedPost?.terms?.some((term) => term.slug === "blocks") || false;
-  const isScssPartial = selectedPost?.terms?.some((term) => term.slug === "scss-partials") || false;
+  const isBlockType =
+    selectedPost?.terms?.some((term) => term.slug === "blocks") || false;
+  const isScssPartial =
+    selectedPost?.terms?.some((term) => term.slug === "scss-partials") || false;
   const postInfo = {
     id: selectedPost?.id,
     type: selectedPost?.terms?.[0]?.name || "N/A",
@@ -170,7 +172,7 @@ const EditorSettings = ({
                       value={description}
                       onChange={handleDescriptionChange}
                       placeholder="Enter block description..."
-                      rows={4}
+                      rows={2}
                     />
                   </div>
 
@@ -194,7 +196,7 @@ const EditorSettings = ({
                   <DashiconButton
                     selectedIcon={icon}
                     onIconSelect={handleIconChange}
-                    label="Block Dashicon"
+                    label="Icon"
                   />
 
                   {/* Inner Blocks Settings */}
