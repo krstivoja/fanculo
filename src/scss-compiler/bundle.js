@@ -14,14 +14,14 @@ class SassCompiler {
     if (this.isInitialized) return this.sass;
 
     try {
-      console.log(
-        "🔄 Loading bundled Dart Sass with tree-shaken dependencies..."
-      );
+      // console.log(
+      //   "🔄 Loading bundled Dart Sass with tree-shaken dependencies..."
+      // );
 
       // Load the Dart Sass core (still need to load this dynamically)
       await this.loadDartSass();
 
-      console.log("✅ Dart Sass initialized with optimized dependencies!");
+      // console.log("✅ Dart Sass initialized with optimized dependencies!");
       this.isInitialized = true;
       return this.sass;
     } catch (error) {
@@ -59,8 +59,46 @@ class SassCompiler {
         return "/wp-content/plugins/fancoolo/";
       };
 
+      const sassUrl =
+        getPluginBaseUrl() + "dist/scss-compiler/sass.dart.min.js";
+
+      // Check if sass.dart.min.js is already loaded
+      const sassAlreadyLoaded = Array.from(
+        document.getElementsByTagName("script")
+      ).some((script) => script.src === sassUrl);
+
+      // If already loaded and _cliPkgExports exists, use it
+      if (
+        sassAlreadyLoaded &&
+        globalThis._cliPkgExports &&
+        globalThis._cliPkgExports.length > 0
+      ) {
+        try {
+          const _cliPkgLibrary = globalThis._cliPkgExports.pop();
+          if (globalThis._cliPkgExports.length === 0)
+            delete globalThis._cliPkgExports;
+
+          const _cliPkgExports = {};
+          _cliPkgLibrary.load({ immutable: Immutable }, _cliPkgExports);
+
+          this.sass = {
+            compile: _cliPkgExports.compile,
+            compileString: _cliPkgExports.compileString,
+            compileAsync: _cliPkgExports.compileAsync,
+            compileStringAsync: _cliPkgExports.compileStringAsync,
+            info: _cliPkgExports.info,
+          };
+
+          resolve(this.sass);
+          return;
+        } catch (error) {
+          reject(error);
+          return;
+        }
+      }
+
       const script = document.createElement("script");
-      script.src = getPluginBaseUrl() + "dist/scss-compiler/sass.dart.min.js";
+      script.src = sassUrl;
       script.onload = () => {
         try {
           // Get the Sass library from global exports (Dart Sass pattern)
@@ -87,7 +125,11 @@ class SassCompiler {
         }
       };
       script.onerror = () => reject(new Error("Failed to load Dart Sass"));
-      document.head.appendChild(script);
+
+      // Only append if not already loaded
+      if (!sassAlreadyLoaded) {
+        document.head.appendChild(script);
+      }
     });
   }
 

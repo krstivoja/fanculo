@@ -56,37 +56,79 @@ class FunculoSassCompiler {
 
   async loadSassCompiler() {
     return new Promise((resolve, reject) => {
-      // Load the bundled SCSS compiler from dist/scss-compiler/
       const bundleUrl = this.baseUrl + "dist/scss-compiler/sass-bundle.min.js";
 
+      // Check if bundle is already loaded
+      const bundleAlreadyLoaded = Array.from(document.getElementsByTagName('script')).some(
+        script => script.src === bundleUrl
+      );
+
+      // If SassCompiler is available globally, reuse it
+      if (window.SassCompiler) {
+        try {
+          this.sass = new window.SassCompiler();
+          this.sass
+            .initialize()
+            .then(() => {
+              resolve(this.sass);
+            })
+            .catch(reject);
+          return;
+        } catch (error) {
+          console.error("❌ Error initializing SCSS compiler:", error);
+          reject(error);
+          return;
+        }
+      }
+
+      // Load the bundle only (it handles loading sass.dart.min.js internally)
+      if (bundleAlreadyLoaded) {
+        // Script tag exists but SassCompiler not yet available - wait for it
+        const checkInterval = setInterval(() => {
+          if (window.SassCompiler) {
+            clearInterval(checkInterval);
+            try {
+              this.sass = new window.SassCompiler();
+              this.sass
+                .initialize()
+                .then(() => {
+                  resolve(this.sass);
+                })
+                .catch(reject);
+            } catch (error) {
+              console.error("❌ Error initializing SCSS compiler:", error);
+              reject(error);
+            }
+          }
+        }, 100);
+
+        // Timeout after 5 seconds
+        setTimeout(() => {
+          clearInterval(checkInterval);
+          if (!this.sass) {
+            reject(new Error("Timeout waiting for SassCompiler to load"));
+          }
+        }, 5000);
+        return;
+      }
+
+      // Load the bundled SCSS compiler (which includes sass.dart.min.js loading)
       const bundleScript = document.createElement("script");
       bundleScript.src = bundleUrl;
       bundleScript.onload = () => {
-        // Load the Dart Sass compiler
-        const sassUrl = this.baseUrl + "dist/scss-compiler/sass.dart.min.js";
-
-        const sassScript = document.createElement("script");
-        sassScript.src = sassUrl;
-        sassScript.onload = () => {
-          try {
-            // Use the bundled SassCompiler class
-            this.sass = new window.SassBundled.default();
-            this.sass
-              .initialize()
-              .then(() => {
-                resolve(this.sass);
-              })
-              .catch(reject);
-          } catch (error) {
-            console.error("❌ Error initializing SCSS compiler:", error);
-            reject(error);
-          }
-        };
-        sassScript.onerror = () => {
-          console.error("❌ Failed to load Dart Sass from:", sassUrl);
-          reject(new Error("Failed to load Dart Sass"));
-        };
-        document.head.appendChild(sassScript);
+        try {
+          // The bundle exports window.SassCompiler
+          this.sass = new window.SassCompiler();
+          this.sass
+            .initialize()
+            .then(() => {
+              resolve(this.sass);
+            })
+            .catch(reject);
+        } catch (error) {
+          console.error("❌ Error initializing SCSS compiler:", error);
+          reject(error);
+        }
       };
       bundleScript.onerror = () => {
         console.error("❌ Failed to load SCSS bundle from:", bundleUrl);
