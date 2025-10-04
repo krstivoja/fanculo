@@ -25,6 +25,10 @@
   --font-xs: 11px;
 }
 
+/* #fancoolo-app:not(:has(#design-system-page)) {
+  @apply fixed h-full w-full z-[99999] top-0 left-0 bg-base-1;
+} */
+
 #fancoolo-app {
   @apply fixed h-full w-full z-[99999] top-0 left-0 bg-base-1;
 }

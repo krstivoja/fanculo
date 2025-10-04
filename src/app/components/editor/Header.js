@@ -3,6 +3,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button, Toast, SaveButton, AdminButton, DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from "../ui";
 import centralizedApi from "../../../utils/api/CentralizedApiService";
 
+// DEV MODE - Set to false for production (matches App.js)
+const ENABLE_DESIGN_SYSTEM = true;
+
 // Lazy load AddPostModal - only loads when needed
 const AddPostModal = lazy(() => import("./AddPostModal"));
 
@@ -20,6 +23,7 @@ const Header = ({ onSave, saveStatus, onPostsRefresh }) => {
   const isEditorPage = location.pathname === "/";
   const isSettingsPage = location.pathname === "/settings";
   const isLicencePage = location.pathname === "/licence";
+  const isDesignSystemPage = location.pathname === "/design-system";
 
   // Handle Ctrl+S / Cmd+S keyboard shortcut
   useEffect(() => {
@@ -143,6 +147,14 @@ const Header = ({ onSave, saveStatus, onPostsRefresh }) => {
             >
               📜 Licence
             </DropdownMenuItem>
+            {ENABLE_DESIGN_SYSTEM && (
+              <DropdownMenuItem
+                onClick={() => navigate("/design-system")}
+                className={isDesignSystemPage ? "bg-action/10" : ""}
+              >
+                🎨 Design System
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={handleRegenerateAll}
