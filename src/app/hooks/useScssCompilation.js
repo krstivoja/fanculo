@@ -226,10 +226,10 @@ export const useScssCompilation = (selectedPost, metaData, setScssError, setShow
    * Compile both frontend and editor SCSS
    */
   const compileAllScss = useCallback(async () => {
-    const [frontend, editor] = await Promise.all([
-      compileFrontendScss(),
-      compileEditorScss()
-    ]);
+    // Run compilations sequentially to avoid race condition with SCSS compiler initialization
+    // The first compilation will initialize the compiler, second will reuse it
+    const frontend = await compileFrontendScss();
+    const editor = await compileEditorScss();
 
     return {
       frontend,
