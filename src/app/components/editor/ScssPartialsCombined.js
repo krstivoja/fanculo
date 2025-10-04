@@ -1,14 +1,22 @@
-import React from 'react';
-import ScssPartialsManager from './ScssPartialsManager';
+import React from "react";
+import ScssPartialsManager from "./ScssPartialsManager";
 
-const ScssPartialsCombined = ({ selectedPost, metaData, onMetaChange, sharedData, dataLoading }) => {
+const ScssPartialsCombined = ({
+  selectedPost,
+  metaData,
+  onMetaChange,
+  sharedData,
+  dataLoading,
+}) => {
   // Get partials data from shared data (no API call needed)
   const globalPartials = sharedData?.scssPartials?.globalPartials || [];
   const availablePartials = sharedData?.scssPartials?.availablePartials || [];
   const loading = dataLoading?.scssPartials || false;
 
   if (loading) {
-    return <div className="p-4 text-center text-contrast">Loading partials...</div>;
+    return (
+      <div className="p-4 text-center text-contrast">Loading partials...</div>
+    );
   }
 
   return (
@@ -18,7 +26,9 @@ const ScssPartialsCombined = ({ selectedPost, metaData, onMetaChange, sharedData
         <div>
           <h4 className="font-medium text-highlight mb-3 flex items-center gap-2">
             🌍 Global Partials
-            <span className="text-xs bg-action text-white px-2 py-1 rounded">Auto-included</span>
+            <span className="text-xs bg-action text-white px-2 py-1 rounded">
+              Auto-included
+            </span>
           </h4>
           <div className="space-y-2">
             {globalPartials.map((partial) => (
@@ -35,34 +45,34 @@ const ScssPartialsCombined = ({ selectedPost, metaData, onMetaChange, sharedData
 
       {/* Style Partials Section */}
       <div className="pt-4 border-t border-outline">
-        <h4 className="font-medium text-highlight mb-3">Frontend Style Partials</h4>
-        <div className="pl-2">
-          <ScssPartialsManager
-            selectedPost={selectedPost}
-            metaData={metaData}
-            onMetaChange={onMetaChange}
-            mode="style"
-            hideGlobalPartials={true}
-            sharedData={sharedData}
-            dataLoading={dataLoading}
-          />
-        </div>
+        <h4 className="font-medium text-highlight mb-3">
+          Frontend Style Partials
+        </h4>
+        <ScssPartialsManager
+          selectedPost={selectedPost}
+          metaData={metaData}
+          onMetaChange={onMetaChange}
+          mode="style"
+          hideGlobalPartials={true}
+          sharedData={sharedData}
+          dataLoading={dataLoading}
+        />
       </div>
 
       {/* Editor Style Partials Section */}
       <div className="pt-4 border-t border-outline">
-        <h4 className="font-medium text-highlight mb-3">Editor Style Partials</h4>
-        <div className="pl-2">
-          <ScssPartialsManager
-            selectedPost={selectedPost}
-            metaData={metaData}
-            onMetaChange={onMetaChange}
-            mode="editorStyle"
-            hideGlobalPartials={true}
-            sharedData={sharedData}
-            dataLoading={dataLoading}
-          />
-        </div>
+        <h4 className="font-medium text-highlight mb-3">
+          Editor Style Partials
+        </h4>
+        <ScssPartialsManager
+          selectedPost={selectedPost}
+          metaData={metaData}
+          onMetaChange={onMetaChange}
+          mode="editorStyle"
+          hideGlobalPartials={true}
+          sharedData={sharedData}
+          dataLoading={dataLoading}
+        />
       </div>
     </div>
   );

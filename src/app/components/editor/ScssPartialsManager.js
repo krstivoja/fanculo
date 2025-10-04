@@ -87,15 +87,6 @@ const ScssPartialsManager = ({
     }
   };
 
-  const handleDrag = (tag, currPos, newPos) => {
-    const newSelected = [...selectedPartials];
-    const [movedItem] = newSelected.splice(currPos, 1);
-    newSelected.splice(newPos, 0, movedItem);
-
-    const reordered = newSelected.map((p, index) => ({ ...p, order: index + 1 }));
-    updateSelectedPartials(reordered);
-  };
-
   if (loading) {
     return <div className="p-4 text-center text-contrast">Loading partials...</div>;
   }
@@ -114,7 +105,7 @@ const ScssPartialsManager = ({
 
   const statusText = selectedPartials.length > 0
     ? `${selectedPartials.length} partial${selectedPartials.length !== 1 ? 's' : ''} selected`
-    : 'No partials selected. Type to search and add partials.';
+    : 'No partials selected. Select from existing partials.';
 
   return (
     <div className="flex flex-col h-full">
@@ -151,8 +142,7 @@ const ScssPartialsManager = ({
           suggestions={suggestions}
           handleDelete={handleDelete}
           handleAddition={handleAddition}
-          handleDrag={handleDrag}
-          placeholder="Type a partial name and press Enter..."
+          placeholder="Select from existing partials..."
         />
 
         <p className="text-xs text-contrast mt-2">
