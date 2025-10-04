@@ -124,18 +124,18 @@ const extractScssPartialsPayload = (related = {}) => {
 export const useHotReloadSave = (postId, originalSaveFunction, postType) => {
   const saveWithHotReload = useCallback(
     async (...args) => {
-      console.log("🔥 Hot reload save triggered for post:", postId);
-      console.log("🔍 [useHotReload] Post type:", postType);
+      // console.log("🔥 Hot reload save triggered for post:", postId);
+      // console.log("🔍 [useHotReload] Post type:", postType);
 
       // Call original save function
       const result = await originalSaveFunction(...args);
-      console.log("💾 Save result:", result);
+      // console.log("💾 Save result:", result);
 
       const hotReloadPayload =
         result && typeof result === "object" ? result.hotReloadPayload : null;
       const saveSucceeded = result !== false;
 
-      // Trigger hot reload after successful save
+      // Trigger hot reload after successful save (but not for SCSS partials - they trigger affected blocks instead)
       if (
         saveSucceeded &&
         window.fancooloSimpleHotReload &&
@@ -148,67 +148,87 @@ export const useHotReloadSave = (postId, originalSaveFunction, postType) => {
           null,
           hotReloadPayload || undefined
         );
-        console.log("✅ Hot reload triggered successfully");
-      } else {
-        console.log(
-          "❌ Hot reload not triggered. Result:",
-          result,
-          "HotReload available:",
-          !!window.fancooloSimpleHotReload
-        );
+        // console.log("✅ Hot reload triggered successfully");
       }
 
       // If this is an SCSS partial save, recompile all blocks using this partial
       if (postType === "scss-partials" && saveSucceeded) {
-        console.log(
-          "🔄 [useHotReload] SCSS partial saved - finding affected blocks..."
-        );
+        // console.log(
+        //   "🔄 [useHotReload] SCSS partial saved - finding affected blocks..."
+        // );
 
-        // First, get the saved partial content to verify it was saved
+        // First, get the saved partial content and check if it's global
+        let isGlobalPartial = false;
         try {
           centralizedApi.invalidatePostCaches(postId);
           centralizedApi.invalidateScssPartialCaches();
 
           const partialData = await centralizedApi.getPostWithRelated(postId);
-          console.log("🔍 [useHotReload] Partial data structure:", partialData);
-          const partialContent =
-            partialData.post?.meta?.scssPartials?.scss ||
-            partialData.post?.meta?.scss_partials?.scss ||
-            partialData.post?.meta?.blocks?.scss;
-          console.log(
-            `📝 [useHotReload] SCSS Partial ${postId} content:`,
-            partialContent
-          );
+
+          // Check if this is a global partial
+          const isGlobalFromMeta =
+            partialData.post?.meta?.scss_partials?.is_global === "1" ||
+            partialData.post?.meta?.scss_partials?.is_global === 1 ||
+            partialData.post?.meta?.scss_partials?.is_global === true;
+          const isGlobalFromRelated =
+            partialData.related?.globalSettings?.isGlobal === true ||
+            partialData.related?.globalSettings?.is_global === true ||
+            partialData.related?.global_settings?.is_global === true;
+
+          isGlobalPartial = isGlobalFromMeta || isGlobalFromRelated;
         } catch (e) {
           console.error("Failed to fetch partial content:", e);
         }
 
         try {
-          // Get blocks that use this partial
-          const response = await apiClient.request(
-            `/scss-partial/${postId}/usage`
-          );
-          const affectedBlocks = response?.data?.blocks || [];
+          let affectedBlocks = [];
+
+          if (isGlobalPartial) {
+            // Global partial affects ALL blocks - get all blocks
+            const allBlocksResponse = await apiClient.request("/posts", {
+              method: "GET",
+            });
+
+            // Filter to get only blocks (not symbols or partials)
+            // Handle both response formats: {data: posts: [...]} or {data: [...]}
+            const allPosts =
+              allBlocksResponse?.data?.posts || allBlocksResponse?.data || [];
+
+            affectedBlocks = allPosts
+              .filter((post) => {
+                const terms = post.terms || [];
+                return terms.some((term) => term.slug === "blocks");
+              })
+              .map((post) => post.id);
+          } else {
+            // Regular partial - only get blocks that use it
+            const response = await apiClient.request(
+              `/scss-partial/${postId}/usage`
+            );
+            affectedBlocks = response?.data?.blocks || [];
+          }
 
           if (affectedBlocks.length > 0) {
-            console.log(
-              `📦 [useHotReload] Found ${affectedBlocks.length} blocks using this partial:`,
-              affectedBlocks
-            );
+            const blockTypeLabel = isGlobalPartial
+              ? "blocks (global partial)"
+              : "blocks using this partial";
+            // console.log(
+            //   `📦 [useHotReload] Found ${affectedBlocks.length} ${blockTypeLabel}:`,
+            //   affectedBlocks
+            // );
 
             const regenerationOperations = [];
             const blockTasks = affectedBlocks.map((blockId) =>
               (async () => {
-                console.log(`⚙️ [useHotReload] Compiling block ${blockId}...`);
+                // console.log(`⚙️ [useHotReload] Compiling block ${blockId}...`);
 
                 try {
+                  // Invalidate caches to ensure fresh data
                   centralizedApi.invalidatePostCaches(blockId);
+                  centralizedApi.invalidateScssPartialCaches(); // Ensure fresh global partials
+
                   const blockData =
                     await centralizedApi.getPostWithRelated(blockId);
-                  console.log(
-                    `🔍 [useHotReload] Block ${blockId} data structure:`,
-                    blockData
-                  );
 
                   const block = blockData.post;
                   const blockMeta = block.meta?.blocks || {};
@@ -242,9 +262,6 @@ export const useHotReloadSave = (postId, originalSaveFunction, postType) => {
                       scss_content: scssCode,
                       css_content: compiledCss,
                     });
-                    console.log(
-                      `✅ [useHotReload] Compiled and saved style.css for block ${blockId}`
-                    );
                   }
 
                   if (blockMeta.editorScss) {
@@ -262,9 +279,6 @@ export const useHotReloadSave = (postId, originalSaveFunction, postType) => {
                       editor_scss_content: editorScssCode,
                       editor_css_content: compiledEditorCss,
                     });
-                    console.log(
-                      `✅ [useHotReload] Compiled and saved editor.css for block ${blockId}`
-                    );
                   }
 
                   regenerationOperations.push({
@@ -313,9 +327,6 @@ export const useHotReloadSave = (postId, originalSaveFunction, postType) => {
                         changeSet,
                         payload
                       );
-                      console.log(
-                        `✅ [useHotReload] Hot reload triggered for block ${blockId}`
-                      );
                     }
                   }
                 } catch (compileError) {
@@ -334,7 +345,7 @@ export const useHotReloadSave = (postId, originalSaveFunction, postType) => {
             ).length;
 
             if (failedBlocks === 0) {
-              console.log("✅ [useHotReload] All affected blocks recompiled");
+              // console.log("✅ [useHotReload] All affected blocks recompiled");
             } else {
               console.warn(
                 `⚠️ [useHotReload] ${failedBlocks} block recompilations failed`
@@ -342,16 +353,10 @@ export const useHotReloadSave = (postId, originalSaveFunction, postType) => {
             }
 
             if (regenerationOperations.length > 0) {
-              console.log(
-                "🔁 [useHotReload] Regenerating files for affected blocks"
-              );
               await apiClient.request("/operations/bulk", {
                 method: "POST",
                 body: JSON.stringify({ operations: regenerationOperations }),
               });
-              console.log(
-                "✅ [useHotReload] File regeneration triggered for affected blocks"
-              );
             }
           } else {
             console.log("ℹ️ [useHotReload] No blocks use this partial");
