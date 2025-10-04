@@ -402,7 +402,7 @@ class FunculoApiClient {
    * @returns {Promise<Object>} Updated post data
    */
   async updatePost(id, updateData) {
-    const result = await this.batchUpdatePosts([{ id, ...updateData }]);
+    const result = await this.batchUpdatePosts([{ post_id: id, ...updateData }]);
     if (result.successful && result.successful.length > 0) {
       return result.successful[0];
     }

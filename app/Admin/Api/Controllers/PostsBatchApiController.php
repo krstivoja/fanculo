@@ -164,11 +164,30 @@ class PostsBatchApiController extends BaseApiController
                     }
                 }
 
-                $results['successful'][] = [
-                    'index' => $index,
-                    'post_id' => $postId,
-                    'updated' => true,
+                // Fetch and format the updated post with full data
+                $updatedPost = get_post($postId);
+
+                // Get terms and meta
+                $allTerms = $this->bulkQueryService->getBulkPostTerms([$postId], \FanCoolo\Content\FunculoTypeTaxonomy::getTaxonomy());
+                $postTerms = $allTerms[$postId] ?? [];
+
+                $optimizedMetaKeys = $this->bulkQueryService->getOptimizedMetaKeys($allTerms);
+                $allMeta = $this->bulkQueryService->getBulkPostMeta([$postId], $optimizedMetaKeys);
+                $postMeta = $allMeta[$postId] ?? [];
+
+                $formattedMeta = $this->bulkQueryService->formatPostMeta($postMeta, $postTerms);
+
+                // Build the response
+                $formattedPost = [
+                    'id' => $updatedPost->ID,
+                    'title' => $updatedPost->post_title,
+                    'content' => $updatedPost->post_content,
+                    'status' => $updatedPost->post_status,
+                    'terms' => $postTerms,
+                    'meta' => $formattedMeta,
                 ];
+
+                $results['successful'][] = $formattedPost;
 
             } catch (\Exception $e) {
                 $results['failed'][] = [
