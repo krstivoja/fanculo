@@ -15,6 +15,7 @@ use FanCoolo\Services\GutenbergSync;
 use FanCoolo\Helpers\PluginHelper;
 use FanCoolo\Database\DatabaseInstaller;
 use FanCoolo\EDDUpdater\EDDLicenseHandler;
+use FanCoolo\Services\ErrorLogger;
 
 /**
  * Simple license checking without EDD dependency
@@ -157,16 +158,13 @@ class App
         try {
             // For now, just set a flag that we tried to initialize
             // Don't actually instantiate the EDDLicenseHandler to avoid white screen
-            error_log('FanCoolo: EDD Updater initialization attempted (disabled for stability)');
-            
+
             // TODO: Fix EDDLicenseHandler initialization issues
             // if (class_exists('FanCoolo\EDDUpdater\EDDLicenseHandler')) {
             //     $this->edd_license_handler = new EDDLicenseHandler();
             // }
         } catch (\Throwable $e) {
-            // Log error but don't break the plugin
-            error_log('FanCoolo EDD Updater initialization failed: ' . $e->getMessage());
-            error_log('FanCoolo EDD Updater error trace: ' . $e->getTraceAsString());
+            ErrorLogger::log('EDD Updater initialization failed', 'App', $e);
         }
     }
 
@@ -181,8 +179,7 @@ class App
                 $this->initializeServices();
             }
         } catch (\Throwable $e) {
-            // Log error but don't break the plugin
-            error_log('FanCoolo services initialization failed: ' . $e->getMessage());
+            ErrorLogger::log('Services initialization failed', 'App', $e);
             // Initialize services anyway to prevent complete failure
             $this->initializeServices();
         }
@@ -202,8 +199,7 @@ class App
                 return;
             }
         } catch (\Throwable $e) {
-            // Log error but don't break the plugin
-            error_log('FanCoolo license access check failed: ' . $e->getMessage());
+            ErrorLogger::log('License access check failed', 'App', $e);
         }
     }
 

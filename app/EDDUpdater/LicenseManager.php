@@ -288,17 +288,10 @@ class LicenseManager
      */
     public function handle_license_activation()
     {
-        // Debug: Always log that this method was called
-        error_log('FanCoolo LicenseManager: handle_license_activation() called');
-        
         // Check if form was submitted
         if (!isset($_POST['fancoolo_license_activate'])) {
-            error_log('FanCoolo LicenseManager: No fancoolo_license_activate POST data found');
             return;
         }
-
-        // Debug: Log that form was submitted
-        error_log('FanCoolo LicenseManager: License activation form submitted');
 
         // Verify nonce
         if (!wp_verify_nonce($_POST['fancoolo_nonce'], 'fancoolo_nonce')) {
@@ -309,7 +302,7 @@ class LicenseManager
         }
 
         $license_key = sanitize_text_field($_POST['fancoolo_license_key'] ?? '');
-        
+
         if (empty($license_key)) {
             add_action('admin_notices', function() {
                 echo '<div class="notice notice-error"><p>Please enter a license key.</p></div>';
@@ -317,17 +310,11 @@ class LicenseManager
             return;
         }
 
-        // Debug: Log license key (first 6 chars only for security)
-        error_log('FanCoolo LicenseManager: Attempting to activate license: ' . substr($license_key, 0, 6) . '...');
-
         // Save the license key
         update_option('fancoolo_license_key', $license_key);
 
         // Try to validate the license
         $validation_result = $this->validate_license($license_key);
-        
-        // Debug: Log validation result
-        error_log('FanCoolo LicenseManager: License validation result: ' . print_r($validation_result, true));
         
         if ($validation_result['success']) {
             update_option('fancoolo_license_status', 'valid');
@@ -366,10 +353,6 @@ class LicenseManager
             'url'        => home_url()
         );
 
-        // Debug: Log API request
-        error_log('FanCoolo LicenseManager: Making API request to: ' . $store_url);
-        error_log('FanCoolo LicenseManager: API params: ' . print_r($api_params, true));
-
         // Make API request
         $response = wp_remote_post($store_url, array(
             'timeout'   => 15,
@@ -377,21 +360,23 @@ class LicenseManager
             'body'      => $api_params
         ));
 
-        // Debug: Log response
-        error_log('FanCoolo LicenseManager: API response code: ' . wp_remote_retrieve_response_code($response));
-        error_log('FanCoolo LicenseManager: API response body: ' . wp_remote_retrieve_body($response));
-
         // Check for errors
         if (is_wp_error($response)) {
-            error_log('FanCoolo LicenseManager: API request error: ' . $response->get_error_message());
+            \FanCoolo\Services\ErrorLogger::log(
+                'License API request failed: ' . $response->get_error_message(),
+                'LicenseManager'
+            );
             return array(
                 'success' => false,
                 'message' => 'API request failed: ' . $response->get_error_message()
             );
         }
-        
+
         if (200 !== wp_remote_retrieve_response_code($response)) {
-            error_log('FanCoolo LicenseManager: API returned non-200 status: ' . wp_remote_retrieve_response_code($response));
+            \FanCoolo\Services\ErrorLogger::log(
+                'License server returned error code: ' . wp_remote_retrieve_response_code($response),
+                'LicenseManager'
+            );
             return array(
                 'success' => false,
                 'message' => 'License server returned error code: ' . wp_remote_retrieve_response_code($response)
@@ -400,7 +385,6 @@ class LicenseManager
 
         // Decode response
         $license_data = json_decode(wp_remote_retrieve_body($response), true);
-        error_log('FanCoolo LicenseManager: Decoded license data: ' . print_r($license_data, true));
 
         if (isset($license_data['license']) && $license_data['license'] === 'valid') {
             return array('success' => true);

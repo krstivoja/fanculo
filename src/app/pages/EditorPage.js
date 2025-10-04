@@ -17,12 +17,13 @@ import {
   useHotReloadSave,
 } from "../hooks";
 
-const EditorPage = () => {
+const EditorPage = ({ searchParams, setSearchParams }) => {
   // UI state
   const [selectedPost, setSelectedPost] = useState(null);
   const [saveStatus, setSaveStatus] = useState("");
   const [scssError, setScssError] = useState(null);
   const [showToast, setShowToast] = useState(false);
+  const [settingsTab, setSettingsTab] = useState("settings"); // Settings sidebar tab state
 
   // Metadata hook
   const { metaData, setMetaData, handleMetaChange } = useMetadata(
@@ -58,7 +59,7 @@ const EditorPage = () => {
     dataLoading,
     loadAllData,
     refreshData,
-  } = useAppData(selectedPost, postOperations.handlePostSelect);
+  } = useAppData(selectedPost, postOperations.handlePostSelect, searchParams);
 
   // Initialize error handler with Toast system
   React.useEffect(() => {
@@ -207,6 +208,32 @@ const EditorPage = () => {
     loadAllData();
   }, []);
 
+  // Sync URL params with state - restore tab from URL on mount
+  useEffect(() => {
+    const tab = searchParams?.get('tab');
+    if (tab && ['settings', 'partials'].includes(tab)) {
+      setSettingsTab(tab);
+    }
+  }, [searchParams]);
+
+  // Sync state with URL - update URL when selected post or tab changes
+  useEffect(() => {
+    if (!setSearchParams) return;
+
+    const params = new URLSearchParams();
+
+    if (selectedPost?.id) {
+      params.set('id', selectedPost.id.toString());
+    }
+
+    // Only include tab param if not default
+    if (settingsTab !== 'settings') {
+      params.set('tab', settingsTab);
+    }
+
+    setSearchParams(params, { replace: true });
+  }, [selectedPost?.id, settingsTab, setSearchParams]);
+
   // Auto-recompile SCSS when block is marked for recompilation (e.g., when partial changes)
   useEffect(() => {
     const autoRecompilePostId = window._funculo_auto_recompile_post_id;
@@ -301,6 +328,8 @@ const EditorPage = () => {
             onPostDelete={postOperations.handlePostDelete(setGroupedPosts)}
             sharedData={sharedData}
             dataLoading={dataLoading}
+            activeTab={settingsTab}
+            onTabChange={setSettingsTab}
           />
         </div>
       </div>

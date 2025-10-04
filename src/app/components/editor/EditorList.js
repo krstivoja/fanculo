@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TAXONOMY_TERMS } from '../../constants/taxonomy';
 import { Button } from '../ui';
 
@@ -29,6 +29,13 @@ const getPostIcon = (post, termSlug) => {
 
 const EditorList = ({ groupedPosts, selectedPost, onPostSelect }) => {
   const [activeTab, setActiveTab] = useState('blocks');
+
+  // Sync active tab with selected post's taxonomy type (blocks/symbols/scss-partials)
+  useEffect(() => {
+    if (selectedPost?.terms?.[0]?.slug) {
+      setActiveTab(selectedPost.terms[0].slug);
+    }
+  }, [selectedPost?.id]);
 
   return (
     <aside id="editor-list" className='flex flex-col h-full border-r border-solid border-outline w-[400px]'>

@@ -5,7 +5,7 @@ import centralizedApi from "../../utils/api/CentralizedApiService";
  * Custom hook for managing app-wide data loading
  * Handles posts, SCSS partials, registered blocks, and block categories
  */
-export const useAppData = (selectedPost, handlePostSelect) => {
+export const useAppData = (selectedPost, handlePostSelect, searchParams) => {
   const [groupedPosts, setGroupedPosts] = useState({
     blocks: [],
     symbols: [],
@@ -86,14 +86,24 @@ export const useAppData = (selectedPost, handlePostSelect) => {
             }
           }
 
-          // Auto-select first post if none selected
+          // Auto-select post: prioritize URL param, then fallback to first post
           if (!selectedPost && showInitialLoading) {
-            const firstPost =
-              grouped.blocks[0] ||
-              grouped.symbols[0] ||
-              grouped["scss-partials"][0];
-            if (firstPost) {
-              handlePostSelect(firstPost);
+            const urlPostId = searchParams?.get('id');
+            let postToSelect = null;
+
+            // Try to restore post from URL if ID is present
+            if (urlPostId) {
+              const allPosts = [...grouped.blocks, ...grouped.symbols, ...grouped["scss-partials"]];
+              postToSelect = allPosts.find(p => p.id === parseInt(urlPostId, 10));
+            }
+
+            // Fallback to first available post if URL post not found
+            if (!postToSelect) {
+              postToSelect = grouped.blocks[0] || grouped.symbols[0] || grouped["scss-partials"][0];
+            }
+
+            if (postToSelect) {
+              handlePostSelect(postToSelect);
             }
           }
         }
@@ -135,7 +145,7 @@ export const useAppData = (selectedPost, handlePostSelect) => {
         if (showInitialLoading) setLoading(false);
       }
     },
-    [selectedPost, handlePostSelect]
+    [selectedPost, handlePostSelect, searchParams]
   );
 
   /**

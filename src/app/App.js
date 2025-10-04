@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from "react";
-import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Navigate, useSearchParams } from "react-router-dom";
 import "./style.css";
 
 // ========================================
@@ -13,13 +13,22 @@ const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const LicencePage = lazy(() => import("./pages/LicencePage"));
 const DesignSystemPage = ENABLE_DESIGN_SYSTEM ? lazy(() => import("./pages/DesignSystemPage")) : null;
 
+/**
+ * Wrapper component to inject URL search params into EditorPage
+ * Enables URL-based routing for post selection and tab state
+ */
+const EditorPageWrapper = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  return <EditorPage searchParams={searchParams} setSearchParams={setSearchParams} />;
+};
+
 const App = () => {
   return (
     <Router>
       <Suspense fallback={null}>
         <Routes>
           {/* Default route - Editor */}
-          <Route path="/" element={<EditorPage />} />
+          <Route path="/" element={<EditorPageWrapper />} />
 
           {/* Settings route */}
           <Route path="/settings" element={<SettingsPage />} />

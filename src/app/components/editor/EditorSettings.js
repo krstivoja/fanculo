@@ -13,9 +13,10 @@ const EditorSettings = ({
   onPostDelete,
   sharedData,
   dataLoading,
+  activeTab = "settings",
+  onTabChange,
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
-  const [activeTab, setActiveTab] = useState("settings");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [icon, setIcon] = useState("search");
@@ -116,14 +117,14 @@ const EditorSettings = ({
             <Button
               variant={activeTab === "settings" ? "primary" : "ghost"}
               className="grow px-3 py-2 text-xs font-medium border-b-2 transition-colors"
-              onClick={() => setActiveTab("settings")}
+              onClick={() => onTabChange?.("settings")}
             >
               Settings
             </Button>
             <Button
               variant={activeTab === "partials" ? "primary" : "ghost"}
               className="grow px-3 py-2 text-xs font-medium border-b-2 transition-colors"
-              onClick={() => setActiveTab("partials")}
+              onClick={() => onTabChange?.("partials")}
             >
               SCSS Partials
             </Button>
